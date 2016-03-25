@@ -115,6 +115,15 @@ class Histogram1D(object):
             values = None
         return self.__class__(np.copy(self.bins), values)
 
+    def __eq__(self, other):
+        if not isinstance(other, Histogram1D):
+            return False
+        if not np.array_equal(other.bins, self.bins):
+            return False
+        if not np.array_equal(other.values, self.values):
+            return False
+        return True
+
     def __add__(self, other):
         new = self.copy()
         new += other
