@@ -1,19 +1,6 @@
 import numpy as np
 
 
-def histogram(data, bins=50, **kwargs):
-    """Create a histogram from data.
-
-    :param data: A compatible object (numpy array-like)
-    """
-    if isinstance(data, np.ndarray):
-        np_values, np_bins = np.histogram(data, bins, **kwargs)
-        return Histogram1D(np_bins, np_values)
-    # elseif pandas, ...
-    else:
-        return histogram(np.array(data), bins, **kwargs)
-
-
 class Histogram1D(object):
     """Representation of one-dimensional histogram.
     """
@@ -57,6 +44,10 @@ class Histogram1D(object):
         return np.concatenate((self.left_edges, self.right_edges[-1:]), axis=0)
 
     @property
+    def nbins(self):
+        return self.bins.shape[0]
+
+    @property
     def left_edges(self):
         return self.bins[:,0]
 
@@ -90,7 +81,7 @@ class Histogram1D(object):
                 # TODO: Fix for non-connected histograms
                 axis.bar(self.left_edges, self.values, self.widths, **kwargs)
             elif histtype == "scatter":
-                axis.scatter(self.centers, self.values)
+                axis.scatter(self.centers, self.values, **kwargs)
             else:
                 raise RuntimeError("Unknown histogram type: {0}".format(histtype))
         else:
