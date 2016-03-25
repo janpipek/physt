@@ -2,16 +2,21 @@ import numpy as np
 
 
 def histogram(data, bins=50, **kwargs):
+    """Create a histogram from data.
+
+    :param data: A compatible object (numpy array-like)
+    """
     if isinstance(data, np.ndarray):
         np_values, np_bins = np.histogram(data, bins, **kwargs)
         return Histogram1D(np_bins, np_values)
     # elseif pandas, ...
     else:
-        return histogram(np.array(data), bins, kwargs)
+        return histogram(np.array(data), bins, **kwargs)
 
 
 class Histogram1D(object):
-    """Representation of one-dimensional histogram."""
+    """Representation of one-dimensional histogram.
+    """
     def __init__(self, bins, values=None):
         bins = np.array(bins)
         if bins.ndim == 1:       # Numpy-style
@@ -34,6 +39,14 @@ class Histogram1D(object):
     @property
     def bins(self):
         return self._bins
+
+    def __getitem__(self, i):
+        """Select subhistogram or get one bin."""
+        if isinstance(i, int):
+            return self.bins[i], self.values[i]
+        # elif isinstance(i, slice)) or isinstance(i, np.ndarray):
+        else:
+            return self.__class__(self.bins[i], self.values[i])
 
     @property
     def values(self):
@@ -60,7 +73,7 @@ class Histogram1D(object):
         return self.right_edges - self.left_edges
 
     def plot(self, histtype='bar', backend="matplotlib", axis=None, **kwargs):
-        """Plot the histogram
+        """Plot the histogram.
 
         :param histtype: ‘bar’ | ‘step’ | 'scatter'
         """
@@ -74,17 +87,19 @@ class Histogram1D(object):
                 y = np.concatenate(([0.0], self.values, [0]), axis=0)
                 axis.step(x, y, where="post", **kwargs)
             elif histtype == "bar":
+                # TODO: Fix for non-connected histograms
                 axis.bar(self.left_edges, self.values, self.widths, **kwargs)
             elif histtype == "scatter":
                 axis.scatter(self.centers, self.values)
             else:
-                raise RuntimeError("Unknown histogram type")
+                raise RuntimeError("Unknown histogram type: {0}".format(histtype))
         else:
             raise RuntimeError("Only matplotlib supported at the moment.")
 
     def to_dataframe(self):
+        """Convert to pandas DataFrame."""
         import pandas as pd
-        df = pd.DataFrame("left" : self.left_edges, "right" : self.right_edges, "value" : self.values)
+        df = pd.DataFrame({"left" : self.left_edges, "right" : self.right_edges, "value" : self.values})
         return df
 
     def __repr__(self):

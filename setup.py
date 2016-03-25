@@ -8,7 +8,7 @@ options = dict(
     version=__version__,
     packages=find_packages(),
     license='MIT',
-    description='',
+    description='P(i/y)thon h(i/y)stograms.',
     long_description=open('README.md').read(),
     author='Jan Pipek',
     author_email='jan.pipek@gmail.com',
@@ -22,8 +22,6 @@ options = dict(
         ]
     },
     classifiers=[
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
