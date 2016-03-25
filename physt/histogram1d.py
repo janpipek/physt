@@ -18,7 +18,7 @@ class Histogram1D(object):
         if values is None:
             self._values = np.zeros(self._bins.shape[0])
         else:
-            values = np.array(values)
+            values = np.array(values, dtype=float)
             if values.shape != (self._bins.shape[0],):
                 raise RuntimeError("Values must have same dimension as bins.")
             self._values = values
@@ -80,17 +80,21 @@ class Histogram1D(object):
     def widths(self):
         return self.right_edges - self.left_edges
 
-    def plot(self, histtype='bar', cumulative=False, backend="matplotlib", axis=None, **kwargs):
+    def plot(self, histtype='bar', cumulative=False, normalized=False, backend="matplotlib", axis=None, **kwargs):
         """Plot the histogram.
 
         :param histtype: ‘bar’ | [‘step’] | 'scatter'
         """
         # TODO: See http://matplotlib.org/1.5.0/examples/api/filled_step.html
+        data = self
+        if normalized:
+            data = data.normalize(inplace=False)
+        if cumulative:
+            values = data.cumulative_values
+        else:
+            values = data.values
+
         if backend == "matplotlib":
-            if cumulative:
-                values = self.cumulative_values
-            else:
-                values = self.values
             if not axis:
                 import matplotlib.pyplot as plt
                 _, axis = plt.subplots()
@@ -163,6 +167,7 @@ class Histogram1D(object):
 
     def __imul__(self, other):
         if np.isscalar(other):
+            self._values = self._values.astype(float)
             self._values *= other
         else:
             raise RuntimeError("Histograms can be multiplied only by a constant.")
@@ -175,6 +180,7 @@ class Histogram1D(object):
 
     def __itruediv__(self, other):
         if np.isscalar(other):
+            self._values = self._values.astype(float)
             self._values /= other
         else:
             raise RuntimeError("Histograms can be divided only by a constant.")
