@@ -31,9 +31,10 @@ class Histogram1D(object):
         """Select subhistogram or get one bin."""
         if isinstance(i, int):
             return self.bins[i], self.values[i]
-        # elif isinstance(i, slice)) or isinstance(i, np.ndarray):
-        else:
-            return self.__class__(self.bins[i], self.values[i])
+        elif isinstance(i, np.ndarray) and i.dtype == bool:
+            if i.shape != (self.nbins,):
+                raise IndexError("Cannot index with masked array of a wrong dimension")
+        return self.__class__(self.bins[i], self.values[i])
 
     @property
     def values(self):
@@ -177,6 +178,7 @@ class Histogram1D(object):
             self._values /= other
         else:
             raise RuntimeError("Histograms can be divided only by a constant.")
+        return self
 
     def to_dataframe(self):
         """Convert to pandas DataFrame."""
