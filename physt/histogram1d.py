@@ -25,14 +25,18 @@ class Histogram1D(object):
 
     @property
     def bins(self):
+        """Matrix of bins.
+
+        - 'bin_count' rows
+        - 2 columns: left, right edges)."""
         return self._bins
 
     def __getitem__(self, i):
-        """Select subhistogram or get one bin."""
+        """Select sub-histogram or get one bin."""
         if isinstance(i, int):
             return self.bins[i], self.frequencies[i]
         elif isinstance(i, np.ndarray) and i.dtype == bool:
-            if i.shape != (self.nbins,):
+            if i.shape != (self.bin_count,):
                 raise IndexError("Cannot index with masked array of a wrong dimension")
         return self.__class__(self.bins[i], self.frequencies[i])
 
@@ -42,47 +46,53 @@ class Histogram1D(object):
 
     @property
     def densities(self):
-        return self._frequencies / self.widths
+        """Frequencies normalized by bin widths.
+
+        Useful when bins are not of the same width.
+        """
+        return self._frequencies / self.bin_widths
 
     @property
     def cumulative_frequencies(self):
         return self._frequencies.cumsum()
 
     @property
-    def total_weight(self):
+    def total(self):
+        """Total number (sum of weights) of entries."""
         return self._frequencies.sum()
 
     def normalize(self, inplace=False):
         if inplace:
-            self /= self.total_weight
+            self /= self.total
             return self
         else:
-            return self / self.total_weight
+            return self / self.total
 
     @property
     def numpy_bins(self):
         """Bins in the format of numpy."""
-        return np.concatenate((self.left_edges, self.right_edges[-1:]), axis=0)
+        return np.concatenate((self.bin_left_edges, self.bin_right_edges[-1:]), axis=0)
 
     @property
-    def nbins(self):
+    def bin_count(self):
+        """Total number of bins."""
         return self.bins.shape[0]
 
     @property
-    def left_edges(self):
+    def bin_left_edges(self):
         return self.bins[:,0]
 
     @property
-    def right_edges(self):
+    def bin_right_edges(self):
         return self.bins[:,1]
 
     @property
-    def centers(self):
-        return (self.left_edges + self.right_edges) / 2
+    def bin_centers(self):
+        return (self.bin_left_edges + self.bin_right_edges) / 2
 
     @property
-    def widths(self):
-        return self.right_edges - self.left_edges
+    def bin_widths(self):
+        return self.bin_right_edges - self.bin_left_edges
 
     def plot(self, histtype='bar', cumulative=False, normalized=False, backend="matplotlib", axis=None, **kwargs):
         """Plot the histogram.
@@ -108,9 +118,9 @@ class Histogram1D(object):
             #     y = np.concatenate(([0.0], self.values, [0]), axis=0)
             #     axis.step(x, y, where="post", **kwargs)
             if histtype == "bar":
-                axis.bar(self.left_edges, values, self.widths, **kwargs)
+                axis.bar(self.bin_left_edges, values, self.bin_widths, **kwargs)
             elif histtype == "scatter":
-                axis.scatter(self.centers, values, **kwargs)
+                axis.scatter(self.bin_centers, values, **kwargs)
             else:
                 raise RuntimeError("Unknown histogram type: {0}".format(histtype))
         else:
@@ -193,7 +203,9 @@ class Histogram1D(object):
     def to_dataframe(self):
         """Convert to pandas DataFrame."""
         import pandas as pd
-        df = pd.DataFrame({"left" : self.left_edges, "right" : self.right_edges, "value" : self.frequencies})
+        from collections import OrderedDict
+        df = pd.DataFrame({"left": self.bin_left_edges, "right": self.bin_right_edges, "frequency": self.frequencies},
+                          columns=["left", "right", "frequency"])
         return df
 
     def __repr__(self):

@@ -12,18 +12,18 @@ example = Histogram1D(bins, values)
 
 class TestBins(object):
     def test_nbins(self):
-        assert example.nbins == 4
+        assert example.bin_count == 4
 
     def test_edges(self):
-        assert np.allclose(example.left_edges, [1.2, 1.4, 1.5, 1.7])
-        assert np.allclose(example.right_edges, [1.4, 1.5, 1.7, 1.8])
-        assert np.allclose(example.centers, [1.3, 1.45, 1.6, 1.75])
+        assert np.allclose(example.bin_left_edges, [1.2, 1.4, 1.5, 1.7])
+        assert np.allclose(example.bin_right_edges, [1.4, 1.5, 1.7, 1.8])
+        assert np.allclose(example.bin_centers, [1.3, 1.45, 1.6, 1.75])
 
     def test_numpy_bins(self):
         assert np.allclose(example.numpy_bins, [1.2, 1.4, 1.5, 1.7, 1.8 ])
 
     def test_widths(self):
-        assert np.allclose(example.widths, [0.2, 0.1, 0.2, 0.1])
+        assert np.allclose(example.bin_widths, [0.2, 0.1, 0.2, 0.1])
 
 
 class TestValues(object):
@@ -95,7 +95,7 @@ class TestIndexing(object):
         assert selected == example
 
         selected = example[1:-1]
-        assert np.allclose(selected.left_edges, [1.4, 1.5])
+        assert np.allclose(selected.bin_left_edges, [1.4, 1.5])
         assert np.array_equal(selected.frequencies, [0, 3])
 
     def test_masked(self):
@@ -115,7 +115,7 @@ class TestIndexing(object):
 
     def test_self_condition(self):
         selected = example[example.frequencies > 0]
-        assert np.allclose(selected.left_edges, [1.2, 1.5, 1.7])
+        assert np.allclose(selected.bin_left_edges, [1.2, 1.5, 1.7])
         assert np.array_equal(selected.frequencies, [4, 3, 7.2])
 
 
@@ -186,6 +186,16 @@ class TestArithmetic(object):
         assert np.allclose(new.frequencies, example.frequencies / 2)
         new /= 2
         assert np.allclose(new.frequencies, example.frequencies / 4)
+
+
+class TestConversion(object):
+    def test_pandas(self):
+        df = example.to_dataframe()
+        assert df.shape == (4, 3)
+        assert np.array_equal(df.columns.values, ["left", "right", "frequency"])
+        assert np.array_equal(df.left, [1.2, 1.4, 1.5, 1.7])
+        assert np.array_equal(df.right, [1.4, 1.5, 1.7, 1.8 ])
+        assert np.array_equal(df.frequency, [4, 0, 3, 7.2])
 
 
 if __name__ == "__main__":
