@@ -4,7 +4,7 @@ import numpy as np
 class Histogram1D(object):
     """Representation of one-dimensional histogram.
     """
-    def __init__(self, bins, frequencies=None):
+    def __init__(self, bins, frequencies=None, **kwargs):
         bins = np.array(bins)
         if bins.ndim == 1:       # Numpy-style
             self._bins = np.hstack((bins[:-1,np.newaxis], bins[1:,np.newaxis]))
@@ -23,6 +23,10 @@ class Histogram1D(object):
                 raise RuntimeError("Values must have same dimension as bins.")
             self._frequencies = frequencies
 
+        self.underflow = kwargs.get("underflow", 0)
+        self.overflow = kwargs.get("overflow", 0)
+        # TODO: if bins are not consecutive, overflow and underflow don't make any sense
+
     @property
     def bins(self):
         """Matrix of bins.
@@ -33,12 +37,27 @@ class Histogram1D(object):
 
     def __getitem__(self, i):
         """Select sub-histogram or get one bin."""
+        underflow = np.nan
+        overflow = np.nan
         if isinstance(i, int):
             return self.bins[i], self.frequencies[i]
-        elif isinstance(i, np.ndarray) and i.dtype == bool:
-            if i.shape != (self.bin_count,):
-                raise IndexError("Cannot index with masked array of a wrong dimension")
-        return self.__class__(self.bins[i], self.frequencies[i])
+        elif isinstance(i, np.ndarray):
+            if i.dtype == bool:
+                if i.shape != (self.bin_count,):
+                    raise IndexError("Cannot index with masked array of a wrong dimension")
+            underflow = np.nan
+            overflow = np.nan
+        elif isinstance(i, slice):
+            if i.step:
+                raise IndexError("Cannot change the order of bins")
+            if i.step == 1 or i.step is None:
+                underflow = self.underflow
+                overflow = self.overflow
+                if i.start:
+                    underflow += self.frequencies[0:i.start].sum()
+                if i.stop:
+                    overflow += self.frequencies[i.stop:].sum()
+        return self.__class__(self.bins[i], self.frequencies[i], overflow=overflow, underflow=underflow)
 
     @property
     def frequencies(self):
@@ -54,12 +73,16 @@ class Histogram1D(object):
 
     @property
     def cumulative_frequencies(self):
+        """
+
+        Note: underflow values are not considered
+        """
         return self._frequencies.cumsum()
 
     @property
     def total(self):
-        """Total number (sum of weights) of entries."""
-        return self._frequencies.sum()
+        """Total number (sum of weights) of entries including underflow and overflow."""
+        return self._frequencies.sum() + self.underflow + self.overflow
 
     def normalize(self, inplace=False):
         if inplace:
@@ -130,9 +153,13 @@ class Histogram1D(object):
     def copy(self, include_frequencies=True):
         if include_frequencies:
             frequencies = np.copy(self.frequencies)
+            underflow = self.underflow
+            overflow = self.overflow
         else:
             frequencies = None
-        return self.__class__(np.copy(self.bins), frequencies)
+            underflow = 0
+            overflow = 0
+        return self.__class__(np.copy(self.bins), frequencies, underflow=underflow, overflow=overflow)
 
     def __eq__(self, other):
         if not isinstance(other, Histogram1D):
@@ -140,6 +167,10 @@ class Histogram1D(object):
         if not np.array_equal(other.bins, self.bins):
             return False
         if not np.array_equal(other.frequencies, self.frequencies):
+            return False
+        if not other.overflow == self.overflow:
+            return False
+        if not other.underflow == self.underflow:
             return False
         return True
 
@@ -153,6 +184,8 @@ class Histogram1D(object):
             raise RuntimeError("Cannot add constant to histograms.")
         if np.allclose(other.bins, self.bins):
             self._frequencies += other.frequencies
+            self.underflow += other.underflow
+            self.overflow += other.overflow
         else:
             raise RuntimeError("Bins must be the same when adding histograms.")
         return self
@@ -167,6 +200,8 @@ class Histogram1D(object):
             raise RuntimeError("Cannot add constant to histograms.")
         if np.allclose(other.bins, self.bins):
             self._frequencies -= other.frequencies
+            self.underflow += other.underflow
+            self.overflow += other.overflow
         else:
             raise RuntimeError("Bins must be the same when subtracting histograms.")
         return self
@@ -183,6 +218,8 @@ class Histogram1D(object):
         if np.isscalar(other):
             self._frequencies = self._frequencies.astype(float)
             self._frequencies *= other
+            self.overflow *= other
+            self.underflow *= other
         else:
             raise RuntimeError("Histograms can be multiplied only by a constant.")
         return self
@@ -196,12 +233,15 @@ class Histogram1D(object):
         if np.isscalar(other):
             self._frequencies = self._frequencies.astype(float)
             self._frequencies /= other
+            self.overflow /= other
+            self.underflow /= other
         else:
             raise RuntimeError("Histograms can be divided only by a constant.")
         return self
 
     def to_dataframe(self):
         """Convert to pandas DataFrame."""
+        # TODO Include underflow, overflow
         import pandas as pd
         from collections import OrderedDict
         df = pd.DataFrame({"left": self.bin_left_edges, "right": self.bin_right_edges, "frequency": self.frequencies},
@@ -209,5 +249,11 @@ class Histogram1D(object):
         return df
 
     def __repr__(self):
-        return "{0}(bins={1})".format(
-            self.__class__.__name__, self.bins.shape[0]) #, self.total, self.underflow, self.overflow)
+        s = "{0}(bins={1}, total={2}".format(
+            self.__class__.__name__, self.bins.shape[0], self.total)
+        if self.underflow:
+            s += ", underflow={0}".format(self.underflow)
+        if self.overflow:
+            s += ", overflow={0}".format(self.overflow)
+        s += ")"
+        return s

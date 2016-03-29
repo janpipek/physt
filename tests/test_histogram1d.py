@@ -7,7 +7,7 @@ import pytest
 
 bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
 values = [4, 0, 3, 7.2]
-example = Histogram1D(bins, values)
+example = Histogram1D(bins, values, overflow=1, underflow=2)
 
 
 class TestBins(object):
@@ -35,7 +35,7 @@ class TestValues(object):
 
     def test_normalize(self):
         new = example.normalize()
-        expected = np.array([4, 0, 3, 7.2]) / 14.2
+        expected = np.array([4, 0, 3, 7.2]) / 17.2
         assert np.allclose(new.frequencies, expected)
         assert np.array_equal(new.bins, example.bins)
         assert new is not example
@@ -45,6 +45,9 @@ class TestValues(object):
         assert np.allclose(new.frequencies, expected)
         assert np.array_equal(new.bins, example.bins)
         assert new is copy
+
+    def test_total(self):
+        assert np.isclose(example.total, 17.2)
 
 
 class TestCopy(object):
@@ -60,18 +63,30 @@ class TestEquivalence(object):
     def test_eq(self):
         bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
         values = [4, 0, 3, 7.2]
-        other1 = Histogram1D(bins, values)
+        other1 = Histogram1D(bins, values, underflow=2, overflow=1)
         assert other1 == example
 
         bins = [1.22, 1.4, 1.5, 1.7, 1.8 ]
         values = [4, 0, 3, 7.2]
-        other2 = Histogram1D(bins, values)
+        other2 = Histogram1D(bins, values, underflow=2, overflow=1)
         assert other2 != example
 
         bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
         values = [4, 0, 13, 7.2]
-        other3 = Histogram1D(bins, values)
+        other3 = Histogram1D(bins, values, underflow=2, overflow=1)
         assert other3 != example
+
+    def test_eq_with_underflows(self):
+        bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
+        values = [4, 0, 3, 7.2]
+        other1 = Histogram1D(bins, values, underflow=2)
+        assert other1 != example
+
+        other2 = Histogram1D(bins, values, overflow=1)
+        assert other2 != example
+
+        other3 = Histogram1D(bins, values, overflow=1, underflow=2)
+        assert other3 == example
 
 
 class TestIndexing(object):
@@ -97,13 +112,21 @@ class TestIndexing(object):
         selected = example[1:-1]
         assert np.allclose(selected.bin_left_edges, [1.4, 1.5])
         assert np.array_equal(selected.frequencies, [0, 3])
+        assert np.isclose(selected.underflow, 6)
+        assert np.isclose(selected.overflow, 8.2)
 
     def test_masked(self):
         mask =  np.array([True, True, True, True], dtype=bool)
-        assert example[mask] == example
+        assert np.array_equal(example[mask].bins, example.bins)
+        assert np.array_equal(example[mask].frequencies, example.frequencies)
+        assert np.isnan(example[mask].underflow)
+        assert np.isnan(example[mask].overflow)
 
         mask =  np.array([True, False, False, False], dtype=bool)
-        assert example[mask] == example[:1]
+        assert np.array_equal(example[mask].bins, example[:1].bins)
+        assert np.array_equal(example[mask].frequencies, example[:1].frequencies)
+        assert np.isnan(example[mask].underflow)
+        assert np.isnan(example[mask].overflow)
 
         with pytest.raises(IndexError):
             mask =  np.array([True, False, False, False, False, False], dtype=bool)
