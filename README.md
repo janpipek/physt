@@ -1,5 +1,5 @@
 # physt
-P(i/y)thon h(i/y)stograms. 
+P(i/y)thon h(i/y)stograms. Based on numpy.histogram but designed for humans(TM) on steroids(TM).
 
 ## Simple example
 
@@ -17,16 +17,24 @@ hist.plot()
 
 ![Heights plot](doc/heights.png)
 
+See more in <https://github.com/janpipek/physt/blob/master/doc/Tutorial.ipynb>
+
 ## Features
 
 ### Implemented
 
 * Input: any numpy-array-like object
+* Keep underflow / overflow
+* Basic numeric operations (* / + -)
+* Items / slice selection
+* Add new values 
+* Cumulative values, densities
+* Simple plotting
 
 ### Planned
 
-* Normalization
-* Add new values (with heights)
-* Underflow / overflow
+* Algorithms for optimized binning
+  - human-friendly
+  - mathematical
 * Stacked histograms
 * Input: pandas.Series, pandas.DataFrame, ...
