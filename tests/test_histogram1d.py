@@ -244,6 +244,7 @@ class TestFindBin(object):
         assert example.find_bin(1.5) == 2
         assert example.find_bin(1.72) == 3
         assert example.find_bin(1.9) == 4
+        assert example.find_bin(1.8) == 3
 
     def test_inconsecutive(self):
         selected = example[[0, 3]]
@@ -252,6 +253,7 @@ class TestFindBin(object):
         assert selected.find_bin(1.45) is None
         assert selected.find_bin(1.55) is None
         assert selected.find_bin(1.75) == 1
+        assert selected.find_bin(1.8) == 1
         assert selected.find_bin(1.9) == 2
 
 

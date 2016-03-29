@@ -45,8 +45,6 @@ class Histogram1D(object):
             if i.dtype == bool:
                 if i.shape != (self.bin_count,):
                     raise IndexError("Cannot index with masked array of a wrong dimension")
-            underflow = np.nan
-            overflow = np.nan
         elif isinstance(i, slice):
             if i.step:
                 raise IndexError("Cannot change the order of bins")
@@ -69,7 +67,7 @@ class Histogram1D(object):
 
         Useful when bins are not of the same width.
         """
-        return self._frequencies / self.bin_widths
+        return (self._frequencies / self.bin_widths) / self.total
 
     @property
     def cumulative_frequencies(self):
@@ -88,6 +86,10 @@ class Histogram1D(object):
         if not np.isnan(self.overflow):
             t += self.overflow
         return t
+
+    @property
+    def total_width(self):
+        return self.bin_widths.sum()
 
     def normalize(self, inplace=False):
         if inplace:
@@ -129,6 +131,11 @@ class Histogram1D(object):
         ixbin = np.searchsorted(self.bin_left_edges, value, side="right")
         if ixbin == 0:
             return -1
+        elif ixbin == self.bin_count:
+            if value <= self.bin_right_edges[-1]:
+                return ixbin - 1
+            else:
+                return self.bin_count
         elif value < self.bin_right_edges[ixbin - 1]:
             return ixbin - 1
         elif ixbin == self.bin_count:
@@ -156,19 +163,23 @@ class Histogram1D(object):
     def bin_widths(self):
         return self.bin_right_edges - self.bin_left_edges
 
-    def plot(self, histtype='bar', cumulative=False, normalized=False, backend="matplotlib", axis=None, **kwargs):
+    def plot(self, histtype='bar', cumulative=False, density=False, backend="matplotlib", axis=None, **kwargs):
         """Plot the histogram.
 
         :param histtype: ‘bar’ | [‘step’] | 'scatter'
         """
         # TODO: See http://matplotlib.org/1.5.0/examples/api/filled_step.html
         data = self
-        if normalized:
-            data = data.normalize(inplace=False)
-        if cumulative:
-            values = data.cumulative_frequencies
+        if density:
+            if cumulative:
+                data = (self / self.total).cumulative_frequencies
+            else:
+                data = self.frequencies / self.total
         else:
-            values = data.densities
+            if cumulative:
+                data = self.cumulative_frequencies
+            else:
+                data = self.frequencies
 
         if backend == "matplotlib":
             if not axis:
@@ -180,9 +191,9 @@ class Histogram1D(object):
             #     y = np.concatenate(([0.0], self.values, [0]), axis=0)
             #     axis.step(x, y, where="post", **kwargs)
             if histtype == "bar":
-                axis.bar(self.bin_left_edges, values, self.bin_widths, **kwargs)
+                axis.bar(self.bin_left_edges, data, self.bin_widths, **kwargs)
             elif histtype == "scatter":
-                axis.scatter(self.bin_centers, values, **kwargs)
+                axis.scatter(self.bin_centers, data, **kwargs)
             else:
                 raise RuntimeError("Unknown histogram type: {0}".format(histtype))
         else:
