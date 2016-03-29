@@ -196,8 +196,15 @@ class Histogram1D(object):
                 axis.scatter(self.bin_centers, data, **kwargs)
             else:
                 raise RuntimeError("Unknown histogram type: {0}".format(histtype))
+
+            # Automatically limit to positive frequencies
+            ylim = (0, axis.get_ylim()[1])
+            if data.max() > ylim[1]:
+                ylim = (ylim[0], data.max() + (data.max() - ylim[0]) * 0.1)
+            axis.set_ylim(ylim)
         else:
             raise RuntimeError("Only matplotlib supported at the moment.")
+
         return axis
 
     def copy(self, include_frequencies=True):
