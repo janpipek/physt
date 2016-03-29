@@ -82,7 +82,12 @@ class Histogram1D(object):
     @property
     def total(self):
         """Total number (sum of weights) of entries including underflow and overflow."""
-        return self._frequencies.sum() + self.underflow + self.overflow
+        t = self._frequencies.sum()
+        if not np.isnan(self.underflow):
+            t += self.underflow
+        if not np.isnan(self.overflow):
+            t += self.overflow
+        return t
 
     def normalize(self, inplace=False):
         if inplace:
@@ -94,6 +99,7 @@ class Histogram1D(object):
     @property
     def numpy_bins(self):
         """Bins in the format of numpy."""
+        # TODO: If not consecutive, does not make sense
         return np.concatenate((self.bin_left_edges, self.bin_right_edges[-1:]), axis=0)
 
     @property
@@ -112,6 +118,39 @@ class Histogram1D(object):
     @property
     def bin_centers(self):
         return (self.bin_left_edges + self.bin_right_edges) / 2
+
+    def find_bin(self, value):
+        """Index of bin corresponding to a value.
+
+        :return index, (0=underflow, N=overflow, None=not found)
+
+        Bins are defined as [left, right)
+        """
+        ixbin = np.searchsorted(self.bin_left_edges, value, side="right")
+        if ixbin == 0:
+            return -1
+        elif value < self.bin_right_edges[ixbin - 1]:
+            return ixbin - 1
+        elif ixbin == self.bin_count:
+            return self.bin_count
+        else:
+            return None
+
+    def fill(self, value, weight=1):
+        """Update histogram with a new value.
+
+        :return index of bin which was incremented (0=underflow, N=overflow, None=not found)
+        """
+        ixbin = self.find_bin(value)
+        if ixbin is None:
+            pass # or error
+        elif ixbin == -1:
+            self.underflow += weight
+        elif ixbin == self.bin_count:
+            self.overflow += weight
+        else:
+            self._frequencies[ixbin] += weight
+        return ixbin
 
     @property
     def bin_widths(self):

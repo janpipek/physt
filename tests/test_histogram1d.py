@@ -58,6 +58,14 @@ class TestCopy(object):
         assert new.frequencies is not example.frequencies
         assert new == example
 
+    def test_copy_no_frequencies(self):
+        new = example.copy(include_frequencies=False)
+        assert new is not example
+        assert np.array_equal(new.bins, example.bins)
+        assert new.total == 0
+        assert new.overflow == 0
+        assert new.underflow ==0
+
 
 class TestEquivalence(object):
     def test_eq(self):
@@ -135,6 +143,13 @@ class TestIndexing(object):
         with pytest.raises(IndexError):
             mask =  np.array([False, False, False], dtype=bool)
             example[mask]
+
+    def test_array(self):
+        selected = example[[1, 2]]
+        assert np.allclose(selected.bin_left_edges, [1.4, 1.5])
+        assert np.array_equal(selected.frequencies, [0, 3])
+        assert np.isnan(selected.underflow)
+        assert np.isnan(selected.overflow)
 
     def test_self_condition(self):
         selected = example[example.frequencies > 0]
@@ -220,6 +235,44 @@ class TestConversion(object):
         assert np.array_equal(df.right, [1.4, 1.5, 1.7, 1.8 ])
         assert np.array_equal(df.frequency, [4, 0, 3, 7.2])
 
+
+class TestFindBin(object):
+    def test_normal(self):
+        # bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
+        assert example.find_bin(1) == -1
+        assert example.find_bin(1.3) == 0
+        assert example.find_bin(1.5) == 2
+        assert example.find_bin(1.72) == 3
+        assert example.find_bin(1.9) == 4
+
+    def test_inconsecutive(self):
+        selected = example[[0, 3]]
+        assert selected.find_bin(1) == -1
+        assert selected.find_bin(1.3) == 0
+        assert selected.find_bin(1.45) is None
+        assert selected.find_bin(1.55) is None
+        assert selected.find_bin(1.75) == 1
+        assert selected.find_bin(1.9) == 2
+
+
+class TestFill(object):
+    def test_fill(self):
+        # bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
+        # values = [4, 0, 3, 7.2]
+        copy = example.copy()
+        copy.fill(1.44)    # Underflow
+        assert np.allclose(copy.frequencies, [4, 1, 3, 7.2])
+
+        copy.fill(1.94)    # Overflow
+        assert np.allclose(copy.frequencies, [4, 1, 3, 7.2])
+        assert copy.overflow == 2
+
+        copy.fill(0.44)    # Underflow
+        assert np.allclose(copy.frequencies, [4, 1, 3, 7.2])
+        assert copy.underflow == 3
+
+        copy.fill(1.44, weight=2.2)
+        assert np.allclose(copy.frequencies, [4, 3.2, 3, 7.2])
 
 if __name__ == "__main__":
     pytest.main(__file__)
