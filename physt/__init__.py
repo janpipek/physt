@@ -24,6 +24,10 @@ def histogram(data, bins=50, **kwargs):
     Returns
     -------
     Histogram1D
+
+    See Also
+    --------
+    numpy.histogram
     """
     if isinstance(data, np.ndarray):
         np_kwargs = {key : kwargs.get(key) for key in kwargs if key in kwargs and key in ["range", "weights"]}
