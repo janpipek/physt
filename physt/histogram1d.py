@@ -4,7 +4,7 @@ import numpy as np
 class Histogram1D(object):
     """Representation of one-dimensional histogram.
     """
-    def __init__(self, bins, values=None):
+    def __init__(self, bins, frequencies=None):
         bins = np.array(bins)
         if bins.ndim == 1:       # Numpy-style
             self._bins = np.hstack((bins[:-1,np.newaxis], bins[1:,np.newaxis]))
@@ -15,13 +15,13 @@ class Histogram1D(object):
         else:
             raise RuntimeError("Unexpected format of bins.")
 
-        if values is None:
-            self._values = np.zeros(self._bins.shape[0])
+        if frequencies is None:
+            self._frequencies = np.zeros(self._bins.shape[0])
         else:
-            values = np.array(values, dtype=float)
-            if values.shape != (self._bins.shape[0],):
+            frequencies = np.array(frequencies, dtype=float)
+            if frequencies.shape != (self._bins.shape[0],):
                 raise RuntimeError("Values must have same dimension as bins.")
-            self._values = values
+            self._frequencies = frequencies
 
     @property
     def bins(self):
@@ -30,23 +30,27 @@ class Histogram1D(object):
     def __getitem__(self, i):
         """Select subhistogram or get one bin."""
         if isinstance(i, int):
-            return self.bins[i], self.values[i]
+            return self.bins[i], self.frequencies[i]
         elif isinstance(i, np.ndarray) and i.dtype == bool:
             if i.shape != (self.nbins,):
                 raise IndexError("Cannot index with masked array of a wrong dimension")
-        return self.__class__(self.bins[i], self.values[i])
+        return self.__class__(self.bins[i], self.frequencies[i])
 
     @property
-    def values(self):
-        return self._values
+    def frequencies(self):
+        return self._frequencies
 
     @property
-    def cumulative_values(self):
-        return self._values.cumsum()
+    def densities(self):
+        return self._frequencies / self.widths
+
+    @property
+    def cumulative_frequencies(self):
+        return self._frequencies.cumsum()
 
     @property
     def total_weight(self):
-        return self._values.sum()
+        return self._frequencies.sum()
 
     def normalize(self, inplace=False):
         if inplace:
@@ -90,9 +94,9 @@ class Histogram1D(object):
         if normalized:
             data = data.normalize(inplace=False)
         if cumulative:
-            values = data.cumulative_values
+            values = data.cumulative_frequencies
         else:
-            values = data.values
+            values = data.densities
 
         if backend == "matplotlib":
             if not axis:
@@ -113,19 +117,19 @@ class Histogram1D(object):
             raise RuntimeError("Only matplotlib supported at the moment.")
         return axis
 
-    def copy(self, include_values=True):
-        if include_values:
-            values = np.copy(self.values)
+    def copy(self, include_frequencies=True):
+        if include_frequencies:
+            frequencies = np.copy(self.frequencies)
         else:
-            values = None
-        return self.__class__(np.copy(self.bins), values)
+            frequencies = None
+        return self.__class__(np.copy(self.bins), frequencies)
 
     def __eq__(self, other):
         if not isinstance(other, Histogram1D):
             return False
         if not np.array_equal(other.bins, self.bins):
             return False
-        if not np.array_equal(other.values, self.values):
+        if not np.array_equal(other.frequencies, self.frequencies):
             return False
         return True
 
@@ -138,7 +142,7 @@ class Histogram1D(object):
         if np.isscalar(other):
             raise RuntimeError("Cannot add constant to histograms.")
         if np.allclose(other.bins, self.bins):
-            self._values += other.values
+            self._frequencies += other.frequencies
         else:
             raise RuntimeError("Bins must be the same when adding histograms.")
         return self
@@ -152,7 +156,7 @@ class Histogram1D(object):
         if np.isscalar(other):
             raise RuntimeError("Cannot add constant to histograms.")
         if np.allclose(other.bins, self.bins):
-            self._values -= other.values
+            self._frequencies -= other.frequencies
         else:
             raise RuntimeError("Bins must be the same when subtracting histograms.")
         return self
@@ -167,8 +171,8 @@ class Histogram1D(object):
 
     def __imul__(self, other):
         if np.isscalar(other):
-            self._values = self._values.astype(float)
-            self._values *= other
+            self._frequencies = self._frequencies.astype(float)
+            self._frequencies *= other
         else:
             raise RuntimeError("Histograms can be multiplied only by a constant.")
         return self
@@ -180,8 +184,8 @@ class Histogram1D(object):
 
     def __itruediv__(self, other):
         if np.isscalar(other):
-            self._values = self._values.astype(float)
-            self._values /= other
+            self._frequencies = self._frequencies.astype(float)
+            self._frequencies /= other
         else:
             raise RuntimeError("Histograms can be divided only by a constant.")
         return self
@@ -189,7 +193,7 @@ class Histogram1D(object):
     def to_dataframe(self):
         """Convert to pandas DataFrame."""
         import pandas as pd
-        df = pd.DataFrame({"left" : self.left_edges, "right" : self.right_edges, "value" : self.values})
+        df = pd.DataFrame({"left" : self.left_edges, "right" : self.right_edges, "value" : self.frequencies})
         return df
 
     def __repr__(self):

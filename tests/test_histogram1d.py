@@ -28,21 +28,21 @@ class TestBins(object):
 
 class TestValues(object):
     def test_values(self):
-        assert np.allclose(example.values, [4, 0, 3, 7.2])
+        assert np.allclose(example.frequencies, [4, 0, 3, 7.2])
 
     def test_cumulative_values(self):
-        assert np.allclose(example.cumulative_values, [4, 4, 7, 14.2])
+        assert np.allclose(example.cumulative_frequencies, [4, 4, 7, 14.2])
 
     def test_normalize(self):
         new = example.normalize()
         expected = np.array([4, 0, 3, 7.2]) / 14.2
-        assert np.allclose(new.values, expected)
+        assert np.allclose(new.frequencies, expected)
         assert np.array_equal(new.bins, example.bins)
         assert new is not example
 
         copy = example.copy()
         new = copy.normalize(inplace=True)
-        assert np.allclose(new.values, expected)
+        assert np.allclose(new.frequencies, expected)
         assert np.array_equal(new.bins, example.bins)
         assert new is copy
 
@@ -52,7 +52,7 @@ class TestCopy(object):
         new = example.copy()
         assert new is not example
         assert new.bins is not example.bins
-        assert new.values is not example.values
+        assert new.frequencies is not example.frequencies
         assert new == example
 
 
@@ -96,7 +96,7 @@ class TestIndexing(object):
 
         selected = example[1:-1]
         assert np.allclose(selected.left_edges, [1.4, 1.5])
-        assert np.array_equal(selected.values, [0, 3])
+        assert np.array_equal(selected.frequencies, [0, 3])
 
     def test_masked(self):
         mask =  np.array([True, True, True, True], dtype=bool)
@@ -114,9 +114,9 @@ class TestIndexing(object):
             example[mask]
 
     def test_self_condition(self):
-        selected = example[example.values > 0]
+        selected = example[example.frequencies > 0]
         assert np.allclose(selected.left_edges, [1.2, 1.5, 1.7])
-        assert np.array_equal(selected.values, [4, 3, 7.2])
+        assert np.array_equal(selected.frequencies, [4, 3, 7.2])
 
 
 class TestArithmetic(object):
@@ -144,7 +144,7 @@ class TestArithmetic(object):
         other = Histogram1D(bins, values)
         sum = example + other
         assert np.allclose(sum.bins, example.bins)
-        assert np.allclose(sum.values, [5, 1, 3, 8.2])
+        assert np.allclose(sum.frequencies, [5, 1, 3, 8.2])
 
     def test_subtract_wrong_histograms(self):
         with pytest.raises(RuntimeError):
@@ -166,15 +166,15 @@ class TestArithmetic(object):
         other = Histogram1D(bins, values)
         sum = example - other
         assert np.allclose(sum.bins, example.bins)
-        assert np.allclose(sum.values, [3, 0, 3, 6.2])
+        assert np.allclose(sum.frequencies, [3, 0, 3, 6.2])
 
     def test_multiplication(self):
         new = example * 2
         assert new is not example
         assert np.allclose(new.bins, example.bins)
-        assert np.allclose(new.values, example.values * 2)
+        assert np.allclose(new.frequencies, example.frequencies * 2)
         new *= 2
-        assert np.allclose(new.values, example.values * 4)
+        assert np.allclose(new.frequencies, example.frequencies * 4)
 
     def test_rmultiplication(self):
         assert example * 2 == 2 * example
@@ -183,9 +183,9 @@ class TestArithmetic(object):
         new = example / 2
         assert new is not example
         assert np.allclose(new.bins, example.bins)
-        assert np.allclose(new.values, example.values / 2)
+        assert np.allclose(new.frequencies, example.frequencies / 2)
         new /= 2
-        assert np.allclose(new.values, example.values / 4)
+        assert np.allclose(new.frequencies, example.frequencies / 4)
 
 
 if __name__ == "__main__":
