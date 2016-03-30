@@ -1,21 +1,25 @@
-__version__ = str('0.1.0')
-from .histogram1d import Histogram1D
+from . import binning, histogram1d
+
 import numpy as np
 
+__version__ = str('0.1.0')
 
-def histogram(data, bins=50, **kwargs):
+
+def histogram(data, bins=None, **kwargs):
     """Create a histogram from data.
 
     Parameters
     ----------
     data : array_like
         (as numpy.histogram)
-    bins: int or sequence of scalars, optional
+    bins: int or sequence of scalars or callable, optional
         (as numpy.histogram)
     range: tuple, optional
         (as numpy.histogram) - first left edge, last right edge
     weights: array_like, optional
         (as numpy.histogram)
+    method: str or callable
+        Binning method
     keep_missed: bool, optional
         store statistics about how many values were lower than limits and how many higher than limits (default: True)
 
@@ -30,13 +34,19 @@ def histogram(data, bins=50, **kwargs):
     numpy.histogram
     """
     if isinstance(data, np.ndarray):
-        np_kwargs = {key : kwargs.get(key) for key in kwargs if key in kwargs and key in ["range", "weights"]}
-        np_values, np_bins = np.histogram(data, bins, **np_kwargs)
-        h_kwargs = {}
-        if kwargs.get("keep_missed", True):
-            weights = kwargs.get("weights", np.ones(data.shape))
-            h_kwargs["underflow"] = weights[data < np_bins[0]].sum()
-            h_kwargs["overflow"] = weights[data > np_bins[-1]].sum()
-        return Histogram1D(np_bins, np_values, **h_kwargs)
+        if bins is None:
+            nbins = binning.ideal_bin_count(data=data)
+            bins = binning.numpy_like(data, nbins, **kwargs)
+        elif np.iterable(bins):
+            bins = np.array(bins)
+        elif isinstance(bins, int):
+            bins = binning.numpy_like(data, bins, **kwargs)
+        elif callable(bins):
+            bins = bins(data, **kwargs)
+        constructor_args = histogram1d.get_histogram_data(data,
+                                              bins=bins,
+                                              weights=kwargs.get("weights", None),
+                                              keep_missed=kwargs.get("keep_missed", True))
+        return histogram1d.Histogram1D(**constructor_args)
     else:
         return histogram(np.array(data), bins, **kwargs)

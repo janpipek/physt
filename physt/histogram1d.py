@@ -1,10 +1,23 @@
 import numpy as np
+from . import bin_utils
 
 
 class Histogram1D(object):
-    """Representation of one-dimensional histogram.
+    """One-dimensional histogram data.
+
+    The bins can be of different widths.
+
+    The bins need not be consecutive. However, some functionality may not be available
+    for non-consecutive bins (like keeping information about underflow and overflow).
+
     """
     def __init__(self, bins, frequencies=None, **kwargs):
+        """
+
+        Parameters
+        ----------
+
+        """
         bins = np.array(bins)
         if bins.ndim == 1:       # Numpy-style
             self._bins = np.hstack((bins[:-1,np.newaxis], bins[1:,np.newaxis]))
@@ -26,7 +39,7 @@ class Histogram1D(object):
         self.underflow = kwargs.get("underflow", 0)
         self.overflow = kwargs.get("overflow", 0)
 
-        self.errors2 = kwargs.get("errors2", None)
+        self._errors2 = kwargs.get("errors2", self.frequencies.copy())
 
         # TODO: if bins are not consecutive, overflow and underflow don't make any sense
 
@@ -39,7 +52,13 @@ class Histogram1D(object):
         return self._bins
 
     def __getitem__(self, i):
-        """Select sub-histogram or get one bin."""
+        """Select sub-histogram or get one bin.
+
+        Parameters
+        ----------
+        i : int | slice | bool masked array | array with indices
+            In most cases, this has same semantics as for numpy.ndarray.__getitem__
+        """
         underflow = np.nan
         overflow = np.nan
         if isinstance(i, int):
@@ -62,6 +81,7 @@ class Histogram1D(object):
 
     @property
     def frequencies(self):
+        """Frequencies (values) of the histogram."""
         return self._frequencies
 
     @property
@@ -81,11 +101,12 @@ class Histogram1D(object):
         return self._frequencies.cumsum()
 
     @property
+    def errors2(self):
+        return self._errors2
+
+    @property
     def errors(self):
-        if self.errors2:
-            return np.sqrt(self.errors2)
-        else:
-            return np.sqrt(self.frequencies)
+        return np.sqrt(self.errors2)
 
     @property
     def total(self):
@@ -121,22 +142,36 @@ class Histogram1D(object):
 
     @property
     def bin_left_edges(self):
+        """Left edges of all bins."""
         return self.bins[:,0]
 
     @property
     def bin_right_edges(self):
+        """Right edges of all bins."""
         return self.bins[:,1]
 
     @property
     def bin_centers(self):
+        """Centers of all bins."""
         return (self.bin_left_edges + self.bin_right_edges) / 2
+
+    @property
+    def bin_widths(self):
+        """Widths of all bins."""
+        return self.bin_right_edges - self.bin_left_edges
 
     def find_bin(self, value):
         """Index of bin corresponding to a value.
 
-        :return index, (0=underflow, N=overflow, None=not found)
+        Parameters
+        ----------
+        value: float
+            Value to be searched for.
 
-        Bins are defined as [left, right)
+        Returns
+        -------
+        ixbin: int
+            index of bin to which value belongs (-1=underflow, N=overflow, None=not found - inconsecutive)
         """
         ixbin = np.searchsorted(self.bin_left_edges, value, side="right")
         if ixbin == 0:
@@ -156,29 +191,64 @@ class Histogram1D(object):
     def fill(self, value, weight=1):
         """Update histogram with a new value.
 
-        :return index of bin which was incremented (0=underflow, N=overflow, None=not found)
+        Parameters
+        ----------
+        value: float
+            Value to be added.
+        weight: float, optional
+            Weight assigned to the value.
+
+        Returns
+        -------
+        ixbin: int
+            index of bin which was incremented (-1=underflow, N=overflow, None=not found)
+
+        Note: If a gap in unconsecutive bins is matched, underflow & overflow are not valid anymore.
+        Note: Name was selected because of the eponymous method in ROOT
         """
         ixbin = self.find_bin(value)
         if ixbin is None:
-            pass # or error
+            self.overflow = np.nan
+            self.underflow = np.nan
         elif ixbin == -1:
             self.underflow += weight
         elif ixbin == self.bin_count:
             self.overflow += weight
         else:
             self._frequencies[ixbin] += weight
+            self.errors2[ixbin] += weight ** 2
         return ixbin
 
-    @property
-    def bin_widths(self):
-        return self.bin_right_edges - self.bin_left_edges
-
-    def plot(self, histtype='bar', cumulative=False, density=False, errors=False, backend="matplotlib", axis=None, **kwargs):
+    def plot(self, histtype='bar', cumulative=False, density=False, errors=False, backend="matplotlib", ax=None, **kwargs):
         """Plot the histogram.
 
-        :param histtype: ‘bar’ | 'scatter'
+        Parameters
+        ----------
+        histtype: string (‘bar’ | 'scatter'), optional
+            Type of the histogram:
+            - bar : as bars, the typical (and default) setting
+            - scatter : as points
+        cumulative: bool, optional
+            If True, the values are displayed as cumulative function rising from 0 to N (or N - fraction of unmatched)
+        errors: bool, optional
+            If True, display error bars for bins (not available for cumulative)
+        density: bool, optional
+            If False (default), display absolute values of the bins, if True, display the densities (scaled to bin
+            width in standard case, to range 0-1 in the cumulative case).
+        backend: str
+            Currently, this has to be matplotlib, but other backends (d3.js or bokeh) are planned.
+        ax: matplotlib.axes.Axes, optional
+            The (matplotlib) axes to draw into. If not set, a default one is created.
+
+        You can also specify arbitrary matplotlib arguments, they are forwarded to the respective plotting methods.
+
+        Returns
+        -------
+        ax: matplotlib.axes.Axes
+            The axes object for further manipulation.
         """
         # TODO: See http://matplotlib.org/1.5.0/examples/api/filled_step.html
+        # TODO: Implement statistics box as in ROOT
         data = self
         if density:
             if cumulative:
@@ -199,34 +269,41 @@ class Histogram1D(object):
                 err_data = self.errors
 
         if backend == "matplotlib":
-            if not axis:
+            if not ax:
                 import matplotlib.pyplot as plt
-                _, axis = plt.subplots()
+                _, ax = plt.subplots()
             if histtype == "bar":
                 bar_kwargs = kwargs.copy()
                 if errors:
                     bar_kwargs["yerr"] = err_data
                     if not "ecolor" in bar_kwargs:
                         bar_kwargs["ecolor"] = "black"
-                axis.bar(self.bin_left_edges, data, self.bin_widths, **bar_kwargs)
+                ax.bar(self.bin_left_edges, data, self.bin_widths, **bar_kwargs)
             elif histtype == "scatter":
                 if errors:
-                    axis.errorbar(self.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "o"), ecolor=kwargs.get("ecolor", "black"))
+                    ax.errorbar(self.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "o"), ecolor=kwargs.get("ecolor", "black"))
                 else:
-                    axis.scatter(self.bin_centers, data, **kwargs)
+                    ax.scatter(self.bin_centers, data, **kwargs)
             else:
                 raise RuntimeError("Unknown histogram type: {0}".format(histtype))
 
             # Automatically limit to positive frequencies
-            ylim = axis.get_ylim()
+            ylim = ax.get_ylim()
             ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
-            axis.set_ylim(ylim)
+            ax.set_ylim(ylim)
         else:
             raise RuntimeError("Only matplotlib supported at the moment.")
 
-        return axis
+        return ax
 
     def copy(self, include_frequencies=True):
+        """A deep copy of the histogram.
+
+        Parameters
+        ----------
+        include_frequencies: bool, optional
+            If True (default), frequencies are copied. Otherwise, an empty histogram template is created.
+        """
         if include_frequencies:
             frequencies = np.copy(self.frequencies)
             underflow = self.underflow
@@ -262,6 +339,7 @@ class Histogram1D(object):
             self._frequencies += other.frequencies
             self.underflow += other.underflow
             self.overflow += other.overflow
+            self._errors2 += other.errors2
         else:
             raise RuntimeError("Bins must be the same when adding histograms.")
         return self
@@ -276,8 +354,9 @@ class Histogram1D(object):
             raise RuntimeError("Cannot add constant to histograms.")
         if np.allclose(other.bins, self.bins):
             self._frequencies -= other.frequencies
-            self.underflow += other.underflow
-            self.overflow += other.overflow
+            self.underflow -= other.underflow
+            self.overflow -= other.overflow
+            self._errors2 += other.errors2
         else:
             raise RuntimeError("Bins must be the same when subtracting histograms.")
         return self
@@ -296,6 +375,7 @@ class Histogram1D(object):
             self._frequencies *= other
             self.overflow *= other
             self.underflow *= other
+            self._errors2 *= other
         else:
             raise RuntimeError("Histograms can be multiplied only by a constant.")
         return self
@@ -311,6 +391,7 @@ class Histogram1D(object):
             self._frequencies /= other
             self.overflow /= other
             self.underflow /= other
+            self._errors2 /= other
         else:
             raise RuntimeError("Histograms can be divided only by a constant.")
         return self
@@ -333,3 +414,45 @@ class Histogram1D(object):
             s += ", overflow={0}".format(self.overflow)
         s += ")"
         return s
+
+
+def get_histogram_data(data, bins, weights=None, keep_missed=True, validate_bins=True):
+    bins = bin_utils.make_bin_array(bins)    # Force correct bin array shape
+    if validate_bins and not bin_utils.is_rising(bins):
+        raise RuntimeError("Bins must be rising.")
+    if weights:
+        if weights.shape != data.shape:
+            raise RuntimeError("Weight must have the same shape as data")
+    else:
+        weights = np.ones(data.shape)
+    data = data.flatten()
+    weights = weights.flatten()
+    args = np.argsort(data)
+    data = data[args]
+    weights = weights[args]
+
+    frequencies = np.zeros(bins.shape[0], dtype=float)
+    errors2 = np.zeros(bins.shape[0], dtype=float)
+
+    for i, bin in enumerate(bins):
+        start = np.searchsorted(data, bin[0], side="left")
+        if i == len(bins) - 1:
+            stop = np.searchsorted(data, bin[1], side="right")
+        else:
+            stop = np.searchsorted(data, bin[1], side="left")
+        frequencies[i] = weights[start:stop].sum()
+        errors2[i] = np.power(weights[start:stop], 2).sum()
+
+    underflow = np.nan
+    overflow = np.nan
+
+    if keep_missed:
+        if bin_utils.is_consecutive(bins) or True:
+            start = np.searchsorted(data, bins[0][0], side="left")
+            stop = np.searchsorted(data, bins[-1][1], side="right")
+            underflow = weights[0:start].sum()
+            overflow = weights[stop:].sum()
+    else:
+        underflow = 0
+        overflow = 0
+    return dict(bins=bins, frequencies=frequencies, underflow=underflow, overflow=overflow, errors2=errors2)
