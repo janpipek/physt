@@ -206,6 +206,8 @@ class Histogram1D(object):
                 bar_kwargs = kwargs.copy()
                 if errors:
                     bar_kwargs["yerr"] = err_data
+                    if not "ecolor" in bar_kwargs:
+                        bar_kwargs["ecolor"] = "black"
                 axis.bar(self.bin_left_edges, data, self.bin_widths, **bar_kwargs)
             elif histtype == "scatter":
                 if errors:
@@ -216,9 +218,8 @@ class Histogram1D(object):
                 raise RuntimeError("Unknown histogram type: {0}".format(histtype))
 
             # Automatically limit to positive frequencies
-            ylim = (0, axis.get_ylim()[1])
-            if data.max() > ylim[1]:
-                ylim = (ylim[0], data.max() + (data.max() - ylim[0]) * 0.1)
+            ylim = axis.get_ylim()
+            ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
             axis.set_ylim(ylim)
         else:
             raise RuntimeError("Only matplotlib supported at the moment.")
