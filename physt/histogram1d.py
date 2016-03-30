@@ -25,6 +25,9 @@ class Histogram1D(object):
 
         self.underflow = kwargs.get("underflow", 0)
         self.overflow = kwargs.get("overflow", 0)
+
+        self.errors2 = kwargs.get("errors2", None)
+
         # TODO: if bins are not consecutive, overflow and underflow don't make any sense
 
     @property
@@ -76,6 +79,13 @@ class Histogram1D(object):
         Note: underflow values are not considered
         """
         return self._frequencies.cumsum()
+
+    @property
+    def errors(self):
+        if self.errors2:
+            return np.sqrt(self.errors2)
+        else:
+            return np.sqrt(self.frequencies)
 
     @property
     def total(self):
@@ -163,10 +173,10 @@ class Histogram1D(object):
     def bin_widths(self):
         return self.bin_right_edges - self.bin_left_edges
 
-    def plot(self, histtype='bar', cumulative=False, density=False, backend="matplotlib", axis=None, **kwargs):
+    def plot(self, histtype='bar', cumulative=False, density=False, errors=False, backend="matplotlib", axis=None, **kwargs):
         """Plot the histogram.
 
-        :param histtype: ‘bar’ | [‘step’] | 'scatter'
+        :param histtype: ‘bar’ | 'scatter'
         """
         # TODO: See http://matplotlib.org/1.5.0/examples/api/filled_step.html
         data = self
@@ -174,26 +184,34 @@ class Histogram1D(object):
             if cumulative:
                 data = (self / self.total).cumulative_frequencies
             else:
-                data = self.frequencies / self.total
+                data = self.densities
         else:
             if cumulative:
                 data = self.cumulative_frequencies
             else:
                 data = self.frequencies
+        if errors:
+            if cumulative:
+                raise NotImplementedError("Errors not implemented for cumulative plots.")
+            if density:
+                err_data = self.densities / self.frequencies * self.errors
+            else:
+                err_data = self.errors
 
         if backend == "matplotlib":
             if not axis:
                 import matplotlib.pyplot as plt
                 _, axis = plt.subplots()
-            # if histtype == "step":
-            # TODO: Fix for non-connected histograms
-            #     x = np.concatenate(([0.0], self.numpy_bins), axis=0)
-            #     y = np.concatenate(([0.0], self.values, [0]), axis=0)
-            #     axis.step(x, y, where="post", **kwargs)
             if histtype == "bar":
-                axis.bar(self.bin_left_edges, data, self.bin_widths, **kwargs)
+                bar_kwargs = kwargs.copy()
+                if errors:
+                    bar_kwargs["yerr"] = err_data
+                axis.bar(self.bin_left_edges, data, self.bin_widths, **bar_kwargs)
             elif histtype == "scatter":
-                axis.scatter(self.bin_centers, data, **kwargs)
+                if errors:
+                    axis.errorbar(self.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "o"), ecolor=kwargs.get("ecolor", "black"))
+                else:
+                    axis.scatter(self.bin_centers, data, **kwargs)
             else:
                 raise RuntimeError("Unknown histogram type: {0}".format(histtype))
 
