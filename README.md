@@ -1,5 +1,11 @@
 # physt
-P(i/y)thon h(i/y)stograms. Based on numpy.histogram but designed for humans(TM) on steroids(TM).
+
+P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram, but designed for humans(TM) on steroids(TM).
+
+The goal is to unify different concepts of histograms as occurring in numpy, pandas, matplotlib, ROOT, etc.
+and to create one representation that is easily manipulated with from the data point of view and at the same time provides
+nice integration into IPython notebook and various plotting options. In short, whatever you want to do with histograms,
+**physt** aims to be at your side.
 
 ## Simple example
 
@@ -27,7 +33,7 @@ See more in <https://github.com/janpipek/physt/blob/master/doc/Tutorial.ipynb>
 * Input: any numpy-array-like object
 * Keep underflow / overflow
 * Basic numeric operations (* / + -)
-* Items / slice selection [including mask arrays]
+* Items / slice selection (including mask arrays)
 * Add new values (fill)
 * Cumulative values, densities
 * Simple plotting (matplotlib)
