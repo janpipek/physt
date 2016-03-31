@@ -36,6 +36,7 @@ class Histogram1D(object):
                 raise RuntimeError("Values must have same dimension as bins.")
             self._frequencies = frequencies
 
+        self.keep_missed = kwargs.get("keep_missed", True)
         self.underflow = kwargs.get("underflow", 0)
         self.overflow = kwargs.get("overflow", 0)
 
@@ -210,9 +211,9 @@ class Histogram1D(object):
         if ixbin is None:
             self.overflow = np.nan
             self.underflow = np.nan
-        elif ixbin == -1:
+        elif ixbin == -1 and self.keep_missed:
             self.underflow += weight
-        elif ixbin == self.bin_count:
+        elif ixbin == self.bin_count and self.keep_missed:
             self.overflow += weight
         else:
             self._frequencies[ixbin] += weight
@@ -416,43 +417,72 @@ class Histogram1D(object):
         return s
 
 
-def get_histogram_data(data, bins, weights=None, keep_missed=True, validate_bins=True):
-    bins = bin_utils.make_bin_array(bins)    # Force correct bin array shape
+def calculate_frequencies(data, bins, weights=None, validate_bins=True, already_sorted=False):
+    """Get frequencies and bin errors from the data.
+
+    Parameters
+    ----------
+    data : array_like
+        Data items to work on.
+    bins : array_like
+        A set of bins.
+    weights : array_like, optional
+        Weights of the items.
+    validate_bins : bool, optional
+        If True (default), bins are validated to be in ascending order.
+    already_sorted : bool, optional
+        If True, the data being entered are already sorted, no need to sort them once more.
+
+    Returns
+    -------
+    frequencies : numpy.ndarray
+        Bin contents
+    errors2 : numpy.ndarray
+        Error squares of the bins
+    underflow : float
+        Weight of items smaller than the first bin
+    overflow : float
+        Weight of items larger than the last bin
+    """
+
+    # Ensure correct binning
+    bins = bin_utils.make_bin_array(bins)
     if validate_bins and not bin_utils.is_rising(bins):
         raise RuntimeError("Bins must be rising.")
+
+    # Create 1D arrays to work on
+    data = np.asarray(data).flatten()
     if weights:
+        weights = np.asarray(weights, dtype=float).flatten()
         if weights.shape != data.shape:
             raise RuntimeError("Weight must have the same shape as data")
     else:
-        weights = np.ones(data.shape)
-    data = data.flatten()
-    weights = weights.flatten()
-    args = np.argsort(data)
-    data = data[args]
-    weights = weights[args]
+        weights = np.ones(data.shape, dtype=int)
 
+    # Data sorting
+    if not already_sorted:
+        args = np.argsort(data)
+        data = data[args]
+        weights = weights[args]
+
+    # Fill frequencies and errors
     frequencies = np.zeros(bins.shape[0], dtype=float)
     errors2 = np.zeros(bins.shape[0], dtype=float)
-
-    for i, bin in enumerate(bins):
+    for xbin, bin in enumerate(bins):
         start = np.searchsorted(data, bin[0], side="left")
-        if i == len(bins) - 1:
+        if xbin == 0:
+            underflow = weights[0:start].sum()
+        if xbin == len(bins) - 1:
             stop = np.searchsorted(data, bin[1], side="right")
+            overflow = weights[stop:].sum()
         else:
             stop = np.searchsorted(data, bin[1], side="left")
-        frequencies[i] = weights[start:stop].sum()
-        errors2[i] = np.power(weights[start:stop], 2).sum()
+        frequencies[xbin] = weights[start:stop].sum()
+        errors2[xbin] = (weights[start:stop] ** 2).sum()
 
-    underflow = np.nan
-    overflow = np.nan
+    # Underflow and overflow don't make sense for unconsecutive binning.
+    if not bin_utils.is_consecutive(bins):
+        underflow = np.nan
+        overflow = np.nan
 
-    if keep_missed:
-        if bin_utils.is_consecutive(bins) or True:
-            start = np.searchsorted(data, bins[0][0], side="left")
-            stop = np.searchsorted(data, bins[-1][1], side="right")
-            underflow = weights[0:start].sum()
-            overflow = weights[stop:].sum()
-    else:
-        underflow = 0
-        overflow = 0
-    return dict(bins=bins, frequencies=frequencies, underflow=underflow, overflow=overflow, errors2=errors2)
+    return frequencies, errors2, underflow, overflow

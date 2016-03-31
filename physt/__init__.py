@@ -43,10 +43,14 @@ def histogram(data, bins=None, **kwargs):
             bins = binning.numpy_like(data, bins, **kwargs)
         elif callable(bins):
             bins = bins(data, **kwargs)
-        constructor_args = histogram1d.get_histogram_data(data,
-                                              bins=bins,
-                                              weights=kwargs.get("weights", None),
-                                              keep_missed=kwargs.get("keep_missed", True))
-        return histogram1d.Histogram1D(**constructor_args)
+        frequencies, errors2, underflow, overflow = histogram1d.calculate_frequencies(data,
+                                                             bins=bins,
+                                                             weights=kwargs.get("weights", None))
+        keep_missed = kwargs.get("keep_missed", True)
+        if not keep_missed:
+            underflow = 0
+            overflow = 0
+        return histogram1d.Histogram1D(bins=bins, frequencies=frequencies, errors2=errors2, overflow=overflow,
+                                        underflow=underflow, keep_missed=keep_missed)
     else:
         return histogram(np.array(data), bins, **kwargs)
