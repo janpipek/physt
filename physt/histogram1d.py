@@ -240,6 +240,8 @@ class Histogram1D(object):
             Currently, this has to be matplotlib, but other backends (d3.js or bokeh) are planned.
         ax: matplotlib.axes.Axes, optional
             The (matplotlib) axes to draw into. If not set, a default one is created.
+        figure: bokeh figure
+            The bokeh figure to draw into.
 
         You can also specify arbitrary matplotlib arguments, they are forwarded to the respective plotting methods.
 
@@ -311,27 +313,28 @@ class Histogram1D(object):
                     "top" : data,
                     "bottom" : np.zeros_like(data),
                     "left" : self.bin_left_edges,
-                    "right" : self.bin_right_edges,
-                   #  "errors" : err_data
+                    "right" : self.bin_right_edges
                 })
                 tooltips = [
                     ("bin", "@left..@right"),
                     ("frequency", "@top")
                 ]
-                if errors:
-                    tooltips.append(("error", "@errors"))
                 hover = HoverTool(tooltips=tooltips)
-                p = figure(tools=[hover])
+                p = kwargs.get("figure", figure(tools=[hover]))
                 p.quad(
                     "left", "right", "top", "bottom",
                     source=plot_data,
                     color=kwargs.get("color", "blue"),
                     line_width=kwargs.get("lw", 1),
-                    line_color=kwargs.get("line_color", "black")
+                    line_color=kwargs.get("line_color", "black"),
+                    fill_alpha=kwargs.get("alpha", 1),
+                    line_alpha=kwargs.get("alpha", 1),
                 )
             else:
                 raise RuntimeError("Unknown histogram type: {0}".format(histtype))
-            show(p)
+            if kwargs.get("show", True):
+                show(p)
+            return p
         else:
             raise RuntimeError("Only matplotlib supported at the moment.")
 
