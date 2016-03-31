@@ -20,7 +20,7 @@ def make_bin_array(bins, dimension=1):
     array([[0, 1],
            [2, 3]])
     """
-    bins = np.array(bins)
+    bins = np.asarray(bins)
     if dimension == 1:
         if bins.ndim == 1:
             return np.hstack((bins[:-1,np.newaxis], bins[1:,np.newaxis]))

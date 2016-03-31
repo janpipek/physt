@@ -25,6 +25,10 @@ hist.plot()
 
 See more in <https://github.com/janpipek/physt/blob/master/doc/Tutorial.ipynb>
 
+## Installation
+
+`pip install physt`
+
 ## Features
 
 ### Implemented
