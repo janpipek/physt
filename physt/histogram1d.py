@@ -268,6 +268,8 @@ class Histogram1D(object):
                 err_data = self.densities / self.frequencies * self.errors
             else:
                 err_data = self.errors
+        else:
+            err_data = None
 
         if backend == "matplotlib":
             if not ax:
@@ -292,6 +294,44 @@ class Histogram1D(object):
             ylim = ax.get_ylim()
             ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
             ax.set_ylim(ylim)
+        elif backend == "bokeh":
+            from bokeh.plotting import figure, output_file, show
+            from bokeh.charts import Bar, Scatter, show
+            from bokeh.models import HoverTool, Range1d
+            from bokeh.models.sources import ColumnDataSource
+
+            if histtype == "scatter":
+                plot_data = {
+                    "x" : self.bin_centers,
+                    "y" : data
+                }
+                p = Scatter(plot_data, x='x', y='y', **kwargs)
+            elif histtype == "bar":
+                plot_data = ColumnDataSource(data={
+                    "top" : data,
+                    "bottom" : np.zeros_like(data),
+                    "left" : self.bin_left_edges,
+                    "right" : self.bin_right_edges,
+                   #  "errors" : err_data
+                })
+                tooltips = [
+                    ("bin", "@left..@right"),
+                    ("frequency", "@top")
+                ]
+                if errors:
+                    tooltips.append(("error", "@errors"))
+                hover = HoverTool(tooltips=tooltips)
+                p = figure(tools=[hover])
+                p.quad(
+                    "left", "right", "top", "bottom",
+                    source=plot_data,
+                    color=kwargs.get("color", "blue"),
+                    line_width=kwargs.get("lw", 1),
+                    line_color=kwargs.get("line_color", "black")
+                )
+            else:
+                raise RuntimeError("Unknown histogram type: {0}".format(histtype))
+            show(p)
         else:
             raise RuntimeError("Only matplotlib supported at the moment.")
 
