@@ -1,5 +1,11 @@
 # physt
-P(i/y)thon h(i/y)stograms. 
+
+P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram, but designed for humans(TM) on steroids(TM).
+
+The goal is to unify different concepts of histograms as occurring in numpy, pandas, matplotlib, ROOT, etc.
+and to create one representation that is easily manipulated with from the data point of view and at the same time provides
+nice integration into IPython notebook and various plotting options. In short, whatever you want to do with histograms,
+**physt** aims to be at your side.
 
 ## Simple example
 
@@ -17,16 +23,35 @@ hist.plot()
 
 ![Heights plot](doc/heights.png)
 
+See more in <https://github.com/janpipek/physt/blob/master/doc/Tutorial.ipynb>
+
+## Installation
+
+`pip install physt`
+
 ## Features
 
 ### Implemented
 
+* 1D histograms
 * Input: any numpy-array-like object
+* Keep underflow / overflow
+* Basic numeric operations (* / + -)
+* Items / slice selection (including mask arrays)
+* Add new values (fill)
+* Cumulative values, densities
+* Simple plotting (matplotlib)
 
 ### Planned
 
-* Normalization
-* Add new values (with heights)
-* Underflow / overflow
-* Stacked histograms
+* Algorithms for optimized binning
+  - human-friendly
+  - mathematical
+* Rebinning
+  - using reference to original data
+  - merging bins
+* Statistics (based on original data)?
+* Stacked histograms (with names)
 * Input: pandas.Series, pandas.DataFrame, ...
+* More plotting backends
+* 2D histograms, (ND)-histograms
