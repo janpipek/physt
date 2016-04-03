@@ -439,6 +439,16 @@ class Histogram1D(object):
             raise RuntimeError("Histograms can be divided only by a constant.")
         return self
 
+    def __array__(self):
+        """Convert to numpy array.
+
+        Return
+        ------
+        arr: array
+            The array of frequencies
+        """
+        return self.frequencies
+
     def to_dataframe(self):
         """Convert to pandas DataFrame.
         """
@@ -452,6 +462,39 @@ class Histogram1D(object):
             },
             columns=["left", "right", "frequency", "error"])
         return df
+
+    def to_xarray(self):
+        """Convert to xarray.Dataset"""
+        import xarray as xr
+        data_vars = {
+            "frequencies": xr.DataArray(self.frequencies, dims="bin"),
+            "errors2": xr.DataArray(self.errors2, dims="bin"),
+            "bins": xr.DataArray(self.bins, dims=("bin", "x01"))
+        }
+        coords = { }
+        attrs = {
+            "underflow": self.underflow,
+            "overflow": self.overflow,
+            "keep_missed": self.keep_missed
+        }
+        return xr.Dataset(data_vars, coords, attrs)
+
+    @classmethod
+    def from_xarray(cls, arr):
+        """Convert form xarray.Dataset
+
+        Parameters
+        ----------
+        arr: xarray.Dataset
+            The data in xarray representation
+        """
+        kwargs = {'frequencies': arr["frequencies"],
+                  'bins': arr["bins"],
+                  'errors2': arr["errors2"],
+                  'overflow': arr.attrs["overflow"],
+                  'underflow': arr.attrs["underflow"],
+                  'keep_missed': arr.attrs["keep_missed"]}
+        return cls(**kwargs)
 
     def to_json(self, path=None):
         from collections import OrderedDict
@@ -480,9 +523,6 @@ class Histogram1D(object):
             with open(path, "r") as f:
                 data = json.load(f)
         return cls(**data)
-
-    def __array__(self):
-        return self.frequencies
 
     def __repr__(self):
         s = "{0}(bins={1}, total={2}".format(
