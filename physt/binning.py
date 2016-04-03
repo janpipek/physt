@@ -16,7 +16,7 @@ def numpy_like(data, bins=10, range=None, **kwargs):
             stop = data.max()
             return np.linspace(start, stop, bins + 1)
     elif np.iterable(bins):
-        return np.array(bins).flatten()
+        return np.asarray(bins).flatten()
     else:
         # Some numpy edge case
         _, bins = np.histogram(data, bins, **kwargs)
@@ -27,8 +27,14 @@ def exponential(data, bins=None, range=None, **kwargs):
     if bins is None:
         bins = ideal_bin_count(data)
     if range is None:
-        range = (data.min(), data.max())
+        range = (np.log10(data.min()), np.log10(data.max()))
     return np.logspace(range[0], range[1], bins)
+
+
+def quantile(data, bins=None, min_quantile=0.0, max_quantile=1.0):
+    if bins is None:
+        bins = ideal_bin_count(data)
+    return np.percentile(data, np.linspace(min_quantile * 100, max_quantile * 100, bins + 1))
 
 
 def ideal_bin_count(data, method="default"):
@@ -41,10 +47,12 @@ def ideal_bin_count(data, method="default"):
     elif method == "sturges":
         return np.ceil(np.log2(n)) + 1
     elif method == "rice":
-        return np.ceil(2 * np.pow(n, 1 / 3))
+        return np.ceil(2 * np.power(n, 1 / 3))
 
 
 methods = {
     "numpy_like" : numpy_like,
     "exponential" : exponential
 }
+
+bincount_methods = ["default", "sturges", "rice"]
