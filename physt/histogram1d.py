@@ -18,7 +18,7 @@ class Histogram1D(object):
         ----------
 
         """
-        bins = np.array(bins)
+        bins = bin_utils.make_bin_array(bins)
         if bins.ndim == 1:       # Numpy-style
             self._bins = np.hstack((bins[:-1,np.newaxis], bins[1:,np.newaxis]))
         elif bins.ndim == 2:     # Tuple-style
@@ -39,10 +39,7 @@ class Histogram1D(object):
         self.keep_missed = kwargs.get("keep_missed", True)
         self.underflow = kwargs.get("underflow", 0)
         self.overflow = kwargs.get("overflow", 0)
-
         self._errors2 = kwargs.get("errors2", self.frequencies.copy())
-
-        # TODO: if bins are not consecutive, overflow and underflow don't make any sense
 
     @property
     def bins(self):
@@ -361,9 +358,11 @@ class Histogram1D(object):
     def __eq__(self, other):
         if not isinstance(other, Histogram1D):
             return False
-        if not np.array_equal(other.bins, self.bins):
+        if not np.allclose(other.bins, self.bins):
             return False
-        if not np.array_equal(other.frequencies, self.frequencies):
+        if not np.allclose(other.frequencies, self.frequencies):
+            return False
+        if not np.allclose(other.errors2, self.errors2):
             return False
         if not other.overflow == self.overflow:
             return False
@@ -441,13 +440,49 @@ class Histogram1D(object):
         return self
 
     def to_dataframe(self):
-        """Convert to pandas DataFrame."""
-        # TODO Include underflow, overflow
+        """Convert to pandas DataFrame.
+        """
         import pandas as pd
-        from collections import OrderedDict
-        df = pd.DataFrame({"left": self.bin_left_edges, "right": self.bin_right_edges, "frequency": self.frequencies},
-                          columns=["left", "right", "frequency"])
+        df = pd.DataFrame(
+            {
+                "left": self.bin_left_edges,
+                "right": self.bin_right_edges,
+                "frequency": self.frequencies,
+                "error": self.errors,
+            },
+            columns=["left", "right", "frequency", "error"])
         return df
+
+    def to_json(self, path=None):
+        from collections import OrderedDict
+        import json
+        data = OrderedDict()
+        data["bins"] = self.bins.tolist()
+        data["frequencies"] = self.frequencies.tolist()
+        data["errors2"] = self.errors2.tolist()
+        data["keep_missed"] = self.keep_missed
+        data["underflow"] = float(self.underflow)
+        data["overflow"] = float(self.overflow)
+
+        text = json.dumps(data)
+        if path:
+            with open(path, "w", encoding="ascii") as f:
+                f.write(text)
+        return text
+
+    @classmethod
+    def from_json(cls, text=None, path=None):
+        import os
+        import json
+        if text:
+            data = json.loads(text)
+        else:
+            with open(path, "r") as f:
+                data = json.load(f)
+        return cls(**data)
+
+    def __array__(self):
+        return self.frequencies
 
     def __repr__(self):
         s = "{0}(bins={1}, total={2}".format(
@@ -490,8 +525,11 @@ def calculate_frequencies(data, bins, weights=None, validate_bins=True, already_
 
     # Ensure correct binning
     bins = bin_utils.make_bin_array(bins)
-    if validate_bins and not bin_utils.is_rising(bins):
-        raise RuntimeError("Bins must be rising.")
+    if validate_bins:
+        if bins.shape[0] == 0:
+            raise RuntimeError("Cannot have histogram with 0 bins.")
+        if not bin_utils.is_rising(bins):
+            raise RuntimeError("Bins must be rising.")
 
     # Create 1D arrays to work on
     data = np.asarray(data).flatten()

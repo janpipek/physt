@@ -28,6 +28,8 @@ def make_bin_array(bins, dimension=1):
             if bins.shape[1] != 2:
                 raise RuntimeError("Binning scheme with ndim==2 must have 2 columns")
             return bins
+        else:
+            raise RuntimeError("Binning scheme must have ndim==1 or ndim==2")
     else:
         raise NotImplementedError("Binning for multi-dimensional histograms not yet implemented.")
 
