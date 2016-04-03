@@ -1,4 +1,5 @@
 import numpy as np
+from .bin_utils import make_bin_array
 
 
 def numpy_like(data=None, bins=10, range=None, **kwargs):
@@ -75,6 +76,25 @@ def fixed_width(data, bin_width, align=True):
         min = (min // align) * align
     bincount = np.ceil((data.max() - min) / bin_width).astype(int)
     return np.arange(bincount + 1) * bin_width + min
+
+
+def calculate_bins(array, _=None, *args, **kwargs):
+    """Find optimal binning from arguments."""
+    if _ is None:
+        bin_count = kwargs.pop("bins", ideal_bin_count(data=array))
+        bins = numpy_like(array, bin_count, *args, **kwargs)
+    elif isinstance(_, int):
+        bins = numpy_like(array, _, *args, **kwargs)
+    elif isinstance(_, str):
+        method = binning_methods[_]
+        bins = method(array, *args, **kwargs)
+    elif callable(_):
+        bins = _(array, *args, **kwargs)
+    elif np.iterable(_):
+        bins = _
+    else:
+        raise RuntimeError("Binning {0} not understood.".format(_))
+    return make_bin_array(bins)
 
 
 binning_methods = {

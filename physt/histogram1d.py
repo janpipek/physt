@@ -39,6 +39,8 @@ class Histogram1D(object):
         self.keep_missed = kwargs.get("keep_missed", True)
         self.underflow = kwargs.get("underflow", 0)
         self.overflow = kwargs.get("overflow", 0)
+        self.name = kwargs.get("name", None)
+        self.axis_name = kwargs.get("axis_name", self.name)
         self._errors2 = kwargs.get("errors2", self.frequencies.copy())
 
     @property
@@ -292,6 +294,10 @@ class Histogram1D(object):
             # Automatically limit to positive frequencies
             ylim = ax.get_ylim()
             ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
+            if self.name:
+                ax.set_title(self.name)
+            if self.axis_name:
+                ax.set_xlabel(self.axis_name)
             ax.set_ylim(ylim)
         elif backend == "bokeh":
             from bokeh.plotting import figure, output_file, show
@@ -353,7 +359,8 @@ class Histogram1D(object):
             frequencies = None
             underflow = 0
             overflow = 0
-        return self.__class__(np.copy(self.bins), frequencies, underflow=underflow, overflow=overflow)
+        return self.__class__(np.copy(self.bins), frequencies, underflow=underflow, overflow=overflow,
+                              name=self.name, axis_name=self.axis_name, keep_missed=self.keep_missed)
 
     def __eq__(self, other):
         if not isinstance(other, Histogram1D):
@@ -367,6 +374,10 @@ class Histogram1D(object):
         if not other.overflow == self.overflow:
             return False
         if not other.underflow == self.underflow:
+            return False
+        if not other.name == self.name:
+            return False
+        if not other.axis_name == self.axis_name:
             return False
         return True
 

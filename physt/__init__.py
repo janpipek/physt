@@ -2,7 +2,7 @@ from . import binning, bin_utils, histogram1d
 
 import numpy as np
 
-__version__ = str('0.1.0')
+__version__ = str('0.2')
 
 
 def histogram(data=None, _=None, *args, **kwargs):
@@ -26,6 +26,10 @@ def histogram(data=None, _=None, *args, **kwargs):
         (as numpy.histogram)
     keep_missed: bool, optional
         store statistics about how many values were lower than limits and how many higher than limits (default: True)
+    name: str
+        name of the histogram
+    axis_name: str
+        name of the variable on x axis
 
     Other numpy.histogram parameters are excluded, see the methods of the Histogram1D class itself.
 
@@ -38,38 +42,31 @@ def histogram(data=None, _=None, *args, **kwargs):
     --------
     numpy.histogram
     """
-    if isinstance(data, np.ndarray):
-        weights = kwargs.get("weights", None)
-        keep_missed = kwargs.get("keep_missed", True)
+    if isinstance(data, tuple) and isinstance(data[0], str):    # Works for groupby DataSeries
+        return histogram(data[1], _, *args, name=data[0], **kwargs)
+    else:
+        # Collect arguments (not to send them to binning algorithms)
+        weights = kwargs.pop("weights", None)
+        keep_missed = kwargs.pop("keep_missed", True)
+        name = kwargs.pop("name", None)
+        axis_name = kwargs.pop("axis_name", None)
+
+        # Convert to array
+        array = np.asarray(data).flatten()
 
         # Get binning
-        if _ is None:
-            bin_count = kwargs.pop("bins", binning.ideal_bin_count(data=data))
-            bins = binning.numpy_like(data, bin_count, *args, **kwargs)
-        elif isinstance(_, int):
-            bins = binning.numpy_like(data, _, *args, **kwargs)
-        elif isinstance(_, str):
-            method = binning.binning_methods[_]
-            bins = method(data, *args, **kwargs)
-        elif callable(_):
-            bins = _(data, *args, **kwargs)
-        elif np.iterable(_):
-            bins = _
-        else:
-            raise RuntimeError("Binning {0} not understood.".format(_))
-        bins = bin_utils.make_bin_array(bins)
+        bins = binning.calculate_bins(array, _, *args, **kwargs)
 
         # Get frequencies
-        frequencies, errors2, underflow, overflow = histogram1d.calculate_frequencies(data,
+        frequencies, errors2, underflow, overflow = histogram1d.calculate_frequencies(array,
                                                                                       bins=bins,
                                                                                       weights=weights)
 
         # Construct the object
-        keep_missed = kwargs.get("keep_missed", True)
         if not keep_missed:
             underflow = 0
             overflow = 0
+        if hasattr(data, "name") and not axis_name:
+            axis_name = data.name
         return histogram1d.Histogram1D(bins=bins, frequencies=frequencies, errors2=errors2, overflow=overflow,
-                                       underflow=underflow, keep_missed=keep_missed)
-    else:
-        return histogram(np.array(data), _, **kwargs)
+                                       underflow=underflow, keep_missed=keep_missed, name=name, axis_name=axis_name)
