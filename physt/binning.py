@@ -66,25 +66,6 @@ def quantile(data, bins=None, qrange=(0.0, 1.0)):
     return np.percentile(data, np.linspace(qrange[0] * 100, qrange[1] * 100, bins + 1))
 
 
-def ideal_bin_count(data, method="default"):
-    """A theoretically ideal bin count.
-
-    Returns
-    -------
-    bincount: int
-    """
-    n = data.size
-    if method == "default":
-        if n <= 32:
-            return 7
-        else:
-            return ideal_bin_count(data, "sturges")
-    elif method == "sturges":
-        return np.ceil(np.log2(n)) + 1
-    elif method == "rice":
-        return np.ceil(2 * np.power(n, 1 / 3))
-
-
 def fixed_width(data, bin_width, align=True):
     if bin_width <= 0:
         raise RuntimeError("Bin width must be > 0.")
@@ -106,6 +87,8 @@ binning_methods = {
 
 try:
     from astropy.stats.histogram import histogram, knuth_bin_width, freedman_bin_width, scott_bin_width, bayesian_blocks
+    import warnings
+    warnings.filterwarnings("ignore", module="astropy\..*")
 
     def astropy_blocks(data, range=None, **kwargs):
         if range is not None:
@@ -139,4 +122,49 @@ except:
     pass     # astropy is not required
 
 
-bincount_methods = ["default", "sturges", "rice"]
+def ideal_bin_count(data, method="default"):
+    """A theoretically ideal bin count.
+
+    Parameters
+    ----------
+    data: array_like or None
+        Data to work on. Most methods don't use this.
+    method: str
+        Name of the method to apply, available values:
+          - default
+          - sqrt
+          - sturges
+          - doane
+
+    Returns
+    -------
+    bincount: int
+        Number of bins, always >= 1
+
+    See also
+    --------
+    - https://en.wikipedia.org/wiki/Histogram
+    """
+    n = data.size
+    if n < 1:
+        return 1
+    if method == "default":
+        if n <= 32:
+            return 7
+        else:
+            return ideal_bin_count(data, "sturges")
+    elif method == "sqrt":
+        return np.ceil(np.sqrt(n))
+    elif method == "sturges":
+        return np.ceil(np.log2(n)) + 1
+    elif method == "doane":
+        if n < 3:
+            return 1
+        from scipy.stats import skew
+        sigma = np.sqrt(6 * (n-2) / (n + 1) * (n + 3))
+        return np.ceil(1 + np.log2(n) + np.log2(1 + np.abs(skew(data)) / sigma))
+    elif method == "rice":
+        return np.ceil(2 * np.power(n, 1 / 3))
+
+
+bincount_methods = ["default", "sturges", "rice", "sqrt", "doane"]
