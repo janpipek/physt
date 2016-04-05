@@ -61,6 +61,8 @@ class Histogram1D(object):
             frequencies = np.array(frequencies, dtype=float)
             if frequencies.shape != (self._bins.shape[0],):
                 raise RuntimeError("Values must have same dimension as bins.")
+            if np.any(frequencies < 0):
+                raise RuntimeError("Cannot have negative frequencies.")
             self._frequencies = frequencies
 
         self.keep_missed = kwargs.get("keep_missed", True)
@@ -68,7 +70,10 @@ class Histogram1D(object):
         self.overflow = kwargs.get("overflow", 0)
         self.name = kwargs.get("name", None)
         self.axis_name = kwargs.get("axis_name", self.name)
-        self._errors2 = kwargs.get("errors2", self.frequencies.copy())
+
+        self._errors2 = np.asarray(kwargs.get("errors2", self.frequencies.copy()))
+        if np.any(self._errors2 < 0):
+            raise  RuntimeError("Cannot have negative squared errors.")
 
     @property
     def bins(self):
@@ -411,6 +416,7 @@ class Histogram1D(object):
             if self.axis_name:
                 ax.set_xlabel(self.axis_name)
             ax.set_ylim(ylim)
+            return ax
         elif backend == "bokeh":
             from bokeh.plotting import figure, output_file, show
             from bokeh.charts import Bar, Scatter, show
@@ -452,8 +458,6 @@ class Histogram1D(object):
             return p
         else:
             raise RuntimeError("Only matplotlib supported at the moment.")
-
-        return ax
 
     def copy(self, include_frequencies=True):
         """A deep copy of the histogram.
@@ -729,6 +733,10 @@ def calculate_frequencies(data, bins, weights=None, validate_bins=True, already_
         Weight of items smaller than the first bin
     overflow : float
         Weight of items larger than the last bin
+
+    Note
+    ----
+    Checks that the bins are in a correct order (not necessarily consecutive)
     """
 
     # Ensure correct binning
