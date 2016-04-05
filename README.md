@@ -34,24 +34,26 @@ See more in <https://github.com/janpipek/physt/blob/master/doc/Tutorial.ipynb>
 ### Implemented
 
 * 1D histograms
-* Input: any numpy-array-like object
+* Understands numpy-array-like object
 * Keep underflow / overflow
 * Basic numeric operations (* / + -)
 * Items / slice selection (including mask arrays)
 * Add new values (fill)
 * Cumulative values, densities
-* Simple plotting (matplotlib)
-
-### Planned
-
+* Simple plotting (matplotlib, bokeh)
 * Algorithms for optimized binning
   - human-friendly
   - mathematical
+* IO, conversions
+  - I/O xarray.DataSet
+  - I/O JSON
+  - O pandas.DataFrame
+
+### Planned
 * Rebinning
   - using reference to original data
   - merging bins
 * Statistics (based on original data)?
 * Stacked histograms (with names)
-* Input: pandas.Series, pandas.DataFrame, ...
 * More plotting backends
 * 2D histograms, (ND)-histograms
