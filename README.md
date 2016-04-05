@@ -23,7 +23,11 @@ hist.plot()
 
 ![Heights plot](doc/heights.png)
 
-See more in <https://github.com/janpipek/physt/blob/master/doc/Tutorial.ipynb>
+See more in docstring's and notebooks:
+
+- Basic tutorial: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Tutorial.ipynb>
+- Binning: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Binning.ipynb>
+- Bokeh plots: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Bokeh%20examples.ipynb>
 
 ## Installation
 
