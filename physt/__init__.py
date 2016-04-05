@@ -46,6 +46,8 @@ def histogram(data=None, _=None, *args, **kwargs):
     """
     if isinstance(data, tuple) and isinstance(data[0], str):    # Works for groupby DataSeries
         return histogram(data[1], _, *args, name=data[0], **kwargs)
+    elif type(data).__name__ == "DataFrame":
+        raise RuntimeError("Cannot create histogram from a pandas DataFrame. Use Series.")
     else:
         # Collect arguments (not to send them to binning algorithms)
         weights = kwargs.pop("weights", None)
