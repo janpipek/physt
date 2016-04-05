@@ -143,11 +143,37 @@ def fixed_width_bins(data, bin_width, align=True):
     return np.arange(bincount + 1) * bin_width + min
 
 
+def integer_bins(data, range=None):
+    """Binning schema with bins centered around integers.
+
+    Designed for integer values. Bins are centered around integers
+    like [0.5, 1.5)
+
+    Parameters
+    ----------
+    range: Optional[Tuple[int]]
+        min (included) and max integer (excluded) bin
+
+     Returns
+    -------
+    numpy.ndarray
+    """
+    if range:
+        min = int(range[0]) - 0.5
+        max = int(range[1]) - 0.5
+    else:
+        min = np.floor(data.min() - 0.5) + 0.5
+        max = np.ceil(data.max() + 0.5) - 0.5
+    bincount = np.round(max - min)
+    return np.arange(bincount + 1) + min
+
+
 binning_methods = {
     "numpy_like" : numpy_bins,
     "exponential" : exponential_bins,
     "quantile": quantile_bins,
     "fixed_width": fixed_width_bins,
+    "integer": integer_bins
 }
 
 try:
