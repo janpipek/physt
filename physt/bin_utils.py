@@ -11,6 +11,10 @@ def make_bin_array(bins, dimension=1):
     dimension: int, optional
         The dimension of the bin space.
 
+    Returns
+    -------
+    numpy.ndarray
+
     Examples
     --------
     >>> make_bin_array([0, 1, 2], dimension=1)
@@ -38,6 +42,10 @@ def is_rising(bins):
     """Check whether the bins are in raising order.
 
     Does not check if the bins are consecutive.
+
+    Returns
+    -------
+    bool
     """
     bins = make_bin_array(bins)
     if np.any(bins[:,0] >= bins[:,1]):
@@ -51,6 +59,10 @@ def is_consecutive(bins, rtol=1.e-5, atol=1.e-8):
     """Check whether the bins are consecutive (edges match).
 
     Does not check if the bins are in rising order.
+
+    Returns
+    -------
+    bool
     """
     if bins.ndim == 1:
         return True

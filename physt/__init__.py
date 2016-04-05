@@ -24,7 +24,7 @@ def histogram(data=None, _=None, *args, **kwargs):
         If string => use named binning method (+ args, kwargs)
     weights: array_like, optional
         (as numpy.histogram)
-    keep_missed: bool, optional
+    keep_missed: Optional[bool]
         store statistics about how many values were lower than limits and how many higher than limits (default: True)
     name: str
         name of the histogram
@@ -35,12 +35,14 @@ def histogram(data=None, _=None, *args, **kwargs):
 
     Returns
     -------
-    Histogram1D or callable
-        - if data is None -> callable
+    Histogram1D
 
     See Also
     --------
     numpy.histogram
+
+    Examples
+    --------
     """
     if isinstance(data, tuple) and isinstance(data[0], str):    # Works for groupby DataSeries
         return histogram(data[1], _, *args, name=data[0], **kwargs)

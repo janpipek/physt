@@ -1,14 +1,26 @@
+"""Different binning algorithms/schemas for the histograms."""
+
 import numpy as np
 from .bin_utils import make_bin_array
 
 
 def calculate_bins(array, _=None, *args, **kwargs):
-    """Find optimal binning from arguments."""
+    """Find optimal binning from arguments.
+
+    Parameters
+    ----------
+    array: arraylike
+    _: int or str or Callable or arraylike or Iterable
+
+    Returns
+    -------
+    numpy.ndarray
+    """
     if _ is None:
         bin_count = kwargs.pop("bins", ideal_bin_count(data=array))
-        bins = numpy_like(array, bin_count, *args, **kwargs)
+        bins = numpy_bins(array, bin_count, *args, **kwargs)
     elif isinstance(_, int):
-        bins = numpy_like(array, _, *args, **kwargs)
+        bins = numpy_bins(array, _, *args, **kwargs)
     elif isinstance(_, str):
         method = binning_methods[_]
         bins = method(array, *args, **kwargs)
@@ -21,8 +33,8 @@ def calculate_bins(array, _=None, *args, **kwargs):
     return make_bin_array(bins)
 
 
-def numpy_like(data=None, bins=10, range=None, **kwargs):
-    """Create same bins as numpy.histogram would do.
+def numpy_bins(data=None, bins=10, range=None, **kwargs):
+    """Binning schema working as numpy.histogram.
 
     Parameters
     ----------
@@ -31,6 +43,10 @@ def numpy_like(data=None, bins=10, range=None, **kwargs):
     bins: int or array_like
     range: tuple
         minimum and maximum
+
+    Returns
+    -------
+    numpy.ndarray
 
     See Also
     --------
@@ -51,7 +67,24 @@ def numpy_like(data=None, bins=10, range=None, **kwargs):
         return bins
 
 
-def exponential(data=None, bins=None, range=None, **kwargs):
+def exponential_bins(data=None, bins=None, range=None, **kwargs):
+    """Binning schema with exponentially distributed bins.
+
+    Parameters
+    ----------
+    bins: Optional[int]
+        Number of bins
+    range: Optional[tuple]
+        The log10 of first left edge and last right edge.
+
+    Returns
+    -------
+    numpy.ndarray
+
+    See also
+    --------
+    numpy.logspace
+    """
     if bins is None:
         bins = ideal_bin_count(data)
     if range is None:
@@ -59,30 +92,62 @@ def exponential(data=None, bins=None, range=None, **kwargs):
     return np.logspace(range[0], range[1], bins+1)
 
 
-def quantile(data, bins=None, qrange=(0.0, 1.0)):
-    """Binning scheme based on quantile ranges."""
+def quantile_bins(data, bins=None, qrange=(0.0, 1.0)):
+    """Binning schema based on quantile ranges.
+
+    This binning finds equally spaced quantiles. This should lead to
+    all bins having roughly the same frequencies.
+
+    Note: weights are not (yet) take into account for calculating
+    quantiles.
+
+    Parameters
+    ----------
+    bins: Optional[int]
+        Number of bins
+    qrange: Optional[tuple]
+        Two floats as minimum and maximum quantile (default: 0.0, 1.0)
+
+    Returns
+    -------
+    numpy.ndarray
+    """
     if bins is None:
         bins = ideal_bin_count(data)
     return np.percentile(data, np.linspace(qrange[0] * 100, qrange[1] * 100, bins + 1))
 
 
-def fixed_width(data, bin_width, align=True):
+def fixed_width_bins(data, bin_width, align=True):
+    """Binning schema with predefined bin width.
+
+    Parameters
+    ----------
+    bin_width: float
+    align: bool or float
+        Align to a "friendly" initial value. If Ture
+
+    Returns
+    -------
+    numpy.ndarray
+    """
     if bin_width <= 0:
         raise RuntimeError("Bin width must be > 0.")
     if align == True:
         align = bin_width
     min = data.min()
+    max = data.max()
     if align:
         min = (min // align) * align
-    bincount = np.ceil((data.max() - min) / bin_width).astype(int)
+        max = np.ceil(max / align) * align
+    bincount = np.round((max - min) / bin_width).astype(int)   # (max - min) should be int or very close to it
     return np.arange(bincount + 1) * bin_width + min
 
 
 binning_methods = {
-    "numpy_like" : numpy_like,
-    "exponential" : exponential,
-    "quantile": quantile,
-    "fixed_width": fixed_width,
+    "numpy_like" : numpy_bins,
+    "exponential" : exponential_bins,
+    "quantile": quantile_bins,
+    "fixed_width": fixed_width_bins,
 }
 
 try:
@@ -90,31 +155,99 @@ try:
     import warnings
     warnings.filterwarnings("ignore", module="astropy\..*")
 
-    def astropy_blocks(data, range=None, **kwargs):
+    def astropy_bayesian_blocks(data, range=None, **kwargs):
+        """Binning schema based on Bayesian blocks (from astropy).
+
+        Computationally expensive for large data sets.
+
+        Parameters
+        ----------
+        data: arraylike
+        range: Optional[tuple]
+
+        Returns
+        -------
+        numpy.ndarray
+
+        See also
+        --------
+        astropy.stats.histogram.bayesian_blocks
+        astropy.stats.histogram.histogram
+        """
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         edges = bayesian_blocks(data)
         return edges
 
     def astropy_knuth(data, range=None, **kwargs):
+        """Binning schema based on Knuth's rule (from astropy).
+
+        Computationally expensive for large data sets.
+
+        Parameters
+        ----------
+        data: arraylike
+        range: Optional[tuple]
+
+        Returns
+        -------
+        numpy.ndarray
+
+        See also
+        --------
+        astropy.stats.histogram.knuth_bin_width
+        astropy.stats.histogram.histogram
+        """
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         _, edges = knuth_bin_width(data, True)
         return edges
 
     def astropy_scott(data, range=None, **kwargs):
+        """Binning schema based on Scott's rule (from astropy).
+
+        Parameters
+        ----------
+        data: arraylike
+        range: Optional[tuple]
+
+        Returns
+        -------
+        numpy.ndarray
+
+        See also
+        --------
+        astropy.stats.histogram.scott_bin_width
+        astropy.stats.histogram.histogram
+        """
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         _, edges = scott_bin_width(data, True)
         return edges
 
     def astropy_freedman(data, range=None, **kwargs):
+        """Binning schema based on Freedman-Diaconis rule (from astropy).
+
+        Parameters
+        ----------
+        data: arraylike
+        range: Optional[tuple]
+
+        Returns
+        -------
+        numpy.ndarray
+
+        See also
+        --------
+        astropy.stats.histogram.freedman_bin_width
+        astropy.stats.histogram.histogram
+        """
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         _, edges = freedman_bin_width(data, True)
         return edges
 
-    binning_methods["astropy_blocks"] = astropy_blocks
+    binning_methods["astropy_blocks"] = astropy_bayesian_blocks
     binning_methods["astropy_knuth"] = astropy_knuth
     binning_methods["astropy_scott"] = astropy_scott
     binning_methods["astropy_freedman"] = astropy_freedman
@@ -135,15 +268,12 @@ def ideal_bin_count(data, method="default"):
           - sqrt
           - sturges
           - doane
+        See https://en.wikipedia.org/wiki/Histogram for the description
 
     Returns
     -------
-    bincount: int
+    int
         Number of bins, always >= 1
-
-    See also
-    --------
-    - https://en.wikipedia.org/wiki/Histogram
     """
     n = data.size
     if n < 1:

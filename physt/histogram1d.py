@@ -10,13 +10,40 @@ class Histogram1D(object):
     The bins need not be consecutive. However, some functionality may not be available
     for non-consecutive bins (like keeping information about underflow and overflow).
 
+    Attributes
+    ----------
+    frequencies: numpy.ndarray
+    bins: numpy.ndarray
+    errors2: numpy.ndarray
+    underflow: float
+    name: str
+    axis_name: str
+    keep_missed: bool
+
+    These are the basic attributes that can be used in the constructor (see there)
+    Other attributes are dynamic.
     """
     def __init__(self, bins, frequencies=None, **kwargs):
-        """
+        """Constructor
 
         Parameters
         ----------
-
+        bins: array_like
+            The bins, either as numpy-like 1D array of edges, or 2D array of edges
+        frequencies: Optional[array_like]
+            The bin contents.
+        keep_missed: Optional[bool]
+            Whether to keep track of underflow/overflow when filling with new values.
+        underflow: Optional[float]
+            Weight of observations that were smaller than the minimum bin.
+        overflow: Optional[float]
+            Weight of observations that were larger than the maximum bin.
+        name: Optional[str]
+            Name of the histogram (will be displayed as plot title)
+        axis_name: Optional[str]
+            Name of the characteristics that is histogrammed (will be displayed on x axis)
+        errors2: Optional[array_like]
+            Quadratic errors of individual bins. If not set, defaults to frequencies.
         """
         bins = bin_utils.make_bin_array(bins)
         if bins.ndim == 1:       # Numpy-style
@@ -47,8 +74,11 @@ class Histogram1D(object):
     def bins(self):
         """Matrix of bins.
 
-        - 'bin_count' rows
-        - 2 columns: left, right edges)."""
+        Returns
+        -------
+        numpy.ndarray
+            Two-dimensional array of bin edges, shape=(n, 2)
+        """
         return self._bins
 
     def __getitem__(self, i):
@@ -56,8 +86,14 @@ class Histogram1D(object):
 
         Parameters
         ----------
-        i : int | slice | bool masked array | array with indices
+        i : int or slice or bool masked array or array with indices
             In most cases, this has same semantics as for numpy.ndarray.__getitem__
+
+
+        Returns
+        -------
+        Histogram1D or float
+            Depending on the parameters, a sub-histogram or content of one bin are returned.
         """
         underflow = np.nan
         overflow = np.nan
@@ -81,7 +117,13 @@ class Histogram1D(object):
 
     @property
     def frequencies(self):
-        """Frequencies (values) of the histogram."""
+        """Frequencies (values) of the histogram.
+
+        Returns
+        -------
+        numpy.ndarray
+            One-dimensional array of bin frequencies
+        """
         return self._frequencies
 
     @property
@@ -89,28 +131,53 @@ class Histogram1D(object):
         """Frequencies normalized by bin widths.
 
         Useful when bins are not of the same width.
+
+        Returns
+        -------
+        numpy.ndarray
         """
         return (self._frequencies / self.bin_widths) / self.total
 
     @property
     def cumulative_frequencies(self):
-        """
+        """Cumulative frequencies.
 
         Note: underflow values are not considered
+
+        Returns
+        -------
+        numpy.ndarray
         """
         return self._frequencies.cumsum()
 
     @property
     def errors2(self):
+        """Squares of the bin errors.
+
+        Returns
+        -------
+        numpy.ndarray
+        """
         return self._errors2
 
     @property
     def errors(self):
+        """Bin errors
+
+        Returns
+        -------
+        numpy.ndarray
+        """
         return np.sqrt(self.errors2)
 
     @property
     def total(self):
-        """Total number (sum of weights) of entries including underflow and overflow."""
+        """Total number (sum of weights) of entries including underflow and overflow.
+
+        Returns
+        -------
+        float
+        """
         t = self._frequencies.sum()
         if not np.isnan(self.underflow):
             t += self.underflow
@@ -120,9 +187,24 @@ class Histogram1D(object):
 
     @property
     def total_width(self):
+        """Total width of all bins.
+
+        In inconsecutive histograms, the missing intervals are not counted in.
+
+        Returns
+        -------
+        float
+        """
         return self.bin_widths.sum()
 
     def normalize(self, inplace=False):
+        """Normalize the histogram, so that the total weight is equal to 1.
+
+        See also
+        --------
+        densities
+
+        """
         if inplace:
             self /= self.total
             return self
@@ -131,33 +213,63 @@ class Histogram1D(object):
 
     @property
     def numpy_bins(self):
-        """Bins in the format of numpy."""
+        """Bins in the format of numpy.
+
+        Returns
+        -------
+        numpy.ndarray
+        """
         # TODO: If not consecutive, does not make sense
         return np.concatenate((self.bin_left_edges, self.bin_right_edges[-1:]), axis=0)
 
     @property
     def bin_count(self):
-        """Total number of bins."""
+        """Total number of bins.
+
+        Returns
+        -------
+        int
+        """
         return self.bins.shape[0]
 
     @property
     def bin_left_edges(self):
-        """Left edges of all bins."""
+        """Left edges of all bins.
+
+        Returns
+        -------
+        numpy.ndarrad
+        """
         return self.bins[:,0]
 
     @property
     def bin_right_edges(self):
-        """Right edges of all bins."""
+        """Right edges of all bins.
+
+        Returns
+        -------
+        numpy.ndarray
+        """
         return self.bins[:,1]
 
     @property
     def bin_centers(self):
-        """Centers of all bins."""
+        """Centers of all bins.
+
+        Returns
+        -------
+        numpy.ndarray
+        """
         return (self.bin_left_edges + self.bin_right_edges) / 2
 
     @property
     def bin_widths(self):
-        """Widths of all bins."""
+        """Widths of all bins.
+
+        Returns
+        -------
+        numpy.ndarray
+        """
         return self.bin_right_edges - self.bin_left_edges
 
     def find_bin(self, value):
@@ -170,7 +282,7 @@ class Histogram1D(object):
 
         Returns
         -------
-        ixbin: int
+        int
             index of bin to which value belongs (-1=underflow, N=overflow, None=not found - inconsecutive)
         """
         ixbin = np.searchsorted(self.bin_left_edges, value, side="right")
@@ -200,7 +312,7 @@ class Histogram1D(object):
 
         Returns
         -------
-        ixbin: int
+        int
             index of bin which was incremented (-1=underflow, N=overflow, None=not found)
 
         Note: If a gap in unconsecutive bins is matched, underflow & overflow are not valid anymore.
@@ -224,29 +336,29 @@ class Histogram1D(object):
 
         Parameters
         ----------
-        histtype: string (‘bar’ | 'scatter'), optional
+        histtype: Optional[str]
             Type of the histogram:
             - bar : as bars, the typical (and default) setting
             - scatter : as points
-        cumulative: bool, optional
+        cumulative: Optional[bool]
             If True, the values are displayed as cumulative function rising from 0 to N (or N - fraction of unmatched)
-        errors: bool, optional
+        errors: Optional[bool]
             If True, display error bars for bins (not available for cumulative)
-        density: bool, optional
+        density: Optional[bool]
             If False (default), display absolute values of the bins, if True, display the densities (scaled to bin
             width in standard case, to range 0-1 in the cumulative case).
         backend: str
             Currently, this has to be matplotlib, but other backends (d3.js or bokeh) are planned.
-        ax: matplotlib.axes.Axes, optional
+        ax: Optional[matplotlib.axes.Axes]
             The (matplotlib) axes to draw into. If not set, a default one is created.
-        figure: bokeh figure
+        figure: Optional[bokeh.plotting.figure.Figure]
             The bokeh figure to draw into.
 
         You can also specify arbitrary matplotlib arguments, they are forwarded to the respective plotting methods.
 
         Returns
         -------
-        ax: matplotlib.axes.Axes
+        matplotlib.axes.Axes or bokeh.models.plots.Plot
             The axes object for further manipulation.
         """
         # TODO: See http://matplotlib.org/1.5.0/examples/api/filled_step.html
@@ -348,8 +460,12 @@ class Histogram1D(object):
 
         Parameters
         ----------
-        include_frequencies: bool, optional
+        include_frequencies: Optional[bool]
             If True (default), frequencies are copied. Otherwise, an empty histogram template is created.
+
+        Returns
+        -------
+        Histogram1D
         """
         if include_frequencies:
             frequencies = np.copy(self.frequencies)
@@ -453,15 +569,25 @@ class Histogram1D(object):
     def __array__(self):
         """Convert to numpy array.
 
-        Return
-        ------
-        arr: array
+        Returns
+        -------
+        numpy.ndarray
             The array of frequencies
+
+        See also
+        --------
+        frequencies
         """
         return self.frequencies
 
     def to_dataframe(self):
         """Convert to pandas DataFrame.
+
+        This is not a lossless conversion - (under/over)flow info is lost.
+
+        Returns
+        -------
+        pandas.DataFrame
         """
         import pandas as pd
         df = pd.DataFrame(
@@ -475,7 +601,14 @@ class Histogram1D(object):
         return df
 
     def to_xarray(self):
-        """Convert to xarray.Dataset"""
+        """Convert to xarray.Dataset
+
+        This is an identity conversion.
+
+        Returns
+        -------
+        xarray.Dataset
+        """
         import xarray as xr
         data_vars = {
             "frequencies": xr.DataArray(self.frequencies, dims="bin"),
@@ -508,6 +641,18 @@ class Histogram1D(object):
         return cls(**kwargs)
 
     def to_json(self, path=None):
+        """Convert to JSON representation.
+
+        Parameters
+        ----------
+        path: Optional[str]
+            Where to write the JSON.
+
+        Returns
+        -------
+        str:
+            The JSON representation.
+        """
         from collections import OrderedDict
         import json
         data = OrderedDict()
@@ -526,7 +671,19 @@ class Histogram1D(object):
 
     @classmethod
     def from_json(cls, text=None, path=None):
-        import os
+        """Read histogram from JSON representation.
+
+        Paramaters
+        ----------
+        text: Optional[str]
+            The JSON string itself.
+        path: Optional[str]
+            Path of the JSON file.
+
+        Returns
+        -------
+        Histogram1D
+        """
         import json
         if text:
             data = json.loads(text)
