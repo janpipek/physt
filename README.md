@@ -61,3 +61,12 @@ See more in docstring's and notebooks:
 * Stacked histograms (with names)
 * More plotting backends
 * 2D histograms, (ND)-histograms
+
+## Dependencies
+
+- numpy
+- (optional) matplotlib - simple output
+- (optional) bokeh - simple output
+- (optional) xarray - I/O
+- (optional) astropy - additional binning algorithms
+- (testing) py.test, pandas
