@@ -358,6 +358,9 @@ class Histogram1D(object):
             The (matplotlib) axes to draw into. If not set, a default one is created.
         figure: Optional[bokeh.plotting.figure.Figure]
             The bokeh figure to draw into.
+        ticks: str
+            Special options for tick placing:
+            - "center" shows ticks for bin centers
 
         You can also specify arbitrary matplotlib arguments, they are forwarded to the respective plotting methods.
 
@@ -389,6 +392,9 @@ class Histogram1D(object):
         else:
             err_data = None
 
+        # Pop our kwargs
+        ticks = kwargs.pop("ticks", None)
+
         if backend == "matplotlib":
             if not ax:
                 import matplotlib.pyplot as plt
@@ -407,6 +413,10 @@ class Histogram1D(object):
                     ax.scatter(self.bin_centers, data, **kwargs)
             else:
                 raise RuntimeError("Unknown histogram type: {0}".format(histtype))
+
+            # Ticks
+            if ticks == "center":
+                ax.set_xticks(self.bin_centers)
 
             # Automatically limit to positive frequencies
             ylim = ax.get_ylim()
