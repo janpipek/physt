@@ -64,7 +64,7 @@ def histogram(data=None, _=None, *args, **kwargs):
             array = array[~np.isnan(array)]
 
         # Get binning
-        bins = binning.calculate_bins(array, _, *args, **kwargs)
+        bins = binning.calculate_bins(array, _, *args, check_nan=not dropna, **kwargs)
 
         # Get frequencies
         frequencies, errors2, underflow, overflow = histogram1d.calculate_frequencies(array,

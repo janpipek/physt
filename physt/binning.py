@@ -10,12 +10,21 @@ def calculate_bins(array, _=None, *args, **kwargs):
     Parameters
     ----------
     array: arraylike
+        Data from which the bins should be decided (sometimes used, sometimes not)
     _: int or str or Callable or arraylike or Iterable
+        To-be-guessed parameter that specifies what kind of binning should be done
+    check_nan: bool
+        Check for the presence of nan's in array? Default: True
 
     Returns
     -------
     numpy.ndarray
+
+
     """
+    if kwargs.pop("check_nan", True):
+        if np.any(np.isnan(array)):
+            raise RuntimeError("Cannot calculate bins in presence of NaN's.")
     if _ is None:
         bin_count = kwargs.pop("bins", ideal_bin_count(data=array))
         bins = numpy_bins(array, bin_count, *args, **kwargs)
