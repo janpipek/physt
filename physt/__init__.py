@@ -26,6 +26,8 @@ def histogram(data=None, _=None, *args, **kwargs):
         (as numpy.histogram)
     keep_missed: Optional[bool]
         store statistics about how many values were lower than limits and how many higher than limits (default: True)
+    dropna: bool
+        whether to clear data from nan's before histogramming
     name: str
         name of the histogram
     axis_name: str
@@ -50,6 +52,7 @@ def histogram(data=None, _=None, *args, **kwargs):
         raise RuntimeError("Cannot create histogram from a pandas DataFrame. Use Series.")
     else:
         # Collect arguments (not to send them to binning algorithms)
+        dropna = kwargs.pop("dropna", False)
         weights = kwargs.pop("weights", None)
         keep_missed = kwargs.pop("keep_missed", True)
         name = kwargs.pop("name", None)
@@ -57,6 +60,8 @@ def histogram(data=None, _=None, *args, **kwargs):
 
         # Convert to array
         array = np.asarray(data).flatten()
+        if dropna:
+            array = array[~np.isnan(array)]
 
         # Get binning
         bins = binning.calculate_bins(array, _, *args, **kwargs)
