@@ -5,7 +5,7 @@ P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram, but designed
 The goal is to unify different concepts of histograms as occurring in numpy, pandas, matplotlib, ROOT, etc.
 and to create one representation that is easily manipulated with from the data point of view and at the same time provides
 nice integration into IPython notebook and various plotting options. In short, whatever you want to do with histograms,
-**physt** aims to be at your side.
+**physt** aims to be on your side.
 
 ## Simple example
 
@@ -70,3 +70,4 @@ See more in docstring's and notebooks:
 - (optional) xarray - I/O
 - (optional) astropy - additional binning algorithms
 - (testing) py.test, pandas
+- (docs) sphinx, sphinx_rtd_theme, ipython
