@@ -13,6 +13,11 @@ def histogram(data=None, _=None, *args, **kwargs):
     2) Calculate frequencies for the bins
     3) Construct the histogram object itself
 
+    *Guiding principle:* parameters understood by numpy.histogram should be
+    understood also by physt.histogram and should result in a Histogram1D
+    object with (h.numpy_bins, h.frequencies) same as the numpy.histogram
+    output. Additional functionality is a bonus.
+
     Parameters
     ----------
     data : array_like, optional
@@ -42,9 +47,6 @@ def histogram(data=None, _=None, *args, **kwargs):
     See Also
     --------
     numpy.histogram
-
-    Examples
-    --------
     """
     if isinstance(data, tuple) and isinstance(data[0], str):    # Works for groupby DataSeries
         return histogram(data[1], _, *args, name=data[0], **kwargs)

@@ -19,7 +19,7 @@ def calculate_bins(array, _=None, *args, **kwargs):
     Returns
     -------
     numpy.ndarray
-
+        A two-dimensional array with pairs of bin edges (not necessarily consecutive).
 
     """
     if kwargs.pop("check_nan", True):
@@ -31,8 +31,15 @@ def calculate_bins(array, _=None, *args, **kwargs):
     elif isinstance(_, int):
         bins = numpy_bins(array, _, *args, **kwargs)
     elif isinstance(_, str):
-        method = binning_methods[_]
-        bins = method(array, *args, **kwargs)
+        # What about the ranges???
+        if _ in bincount_methods:
+            bin_count = ideal_bin_count(array, method=_)
+            bins = numpy_bins(array, bin_count, *args, **kwargs)
+        elif _ in binning_methods:
+            method = binning_methods[_]
+            bins = method(array, *args, **kwargs)
+        else:
+            raise RuntimeError("No binning method {0} available.".format(_))
     elif callable(_):
         bins = _(array, *args, **kwargs)
     elif np.iterable(_):
@@ -94,6 +101,7 @@ def exponential_bins(data=None, bins=None, range=None, **kwargs):
     --------
     numpy.logspace
     """
+    # TODO: Change range sematics of range to fit with the rest
     if bins is None:
         bins = ideal_bin_count(data)
     if range is None:
@@ -121,6 +129,7 @@ def quantile_bins(data, bins=None, qrange=(0.0, 1.0)):
     -------
     numpy.ndarray
     """
+    # TODO: Accept range in some way?
     if bins is None:
         bins = ideal_bin_count(data)
     return np.percentile(data, np.linspace(qrange[0] * 100, qrange[1] * 100, bins + 1))
