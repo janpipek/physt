@@ -25,6 +25,8 @@ def calculate_bins(array, _=None, *args, **kwargs):
     if kwargs.pop("check_nan", True):
         if np.any(np.isnan(array)):
             raise RuntimeError("Cannot calculate bins in presence of NaN's.")
+    if "range" in kwargs:
+        array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
         bin_count = kwargs.pop("bins", ideal_bin_count(data=array))
         bins = numpy_bins(array, bin_count, *args, **kwargs)
@@ -57,8 +59,8 @@ def numpy_bins(data=None, bins=10, range=None, **kwargs):
     data: array_like, optional
         This is optional if both bins and range are set
     bins: int or array_like
-    range: tuple
-        minimum and maximum
+    range: Optional[tuple]
+        (min, max)
 
     Returns
     -------
@@ -91,7 +93,7 @@ def exponential_bins(data=None, bins=None, range=None, **kwargs):
     bins: Optional[int]
         Number of bins
     range: Optional[tuple]
-        The log10 of first left edge and last right edge.
+        (min, max)
 
     Returns
     -------
@@ -99,12 +101,13 @@ def exponential_bins(data=None, bins=None, range=None, **kwargs):
 
     See also
     --------
-    numpy.logspace
+    numpy.logspace - note that our range semantics is different
     """
-    # TODO: Change range sematics of range to fit with the rest
     if bins is None:
         bins = ideal_bin_count(data)
-    if range is None:
+    if range:
+        range = (np.log10(range[0]), np.log10(range[1]))
+    else:
         range = (np.log10(data.min()), np.log10(data.max()))
     return np.logspace(range[0], range[1], bins+1)
 
@@ -148,6 +151,7 @@ def fixed_width_bins(data, bin_width, align=True):
     -------
     numpy.ndarray
     """
+    # TODO: Introduce range
     if bin_width <= 0:
         raise RuntimeError("Bin width must be > 0.")
     if align == True:
