@@ -2,7 +2,7 @@ from . import binning, bin_utils, histogram1d
 
 import numpy as np
 
-__version__ = str('0.2.1')
+__version__ = str('0.2.2')
 
 
 def histogram(data, _=None, *args, **kwargs):
