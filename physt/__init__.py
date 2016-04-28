@@ -5,7 +5,7 @@ import numpy as np
 __version__ = str('0.2.1')
 
 
-def histogram(data=None, _=None, *args, **kwargs):
+def histogram(data, _=None, *args, **kwargs):
     """Facade function to create histograms.
 
     This proceeds in three steps:
