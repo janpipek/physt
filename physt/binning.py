@@ -138,7 +138,7 @@ def quantile_bins(data, bins=None, qrange=(0.0, 1.0)):
     return np.percentile(data, np.linspace(qrange[0] * 100, qrange[1] * 100, bins + 1))
 
 
-def fixed_width_bins(data, bin_width, align=True):
+def fixed_width_bins(data, bin_width, align=True, range=None):
     """Binning schema with predefined bin width.
 
     Parameters
@@ -156,8 +156,8 @@ def fixed_width_bins(data, bin_width, align=True):
         raise RuntimeError("Bin width must be > 0.")
     if align == True:
         align = bin_width
-    min = data.min()
-    max = data.max()
+    min = range[0] if range else data.min()
+    max = range[1] if range else data.max()
     if align:
         min = (min // align) * align
         max = np.ceil(max / align) * align
@@ -190,12 +190,37 @@ def integer_bins(data, range=None):
     return np.arange(bincount + 1) + min
 
 
+def human_bins(data, bins=10, range=None):
+    """Binning schema with bins automatically optimized human-friendly widths.
+    
+    Parameters
+    ----------
+    bins: Optional[int]
+        Number of bins
+    range: Optional[tuple]
+        (min, max)
+
+    Returns
+    -------
+    numpy.ndarray        
+    """
+    min_ = range[0] if range else data.min()
+    max_ = range[1] if range else data.max()
+    bw = (max_ - min_) / bins
+    subscales = np.array([0.5, 1, 2, 2.5, 5, 10])
+    power = np.floor(np.log10(bw)).astype(int)
+    best_index = np.argmin(np.abs(np.log(subscales * (10 ** power) / bw)))
+    width = (10 ** power) * subscales[best_index]
+    return fixed_width_bins(data, width, range=range)
+    
+
 binning_methods = {
     "numpy_like" : numpy_bins,
     "exponential" : exponential_bins,
     "quantile": quantile_bins,
     "fixed_width": fixed_width_bins,
-    "integer": integer_bins
+    "integer": integer_bins,
+    "human" : human_bins
 }
 
 try:
