@@ -45,15 +45,7 @@ class Histogram1D(object):
         errors2: Optional[array_like]
             Quadratic errors of individual bins. If not set, defaults to frequencies.
         """
-        bins = bin_utils.make_bin_array(bins)
-        if bins.ndim == 1:       # Numpy-style
-            self._bins = np.hstack((bins[:-1,np.newaxis], bins[1:,np.newaxis]))
-        elif bins.ndim == 2:     # Tuple-style
-            if bins.shape[1] != 2:
-                raise RuntimeError("")
-            self._bins = bins
-        else:
-            raise RuntimeError("Unexpected format of bins.")
+        self._bins = bin_utils.make_bin_array(bins)
 
         if frequencies is None:
             self._frequencies = np.zeros(self._bins.shape[0])
