@@ -8,11 +8,11 @@ import pytest
 
 class TestMakeArray(object):
     def test_make_from_numpy(self):
-        arr = bin_utils.make_bin_array([0, 1, 2], dimension=1)
+        arr = bin_utils.make_bin_array([0, 1, 2])
         assert np.array_equal(arr, [[0, 1], [1, 2]])
 
     def test_idempotent(self):
-        arr = bin_utils.make_bin_array([[0, 1], [2, 3]], dimension=1)
+        arr = bin_utils.make_bin_array([[0, 1], [2, 3]])
         assert np.array_equal(arr, [[0, 1], [2, 3]])
 
 

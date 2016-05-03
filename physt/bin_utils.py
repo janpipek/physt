@@ -1,15 +1,13 @@
 import numpy as np
 
 
-def make_bin_array(bins, dimension=1):
+def make_bin_array(bins):
     """Turn bin data into array understood by HistogramXX classes.
 
     Parameters
     ----------
     bins: array_like
         Array of edges or array of edge tuples.
-    dimension: int, optional
-        The dimension of the bin space.
 
     Returns
     -------
@@ -17,25 +15,22 @@ def make_bin_array(bins, dimension=1):
 
     Examples
     --------
-    >>> make_bin_array([0, 1, 2], dimension=1)
+    >>> make_bin_array([0, 1, 2])
     array([[0, 1],
            [1, 2]])
-    >>> make_bin_array([[0, 1], [2, 3]], dimension=1)
+    >>> make_bin_array([[0, 1], [2, 3]])
     array([[0, 1],
            [2, 3]])
     """
     bins = np.asarray(bins)
-    if dimension == 1:
-        if bins.ndim == 1:
-            return np.hstack((bins[:-1,np.newaxis], bins[1:,np.newaxis]))
-        elif bins.ndim == 2:
-            if bins.shape[1] != 2:
-                raise RuntimeError("Binning scheme with ndim==2 must have 2 columns")
-            return bins
-        else:
-            raise RuntimeError("Binning scheme must have ndim==1 or ndim==2")
+    if bins.ndim == 1:
+        return np.hstack((bins[:-1,np.newaxis], bins[1:,np.newaxis]))
+    elif bins.ndim == 2:
+        if bins.shape[1] != 2:
+            raise RuntimeError("Binning schema with ndim==2 must have 2 columns")
+        return bins  # Already correct, just pass
     else:
-        raise NotImplementedError("Binning for multi-dimensional histograms not yet implemented.")
+        raise RuntimeError("Binning schema must have ndim==1 or ndim==2")
 
 
 def is_rising(bins):
