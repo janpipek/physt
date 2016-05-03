@@ -33,6 +33,10 @@ def make_bin_array(bins):
         raise RuntimeError("Binning schema must have ndim==1 or ndim==2")
 
 
+def to_numpy_bins(bins):
+    return np.concatenate([bins[0], [bins[1, -1]]])
+
+
 def is_rising(bins):
     """Check whether the bins are in raising order.
 
