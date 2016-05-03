@@ -65,7 +65,9 @@ class Histogram1D(object):
 
         self._errors2 = np.asarray(kwargs.get("errors2", self.frequencies.copy()))
         if np.any(self._errors2 < 0):
-            raise  RuntimeError("Cannot have negative squared errors.")
+            raise RuntimeError("Cannot have negative squared errors.")
+        if self._errors2.shape != self._frequencies.shape:
+            raise RuntimeError("Errors must have same dimension as frequencies.")
 
     @property
     def bins(self):
