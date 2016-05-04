@@ -2,10 +2,10 @@ from . import bin_utils
 import numpy as np
 
 
-class Histogram2D(object):
-    _dimension = 2
+class HistogramND(object):
+    def __init__(self, dimension, bins, frequencies=None, **kwargs):
+        self._dimension = dimension
 
-    def __init__(self, bins, frequencies=None, **kwargs):
         # Bins + checks
         if len(bins) != self._dimension:
             raise RuntimeError("bins must be a sequence of {0} schemas".format(self._dimension))
@@ -143,9 +143,6 @@ class Histogram2D(object):
             self.errors2[ixbin] += weight ** 2
         return ixbin
 
-    def plot(self, *args):
-        raise NotImplementedError()
-
     def copy(self, include_frequencies=True):
         if include_frequencies:
             frequencies = np.copy(self.frequencies)
@@ -251,6 +248,14 @@ class Histogram2D(object):
     @classmethod
     def from_json(cls, text=None, path=None):
         return NotImplementedError
+
+
+class Histogram2D(HistogramND):
+    def __init__(self, bins, frequencies=None, **kwargs):
+        super(Histogram2D, self).__init__(2, bins, frequencies, **kwargs)
+
+    def plot(self, *args):
+        raise NotImplementedError()
 
 
 def calculate_frequencies(data, ndim, bins, weights=None):
