@@ -60,6 +60,7 @@ class Histogram1D(object):
         self.keep_missed = kwargs.get("keep_missed", True)
         self.underflow = kwargs.get("underflow", 0)
         self.overflow = kwargs.get("overflow", 0)
+        self.inner_missed = kwargs.get("inner_missed", 0)
         self.name = kwargs.get("name", None)
         self.axis_name = kwargs.get("axis_name", self.name)
 
@@ -135,7 +136,7 @@ class Histogram1D(object):
         -------
         numpy.ndarray
         """
-        return (self._frequencies / self.bin_widths) / self.total
+        return (self._frequencies / self.bin_sizes) / self.total
 
     @property
     def cumulative_frequencies(self):
@@ -170,6 +171,20 @@ class Histogram1D(object):
         return np.sqrt(self.errors2)
 
     @property
+    def missed(self):
+        """Sum of underflow and overflow.
+
+        Returns
+        -------
+        float
+
+        Note
+        ----
+        To be consistent with n-dimensional histograms.
+        """
+        return self.underflow + self.overflow + self.inner_missed
+
+    @property
     def total(self):
         """Total number (sum of weights) of entries including underflow and overflow.
 
@@ -178,10 +193,9 @@ class Histogram1D(object):
         float
         """
         t = self._frequencies.sum()
-        if not np.isnan(self.underflow):
-            t += self.underflow
-        if not np.isnan(self.overflow):
-            t += self.overflow
+        missed = self.missed   # TODO: Makes sense?
+        if missed:
+            t += missed
         return t
 
     @property
@@ -222,6 +236,10 @@ class Histogram1D(object):
         return np.concatenate((self.bin_left_edges, self.bin_right_edges[-1:]), axis=0)
 
     @property
+    def shape(self):
+        return (self.bins.shape[0],)
+
+    @property
     def bin_count(self):
         """Total number of bins.
 
@@ -229,7 +247,7 @@ class Histogram1D(object):
         -------
         int
         """
-        return self.bins.shape[0]
+        return np.product(self.shape)
 
     @property
     def bin_left_edges(self):
@@ -239,7 +257,7 @@ class Histogram1D(object):
         -------
         numpy.ndarrad
         """
-        return self.bins[:,0]
+        return self.bins[...,0]
 
     @property
     def bin_right_edges(self):
@@ -249,7 +267,7 @@ class Histogram1D(object):
         -------
         numpy.ndarray
         """
-        return self.bins[:,1]
+        return self.bins[...,1]
 
     @property
     def bin_centers(self):
@@ -269,6 +287,12 @@ class Histogram1D(object):
         -------
         numpy.ndarray
         """
+        import warnings
+        warnings.warn("Deprecation: use bin_sizes instead of bin_widths.")
+        return self.bin_sizes
+
+    @property
+    def bin_sizes(self):
         return self.bin_right_edges - self.bin_left_edges
 
     def find_bin(self, value):
@@ -479,11 +503,15 @@ class Histogram1D(object):
             frequencies = np.copy(self.frequencies)
             underflow = self.underflow
             overflow = self.overflow
+            inner_missed = self.inner_missed
+            # TODO Errors!
         else:
             frequencies = None
             underflow = 0
             overflow = 0
-        return self.__class__(np.copy(self.bins), frequencies, underflow=underflow, overflow=overflow,
+            inner_missed = 0
+            # TODO Errors!
+        return self.__class__(np.copy(self.bins), frequencies, underflow=underflow, overflow=overflow, inner_missed=inner_missed,
                               name=self.name, axis_name=self.axis_name, keep_missed=self.keep_missed)
 
     def __eq__(self, other):
@@ -498,6 +526,8 @@ class Histogram1D(object):
         if not other.overflow == self.overflow:
             return False
         if not other.underflow == self.underflow:
+            return False
+        if not other.inner_missed == self.inner_missed:
             return False
         if not other.name == self.name:
             return False
@@ -517,6 +547,7 @@ class Histogram1D(object):
             self._frequencies += other.frequencies
             self.underflow += other.underflow
             self.overflow += other.overflow
+            self.inner_missed += other.inner_missed
             self._errors2 += other.errors2
         else:
             raise RuntimeError("Bins must be the same when adding histograms.")
@@ -534,6 +565,7 @@ class Histogram1D(object):
             self._frequencies -= other.frequencies
             self.underflow -= other.underflow
             self.overflow -= other.overflow
+            self.inner_missed -= other.inner_missed
             self._errors2 += other.errors2
         else:
             raise RuntimeError("Bins must be the same when subtracting histograms.")
@@ -553,6 +585,7 @@ class Histogram1D(object):
             self._frequencies *= other
             self.overflow *= other
             self.underflow *= other
+            self.inner_missed *= other
             self._errors2 *= other
         else:
             raise RuntimeError("Histograms can be multiplied only by a constant.")
@@ -569,6 +602,7 @@ class Histogram1D(object):
             self._frequencies /= other
             self.overflow /= other
             self.underflow /= other
+            self.inner_missed /= other
             self._errors2 /= other
         else:
             raise RuntimeError("Histograms can be divided only by a constant.")
@@ -627,6 +661,7 @@ class Histogram1D(object):
         attrs = {
             "underflow": self.underflow,
             "overflow": self.overflow,
+            "inner_missed": self.inner_missed,
             "keep_missed": self.keep_missed
         }
         return xr.Dataset(data_vars, coords, attrs)
