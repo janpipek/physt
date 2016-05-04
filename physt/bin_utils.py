@@ -40,16 +40,54 @@ def to_numpy_bins(bins):
 
 
 def to_numpy_bins_with_mask(bins):
-    edges = []
-    mask = []
-    edges.append(bins[0,0])
-    for i in range(bins.shape[0] - 1):
-        mask.append(True)
-        edges.append(bins[i,1])
-        if bins[i,1] != bins[i+1,0]:
-            mask.append(False)
-            edges.append(bins[i+1, 0])
-    edges.append(bins[-1:1])
+    """Numpy binning edges including gaps.
+
+    Parameters
+    ----------
+    bins: array_like
+        1-D (n) or 2-D (n, 2) array of edges
+
+    Returns
+    -------
+    edges: np.ndarray
+        0-th element: -np.inf
+        1..-2th element: all edges
+        last element: +np.inf
+    mask: np.ndarray
+        List of indices that correspond to bins that have to be included
+
+    Examples
+    --------
+    >>> to_numpy_bins_with_mask([0, 1, 2])
+    (array([-inf,   0.,   1.,   2.,  inf]), array([1, 2, 3]))
+
+    >>> to_numpy_bins_with_mask([[0, 1], [2, 3]])
+    ([-inf, 0, 1, 2, 3, inf], [1, 3])
+    """
+    bins = np.asarray(bins)
+    if bins.ndim == 1:
+        edges = np.concatenate([[-np.inf], bins, [np.inf]])
+        mask = np.arange(1, bins.shape[0] + 1)
+    elif bins.ndim == 2:
+        edges = []
+        mask = []
+        edges.append(-np.inf)
+        j = 1
+        edges.append(bins[0,0])
+        for i in range(bins.shape[0] - 1):
+            mask.append(j)
+            edges.append(bins[i,1])
+            if bins[i,1] != bins[i+1,0]:
+                edges.append(bins[i+1, 0])
+                j += 1
+            j += 1
+        mask.append(j)
+        edges.append(bins[-1, 1])
+        edges.append(np.inf)
+    else:
+        raise RuntimeError("to_numpy_bins_with_mask: array with dim=1 or 2 expected")
+    if not np.all(np.diff(edges) > 0):
+        raise RuntimeError("to_numpy_bins_with_mask: edges array not monotone.")
     return edges, mask
 
 

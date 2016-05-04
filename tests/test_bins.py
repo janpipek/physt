@@ -16,6 +16,34 @@ class TestMakeArray(object):
         assert np.array_equal(arr, [[0, 1], [2, 3]])
 
 
+class TestNumpyBinsWithMask(object):
+    def test_numpy_style(self):
+        arr = np.array([1, 2, 3.1, 4])
+        edges, mask = bin_utils.to_numpy_bins_with_mask(arr)
+        assert np.array_equal(edges, [-np.inf, 1, 2, 3.1, 4, np.inf])
+        assert np.array_equal(mask, [1, 2, 3, 4])
+
+    def test_consecutive(self):
+        arr = np.array([[0, 1.1], [1.1, 2.1]])
+        edges, mask = bin_utils.to_numpy_bins_with_mask(arr)
+        assert np.array_equal(edges, [-np.inf, 0, 1.1, 2.1, np.inf])
+        assert np.array_equal(mask, [1, 2])
+
+    def test_unconsecutive(self):
+        arr = np.array([[0, 1], [1.1, 2.1]])
+        edges, mask = bin_utils.to_numpy_bins_with_mask(arr)
+        assert np.array_equal(edges, [-np.inf, 0, 1, 1.1, 2.1, np.inf])
+        assert np.array_equal(mask, [1, 3])
+
+    def test_nonsense(self):
+        arr = np.array([[0, 1], [0.1, 2.1]])
+        with pytest.raises(RuntimeError):
+            bin_utils.to_numpy_bins_with_mask(arr)
+        arr = np.array([[[0, 1], [0.1, 2.1]], [[0, 1], [0.1, 2.1]]])
+        with pytest.raises(RuntimeError):
+            bin_utils.to_numpy_bins_with_mask(arr)
+
+
 class TestValidation(object):
     def test_rising(self):
         valid = [
