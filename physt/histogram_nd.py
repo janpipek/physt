@@ -85,8 +85,11 @@ class HistogramND(object):
     def total(self):        # OK -> Base
         return self._frequencies.sum()
 
-    def get_bin_widths(self, axis):  # -> Base
-        return self.get_bin_right_edges(axis) - self.get_bin_left_edges(axis)
+    def get_bin_widths(self, axis = None):  # -> Base
+        if axis is not None:
+            return self.get_bin_right_edges(axis) - self.get_bin_left_edges(axis)
+        else:
+            return np.meshgrid(*[self.get_bin_widths(i) for i in range(self.ndim)], indexing='ij')
 
     @property
     def bin_sizes(self):
@@ -102,10 +105,10 @@ class HistogramND(object):
         return np.product([self.get_bin_widths(i) for i in range(self._dimension)])
 
     def get_bin_left_edges(self, axis):
-        raise NotImplementedError()
+        return self.bins[axis][:, 0]
 
     def get_bin_right_edges(self, axis):
-        raise NotImplementedError()
+        return self.bins[axis][:, 1]
 
     # TODO: bin_centers property?
 
@@ -113,7 +116,12 @@ class HistogramND(object):
         if axis is not None:
             return (self.get_bin_right_edges(axis) + self.get_bin_left_edges(axis)) / 2
         else:
-            raise NotImplementedError()
+            return np.meshgrid(*[self.get_bin_centers(i) for i in range(self.ndim)], indexing='ij')
+            # TODO: This is wrong
+            # centers = self.get_bin_centers(0)
+            # for i in range(1, self.ndim):
+            #     centers = np.outer(centers, self.get_bin_centers(i))
+            # return centers
 
     def find_bin(self, value, axis=None):  # TODO: Check!
         if axis is not None:
@@ -258,8 +266,43 @@ class Histogram2D(HistogramND):
     def __init__(self, bins, frequencies=None, **kwargs):
         super(Histogram2D, self).__init__(2, bins, frequencies, **kwargs)
 
-    def plot(self, *args):
-        raise NotImplementedError()
+    def plot(self, histtype='bar3d', backend="matplotlib", ax=None, **kwargs):
+        color = kwargs.pop("color", "frequency")
+
+        if backend == "matplotlib":
+            from mpl_toolkits.mplot3d import Axes3D
+            if not ax:
+                import matplotlib.pyplot as plt
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+            if histtype == "bar3d":
+                xpos, ypos = (arr.flatten() for arr in self.get_bin_centers())
+                zpos = np.zeros_like(ypos)
+
+                dx, dy = (arr.flatten() for arr in self.get_bin_widths())
+                dz = self.frequencies.flatten()
+
+                if color == "frequency":
+                    import matplotlib.cm as cm
+                    import matplotlib.colors as colors
+                    norm = colors.Normalize(dz.min(), dz.max())
+                    colors = cm.jet(norm(dz))
+                else:
+                    colors = color
+
+                ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors)
+                ax.set_xlabel(self.axis_names[0])
+                ax.set_ylabel(self.axis_names[1])
+                ax.set_zlabel("frequency")
+                if self.name:
+                    ax.set_title(self.name)
+            else:
+                raise RuntimeError("Unsupported hist type")
+            return ax
+        else:
+            raise RuntimeError("Unsupported hist type")
+        pass
+
 
 
 def calculate_frequencies(data, ndim, bins, weights=None):
