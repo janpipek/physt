@@ -1,0 +1,3 @@
+0.3 (coming soon)
+-----------------
+- 2D, ND histograms

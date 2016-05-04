@@ -28,6 +28,7 @@ See more in docstring's and notebooks:
 - Basic tutorial: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Tutorial.ipynb>
 - Binning: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Binning.ipynb>
 - Bokeh plots: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Bokeh%20examples.ipynb>
+- 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/2D%20Histograms.ipynb>
 
 ## Installation
 
@@ -38,6 +39,8 @@ See more in docstring's and notebooks:
 ### Implemented
 
 * 1D histograms
+* 2D histograms(beta)
+* ND histograms(beta)
 * Understands numpy-array-like object
 * Keep underflow / overflow
 * Basic numeric operations (* / + -)
@@ -45,6 +48,7 @@ See more in docstring's and notebooks:
 * Add new values (fill)
 * Cumulative values, densities
 * Simple plotting (matplotlib, bokeh)
+  - 2D support experimental
 * Algorithms for optimized binning
   - human-friendly
   - mathematical
@@ -60,7 +64,6 @@ See more in docstring's and notebooks:
 * Statistics (based on original data)?
 * Stacked histograms (with names)
 * More plotting backends
-* 2D histograms, (ND)-histograms
 
 ## Dependencies
 
