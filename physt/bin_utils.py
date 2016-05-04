@@ -59,7 +59,7 @@ def to_numpy_bins_with_mask(bins):
     Examples
     --------
     >>> to_numpy_bins_with_mask([0, 1, 2])
-    (array([-inf,   0.,   1.,   2.,  inf]), array([1, 2, 3]))
+    (array([-inf,   0.,   1.,   2.,  inf]), array([1, 2]))
 
     >>> to_numpy_bins_with_mask([[0, 1], [2, 3]])
     ([-inf, 0, 1, 2, 3, inf], [1, 3])
@@ -67,7 +67,7 @@ def to_numpy_bins_with_mask(bins):
     bins = np.asarray(bins)
     if bins.ndim == 1:
         edges = np.concatenate([[-np.inf], bins, [np.inf]])
-        mask = np.arange(1, bins.shape[0] + 1)
+        mask = np.arange(1, bins.shape[0])
     elif bins.ndim == 2:
         edges = []
         mask = []

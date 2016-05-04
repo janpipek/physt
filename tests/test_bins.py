@@ -21,7 +21,7 @@ class TestNumpyBinsWithMask(object):
         arr = np.array([1, 2, 3.1, 4])
         edges, mask = bin_utils.to_numpy_bins_with_mask(arr)
         assert np.array_equal(edges, [-np.inf, 1, 2, 3.1, 4, np.inf])
-        assert np.array_equal(mask, [1, 2, 3, 4])
+        assert np.array_equal(mask, [1, 2, 3])
 
     def test_consecutive(self):
         arr = np.array([[0, 1.1], [1.1, 2.1]])

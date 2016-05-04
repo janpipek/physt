@@ -253,35 +253,34 @@ class Histogram2D(object):
         return NotImplementedError
 
 
-def calculate_frequencies(data, ndim, bins, weights=None, validate_bins=True):
-    # TODO: add validation
-    bins = [bin_utils.make_bin_array(bins[i]) for i in range(ndim)]
-    if validate_bins:
-        raise NotImplementedError()
+def calculate_frequencies(data, ndim, bins, weights=None):
+    data = np.asarray(data)
 
-    if weights:
-        # TODO Add check
-        raise NotImplementedError()
+    edges_and_mask = [bin_utils.to_numpy_bins_with_mask(bins[i]) for i in range(ndim)]
+    edges = [em[0] for em in edges_and_mask]
+    masks = [em[1] for em in edges_and_mask]
+
+    ixgrid = np.ix_(*masks) # Indexer to select parts we want
+
+    if weights is not None:
+        weights = np.asarray(weights)
+        if weights.shape != (data.shape[0],):
+            raise RuntimeError("Invalid weights shape.")
+        total_weight = weights.sum()
     else:
-        weights = np.ones(data.shape[0], dtype=int)
+        total_weight = data.shape[0]
 
-    continuous = [ bin_utils.is_consecutive(bins[i]) for i in range(ndim)]
-    if not continuous:
-        raise NotImplementedError("Not supported for inconsecutive bins yet.")
-    numpy_bins = [bin_utils.to_numpy_bins(bins[i]) for i in range(ndim)]
+    frequencies, _ = np.histogramdd(data, edges, weights=weights)
 
-    if ndim == 2:
-        # TODO: Add weights
-        frequencies, _, _ = np.histogram2d(data[:,0], data[:,1], numpy_bins)
+    frequencies = frequencies[ixgrid].copy()
+
+    missing = total_weight - frequencies.sum()
+
+    if weights is not None:
+        err_freq, _ = np.histogramdd(data, edges, weights=weights ** 2)
+        errors2 = err_freq[ixgrid].copy()
     else:
-        # TODO: Add weights
-        frequencies, _ = np.histogramdd(data, numpy_bins)
-
-    # TODO: Implement missing
-    missing = 0
-
-    # TODO: Implement errors / weights???
-    errors2 = frequencies
+        errors2 = frequencies.copy()
 
     return frequencies, missing, errors2
 
