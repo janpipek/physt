@@ -33,7 +33,11 @@ class HistogramND(object):
             raise RuntimeError("The length of axis names must be equal to histogram dimension.")
 
         # Errors + checks
-        self._errors2 = np.asarray(kwargs.get("errors2", self.frequencies.copy()))
+        self._errors2 = kwargs.get("errors2")
+        if self._errors2 is None:
+            self._errors2 = self._frequencies.copy()
+        else:
+            self._errors2 = np.asarray(self._errors2)
         if self._errors2.shape != self._frequencies.shape:
             raise RuntimeError("Errors must have same dimension as frequencies.")
         if np.any(self._errors2 < 0):
@@ -287,5 +291,5 @@ def calculate_frequencies(data, ndim, bins, weights=None):
     else:
         errors2 = frequencies.copy()
 
-    return frequencies, missing, errors2
+    return frequencies, errors2, missing
 

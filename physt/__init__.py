@@ -1,4 +1,4 @@
-from . import binning, bin_utils, histogram1d
+from . import binning, bin_utils, histogram1d, histogram_nd
 
 import numpy as np
 
@@ -81,3 +81,24 @@ def histogram(data, _=None, *args, **kwargs):
             axis_name = data.name
         return histogram1d.Histogram1D(bins=bins, frequencies=frequencies, errors2=errors2, overflow=overflow,
                                        underflow=underflow, keep_missed=keep_missed, name=name, axis_name=axis_name)
+
+
+def histogram2d(data1, data2, bins=10, *args, **kwargs):
+    data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
+    return histogramdd(data, bins, *args, **kwargs)
+
+
+def histogramdd(data, bins=10, *args, **kwargs):
+    data = np.asarray(data)
+    n, dim = data.shape
+    if isinstance(bins, int):
+        bins = [bins] * dim
+    bins = [binning.numpy_bins(data[:,i], bins[i]) for i in range(dim)]
+    weights = kwargs.pop("weights", None)
+    frequencies, errors2, missed = histogram_nd.calculate_frequencies(data, ndim=dim,
+                                                                      bins=bins,
+                                                                      weights=weights)
+    if dim == 2:
+        return histogram_nd.Histogram2D(bins, frequencies=frequencies, errors2=errors2, **kwargs)
+    else:
+        return histogram_nd.HistogramND(dim, bins, frequencies=frequencies, errors2=errors2, **kwargs)
