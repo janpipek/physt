@@ -89,7 +89,15 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
 
 
 def histogramdd(data, bins=10, *args, **kwargs):
+    # pandas - guess axis names
+    if hasattr(data, "columns") and not "axis_names" in kwargs:
+        try:
+            kwargs["axis_names"] = list(data.columns)
+        except:
+            pass # Perhaps columns has different meaning here.
+
     data = np.asarray(data)
+
     n, dim = data.shape
     if isinstance(bins, int):
         bins = [bins] * dim

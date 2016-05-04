@@ -60,7 +60,7 @@ class HistogramND(object):
 
     @property
     def numpy_bins(self):
-        raise NotImplementedError()
+        return [bin_utils.to_numpy_bins(bins) for bins in self.bins]
 
     @property
     def frequencies(self):  # Ok -> Base
@@ -104,11 +104,17 @@ class HistogramND(object):
         """The default size of the bin space."""
         return np.product([self.get_bin_widths(i) for i in range(self._dimension)])
 
-    def get_bin_left_edges(self, axis):
-        return self.bins[axis][:, 0]
+    def get_bin_left_edges(self, axis=None):
+        if axis is not None:
+            return self.bins[axis][:, 0]
+        else:
+            return np.meshgrid(*[self.get_bin_left_edges(i) for i in range(self.ndim)], indexing='ij')
 
-    def get_bin_right_edges(self, axis):
-        return self.bins[axis][:, 1]
+    def get_bin_right_edges(self, axis=None):
+        if axis is not None:
+            return self.bins[axis][:, 1]
+        else:
+            return np.meshgrid(*[self.get_bin_right_edges(i) for i in range(self.ndim)], indexing='ij')
 
     # TODO: bin_centers property?
 
@@ -117,11 +123,6 @@ class HistogramND(object):
             return (self.get_bin_right_edges(axis) + self.get_bin_left_edges(axis)) / 2
         else:
             return np.meshgrid(*[self.get_bin_centers(i) for i in range(self.ndim)], indexing='ij')
-            # TODO: This is wrong
-            # centers = self.get_bin_centers(0)
-            # for i in range(1, self.ndim):
-            #     centers = np.outer(centers, self.get_bin_centers(i))
-            # return centers
 
     def find_bin(self, value, axis=None):  # TODO: Check!
         if axis is not None:
@@ -168,6 +169,33 @@ class HistogramND(object):
                               frequencies=frequencies, errors2=errors2,
                               name=self.name, axis_names=self.axis_names[:],
                               keep_missed=self.keep_missed, missed=missed)
+
+    def projection(self, *axes, **kwargs):
+        axes = list(axes)
+        for i, ax in enumerate(axes):
+            if isinstance(ax, str):
+                axes[i] = self.axis_names.index(ax)
+        invert = list(range(self.ndim))
+        for ax in axes:
+            invert.remove(ax)
+        axes = tuple(axes)
+        invert = tuple(invert)
+        frequencies = self.frequencies.sum(axis=invert)
+        errors2 = self.errors2.sum(axis=invert)
+        name = kwargs.pop("name", self.name)
+        axis_names = [name for i, name in enumerate(self.axis_names) if i in axes]
+        bins = [bins for i, bins in enumerate(self.bins) if i in axes]
+        if len(axes) == 1:
+            from .histogram1d import Histogram1D
+            return Histogram1D(bins=bins[0], frequencies=frequencies, errors2=errors2,
+                               axis_name=axis_names[0], name=name)
+        elif len(axes) == 2:
+            return Histogram2D(bins=bins, frequencies=frequencies, errors2=errors2,
+                               axis_names=axis_names, name=name)
+        else:
+            return HistogramND(dimension=len(axes), bins=bins, frequencies=frequencies, errors2=errors2,
+                               axis_names=axis_names, name=name)
+
 
     # TODO: same_bins...
 
@@ -261,16 +289,29 @@ class HistogramND(object):
     def from_json(cls, text=None, path=None):
         return NotImplementedError
 
+    def __repr__(self):
+        s = "{0}(bins={1}, total={2}".format(
+            self.__class__.__name__, self.shape, self.total)
+        if self.missed:
+            s += ", missed={0}".format(self.missed)
+        s += ")"
+        return s
+
 
 class Histogram2D(HistogramND):
     def __init__(self, bins, frequencies=None, **kwargs):
         super(Histogram2D, self).__init__(2, bins, frequencies, **kwargs)
 
-    def plot(self, histtype='bar3d', backend="matplotlib", ax=None, **kwargs):
+    def plot(self, histtype='bar3d', density=False, backend="matplotlib", ax=None, **kwargs):
         color = kwargs.pop("color", "frequency")
 
         if backend == "matplotlib":
+            xpos, ypos = (arr.flatten() for arr in self.get_bin_centers())
+            zpos = np.zeros_like(ypos)
+
             from mpl_toolkits.mplot3d import Axes3D
+
+
             if not ax:
                 import matplotlib.pyplot as plt
                 fig = plt.figure()
@@ -280,20 +321,25 @@ class Histogram2D(HistogramND):
                 zpos = np.zeros_like(ypos)
 
                 dx, dy = (arr.flatten() for arr in self.get_bin_widths())
-                dz = self.frequencies.flatten()
+
+                if density:
+                    dz = self.densities.flatten()
+                else:
+                    dz = self.frequencies.flatten()
 
                 if color == "frequency":
                     import matplotlib.cm as cm
                     import matplotlib.colors as colors
                     norm = colors.Normalize(dz.min(), dz.max())
-                    colors = cm.jet(norm(dz))
+                    cmap = kwargs.pop("cmap", cm.jet)
+                    colors = cmap(norm(dz))
                 else:
                     colors = color
 
                 ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors)
                 ax.set_xlabel(self.axis_names[0])
                 ax.set_ylabel(self.axis_names[1])
-                ax.set_zlabel("frequency")
+                ax.set_zlabel("density" if density else "frequency")
                 if self.name:
                     ax.set_title(self.name)
             else:
@@ -302,7 +348,6 @@ class Histogram2D(HistogramND):
         else:
             raise RuntimeError("Unsupported hist type")
         pass
-
 
 
 def calculate_frequencies(data, ndim, bins, weights=None):
@@ -322,6 +367,7 @@ def calculate_frequencies(data, ndim, bins, weights=None):
     else:
         total_weight = data.shape[0]
 
+    # TODO: Right edges are not taken into account because they fall into inf bin
     frequencies, _ = np.histogramdd(data, edges, weights=weights)
 
     frequencies = frequencies[ixgrid].copy()

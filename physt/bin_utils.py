@@ -36,7 +36,7 @@ def make_bin_array(bins):
 def to_numpy_bins(bins):
     if not is_consecutive(bins):
         raise RuntimeError("Cannot create numpy bins from inconsecutive")
-    return np.concatenate([bins[0], [bins[1, -1]]])
+    return np.concatenate([bins[:1, 0], bins[:, 1]])
 
 
 def to_numpy_bins_with_mask(bins):
