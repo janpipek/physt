@@ -305,36 +305,32 @@ class Histogram2D(HistogramND):
     def plot(self, histtype='bar3d', density=False, backend="matplotlib", ax=None, **kwargs):
         color = kwargs.pop("color", "frequency")
 
+        if density:
+            dz = self.densities.flatten()
+        else:
+            dz = self.frequencies.flatten()
+
         if backend == "matplotlib":
-            xpos, ypos = (arr.flatten() for arr in self.get_bin_centers())
-            zpos = np.zeros_like(ypos)
+            import matplotlib.pyplot as plt
+            import matplotlib.cm as cm
+            import matplotlib.colors as colors
 
-            from mpl_toolkits.mplot3d import Axes3D
+            if color == "frequency":
+                norm = colors.Normalize(dz.min(), dz.max())
+                cmap = kwargs.pop("cmap", cm.plasma)
+                colors = cmap(norm(dz))
+            else:
+                colors = color
 
-
-            if not ax:
-                import matplotlib.pyplot as plt
-                fig = plt.figure()
-                ax = fig.add_subplot(111, projection='3d')
             if histtype == "bar3d":
+                from mpl_toolkits.mplot3d import Axes3D
                 xpos, ypos = (arr.flatten() for arr in self.get_bin_centers())
                 zpos = np.zeros_like(ypos)
-
                 dx, dy = (arr.flatten() for arr in self.get_bin_widths())
 
-                if density:
-                    dz = self.densities.flatten()
-                else:
-                    dz = self.frequencies.flatten()
-
-                if color == "frequency":
-                    import matplotlib.cm as cm
-                    import matplotlib.colors as colors
-                    norm = colors.Normalize(dz.min(), dz.max())
-                    cmap = kwargs.pop("cmap", cm.jet)
-                    colors = cmap(norm(dz))
-                else:
-                    colors = color
+                if not ax:
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111, projection='3d')
 
                 ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors)
                 ax.set_xlabel(self.axis_names[0])
@@ -342,6 +338,34 @@ class Histogram2D(HistogramND):
                 ax.set_zlabel("density" if density else "frequency")
                 if self.name:
                     ax.set_title(self.name)
+            elif histtype == "map":
+                if not ax:
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111)
+                else:
+                    fig = ax.get_figure()
+
+                xpos, ypos = (arr.flatten() for arr in self.get_bin_left_edges())
+                dx, dy = (arr.flatten() for arr in self.get_bin_widths())
+
+                for i in range(len(xpos)):
+                    bin_color = colors[i]
+                    rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
+                                         facecolor=bin_color, edgecolor="black")
+                    ax.add_patch(rect)
+                ax.set_xlim(self.bins[0][0,0], self.bins[0][-1,1])
+                ax.set_ylim(self.bins[1][0,0], self.bins[1][-1,1])
+                ax.autoscale_view()
+                ax.set_xlabel(self.axis_names[0])
+                ax.set_ylabel(self.axis_names[1])
+                if self.name:
+                    ax.set_title(self.name)
+
+                mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
+                mappable.set_array(dz)
+
+                fig.colorbar(mappable, ax=ax)
+                fig.tight_layout()
             else:
                 raise RuntimeError("Unsupported hist type")
             return ax
