@@ -25,7 +25,7 @@ def calculate_bins(array, _=None, *args, **kwargs):
     if kwargs.pop("check_nan", True):
         if np.any(np.isnan(array)):
             raise RuntimeError("Cannot calculate bins in presence of NaN's.")
-    if "range" in kwargs:
+    if "range" in kwargs:   # TODO: Remove from other functions
         array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
         bin_count = kwargs.pop("bins", ideal_bin_count(data=array))
@@ -49,6 +49,54 @@ def calculate_bins(array, _=None, *args, **kwargs):
     else:
         raise RuntimeError("Binning {0} not understood.".format(_))
     return make_bin_array(bins)
+
+
+def calculate_bins_nd(array, bins=None, *args, **kwargs):
+    if kwargs.pop("check_nan", True):
+        if np.any(np.isnan(array)):
+            raise RuntimeError("Cannot calculate bins in presence of NaN's.")
+    n, dim = array.shape
+
+    # Prepare bins
+    if isinstance(bins, (list, tuple)):
+        if len(bins) != dim:
+            raise RuntimeError("List of bins not understood.")
+    else:
+        bins = [bins] * dim
+
+    # Prepare arguments
+    range_ = kwargs.pop("range", None)
+    if range_:
+        range_n = np.asarray(range_)
+        if range_n.shape == (2,):
+            range_ = dim * [range_]
+        elif range_n.shape == (dim, 2):
+            range_ = range_
+        else:
+            raise RuntimeError("1 or d tuples expected for the range")
+    for i in range(len(args)):
+        if isinstance(args[i], (list, tuple)):
+            if len(args[i]) != dim:
+                raise RuntimeError("Argument not understood.")
+        else:
+            args[i] = dim * [args[i]]
+    for key in list(kwargs.keys()):
+        if isinstance(kwargs[key], (list, tuple)):
+            if len(kwargs[key]) != dim:
+                raise RuntimeError("Argument not understood.")
+        else:
+            kwargs[key] = dim * [kwargs[key]]
+
+    if range_:
+        kwargs["range"] = range_
+
+    bins = [
+        calculate_bins(array[:, i], bins[i],
+                       *(arg[i] for arg in args),
+                       **{k : kwarg[i] for k, kwarg in kwargs.items()})
+        for i in range(dim)
+        ]
+    return bins
 
 
 def numpy_bins(data=None, bins=10, range=None, **kwargs):
@@ -145,7 +193,10 @@ def fixed_width_bins(data, bin_width, align=True, range=None):
     ----------
     bin_width: float
     align: bool or float
-        Align to a "friendly" initial value. If Ture
+        The left-most edge will be aligned to a multiple of this.
+        If True, bin_width will be assumed
+    range: Optional[tuple]
+        (min, max)
 
     Returns
     -------

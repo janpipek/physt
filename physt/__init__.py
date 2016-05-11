@@ -96,12 +96,19 @@ def histogramdd(data, bins=10, *args, **kwargs):
         except:
             pass # Perhaps columns has different meaning here.
 
+    # Prepare and check data
     data = np.asarray(data)
-
+    if data.ndim != 2:
+        raise RuntimeError("Array must have shape (n, d)")
     n, dim = data.shape
-    if isinstance(bins, int):
-        bins = [bins] * dim
-    bins = [binning.numpy_bins(data[:,i], bins[i]) for i in range(dim)]
+    dropna = kwargs.pop("dropna", False)
+    if dropna:
+        data = data[~np.isnan(data).any(axis=1)]
+
+    # Prepare bins
+    bins = binning.calculate_bins_nd(data, bins=bins, *args, check_nan=not dropna, **kwargs)
+
+    # Prepare remaining data
     weights = kwargs.pop("weights", None)
     frequencies, errors2, missed = histogram_nd.calculate_frequencies(data, ndim=dim,
                                                                       bins=bins,
