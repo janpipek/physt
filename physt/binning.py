@@ -65,6 +65,7 @@ def calculate_bins_nd(array, bins=None, *args, **kwargs):
         bins = [bins] * dim
 
     # Prepare arguments
+    args = list(args)
     range_ = kwargs.pop("range", None)
     if range_:
         range_n = np.asarray(range_)
@@ -160,7 +161,7 @@ def exponential_bins(data=None, bins=None, range=None, **kwargs):
     return np.logspace(range[0], range[1], bins+1)
 
 
-def quantile_bins(data, bins=None, qrange=(0.0, 1.0)):
+def quantile_bins(data, bins=None, qrange=(0.0, 1.0), **kwargs):
     """Binning schema based on quantile ranges.
 
     This binning finds equally spaced quantiles. This should lead to
@@ -186,7 +187,7 @@ def quantile_bins(data, bins=None, qrange=(0.0, 1.0)):
     return np.percentile(data, np.linspace(qrange[0] * 100, qrange[1] * 100, bins + 1))
 
 
-def fixed_width_bins(data, bin_width, align=True, range=None):
+def fixed_width_bins(data, bin_width, align=True, range=None, **kwargs):
     """Binning schema with predefined bin width.
 
     Parameters
@@ -216,7 +217,7 @@ def fixed_width_bins(data, bin_width, align=True, range=None):
     return np.arange(bincount + 1) * bin_width + min
 
 
-def integer_bins(data, range=None):
+def integer_bins(data, range=None, **kwargs):
     """Binning schema with bins centered around integers.
 
     Designed for integer values. Bins are centered around integers
@@ -241,7 +242,7 @@ def integer_bins(data, range=None):
     return np.arange(bincount + 1) + min
 
 
-def human_bins(data, bins=10, range=None):
+def human_bins(data, bins=10, range=None, **kwargs):
     """Binning schema with bins automatically optimized human-friendly widths.
     
     Parameters
