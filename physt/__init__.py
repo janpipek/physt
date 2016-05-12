@@ -6,7 +6,7 @@ __version__ = str('0.2.99')
 
 
 def histogram(data, _=None, *args, **kwargs):
-    """Facade function to create histograms.
+    """Facade function to create 1D histograms.
 
     This proceeds in three steps:
     1) Based on magical parameter _, construct bins for the histogram
@@ -84,17 +84,45 @@ def histogram(data, _=None, *args, **kwargs):
 
 
 def histogram2d(data1, data2, bins=10, *args, **kwargs):
+    """Facade function to create 2D histograms.
+
+
+    Returns
+    -------
+    Histogram2D
+
+    See Also
+    --------
+    numpy.histogram2d    
+    """
+    # guess axis names
+    if not "axis_names" in kwargs:
+        if hasattr(data1, "name") and hasattr(data2, "name"):
+            kwargs["axis_names"] = [data1.name, data2.name]
     data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
     return histogramdd(data, bins, *args, **kwargs)
 
 
 def histogramdd(data, bins=10, *args, **kwargs):
+    """Facade function to create n-dimensional histograms.
+
+
+    Returns
+    -------
+    HistogramND
+
+    See Also
+    --------
+    numpy.histogramdd  
+    """
+
     # pandas - guess axis names
-    if hasattr(data, "columns") and not "axis_names" in kwargs:
-        try:
-            kwargs["axis_names"] = list(data.columns)
-        except:
-            pass # Perhaps columns has different meaning here.
+    if not "axis_names" in kwargs:
+        if hasattr(data, "columns"):
+            try:
+                kwargs["axis_names"] = list(data.columns)
+            except:
+                pass # Perhaps columns has different meaning here.
 
     # Prepare and check data
     data = np.asarray(data)
