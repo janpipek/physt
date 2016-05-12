@@ -208,7 +208,7 @@ class Histogram1D(object):
         -------
         float
         """
-        return self.bin_widths.sum()
+        return self.bin_sizes.sum()
 
     def normalize(self, inplace=False):
         """Normalize the histogram, so that the total weight is equal to 1.
@@ -423,7 +423,7 @@ class Histogram1D(object):
                     bar_kwargs["yerr"] = err_data
                     if not "ecolor" in bar_kwargs:
                         bar_kwargs["ecolor"] = "black"
-                ax.bar(self.bin_left_edges, data, self.bin_widths, **bar_kwargs)
+                ax.bar(self.bin_left_edges, data, self.bin_sizes, **bar_kwargs)
             elif histtype == "scatter":
                 if errors:
                     ax.errorbar(self.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "o"), ecolor=kwargs.get("ecolor", "black"))
