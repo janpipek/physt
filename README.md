@@ -33,7 +33,7 @@ iris_hist = h2(iris["sepal_length"], iris["sepal_width"], "human", 12, name="Iri
 iris_hist.plot();
 ```
 
-![Iris 2D plot](doc/iris-2D.png)
+![Iris 2D plot](doc/iris-2d.png)
 
 See more in docstring's and notebooks:
 
