@@ -251,13 +251,17 @@ class HistogramND(object):
         raise NotImplementedError()
 
     def __imul__(self, other):
-        raise NotImplementedError()
+        self._frequencies *= other
+        self._errors2 *= other ** 2
+        return self
 
     def __isub__(self, other):
         raise NotImplementedError()
 
     def __itruediv__(self, other):
-        raise NotImplementedError()
+        self._frequencies /= other
+        self._errors2 /= other ** 2
+        return self
 
     def __array__(self):
         """Convert to numpy array.
