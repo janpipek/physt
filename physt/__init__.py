@@ -145,3 +145,15 @@ def histogramdd(data, bins=10, *args, **kwargs):
         return histogram_nd.Histogram2D(bins, frequencies=frequencies, errors2=errors2, **kwargs)
     else:
         return histogram_nd.HistogramND(dim, bins, frequencies=frequencies, errors2=errors2, **kwargs)
+
+
+# Aliases
+h1 = histogram
+h2 = histogram2d
+
+def h3(data, *args, **kwargs):
+    data = np.asarray(data)
+    n, dim = data.shape
+    if dim != 3:
+        raise RuntimeError("Array must have shape (n, 3)")
+    histogramdd(data, *args, **kwargs)
