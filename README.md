@@ -23,6 +23,18 @@ hist.plot()
 
 ![Heights plot](doc/heights.png)
 
+## 2D example
+
+```python
+import seaborn as sns
+
+iris = sns.load_dataset('iris')
+iris_hist = h2(iris["sepal_length"], iris["sepal_width"], "human", 12, name="Iris")
+iris_hist.plot();
+```
+
+![Iris 2D plot](doc/iris-2D.png)
+
 See more in docstring's and notebooks:
 
 - Basic tutorial: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Tutorial.ipynb>
