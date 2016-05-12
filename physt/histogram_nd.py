@@ -302,7 +302,7 @@ class Histogram2D(HistogramND):
     def __init__(self, bins, frequencies=None, **kwargs):
         super(Histogram2D, self).__init__(2, bins, frequencies, **kwargs)
 
-    def plot(self, histtype='bar3d', density=False, backend="matplotlib", ax=None, **kwargs):
+    def plot(self, histtype='map', density=False, backend="matplotlib", ax=None, **kwargs):
         color = kwargs.pop("color", "frequency")
 
         if density:
@@ -351,7 +351,7 @@ class Histogram2D(HistogramND):
                 for i in range(len(xpos)):
                     bin_color = colors[i]
                     rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
-                                         facecolor=bin_color, edgecolor="black")
+                                         facecolor=bin_color, edgecolor="black", lw=kwargs.get("lw", 1))
                     ax.add_patch(rect)
                 ax.set_xlim(self.bins[0][0,0], self.bins[0][-1,1])
                 ax.set_ylim(self.bins[1][0,0], self.bins[1][-1,1])
