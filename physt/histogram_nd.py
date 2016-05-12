@@ -315,6 +315,7 @@ class Histogram2D(HistogramND):
         show_zero = kwargs.pop("show_zero", True)
         show_colorbar = kwargs.pop("show_colorbar", True)
         show_values = kwargs.pop("show_values", False)
+        format_value = kwargs.pop("format_value", str)
 
         if density:
             dz = self.densities.flatten()
@@ -371,10 +372,7 @@ class Histogram2D(HistogramND):
                         ax.add_patch(rect)
                         
                         if show_values:
-                            if not dz[i] - np.floor(dz[i]):
-                                text = int(dz[i])
-                            else:
-                                text = dz[i]
+                            text = format_value(dz[i])
                                 
                             if np.mean(bin_color[:3]) > 0.5:
                                 text_color = (0.0, 0.0, 0.0, 1.0)
