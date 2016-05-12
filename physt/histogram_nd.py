@@ -303,7 +303,14 @@ class Histogram2D(HistogramND):
         super(Histogram2D, self).__init__(2, bins, frequencies, **kwargs)
 
     def plot(self, histtype='map', density=False, backend="matplotlib", ax=None, **kwargs):
+        """Plot the 2D histogram.
+        
+                
+        """
         color = kwargs.pop("color", "frequency")
+        show_zero = kwargs.pop("show_zero", True)
+        show_colorbar = kwargs.pop("show_colorbar", True)
+        show_values = kwargs.pop("show_values", False)
 
         if density:
             dz = self.densities.flatten()
@@ -320,7 +327,7 @@ class Histogram2D(HistogramND):
                 cmap = kwargs.pop("cmap", cm.plasma)
                 colors = cmap(norm(dz))
             else:
-                colors = color
+                colors = color   # TODO: does not work for map
 
             if histtype == "bar3d":
                 from mpl_toolkits.mplot3d import Axes3D
@@ -346,13 +353,31 @@ class Histogram2D(HistogramND):
                     fig = ax.get_figure()
 
                 xpos, ypos = (arr.flatten() for arr in self.get_bin_left_edges())
+                if show_values:
+                    text_x, text_y = (arr.flatten() for arr in self.get_bin_centers())
+                
                 dx, dy = (arr.flatten() for arr in self.get_bin_widths())
 
                 for i in range(len(xpos)):
                     bin_color = colors[i]
-                    rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
-                                         facecolor=bin_color, edgecolor="black", lw=kwargs.get("lw", 1))
-                    ax.add_patch(rect)
+                
+                    if dz[i] > 0 or show_zero:
+                        rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
+                                            facecolor=bin_color, edgecolor="black", lw=kwargs.get("lw", 1))
+                        ax.add_patch(rect)
+                        
+                        if show_values:
+                            if not dz[i] - np.floor(dz[i]):
+                                text = int(dz[i])
+                            else:
+                                text = dz[i]
+                                
+                            if np.mean(bin_color[:3]) > 0.5:
+                                text_color = (0.0, 0.0, 0.0, 1.0)
+                            else:
+                                text_color = (1.0, 1.0, 1.0, 1.0)
+                            ax.text(text_x[i], text_y[i], text, horizontalalignment='center', verticalalignment='center', color=text_color)                        
+                                                
                 ax.set_xlim(self.bins[0][0,0], self.bins[0][-1,1])
                 ax.set_ylim(self.bins[1][0,0], self.bins[1][-1,1])
                 ax.autoscale_view()
@@ -361,10 +386,11 @@ class Histogram2D(HistogramND):
                 if self.name:
                     ax.set_title(self.name)
 
-                mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
-                mappable.set_array(dz)
+                if show_colorbar:
+                    mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
+                    mappable.set_array(dz)
 
-                fig.colorbar(mappable, ax=ax)
+                    fig.colorbar(mappable, ax=ax)
                 fig.tight_layout()
             else:
                 raise RuntimeError("Unsupported hist type")

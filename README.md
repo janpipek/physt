@@ -10,7 +10,7 @@ nice integration into IPython notebook and various plotting options. In short, w
 ## Simple example
 
 ```python
-from physt import histogram
+from physt import histogram, h2
 
 heights = [160, 155, 156, 198, 177, 168, 191, 183, 184, 179, 178, 172, 173, 175,
            172, 177, 176, 175, 174, 173, 174, 175, 177, 169, 168, 164, 175, 188,
@@ -29,8 +29,8 @@ hist.plot()
 import seaborn as sns
 
 iris = sns.load_dataset('iris')
-iris_hist = h2(iris["sepal_length"], iris["sepal_width"], "human", 12, name="Iris")
-iris_hist.plot();
+iris_hist = h2(iris["sepal_length"], iris["sepal_width"], "human", (12, 7), name="Iris")
+iris_hist.plot(show_zero=False, cmap=cm.gray_r, show_values=True);
 ```
 
 ![Iris 2D plot](doc/iris-2d.png)
