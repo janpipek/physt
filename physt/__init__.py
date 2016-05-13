@@ -2,7 +2,7 @@ from . import binning, bin_utils, histogram1d, histogram_nd
 
 import numpy as np
 
-__version__ = str('0.2.99')
+__version__ = str('0.2.100')
 
 
 def histogram(data, _=None, *args, **kwargs):
@@ -14,9 +14,11 @@ def histogram(data, _=None, *args, **kwargs):
     3) Construct the histogram object itself
 
     *Guiding principle:* parameters understood by numpy.histogram should be
-    understood also by physt.histogram and should result in a Histogram1D
+    understood also by physt.histogram as well and should result in a Histogram1D
     object with (h.numpy_bins, h.frequencies) same as the numpy.histogram
     output. Additional functionality is a bonus.
+
+    This function is also aliased as "h1".
 
     Parameters
     ----------
@@ -86,6 +88,9 @@ def histogram(data, _=None, *args, **kwargs):
 def histogram2d(data1, data2, bins=10, *args, **kwargs):
     """Facade function to create 2D histograms.
 
+    For implementation and parameters, see histogramdd.
+
+    This function is also aliased as "h2".
 
     Returns
     -------
@@ -94,6 +99,7 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
     See Also
     --------
     numpy.histogram2d    
+    histogramdd
     """
     # guess axis names
     if not "axis_names" in kwargs:
@@ -106,6 +112,21 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
 def histogramdd(data, bins=10, *args, **kwargs):
     """Facade function to create n-dimensional histograms.
 
+    3D variant of this function is also aliased as "h3".
+
+    Parameters
+    ----------
+    data : array_like
+        Container of all the values
+    bins: Any
+    weights: array_like, optional
+        (as numpy.histogram)
+    dropna: bool
+        whether to clear data from nan's before histogramming
+    name: str
+        name of the histogram
+    axis_names: Iterable[str]
+        names of the variable on x axis   
 
     Returns
     -------
