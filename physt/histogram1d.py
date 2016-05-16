@@ -44,6 +44,8 @@ class Histogram1D(object):
             Name of the characteristics that is histogrammed (will be displayed on x axis)
         errors2: Optional[array_like]
             Quadratic errors of individual bins. If not set, defaults to frequencies.
+        stats: dict
+            Dictionary of various statistics ("sum", "sum2")
         """
         self._bins = bin_utils.make_bin_array(bins)
 
@@ -63,6 +65,7 @@ class Histogram1D(object):
         self.inner_missed = kwargs.get("inner_missed", 0)
         self.name = kwargs.get("name", None)
         self.axis_name = kwargs.get("axis_name", self.name)
+        self._stats = kwargs.get("stats", None)
 
         self._errors2 = np.asarray(kwargs.get("errors2", self.frequencies.copy()))
         if np.any(self._errors2 < 0):
@@ -193,6 +196,31 @@ class Histogram1D(object):
         float
         """
         return self._frequencies.sum()
+
+    def mean(self):
+        if self._stats:
+            return self._stats["sum"] / self.total
+        else:
+            return None    # TODO: or error
+
+    def std(self):
+        if self._stats:
+            return np.sqrt(self.variance())
+        else:
+            return None    # TODO: or error
+
+    def variance(self):
+        if self._stats:
+            return (self._stats["sum2"] - self._stats["sum"] ** 2 / self.total) / self.total
+        else:
+            return None
+
+    # TODO: Add (correct) implementation of SEM
+    # def sem(self):
+    #     if self._stats:
+    #         return 1 / total * np.sqrt(self.variance)
+    #     else:
+    #         return None
 
     @property
     def total_width(self):
@@ -348,6 +376,9 @@ class Histogram1D(object):
         else:
             self._frequencies[ixbin] += weight
             self.errors2[ixbin] += weight ** 2
+            if self._stats:
+                self._stats["sum"] += weight * value
+                self._stats["sum2"] += (weight * value) ** 2
         return ixbin
 
     def plot(self, histtype='bar', cumulative=False, density=False, errors=False, backend="matplotlib", ax=None, **kwargs):
@@ -375,6 +406,8 @@ class Histogram1D(object):
         ticks: str
             Special options for tick placing:
             - "center" shows ticks for bin centers
+        stats_box: Optional[bool]
+            If True (default: False), show a summary statistics like ROOT histograms do.
 
         You can also specify arbitrary matplotlib arguments, they are forwarded to the respective plotting methods.
 
@@ -408,6 +441,7 @@ class Histogram1D(object):
 
         # Pop our kwargs
         ticks = kwargs.pop("ticks", None)
+        stats_box = kwargs.pop("stats_box", False)
 
         if backend == "matplotlib":
             if not ax:
@@ -440,9 +474,16 @@ class Histogram1D(object):
             if self.axis_name:
                 ax.set_xlabel(self.axis_name)
             ax.set_ylim(ylim)
+
+            # Stats box 
+            if stats_box:
+                # place a text box in upper left in axes coords
+                text = "Total: {0}\nMean: {1:.2f}\nStd.dev: {2:.2f}".format(self.total, self.mean(), self.std())
+                ax.text(0.05, 0.95, text, transform=ax.transAxes,
+                        verticalalignment='top', horizontalalignment='left')
             return ax
         elif backend == "bokeh":
-            from bokeh.plotting import figure, output_file, show
+            from bokeh.plotting import figure, output_file, show 
             from bokeh.charts import Bar, Scatter, show
             from bokeh.models import HoverTool, Range1d
             from bokeh.models.sources import ColumnDataSource
@@ -545,6 +586,9 @@ class Histogram1D(object):
             self.overflow += other.overflow
             self.inner_missed += other.inner_missed
             self._errors2 += other.errors2
+            if self._stats:
+                self._stats["sum"] += other._stats["sum"]
+                self._stats["sum2"] += other._stats["sum2"]
         else:
             raise RuntimeError("Bins must be the same when adding histograms.")
         return self
@@ -563,6 +607,9 @@ class Histogram1D(object):
             self.overflow -= other.overflow
             self.inner_missed -= other.inner_missed
             self._errors2 += other.errors2
+            if self._stats:
+                self._stats["sum"] -= other._stats["sum"]
+                self._stats["sum2"] -= other._stats["sum2"]            
         else:
             raise RuntimeError("Bins must be the same when subtracting histograms.")
         return self
@@ -583,6 +630,9 @@ class Histogram1D(object):
             self.underflow *= other
             self.inner_missed *= other
             self._errors2 *= other
+            if self._stats:
+                self._stats["sum"] *= other
+                self._stats["sum2"] *= other ** 2
         else:
             raise RuntimeError("Histograms can be multiplied only by a constant.")
         return self
@@ -600,6 +650,9 @@ class Histogram1D(object):
             self.underflow /= other
             self.inner_missed /= other
             self._errors2 /= other
+            if self._stats:
+                self._stats["sum"] /= other
+                self._stats["sum2"] /= other ** 2            
         else:
             raise RuntimeError("Histograms can be divided only by a constant.")
         return self
@@ -660,6 +713,7 @@ class Histogram1D(object):
             "inner_missed": self.inner_missed,
             "keep_missed": self.keep_missed
         }
+        # TODO: Add stats
         return xr.Dataset(data_vars, coords, attrs)
 
     @classmethod
@@ -677,6 +731,7 @@ class Histogram1D(object):
                   'overflow': arr.attrs["overflow"],
                   'underflow': arr.attrs["underflow"],
                   'keep_missed': arr.attrs["keep_missed"]}
+        # TODO: Add stats
         return cls(**kwargs)
 
     def to_json(self, path=None):
@@ -701,6 +756,7 @@ class Histogram1D(object):
         data["keep_missed"] = self.keep_missed
         data["underflow"] = float(self.underflow)
         data["overflow"] = float(self.overflow)
+        # TODO: Add stats
 
         text = json.dumps(data)
         if path:
@@ -729,6 +785,7 @@ class Histogram1D(object):
         else:
             with open(path, "r") as f:
                 data = json.load(f)
+        # TODO: Add stats
         return cls(**data)
 
     def __repr__(self):
@@ -774,6 +831,10 @@ def calculate_frequencies(data, bins, weights=None, validate_bins=True, already_
     Checks that the bins are in a correct order (not necessarily consecutive)
     """
 
+    # Statistics
+    sum = 0.0
+    sum2 = 0.0
+
     # Ensure correct binning
     bins = bin_utils.make_bin_array(bins)
     if validate_bins:
@@ -811,10 +872,14 @@ def calculate_frequencies(data, bins, weights=None, validate_bins=True, already_
             stop = np.searchsorted(data, bin[1], side="left")
         frequencies[xbin] = weights[start:stop].sum()
         errors2[xbin] = (weights[start:stop] ** 2).sum()
+        sum += (data[start:stop] * weights[start:stop]).sum()
+        sum2 += ((data[start:stop] * weights[start:stop]) ** 2).sum()
 
     # Underflow and overflow don't make sense for unconsecutive binning.
     if not bin_utils.is_consecutive(bins):
         underflow = np.nan
         overflow = np.nan
 
-    return frequencies, errors2, underflow, overflow
+    stats = { "sum": sum, "sum2" : sum2}
+
+    return frequencies, errors2, underflow, overflow, stats

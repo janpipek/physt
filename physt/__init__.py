@@ -71,9 +71,9 @@ def histogram(data, _=None, *args, **kwargs):
         bins = binning.calculate_bins(array, _, *args, check_nan=not dropna, **kwargs)
 
         # Get frequencies
-        frequencies, errors2, underflow, overflow = histogram1d.calculate_frequencies(array,
-                                                                                      bins=bins,
-                                                                                      weights=weights)
+        frequencies, errors2, underflow, overflow, stats = histogram1d.calculate_frequencies(array,
+                                                                                             bins=bins,
+                                                                                             weights=weights)
 
         # Construct the object
         if not keep_missed:
@@ -82,7 +82,8 @@ def histogram(data, _=None, *args, **kwargs):
         if hasattr(data, "name") and not axis_name:
             axis_name = data.name
         return histogram1d.Histogram1D(bins=bins, frequencies=frequencies, errors2=errors2, overflow=overflow,
-                                       underflow=underflow, keep_missed=keep_missed, name=name, axis_name=axis_name)
+                                       underflow=underflow, stats=stats,
+                                       keep_missed=keep_missed, name=name, axis_name=axis_name)
 
 
 def histogram2d(data1, data2, bins=10, *args, **kwargs):
