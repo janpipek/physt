@@ -373,8 +373,9 @@ class Histogram2D(HistogramND):
                         
                         if show_values:
                             text = format_value(dz[i])
+                            yiq_y = np.dot(bin_color[:3], [0.299, 0.587, 0.114])
                                 
-                            if np.mean(bin_color[:3]) > 0.5:
+                            if yiq_y > 0.5:
                                 text_color = (0.0, 0.0, 0.0, 1.0)
                             else:
                                 text_color = (1.0, 1.0, 1.0, 1.0)
