@@ -186,17 +186,13 @@ class Histogram1D(object):
 
     @property
     def total(self):
-        """Total number (sum of weights) of entries including underflow and overflow.
+        """Total number (sum of weights) of entries excluding underflow and overflow.
 
         Returns
         -------
         float
         """
-        t = self._frequencies.sum()
-        missed = self.missed   # TODO: Makes sense?
-        if missed:
-            t += missed
-        return t
+        return self._frequencies.sum()
 
     @property
     def total_width(self):
