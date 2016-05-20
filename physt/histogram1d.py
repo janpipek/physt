@@ -390,6 +390,7 @@ class Histogram1D(object):
             Type of the histogram:
             - bar : as bars, the typical (and default) setting
             - scatter : as points
+            - line : as simple line
         cumulative: Optional[bool]
             If True, the values are displayed as cumulative function rising from 0 to N (or N - fraction of unmatched)
         errors: Optional[bool]
@@ -459,6 +460,11 @@ class Histogram1D(object):
                     ax.errorbar(self.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "o"), ecolor=kwargs.get("ecolor", "black"))
                 else:
                     ax.scatter(self.bin_centers, data, **kwargs)
+            elif histtype == "line":
+                if errors:
+                    ax.errorbar(self.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "-"), ecolor=kwargs.get("ecolor", "black"), **kwargs)
+                else:
+                    ax.plot(self.bin_centers, data, **kwargs)
             else:
                 raise RuntimeError("Unknown histogram type: {0}".format(histtype))
 
