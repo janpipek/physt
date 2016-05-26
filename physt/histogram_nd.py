@@ -320,19 +320,23 @@ class Histogram2D(HistogramND):
             map or bar3d
         cmap: str or matplotlib.colors.Colormap
             The colormap of name of the colormap (used in map)
-        cmap_min: float
+        cmap_min: float or str
             Minimum value to include in the colormap (lower are clipped, default: 0)
+            Special value: "min" -> Minimum value is the minimum bin value
         cmap_max: float
-            Maximum value to include in the colormap (higher are clipped, default: maximum bin)            
+            Maximum value to include in the colormap (higher are clipped, default: maximum bin value)            
         show_zero: bool
             Draw bins with zero frequency (default: True)
         show_values: bool
             Show little labels with bin values (default: False)
+        format_value: function
+            The thing to be displayed as value (useful example: int)            
         show_colorbar: bool
             Display a colobar with range on the right of the axis
         grid_color: str
-            Color of the grid in the colour map (default: "black")
-
+            Color of the grid in the colour map (default: middle of the colormap)
+        lw: float
+            Width of the grid lines
                 
         """
         color = kwargs.pop("color", "frequency")
@@ -352,9 +356,11 @@ class Histogram2D(HistogramND):
             import matplotlib.colors as colors
 
             if color == "frequency":
-                cmap = kwargs.pop("cmap", cm.plasma)
+                cmap = kwargs.pop("cmap", "Greys")
                 cmap_max = kwargs.pop("cmap_max", dz.max())
-                cmap_min = kwargs.pop("cmap_min", dz.min())
+                cmap_min = kwargs.pop("cmap_min", 0)
+                if cmap_min == "min":
+                    cmap_min = dz.min()
                 norm = colors.Normalize(cmap_min, cmap_max, clip=True)
                 
                 if isinstance(cmap, str):
@@ -397,7 +403,7 @@ class Histogram2D(HistogramND):
                 
                     if dz[i] > 0 or show_zero:
                         rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
-                                            facecolor=bin_color, edgecolor=kwargs.get("grid_color", "black"), lw=kwargs.get("lw", 1))
+                                            facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)), lw=kwargs.get("lw", 0.5))
                         ax.add_patch(rect)
                         
                         if show_values:
