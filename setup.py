@@ -7,6 +7,7 @@ options = dict(
     name='physt',
     version=__version__,
     packages=find_packages(),
+    # package_data={'': ['LICENSE', 'MANIFEST.in', 'README.md', 'HISTORY.txt']},
     license='MIT',
     description='P(i/y)thon h(i/y)stograms.',
     long_description=open('README.md').read(),

@@ -59,6 +59,7 @@ See more in docstring's and notebooks:
 * Items / slice selection (including mask arrays)
 * Add new values (fill)
 * Cumulative values, densities
+* Simple statistics for original data (mean, std, sem)
 * Simple plotting (matplotlib, bokeh)
   - 2D support experimental
 * Algorithms for optimized binning
