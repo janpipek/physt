@@ -92,6 +92,10 @@ def is_rising(bins):
 
     Does not check if the bins are consecutive.
 
+    Parameters
+    ----------
+    bins: array_like
+
     Returns
     -------
     bool

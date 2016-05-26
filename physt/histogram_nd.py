@@ -303,12 +303,34 @@ class HistogramND(object):
 
 
 class Histogram2D(HistogramND):
+    """Specialized version of the general HistogramND class.
+
+    Its only addition is the plot() method
+    """
+
     def __init__(self, bins, frequencies=None, **kwargs):
         super(Histogram2D, self).__init__(2, bins, frequencies, **kwargs)
 
     def plot(self, histtype='map', density=False, backend="matplotlib", ax=None, **kwargs):
         """Plot the 2D histogram.
         
+        Parameters
+        ----------
+        histtype: str
+            map or bar3d
+        cmap: str or matplotlib.colors.Colormap
+            The colormap of name of the colormap (used in map)
+        cmap_min: float
+            Minimum value to include in the colormap (lower are clipped, default: 0)
+        cmap_max: float
+            Maximum value to include in the colormap (higher are clipped, default: maximum bin)            
+        show_zero: bool
+            Draw bins with zero frequency (default: True)
+        show_values: bool
+            Show little labels with bin values (default: False)
+        show_colorbar: bool
+            Display a colobar with range on the right of the axis
+
                 
         """
         color = kwargs.pop("color", "frequency")
@@ -328,8 +350,13 @@ class Histogram2D(HistogramND):
             import matplotlib.colors as colors
 
             if color == "frequency":
-                norm = colors.Normalize(dz.min(), dz.max())
                 cmap = kwargs.pop("cmap", cm.plasma)
+                cmap_max = kwargs.pop("cmap_max", dz.max())
+                cmap_min = kwargs.pop("cmap_min", dz.min())
+                norm = colors.Normalize(cmap_min, cmap_max, clip=True)
+                
+                if isinstance(cmap, str):
+                    cmap = plt.get_cmap(cmap)
                 colors = cmap(norm(dz))
             else:
                 colors = color   # TODO: does not work for map
