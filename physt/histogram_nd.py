@@ -330,6 +330,8 @@ class Histogram2D(HistogramND):
             Show little labels with bin values (default: False)
         show_colorbar: bool
             Display a colobar with range on the right of the axis
+        grid_color: str
+            Color of the grid in the colour map (default: "black")
 
                 
         """
@@ -395,7 +397,7 @@ class Histogram2D(HistogramND):
                 
                     if dz[i] > 0 or show_zero:
                         rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
-                                            facecolor=bin_color, edgecolor="black", lw=kwargs.get("lw", 1))
+                                            facecolor=bin_color, edgecolor=kwargs.get("grid_color", "black"), lw=kwargs.get("lw", 1))
                         ax.add_patch(rect)
                         
                         if show_values:
