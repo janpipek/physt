@@ -409,6 +409,14 @@ class Histogram1D(object):
             - "center" shows ticks for bin centers
         stats_box: Optional[bool]
             If True (default: False), show a summary statistics like ROOT histograms do.
+        cmap: str | matplotlib.colors.Colormap | True
+            If used, the colormap of name of the colormap => overrides "color" parameter
+            If True, takes the default colormap ("Greys")
+        cmap_min: float or str
+            If cmap is used, minimum value to include in the colormap (lower are clipped, default: 0)
+            Special value: "min" -> Minimum value is the minimum bin value
+        cmap_max: float
+            If cmap is used, maximum value to include in the colormap (higher are clipped, default: maximum bin value)            
 
         You can also specify arbitrary matplotlib arguments, they are forwarded to the respective plotting methods.
 
@@ -443,10 +451,11 @@ class Histogram1D(object):
         # Pop our kwargs
         ticks = kwargs.pop("ticks", None)
         stats_box = kwargs.pop("stats_box", False)
+        cmap = kwargs.pop("cmap", None)
 
         if backend == "matplotlib":
+            import matplotlib.pyplot as plt
             if not ax:
-                import matplotlib.pyplot as plt
                 _, ax = plt.subplots()
             if histtype == "bar":
                 bar_kwargs = kwargs.copy()
@@ -454,6 +463,18 @@ class Histogram1D(object):
                     bar_kwargs["yerr"] = err_data
                     if not "ecolor" in bar_kwargs:
                         bar_kwargs["ecolor"] = "black"
+                if cmap:
+                    if cmap == True:
+                        cmap = "Greys"
+                    import matplotlib.colors as colors
+                    cmap_max = kwargs.pop("cmap_max", data.max())
+                    cmap_min = kwargs.pop("cmap_min", 0)
+                    if cmap_min == "min":
+                        cmap_min = data.min()
+                    norm = colors.Normalize(cmap_min, cmap_max, clip=True)
+                    if isinstance(cmap, str):
+                        cmap = plt.get_cmap(cmap)
+                    bar_kwargs["color"] = cmap(norm(data))                   
                 ax.bar(self.bin_left_edges, data, self.bin_sizes, **bar_kwargs)
             elif histtype == "scatter":
                 if errors:
