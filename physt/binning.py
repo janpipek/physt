@@ -15,6 +15,9 @@ def calculate_bins(array, _=None, *args, **kwargs):
         To-be-guessed parameter that specifies what kind of binning should be done
     check_nan: bool
         Check for the presence of nan's in array? Default: True
+    range: tuple
+        Limit values to a range. Some of the binning methods also (subsequently)
+        use this parameter for the bin shape.
 
     Returns
     -------
@@ -25,7 +28,7 @@ def calculate_bins(array, _=None, *args, **kwargs):
     if kwargs.pop("check_nan", True):
         if np.any(np.isnan(array)):
             raise RuntimeError("Cannot calculate bins in presence of NaN's.")
-    if "range" in kwargs:   # TODO: Remove from other functions
+    if "range" in kwargs:   # TODO: re-consider the usage of this parameter
         array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
         bin_count = kwargs.pop("bins", ideal_bin_count(data=array))
@@ -194,7 +197,7 @@ def fixed_width_bins(data, bin_width, align=True, range=None, **kwargs):
     ----------
     bin_width: float
     align: bool or float
-        The left-most edge will be aligned to a multiple of this.
+        The left-most & right-most edge will be aligned to a multiple of this.
         If True, bin_width will be assumed
     range: Optional[tuple]
         (min, max)
@@ -267,7 +270,7 @@ def human_bins(data, bins=10, range=None, **kwargs):
     
 
 binning_methods = {
-    "numpy_like" : numpy_bins,
+    "numpy" : numpy_bins,
     "exponential" : exponential_bins,
     "quantile": quantile_bins,
     "fixed_width": fixed_width_bins,
