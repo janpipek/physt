@@ -35,7 +35,7 @@ class TestValues(object):
 
     def test_normalize(self):
         new = example.normalize()
-        expected = np.array([4, 0, 3, 7.2]) / 17.2
+        expected = np.array([4, 0, 3, 7.2]) / 14.2
         assert np.allclose(new.frequencies, expected)
         assert np.array_equal(new.bins, example.bins)
         assert new is not example
@@ -47,7 +47,7 @@ class TestValues(object):
         assert new is copy
 
     def test_total(self):
-        assert np.isclose(example.total, 17.2)
+        assert np.isclose(example.total, 14.2)
 
 
 class TestCopy(object):

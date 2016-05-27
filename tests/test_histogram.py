@@ -30,7 +30,7 @@ class TestNumpyBins(object):
         assert hist.bin_right_edges[-1] == 1.0
         assert hist.overflow == 0
         assert hist.underflow == 50
-        assert hist.total == 100
+        assert hist.total == 50
 
         hist = histogram(arr, bins=10, range=(0.5, 1.0), keep_missed=False)
         assert hist.total == 50
