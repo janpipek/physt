@@ -248,6 +248,8 @@ class Histogram2D(HistogramND):
     """
 
     def __init__(self, bins, frequencies=None, **kwargs):
+        if "dim" in kwargs:
+            kwargs.pop("dim")
         super(Histogram2D, self).__init__(2, bins, frequencies, **kwargs)
 
     def plot(self, histtype='map', density=False, backend="matplotlib", ax=None, **kwargs):
@@ -374,7 +376,6 @@ class Histogram2D(HistogramND):
             return ax
         else:
             raise RuntimeError("Unsupported hist type")
-        pass
 
 
 def calculate_frequencies(data, ndim, bins, weights=None):

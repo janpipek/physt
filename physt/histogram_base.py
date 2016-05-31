@@ -104,3 +104,4 @@ class HistogramBase(object):
         frequencies
         """
         return self.frequencies
+

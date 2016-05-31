@@ -166,7 +166,7 @@ def histogramdd(data, bins=10, *args, **kwargs):
     if dim == 2:
         return histogram_nd.Histogram2D(bins, frequencies=frequencies, errors2=errors2, **kwargs)
     else:
-        return histogram_nd.HistogramND(dim, bins, frequencies=frequencies, errors2=errors2, **kwargs)
+        return histogram_nd.HistogramND(dim=dim, bins=bins, frequencies=frequencies, errors2=errors2, **kwargs)
 
 
 # Aliases

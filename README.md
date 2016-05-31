@@ -41,6 +41,7 @@ See more in docstring's and notebooks:
 - Binning: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Binning.ipynb>
 - Bokeh plots: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Bokeh%20examples.ipynb>
 - 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/2D%20Histograms.ipynb>
+- Special histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Special%20Histograms.ipynb>
 
 ## Installation
 
