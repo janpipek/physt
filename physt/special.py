@@ -1,4 +1,5 @@
 from .histogram_nd import HistogramND
+from .histogram1d import Histogram1D
 from . import binning, histogram_nd
 import numpy as np
 
@@ -16,6 +17,22 @@ class PolarHistogram(HistogramND):
         sizes = self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2
         sizes = np.outer(sizes, self.get_bin_widths(1))
         return sizes
+
+    def projection(self, axis_name, **kwargs):
+        if axis_name == self.axis_names[0]:
+            ax = 0
+        elif axis_name == self.axis_names[1]:
+            ax = 1
+        else:
+            raise RuntimeError("Invalid axis for projection.")
+        invert = 1 - ax
+
+        frequencies = self.frequencies.sum(axis=invert)
+        errors2 = self.errors2.sum(axis=invert)
+        bins = self.bins[ax]
+        name = kwargs.pop("name", self.name)
+        klass = (RadialHistogram, AzimuthalHistogram)[ax]
+        return klass(bins=bins, errors2=errors2, name=name, frequencies=frequencies, **kwargs)
 
     def find_bin(self, value, axis=None):
         raise NotImplementedError()
@@ -91,8 +108,16 @@ class PolarHistogram(HistogramND):
             raise RuntimeError("Unsupported hist type")
 
 
+class RadialHistogram(Histogram1D):
+    """Projection of polar histogram to 1D with respect to radius."""
+    @property
+    def bin_sizes(self):
+        return self.bin_right_edges ** 2 - self.bin_left_edges ** 2
 
 
+class AzimuthalHistogram(Histogram1D):
+    """Projection of polar histogram to 1D with respect to phi."""
+    # TODO: Add special plotting
 
 
 def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwargs):
