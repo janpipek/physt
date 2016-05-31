@@ -248,13 +248,11 @@ class Histogram1D(HistogramBase):
         -------
         numpy.ndarray
         """
-        import warnings
-        warnings.warn("Deprecation: use bin_sizes instead of bin_widths.")
-        return self.bin_sizes
+        return self.bin_right_edges - self.bin_left_edges
 
     @property
     def bin_sizes(self):
-        return self.bin_right_edges - self.bin_left_edges
+        return self.bin_widths
 
     def find_bin(self, value):
         """Index of bin corresponding to a value.
@@ -412,7 +410,7 @@ class Histogram1D(HistogramBase):
                     if isinstance(cmap, str):
                         cmap = plt.get_cmap(cmap)
                     bar_kwargs["color"] = cmap(norm(data))                   
-                ax.bar(self.bin_left_edges, data, self.bin_sizes, **bar_kwargs)
+                ax.bar(self.bin_left_edges, data, self.bin_widths, **bar_kwargs)
             elif histtype == "scatter":
                 if errors:
                     ax.errorbar(self.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "o"), ecolor=kwargs.get("ecolor", "black"))
@@ -505,15 +503,16 @@ class Histogram1D(HistogramBase):
             underflow = self.underflow
             overflow = self.overflow
             inner_missed = self.inner_missed
-            # TODO Errors!
+            errors2 = self.errors2
         else:
             frequencies = None
             underflow = 0
             overflow = 0
             inner_missed = 0
-            # TODO Errors!
+            errors2 = None
         return self.__class__(np.copy(self.bins), frequencies, underflow=underflow, overflow=overflow, inner_missed=inner_missed,
-                              name=self.name, axis_name=self.axis_name, keep_missed=self.keep_missed)
+                              name=self.name, axis_name=self.axis_name, keep_missed=self.keep_missed,
+                              errors2=errors2)
 
     def __eq__(self, other):
         if not isinstance(other, Histogram1D):
