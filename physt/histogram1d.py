@@ -1,8 +1,9 @@
 import numpy as np
 from . import bin_utils
+from .histogram_base import HistogramBase
 
 
-class Histogram1D(object):
+class Histogram1D(HistogramBase):
     """One-dimensional histogram data.
 
     The bins can be of different widths.
@@ -73,17 +74,6 @@ class Histogram1D(object):
         if self._errors2.shape != self._frequencies.shape:
             raise RuntimeError("Errors must have same dimension as frequencies.")
 
-    @property
-    def bins(self):
-        """Matrix of bins.
-
-        Returns
-        -------
-        numpy.ndarray
-            Two-dimensional array of bin edges, shape=(n, 2)
-        """
-        return self._bins
-
     def __getitem__(self, i):
         """Select sub-histogram or get one bin.
 
@@ -119,29 +109,6 @@ class Histogram1D(object):
         return self.__class__(self.bins[i], self.frequencies[i], overflow=overflow, underflow=underflow)
 
     @property
-    def frequencies(self):
-        """Frequencies (values) of the histogram.
-
-        Returns
-        -------
-        numpy.ndarray
-            One-dimensional array of bin frequencies
-        """
-        return self._frequencies
-
-    @property
-    def densities(self):
-        """Frequencies normalized by bin widths.
-
-        Useful when bins are not of the same width.
-
-        Returns
-        -------
-        numpy.ndarray
-        """
-        return (self._frequencies / self.bin_sizes) / self.total
-
-    @property
     def cumulative_frequencies(self):
         """Cumulative frequencies.
 
@@ -152,26 +119,6 @@ class Histogram1D(object):
         numpy.ndarray
         """
         return self._frequencies.cumsum()
-
-    @property
-    def errors2(self):
-        """Squares of the bin errors.
-
-        Returns
-        -------
-        numpy.ndarray
-        """
-        return self._errors2
-
-    @property
-    def errors(self):
-        """Bin errors
-
-        Returns
-        -------
-        numpy.ndarray
-        """
-        return np.sqrt(self.errors2)
 
     @property
     def missed(self):
@@ -186,16 +133,6 @@ class Histogram1D(object):
         To be consistent with n-dimensional histograms.
         """
         return self.underflow + self.overflow + self.inner_missed
-
-    @property
-    def total(self):
-        """Total number (sum of weights) of entries excluding underflow and overflow.
-
-        Returns
-        -------
-        float
-        """
-        return self._frequencies.sum()
 
     def mean(self):
         if self._stats:
@@ -599,11 +536,6 @@ class Histogram1D(object):
             return False
         return True
 
-    def __add__(self, other):
-        new = self.copy()
-        new += other
-        return new
-
     def __iadd__(self, other):
         if np.isscalar(other):
             raise RuntimeError("Cannot add constant to histograms.")
@@ -619,11 +551,6 @@ class Histogram1D(object):
         else:
             raise RuntimeError("Bins must be the same when adding histograms.")
         return self
-
-    def __sub__(self, other):
-        new = self.copy()
-        new -= other
-        return new
 
     def __isub__(self, other):
         if np.isscalar(other):
@@ -641,14 +568,6 @@ class Histogram1D(object):
             raise RuntimeError("Bins must be the same when subtracting histograms.")
         return self
 
-    def __mul__(self, other):
-        new = self.copy()
-        new *= other
-        return new
-
-    def __rmul__(self, other):
-        return self * other
-
     def __imul__(self, other):
         if np.isscalar(other):
             self._frequencies = self._frequencies.astype(float)
@@ -664,11 +583,6 @@ class Histogram1D(object):
             raise RuntimeError("Histograms can be multiplied only by a constant.")
         return self
 
-    def __truediv__(self, other):
-        new = self.copy()
-        new /= other
-        return new
-
     def __itruediv__(self, other):
         if np.isscalar(other):
             self._frequencies = self._frequencies.astype(float)
@@ -683,20 +597,6 @@ class Histogram1D(object):
         else:
             raise RuntimeError("Histograms can be divided only by a constant.")
         return self
-
-    def __array__(self):
-        """Convert to numpy array.
-
-        Returns
-        -------
-        numpy.ndarray
-            The array of frequencies
-
-        See also
-        --------
-        frequencies
-        """
-        return self.frequencies
 
     def to_dataframe(self):
         """Convert to pandas DataFrame.

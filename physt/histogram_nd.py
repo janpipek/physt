@@ -1,8 +1,9 @@
 from . import bin_utils
+from .histogram_base import HistogramBase
 import numpy as np
 
 
-class HistogramND(object):
+class HistogramND(HistogramBase):
     def __init__(self, dimension, bins, frequencies=None, **kwargs):
         self._dimension = dimension
 
@@ -55,35 +56,10 @@ class HistogramND(object):
         raise NotImplementedError()
 
     @property
-    def bins(self):
-        return self._bins
-
-    @property
     def numpy_bins(self):
         return [bin_utils.to_numpy_bins(bins) for bins in self.bins]
 
-    @property
-    def frequencies(self):  # Ok -> Base
-        return self._frequencies
-
-    @property
-    def densities(self):    # OK -> Base
-        return (self._frequencies / self.bin_sizes) / self.total
-
     # Missing: cumulative_frequencies - does it make sense
-
-    @property
-    def errors2(self):      # OK -> Base
-        return self._errors2
-
-    def errors(self):       # OK -> Base
-        return np.sqrt(self._errors2)
-
-    # Missing: Missed - as attribute
-
-    @property
-    def total(self):        # OK -> Base
-        return self._frequencies.sum()
 
     def get_bin_widths(self, axis = None):  # -> Base
         if axis is not None:
@@ -224,29 +200,6 @@ class HistogramND(object):
             return False
         return True
 
-    def __add__(self, other):
-        new = self.copy()
-        new += other
-        return new
-
-    def __sub__(self, other):
-        new = self.copy()
-        new -= other
-        return new
-
-    def __mul__(self, other):
-        new = self.copy()
-        new *= other
-        return new
-
-    def __rmul__(self, other):
-        return self * other
-
-    def __truediv__(self, other):
-        new = self.copy()
-        new /= other
-        return new
-
     def __iadd__(self, other):
         raise NotImplementedError()
 
@@ -262,20 +215,6 @@ class HistogramND(object):
         self._frequencies /= other
         self._errors2 /= other ** 2
         return self
-
-    def __array__(self):
-        """Convert to numpy array.
-
-        Returns
-        -------
-        numpy.ndarray
-            The array of frequencies
-
-        See also
-        --------
-        frequencies
-        """
-        return self.frequencies
 
     # TODO: to_dataframe() ?
 
