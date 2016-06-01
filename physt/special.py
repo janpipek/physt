@@ -121,13 +121,15 @@ class AzimuthalHistogram(Histogram1D):
 
 
 def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwargs):
-    rdata = np.hypot(xdata, ydata)
-    phidata = np.arctan2(xdata, ydata)
+    rdata = np.hypot(ydata, xdata)
+    phidata = np.arctan2(ydata, xdata)
     data = np.concatenate([rdata[:, np.newaxis], phidata[:, np.newaxis]], axis=1)
     dropna = kwargs.pop("dropna", False)
     if isinstance(phi_bins, int):
         phi_range = (-np.pi, np.pi)
-        if "range" in "kwargs":
+        if "phi_range" in "kwargs":
+            phi_range = kwargs["phi_range"]        
+        elif "range" in "kwargs":
             phi_range = kwargs["range"][1]
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
