@@ -1,8 +1,6 @@
-from . import binning, bin_utils, histogram1d, histogram_nd
+from . import binning
 
-import numpy as np
-
-__version__ = str('0.3')
+__version__ = str('0.3.1')
 
 
 def histogram(data, _=None, *args, **kwargs):
@@ -50,6 +48,10 @@ def histogram(data, _=None, *args, **kwargs):
     --------
     numpy.histogram
     """
+    import numpy as np
+    from .histogram1d import Histogram1D, calculate_frequencies
+    from .binning import calculate_bins
+
     if isinstance(data, tuple) and isinstance(data[0], str):    # Works for groupby DataSeries
         return histogram(data[1], _, *args, name=data[0], **kwargs)
     elif type(data).__name__ == "DataFrame":
@@ -68,10 +70,10 @@ def histogram(data, _=None, *args, **kwargs):
             array = array[~np.isnan(array)]
 
         # Get binning
-        bins = binning.calculate_bins(array, _, *args, check_nan=not dropna, **kwargs)
+        bins = calculate_bins(array, _, *args, check_nan=not dropna, **kwargs)
 
         # Get frequencies
-        frequencies, errors2, underflow, overflow, stats = histogram1d.calculate_frequencies(array,
+        frequencies, errors2, underflow, overflow, stats = calculate_frequencies(array,
                                                                                              bins=bins,
                                                                                              weights=weights)
 
@@ -81,7 +83,7 @@ def histogram(data, _=None, *args, **kwargs):
             overflow = 0
         if hasattr(data, "name") and not axis_name:
             axis_name = data.name
-        return histogram1d.Histogram1D(bins=bins, frequencies=frequencies, errors2=errors2, overflow=overflow,
+        return Histogram1D(bins=bins, frequencies=frequencies, errors2=errors2, overflow=overflow,
                                        underflow=underflow, stats=stats,
                                        keep_missed=keep_missed, name=name, axis_name=axis_name)
 
@@ -102,6 +104,8 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
     numpy.histogram2d    
     histogramdd
     """
+    import numpy as np
+
     # guess axis names
     if not "axis_names" in kwargs:
         if hasattr(data1, "name") and hasattr(data2, "name"):
@@ -137,6 +141,9 @@ def histogramdd(data, bins=10, *args, **kwargs):
     --------
     numpy.histogramdd  
     """
+    import numpy as np
+    from . import histogram_nd
+    from .binning import calculate_bins_nd
 
     # pandas - guess axis names
     if not "axis_names" in kwargs:
@@ -156,7 +163,7 @@ def histogramdd(data, bins=10, *args, **kwargs):
         data = data[~np.isnan(data).any(axis=1)]
 
     # Prepare bins
-    bins = binning.calculate_bins_nd(data, bins, *args, check_nan=not dropna, **kwargs)
+    bins = calculate_bins_nd(data, bins, *args, check_nan=not dropna, **kwargs)
 
     # Prepare remaining data
     weights = kwargs.pop("weights", None)
@@ -173,9 +180,14 @@ def histogramdd(data, bins=10, *args, **kwargs):
 h1 = histogram
 h2 = histogram2d
 
+
 def h3(data, *args, **kwargs):
+    import numpy as np
+
     data = np.asarray(data)
     n, dim = data.shape
     if dim != 3:
         raise RuntimeError("Array must have shape (n, 3)")
     histogramdd(data, *args, **kwargs)
+
+from .special import polar_histogram
