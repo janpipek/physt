@@ -4,6 +4,9 @@ import numpy as np
 
 
 class HistogramND(HistogramBase):
+    """Multi-dimensional histogram data.
+    """
+
     def __init__(self, dimension, bins, frequencies=None, **kwargs):
         self._dimension = dimension
 
@@ -242,7 +245,7 @@ class HistogramND(HistogramBase):
 
 
 class Histogram2D(HistogramND):
-    """Specialized version of the general HistogramND class.
+    """Specialized 2D variant of the general HistogramND class.
 
     Its only addition is the plot() method
     """

@@ -5,6 +5,10 @@ import numpy as np
 
 
 class PolarHistogram(HistogramND):
+    """Polar histogram data.
+
+    This is a special case of a 2D histogram with transformed coordinates.
+    """
     def __init__(self, bins, frequencies=None, **kwargs):
         if not "axis_names" in kwargs:
             kwargs["axis_names"] = ("r", "phi")
@@ -34,8 +38,27 @@ class PolarHistogram(HistogramND):
         klass = (RadialHistogram, AzimuthalHistogram)[ax]
         return klass(bins=bins, errors2=errors2, name=name, frequencies=frequencies, **kwargs)
 
-    def find_bin(self, value, axis=None):
-        raise NotImplementedError()
+    def find_bin(self, value, axis=None, radial_coords=False):
+        if radial_coords:
+            r, phi = value
+            # TODO: phi modulo
+        else:
+            r= np.hypot(value[1], value[0])
+            phi = np.arctan2(value[1], value[0])        
+        ixbin = (HistogramND.find_bin(self, r, 0),  HistogramND.find_bin(self, phi, 1))
+        if None in ixbin:
+            return None
+        else:
+            return ixbin
+
+    def fill(self, value, weight=1, radial_coords=False):
+        ixbin = self.find_bin(value, radial_coords=radial_coords)
+        if ixbin is None and self.keep_missed:
+            self.missed += weight
+        else:
+            self._frequencies[ixbin] += weight
+            self.errors2[ixbin] += weight ** 2
+        return ixbin
 
     def plot(self, histtype="map", density=False, backend="matplotlib", **kwargs):
         color = kwargs.pop("color", "frequency")
@@ -109,15 +132,21 @@ class PolarHistogram(HistogramND):
 
 
 class RadialHistogram(Histogram1D):
-    """Projection of polar histogram to 1D with respect to radius."""
+    """Projection of polar histogram to 1D with respect to radius.
+
+    This is a special case of a 1D histogram with transformed coordinates.
+    """
     @property
     def bin_sizes(self):
         return self.bin_right_edges ** 2 - self.bin_left_edges ** 2
 
 
 class AzimuthalHistogram(Histogram1D):
-    """Projection of polar histogram to 1D with respect to phi."""
-    # TODO: Add special plotting
+    """Projection of polar histogram to 1D with respect to phi.
+
+    This is a special case of a 1D histogram with transformed coordinates.
+    """
+    # TODO: Add special plotting (polar bar, polar ring)
 
 
 def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwargs):
