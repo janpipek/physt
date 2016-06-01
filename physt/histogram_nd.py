@@ -109,7 +109,7 @@ class HistogramND(HistogramBase):
                 if value <= self.get_bin_right_edges(axis)[-1]:
                     return ixbin - 1
                 else:
-                    return self.shape[axis]
+                    return None
             elif value < self.get_bin_right_edges(axis)[ixbin - 1]:
                 return ixbin - 1
             elif ixbin == self.shape[axis]:
@@ -117,7 +117,7 @@ class HistogramND(HistogramBase):
             else:
                 return None
         else:
-            ixbin = [self.find_bin(value[i], i) for i in range(self._dimension)]
+            ixbin = tuple(self.find_bin(value[i], i) for i in range(self._dimension))
             if None in ixbin:
                 return None
             else:
