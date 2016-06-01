@@ -24,7 +24,7 @@ class Histogram1D(HistogramBase):
     These are the basic attributes that can be used in the constructor (see there)
     Other attributes are dynamic.
     """
-    def __init__(self, bins, frequencies=None, **kwargs):
+    def __init__(self, bins, frequencies=None, errors2=None, **kwargs):
         """Constructor
 
         Parameters
@@ -53,7 +53,7 @@ class Histogram1D(HistogramBase):
         if frequencies is None:
             self._frequencies = np.zeros(self._bins.shape[0])
         else:
-            frequencies = np.array(frequencies, dtype=float)
+            frequencies = np.asarray(frequencies, dtype=float)
             if frequencies.shape != (self._bins.shape[0],):
                 raise RuntimeError("Values must have same dimension as bins.")
             if np.any(frequencies < 0):
@@ -68,7 +68,10 @@ class Histogram1D(HistogramBase):
         self.axis_name = kwargs.get("axis_name", self.name)
         self._stats = kwargs.get("stats", None)
 
-        self._errors2 = np.asarray(kwargs.get("errors2", self.frequencies.copy()))
+        if errors2 is None:
+            self._errors2 = self._frequencies.copy()
+        else:
+            self._errors2 = np.asarray(errors2)
         if np.any(self._errors2 < 0):
             raise RuntimeError("Cannot have negative squared errors.")
         if self._errors2.shape != self._frequencies.shape:
@@ -106,7 +109,8 @@ class Histogram1D(HistogramBase):
                     underflow += self.frequencies[0:i.start].sum()
                 if i.stop:
                     overflow += self.frequencies[i.stop:].sum()
-        return self.__class__(self.bins[i], self.frequencies[i], overflow=overflow, underflow=underflow)
+        return self.__class__(self.bins[i], self.frequencies[i], self.errors2[i], overflow=overflow,
+                              underflow=underflow, name=self.name, axis_name=self.axis_name)
 
     @property
     def cumulative_frequencies(self):
@@ -503,7 +507,7 @@ class Histogram1D(HistogramBase):
             underflow = self.underflow
             overflow = self.overflow
             inner_missed = self.inner_missed
-            errors2 = self.errors2
+            errors2 = np.copy(self.errors2)
         else:
             frequencies = None
             underflow = 0
@@ -515,7 +519,7 @@ class Histogram1D(HistogramBase):
                               errors2=errors2)
 
     def __eq__(self, other):
-        if not isinstance(other, Histogram1D):
+        if not isinstance(other, self.__class__):
             return False
         if not np.allclose(other.bins, self.bins):
             return False

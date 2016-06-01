@@ -66,6 +66,13 @@ class TestCopy(object):
         assert new.overflow == 0
         assert new.underflow ==0
 
+    def test_copy_with_errors(self):
+        bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
+        values = [4, 0, 3, 7.2]
+        errors2 = [1, 0, 4, 2.6]
+        h1 = Histogram1D(bins, values, errors2)
+        assert h1.copy() == h1
+
 
 class TestEquivalence(object):
     def test_eq(self):
@@ -83,6 +90,16 @@ class TestEquivalence(object):
         values = [4, 0, 13, 7.2]
         other3 = Histogram1D(bins, values, underflow=2, overflow=1)
         assert other3 != example
+
+        bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
+        values = [4, 0, 3, 7.2]
+        errors2 = [4, 0, 3, 7.2]
+        other4 = Histogram1D(bins, values, errors2, underflow=2, overflow=1)
+        assert other4 == example
+
+        errors2 = [4, 0, 3, 8.2]
+        other5 = Histogram1D(bins, values, errors2, underflow=2, overflow=1)
+        assert other5 != example
 
     def test_eq_with_underflows(self):
         bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
