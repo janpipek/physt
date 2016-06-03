@@ -45,6 +45,5 @@ class TestAdaptive(object):
         assert np.array_equal(h.frequencies, [2, 0, 1, 1])
 
 
-
 if __name__ == "__main__":
     pytest.main(__file__)

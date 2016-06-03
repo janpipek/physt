@@ -55,6 +55,10 @@ def calculate_bins(array, _=None, *args, **kwargs):
 
 
 def calculate_bins_nd(array, bins=None, *args, **kwargs):
+    """Find optimal binning from arguments (n-dimensional variant)
+
+    Usage similar to `calculate_bins`.
+    """
     if kwargs.pop("check_nan", True):
         if np.any(np.isnan(array)):
             raise RuntimeError("Cannot calculate bins in presence of NaN's.")

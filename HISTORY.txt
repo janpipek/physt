@@ -1,3 +1,9 @@
+0.3.2 (3rd June 2016)
+---------------------
+- Fix: arithmetics with ND histograms
+- Fix: statistics
+- Added: adaptive histogram (alpha)
+
 0.3.1 (1st June 2016)
 ---------------------
 - bug fixes

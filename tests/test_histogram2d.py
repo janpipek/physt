@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 import physt
 from physt import histogram_nd
 import numpy as np
@@ -67,8 +67,8 @@ class TestHistogram2D(object):
         assert hist.frequencies.sum() == 6
 
 
-x = [0.5, 1.5, 2.5, 2.2, 3.3, 4.2]
-y = [1.5, 1.5, 1.5, 2.2, 1.3, 1.2]
+xx = [0.5, 1.5, 2.5, 2.2, 3.3, 4.2]
+yy = [1.5, 1.5, 1.5, 2.2, 1.3, 1.2]
 
 # Calculated:
 freqs = np.array([[ 1.,  0.],
@@ -79,7 +79,7 @@ freqs = np.array([[ 1.,  0.],
 
 class TestArithmetics(object):
     def test_multiply_by_constant(self):
-        h = physt.histogram2d(x, y, "fixed_width", 1)
+        h = physt.histogram2d(xx, yy, "fixed_width", 1)
 
         assert np.array_equal(h.frequencies, freqs)
         i = h * 2
@@ -87,40 +87,40 @@ class TestArithmetics(object):
         assert np.array_equal(i.errors2, freqs * 4)        
 
     def test_multiply_by_other(self):
-        h = physt.histogram2d(x, y, "fixed_width", 1)
+        h = physt.histogram2d(xx, yy, "fixed_width", 1)
         with pytest.raises(RuntimeError):
             h * h
 
     def test_divide_by_other(self):
-        h = physt.histogram2d(x, y, "fixed_width", 1)
+        h = physt.histogram2d(xx, yy, "fixed_width", 1)
         with pytest.raises(RuntimeError):
             h * h
 
     def test_divide_by_constant(self):
-        h = physt.histogram2d(x, y, "fixed_width", 1)
+        h = physt.histogram2d(xx, yy, "fixed_width", 1)
         i = h / 2
         assert np.array_equal(i.frequencies, freqs / 2)
         assert np.array_equal(i.errors2, freqs / 4)                   
 
     def test_addition_by_constant(self):
-        h = physt.histogram2d(x, y, "fixed_width", 1)
+        h = physt.histogram2d(xx, yy, "fixed_width", 1)
         with pytest.raises(RuntimeError):
             h + 4        
 
     def test_addition_with_another(self):
-        h = physt.histogram2d(x, y, "fixed_width", 1)
+        h = physt.histogram2d(xx, yy, "fixed_width", 1)
         i = h + h
         assert np.array_equal(i.frequencies, freqs * 2)
         assert np.array_equal(i.errors2, freqs * 2)   
 
     def test_subtraction_with_another(self):
-        h = physt.histogram2d(x, y, "fixed_width", 1)
+        h = physt.histogram2d(xx, yy, "fixed_width", 1)
         i = h * 2 - h
         assert np.array_equal(i.frequencies, freqs)
         assert np.array_equal(i.errors2, 5 * freqs)          
 
     def test_subtraction_by_constant(self):
-        h = physt.histogram2d(x, y, "fixed_width", 1)
+        h = physt.histogram2d(xx, yy, "fixed_width", 1)
         with pytest.raises(RuntimeError):
             h - 4               
 

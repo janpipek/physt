@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 from physt import bin_utils
 import numpy as np
 import pytest
