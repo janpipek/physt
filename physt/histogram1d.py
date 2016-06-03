@@ -147,13 +147,16 @@ class Histogram1D(HistogramBase):
         else:
             return None    # TODO: or error
 
-    def std(self):
+    def std(self, ddof=0):
+        # TODO: Add DOF
         if self._stats:
-            return np.sqrt(self.variance())
+            return np.sqrt(self.variance(ddof=ddof))
         else:
             return None    # TODO: or error
 
-    def variance(self):
+    def variance(self, ddof=0):
+        # TODO: Add DOF
+        # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
         if self._stats:
             if self.total > 0:
                 return (self._stats["sum2"] - self._stats["sum"] ** 2 / self.total) / self.total
@@ -323,7 +326,7 @@ class Histogram1D(HistogramBase):
             self._errors2[ixbin] += weight ** 2
             if self._stats:
                 self._stats["sum"] += weight * value
-                self._stats["sum2"] += (weight * value) ** 2
+                self._stats["sum2"] += weight * value ** 2
         return ixbin
 
     def plot(self, histtype='bar', cumulative=False, density=False, errors=False, backend="matplotlib", ax=None, **kwargs):
@@ -809,7 +812,7 @@ def calculate_frequencies(data, bins, weights=None, validate_bins=True, already_
         frequencies[xbin] = weights[start:stop].sum()
         errors2[xbin] = (weights[start:stop] ** 2).sum()
         sum += (data[start:stop] * weights[start:stop]).sum()
-        sum2 += ((data[start:stop] * weights[start:stop]) ** 2).sum()
+        sum2 += ((data[start:stop]) ** 2 * weights[start:stop]).sum()
 
     # Underflow and overflow don't make sense for unconsecutive binning.
     if not bin_utils.is_consecutive(bins):
@@ -870,4 +873,4 @@ class AdaptiveHistogram1D(Histogram1D):
             self._errors2[bin] += weight ** 2               
 
         self._stats["sum"] += weight * value
-        self._stats["sum2"] += (weight * value) ** 2
+        self._stats["sum2"] += weight * value ** 2
