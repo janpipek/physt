@@ -54,7 +54,10 @@ See more in docstring's and notebooks:
 * 1D histograms
 * 2D histograms(beta)
 * ND histograms(beta)
-* Understands numpy-array-like object
+* Some special histograms
+  - 2D polar coordinates (with plotting)
+* Adaptive histogram from on-line filling of unknown data
+* Understands any numpy-array-like object
 * Keep underflow / overflow
 * Basic numeric operations (* / + -)
 * Items / slice selection (including mask arrays)
