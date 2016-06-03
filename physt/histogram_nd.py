@@ -95,8 +95,6 @@ class HistogramND(HistogramBase):
         else:
             return np.meshgrid(*[self.get_bin_right_edges(i) for i in range(self.ndim)], indexing='ij')
 
-    # TODO: bin_centers property?
-
     def get_bin_centers(self, axis=None):
         if axis is not None:
             return (self.get_bin_right_edges(axis) + self.get_bin_left_edges(axis)) / 2
@@ -139,7 +137,7 @@ class HistogramND(HistogramBase):
         if include_frequencies:
             frequencies = np.copy(self.frequencies)
             missed = self.missed
-            errors2 = self.errors2
+            errors2 = np.copy(self.errors2)
         else:
             frequencies = None
             missed = 0
@@ -175,9 +173,6 @@ class HistogramND(HistogramBase):
             return HistogramND(dimension=len(axes), bins=bins, frequencies=frequencies, errors2=errors2,
                                axis_names=axis_names, name=name)
 
-
-    # TODO: same_bins...
-
     def __eq__(self, other):
         """Equality comparison
 
@@ -204,36 +199,54 @@ class HistogramND(HistogramBase):
         return True
 
     def __iadd__(self, other):
-        raise NotImplementedError()
+        if np.isscalar(other):
+            raise RuntimeError("Cannot add constant to histograms.")        
+        if not self.same_bins(other):
+            raise RuntimeError("Incompatible binning")
+        self._frequencies += other.frequencies
+        self._errors2 += other.errors2 
+        self.missed += other.missed
+        return self
 
     def __imul__(self, other):
+        if not np.isscalar(other):
+            raise RuntimeError("Histograms may be multiplied only by a constant.")  
         self._frequencies *= other
         self._errors2 *= other ** 2
+        self.missed *= other
         return self
 
     def __isub__(self, other):
-        raise NotImplementedError()
-
-    def __itruediv__(self, other):
-        self._frequencies /= other
-        self._errors2 /= other ** 2
+        if np.isscalar(other):
+            raise RuntimeError("Cannot subtract constant from histograms.")            
+        if not self.same_bins(other):
+            raise RuntimeError("Incompatible binning")
+        self._frequencies -= other.frequencies
+        self._errors2 += other.errors2 
+        self.missed -= other.missed
         return self
 
-    # TODO: to_dataframe() ?
+    def __itruediv__(self, other):
+        if not np.isscalar(other):
+            raise RuntimeError("Histograms may be divided only by a constant.")  
+        self._frequencies /= other
+        self._errors2 /= other ** 2
+        self.missed /= other
+        return self
 
-    def to_xarray(self):
-        raise NotImplementedError()
+    # def to_xarray(self):
+    #     raise NotImplementedError()
 
-    @classmethod
-    def from_xarray(cls, arr):
-        raise  NotImplementedError()
+    # @classmethod
+    # def from_xarray(cls, arr):
+    #     raise  NotImplementedError()
 
-    def to_json(self, path=None):
-        raise NotImplementedError()
+    # def to_json(self, path=None):
+    #     raise NotImplementedError()
 
-    @classmethod
-    def from_json(cls, text=None, path=None):
-        return NotImplementedError
+    # @classmethod
+    # def from_json(cls, text=None, path=None):
+    #     return NotImplementedError
 
     def __repr__(self):
         s = "{0}(bins={1}, total={2}".format(

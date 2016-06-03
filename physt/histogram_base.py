@@ -68,6 +68,23 @@ class HistogramBase(object):
         """
         return self._frequencies.sum()
 
+    def same_bins(self, other):
+        """Whether two histogram share the same binning.
+
+        Returns
+        -------
+        bool
+        """
+        if self.ndim != other.ndim:
+            return False
+        elif self.ndim == 1:
+            return np.allclose(self.bins, other.bins)
+        elif self.ndim > 1:
+            for i in range(self.ndim):
+                if not np.allclose(self.bins[i], other.bins[i]):
+                    return False
+                return True
+
     def __add__(self, other):
         new = self.copy()
         new += other

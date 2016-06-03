@@ -74,8 +74,8 @@ def histogram(data, _=None, *args, **kwargs):
 
         # Get frequencies
         frequencies, errors2, underflow, overflow, stats = calculate_frequencies(array,
-                                                                                             bins=bins,
-                                                                                             weights=weights)
+                                                                                 bins=bins,
+                                                                                 weights=weights)
 
         # Construct the object
         if not keep_missed:
@@ -110,6 +110,8 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
     if not "axis_names" in kwargs:
         if hasattr(data1, "name") and hasattr(data2, "name"):
             kwargs["axis_names"] = [data1.name, data2.name]
+    data1 = np.asarray(data1)
+    data2 = np.asarray(data2)
     data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
     return histogramdd(data, bins, *args, **kwargs)
 
