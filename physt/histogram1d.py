@@ -140,7 +140,10 @@ class Histogram1D(HistogramBase):
 
     def mean(self):
         if self._stats:
-            return self._stats["sum"] / self.total
+            if self.total > 0:
+                return self._stats["sum"] / self.total
+            else:
+                return np.nan
         else:
             return None    # TODO: or error
 
@@ -152,7 +155,10 @@ class Histogram1D(HistogramBase):
 
     def variance(self):
         if self._stats:
-            return (self._stats["sum2"] - self._stats["sum"] ** 2 / self.total) / self.total
+            if self.total > 0:
+                return (self._stats["sum2"] - self._stats["sum"] ** 2 / self.total) / self.total
+            else:
+                return np.nan
         else:
             return None
 
@@ -314,7 +320,7 @@ class Histogram1D(HistogramBase):
             self.overflow += weight
         else:
             self._frequencies[ixbin] += weight
-            self.errors2[ixbin] += weight ** 2
+            self._errors2[ixbin] += weight ** 2
             if self._stats:
                 self._stats["sum"] += weight * value
                 self._stats["sum2"] += (weight * value) ** 2
@@ -813,3 +819,55 @@ def calculate_frequencies(data, bins, weights=None, validate_bins=True, already_
     stats = { "sum": sum, "sum2" : sum2}
 
     return frequencies, errors2, underflow, overflow, stats
+
+
+class AdaptiveHistogram1D(Histogram1D):
+    """Histogram with fixed-width bins that automatically adapts its bin count with new values filled.
+
+    In comparison with Histogram1D, it is a bit more limited - allows no holes, bins are all of the
+    same width, no overflows/underflows, ...
+    """
+    def __init__(self, bin_width, sparse=False, **kwargs):
+        bins = np.ndarray((0, 2), dtype=float)
+        super(AdaptiveHistogram1D, self).__init__(bins, **kwargs)
+        assert bin_width > 0
+        self.bin_width = bin_width
+        self.sparse = sparse
+        self._stats = { "sum": 0.0, "sum2" : 0.0}
+        if sparse:
+            raise NotImplementedError("Not yet implemented.")
+
+    def find_bin(self, value):
+        if self.bins.shape[0] == 0:
+            return 0
+        else:
+            return int(np.floor((value - self.bin_left_edges[0]) / self.bin_width))
+
+    def fill(self, value, weight=1.0):
+        if self.bins.shape[0] == 0:
+            left_edge = np.floor(value / self.bin_width) * self.bin_width
+            # self._min_bin = left_edge
+            self._bins = np.asarray([[left_edge, left_edge + self.bin_width]])
+            self._frequencies = np.asarray([weight])
+            self._errors2 = np.asarray([weight ** 2])
+        else:
+            bin = self.find_bin(value)
+            if bin < 0:
+                add = 0 - bin
+                self._frequencies = np.concatenate((np.zeros(add), self._frequencies))
+                self._errors2 = np.concatenate((np.zeros(add), self._errors2))
+                new_min = self.bin_left_edges[0] - add * self.bin_width
+                new_numpy_bins = new_min + self.bin_width * np.arange(add + self.bin_count + 1)
+                bin = 0
+                self._bins = bin_utils.make_bin_array(new_numpy_bins)
+            elif bin >= self.bin_count:
+                add = bin - self.bin_count + 1
+                self._frequencies = np.concatenate((self._frequencies, np.zeros(add)))
+                self._errors2 = np.concatenate((self._errors2, np.zeros(add)))
+                new_numpy_bins = self.bin_left_edges[0] + self.bin_width * np.arange(bin + 2)
+                self._bins = bin_utils.make_bin_array(new_numpy_bins)
+            self._frequencies[bin] += weight
+            self._errors2[bin] += weight ** 2               
+
+        self._stats["sum"] += weight * value
+        self._stats["sum2"] += (weight * value) ** 2

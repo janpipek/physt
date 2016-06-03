@@ -191,3 +191,4 @@ def h3(data, *args, **kwargs):
     histogramdd(data, *args, **kwargs)
 
 from .special import polar_histogram
+from .histogram1d import AdaptiveHistogram1D as adaptive_histogram_1d
