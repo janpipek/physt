@@ -52,7 +52,7 @@ class TestHistogram2D(object):
     def test_simple_random(self):
         x = np.random.normal(100, 1, 1000)
         y = np.random.normal(10, 10, 1000)
-        h2 = physt.histogram2d(x, y, [8, 4], name="Some histogram", axis_names=["x", "y"])
+        h2 = physt.h2(x, y, [8, 4], name="Some histogram", axis_names=["x", "y"])
         assert h2.frequencies.sum() == 1000
         assert h2.shape == (8, 4)
         assert h2.name == "Some histogram"
@@ -62,13 +62,10 @@ class TestHistogram2D(object):
         vals2 = np.array(vals)
         vals2[0, 1] = np.nan
         with pytest.raises(RuntimeError):
-            hist = physt.histogram2d(vals2[:,0], vals2[:,1])
-        hist = physt.histogram2d(vals2[:, 0], vals2[:, 1], dropna=True)
+            hist = physt.h2(vals2[:,0], vals2[:,1])
+        hist = physt.h2(vals2[:, 0], vals2[:, 1], dropna=True)
         assert hist.frequencies.sum() == 6
 
-
-xx = [0.5, 1.5, 2.5, 2.2, 3.3, 4.2]
-yy = [1.5, 1.5, 1.5, 2.2, 1.3, 1.2]
 
 # Calculated:
 freqs = np.array([[ 1.,  0.],
@@ -77,9 +74,12 @@ freqs = np.array([[ 1.,  0.],
     [ 1.,  0.],
     [ 1.,  0.]])
 
+
 class TestArithmetics(object):
     def test_multiply_by_constant(self):
-        h = physt.histogram2d(xx, yy, "fixed_width", 1)
+        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
+        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
+        h = physt.h2(xx, yy, "fixed_width", 1)
 
         assert np.array_equal(h.frequencies, freqs)
         i = h * 2
@@ -87,40 +87,54 @@ class TestArithmetics(object):
         assert np.array_equal(i.errors2, freqs * 4)        
 
     def test_multiply_by_other(self):
-        h = physt.histogram2d(xx, yy, "fixed_width", 1)
+        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
+        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])        
+        h = physt.h2(xx, yy, "fixed_width", 1)
         with pytest.raises(RuntimeError):
             h * h
 
     def test_divide_by_other(self):
-        h = physt.histogram2d(xx, yy, "fixed_width", 1)
+        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
+        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])        
+        h = physt.h2(xx, yy, "fixed_width", 1)
         with pytest.raises(RuntimeError):
             h * h
 
     def test_divide_by_constant(self):
-        h = physt.histogram2d(xx, yy, "fixed_width", 1)
+        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
+        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])        
+        h = physt.h2(xx, yy, "fixed_width", 1)
         i = h / 2
         assert np.array_equal(i.frequencies, freqs / 2)
         assert np.array_equal(i.errors2, freqs / 4)                   
 
     def test_addition_by_constant(self):
-        h = physt.histogram2d(xx, yy, "fixed_width", 1)
+        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
+        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])        
+        h = physt.h2(xx, yy, "fixed_width", 1)
         with pytest.raises(RuntimeError):
             h + 4        
 
     def test_addition_with_another(self):
-        h = physt.histogram2d(xx, yy, "fixed_width", 1)
+        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
+        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])        
+        h = physt.h2(xx, yy, "fixed_width", 1)
         i = h + h
         assert np.array_equal(i.frequencies, freqs * 2)
         assert np.array_equal(i.errors2, freqs * 2)   
 
     def test_subtraction_with_another(self):
-        h = physt.histogram2d(xx, yy, "fixed_width", 1)
+        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
+        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])        
+        h = physt.h2(xx, yy, "fixed_width", 1)
         i = h * 2 - h
         assert np.array_equal(i.frequencies, freqs)
         assert np.array_equal(i.errors2, 5 * freqs)          
 
     def test_subtraction_by_constant(self):
-        h = physt.histogram2d(xx, yy, "fixed_width", 1)
+        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
+        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])        
+        h = physt.h2(xx, yy, "fixed_width", 1)
         with pytest.raises(RuntimeError):
             h - 4               
 
