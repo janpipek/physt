@@ -1,5 +1,5 @@
 import numpy as np
-from . import bin_utils
+from . import bin_utils, binning
 from .histogram_base import HistogramBase
 
 
@@ -874,3 +874,27 @@ class AdaptiveHistogram1D(Histogram1D):
 
         self._stats["sum"] += weight * value
         self._stats["sum2"] += weight * value ** 2
+
+    def fill_n(self, values, weights=None, dropna=True):
+        new_bins = binning.fixed_width_bins(values, bin_width=self.bin_width)
+        frequencies, errors2, _, _, stats = calculate_frequencies(values, new_bins,
+                                                                  weights=weights, validate_bins=False)
+        if self.bins.shape[0] == 0:
+            self._bins = new_bins
+            self._errors2 = errors2
+            self._stats = stats
+        else:
+            if new_bins == self._bins:
+                # TODO: Simple addition
+            else:
+                # TODO: find bin union
+                bin_union = None
+                self.rebin(bin_union, check=False)
+                # TODO: rebin new_bins
+
+    def rebin(self, new_bins, check=True):
+        if check:
+            if not bin_utils.is_bin_subset(self.bins, new_bins):
+                raise RuntimeError("Incompatible rebinning")
+            # TODO: check
+        # Now do the rebinning (or maybe incorporate the checking?

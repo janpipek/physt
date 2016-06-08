@@ -122,3 +122,32 @@ def is_consecutive(bins, rtol=1.e-5, atol=1.e-8):
     else:
         bins = make_bin_array(bins)
         return np.allclose(bins[1:,0], bins[:-1,1], rtol, atol)
+
+
+def is_bin_subset(sub, sup):
+    """Check whether all bins in one binning are present also in another:
+
+    Parameters
+    ----------
+    sub: array_like
+        Candidate for the bin subset
+    sup: array_like
+        Candidate for the bin superset
+
+    Returns
+    -------
+    bool
+
+    """
+    sub = make_bin_array(sub)
+    sup = make_bin_array(sup)
+
+    for row in sub:
+        if not (row == sup).all(axis=1).any():
+            # TODO: Enable also approximate equality
+            return False
+    return True
+
+
+def is_bin_superset(sup, sub):
+    return is_bin_subset(sub=sub, sup=sup)
