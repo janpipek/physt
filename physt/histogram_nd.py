@@ -201,7 +201,7 @@ class HistogramND(HistogramBase):
     def __iadd__(self, other):
         if np.isscalar(other):
             raise RuntimeError("Cannot add constant to histograms.")        
-        if not self.same_bins(other):
+        if not self.has_same_bins(other):
             raise RuntimeError("Incompatible binning")
         self._frequencies += other.frequencies
         self._errors2 += other.errors2 
@@ -219,7 +219,7 @@ class HistogramND(HistogramBase):
     def __isub__(self, other):
         if np.isscalar(other):
             raise RuntimeError("Cannot subtract constant from histograms.")            
-        if not self.same_bins(other):
+        if not self.has_same_bins(other):
             raise RuntimeError("Incompatible binning")
         self._frequencies -= other.frequencies
         self._errors2 += other.errors2 

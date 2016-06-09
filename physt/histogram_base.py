@@ -68,7 +68,7 @@ class HistogramBase(object):
         """
         return self._frequencies.sum()
 
-    def same_bins(self, other):
+    def has_same_bins(self, other):
         """Whether two histogram share the same binning.
 
         Returns
@@ -78,6 +78,8 @@ class HistogramBase(object):
         if self.ndim != other.ndim:
             return False
         elif self.ndim == 1:
+            if self.bins.shape != other.bins.shape:
+                return False
             return np.allclose(self.bins, other.bins)
         elif self.ndim > 1:
             for i in range(self.ndim):
@@ -85,9 +87,14 @@ class HistogramBase(object):
                     return False
                 return True
 
+    def has_compatible_bins(self, other):
+        # By default, the bins must be the same
+        # Overridden
+        return self.has_same_bins()
+
     def fill_n(self, values, weights=None):
         if weights is not None:
-            if weights.shape != values.shape[0:]:
+            if weights.shape != values.shape[0]:
                 raise RuntimeError("Wrong shape of weights")
         for i, value in enumerate(values):
             if weights is not None:

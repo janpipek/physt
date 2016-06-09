@@ -54,10 +54,38 @@ class TestFillNAdaptive(object):
         assert h.total == 4
         assert h.mean() == 8.0
 
+    def test_non_empty(self):
+        h = AdaptiveHistogram1D(10)
+        h.fill_n([4, 5, 11, 12])
+
         h.fill_n([-3, 120])
         assert h.bin_left_edges[0] == -10
         assert h.bin_count == 13
 
+    def test_with_weights(self):
+        h = AdaptiveHistogram1D(10)
+        h.fill_n([4, 5, 6, 12], [1, 1, 2, 3])
+        assert np.array_equal(h.frequencies, [4, 3])
+        assert np.array_equal(h.errors2, [6, 9])
+        assert np.array_equal(h.numpy_bins, [0, 10, 20])
+
+    def test_with_incorrect_weights(self):
+        h = AdaptiveHistogram1D(10)
+        with pytest.raises(RuntimeError):
+            h.fill_n([0, 1], [2, 3, 4])
+        with pytest.raises(RuntimeError):
+            h.fill_n([0, 1, 2, 3], [2, 3, 4])
+
+
+class TestAdaptiveArithmetics(object):
+    def test_adding_empty(self):
+        ha1 = AdaptiveHistogram1D(10)
+        ha1.fill_n(np.random.normal(100, 10, 1000))
+
+        ha2 = AdaptiveHistogram1D(10)
+        ha3 = ha1 + ha2
+
+        assert ha1 == ha3
 
 if __name__ == "__main__":
     pytest.main(__file__)

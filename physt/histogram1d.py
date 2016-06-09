@@ -113,6 +113,10 @@ class Histogram1D(HistogramBase):
                               underflow=underflow, name=self.name, axis_name=self.axis_name)
 
     @property
+    def ndim(self):
+        return 1
+
+    @property
     def cumulative_frequencies(self):
         """Cumulative frequencies.
 
@@ -242,6 +246,14 @@ class Histogram1D(HistogramBase):
         numpy.ndarray
         """
         return self.bins[...,1]
+
+    @property
+    def min_edge(self):
+        return self.bin_left_edges[0]
+
+    @property
+    def max_edge(self):
+        return self.bin_right_edges[-1]
 
     @property
     def bin_centers(self):
@@ -865,10 +877,13 @@ class AdaptiveHistogram1D(Histogram1D):
         values = np.asarray(values)
         if dropna:
             values = values[~np.isnan(values)]
+        if weights is not None and np.isscalar(weights):
+            weights = np.ones_like(values) * weights
         new_bins = binning.fixed_width_bins(values, bin_width=self.bin_width)
         new_bins = bin_utils.make_bin_array(new_bins)
         frequencies, errors2, _, _, stats = calculate_frequencies(values, new_bins,
                                                                   weights=weights, validate_bins=False)
+
         if self.bins.shape[0] == 0:
             self._bins = new_bins
             self._frequencies = frequencies
@@ -883,6 +898,49 @@ class AdaptiveHistogram1D(Histogram1D):
             self._errors2[left:right] += errors2
             for key in self._stats:
                 self._stats[key] += stats.get(key, 0.0)
+
+    def has_compatible_bins(self, other):
+        return np.allclose((other.bins % self.bin_width), 0)
+
+    def copy(self, include_frequencies=True):
+        result = self.__class__(bin_width=self.bin_width, name=self.name, axis_name=self.axis_name)
+        if include_frequencies:
+            result._bins = np.copy(self.bins)
+            result._frequencies = np.copy(self.frequencies)
+            result._errors2 = np.copy(self.errors2)
+            result._stats = self._stats.copy()
+        return result
+
+    def __iadd__(self, other):
+        if not isinstance(other, Histogram1D):
+            raise RuntimeError("Not a histogram")
+        if self.has_same_bins(other):
+            return Histogram1D.__iadd__(self, other)
+        elif self.has_compatible_bins(other):
+            if other.missed > 0:
+                raise RuntimeError("Cannot add histogram with missed values.")
+            if other.bin_count == 0:
+                return self
+            if isinstance(other, AdaptiveHistogram1D):
+                otherx = AdaptiveHistogram1D(self.bin_width)
+                otherx._frequencies = other.frequencies.copy()
+                otherx._errors2 = other.errors2.copy()
+                otherx._bins = other.bins.copy()      # Possibly fill gaps???
+                otherx._stats = other._stats.copy()
+                other = otherx
+            else:
+                other = other.copy()
+            self._force_bin_existence(other.min_edge)
+            self._force_bin_existence(other.max_edge)
+            other._force_bin_existence(self.min_edge)
+            other._force_bin_existence(self.max_edge)
+        else:
+            raise RuntimeError("Incompatible histograms")
+        self._frequencies += other.frequencies
+        self._errors2 += other.errors2
+        for key in self._stats:
+            self._stats[key] += other._stats.get(key, 0.0)
+        return self
 
     def _force_bin_existence(self, value):
         """
