@@ -42,6 +42,7 @@ See more in docstring's and notebooks:
 - Bokeh plots: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Bokeh%20examples.ipynb>
 - 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/2D%20Histograms.ipynb>
 - Special histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Special%20histograms.ipynb>
+- Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Adaptive%20histogram.ipynb>
 
 ## Installation
 
@@ -56,7 +57,7 @@ See more in docstring's and notebooks:
 * ND histograms(beta)
 * Some special histograms
   - 2D polar coordinates (with plotting)
-* Adaptive histogram from on-line filling of unknown data
+* Adaptive histogram for on-line filling of unknown data(beta)
 * Understands any numpy-array-like object
 * Keep underflow / overflow
 * Basic numeric operations (* / + -)
