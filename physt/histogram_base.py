@@ -85,6 +85,16 @@ class HistogramBase(object):
                     return False
                 return True
 
+    def fill_n(self, values, weights=None):
+        if weights is not None:
+            if weights.shape != values.shape[0:]:
+                raise RuntimeError("Wrong shape of weights")
+        for i, value in enumerate(values):
+            if weights is not None:
+                self.fill(value, weights[i])
+            else:
+                self.fill(value)
+
     def __add__(self, other):
         new = self.copy()
         new += other

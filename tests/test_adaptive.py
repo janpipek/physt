@@ -45,5 +45,19 @@ class TestAdaptive(object):
         assert np.array_equal(h.frequencies, [2, 0, 1, 1])
 
 
+class TestFillNAdaptive(object):
+    def test_empty(self):
+        h = AdaptiveHistogram1D(10)
+        h.fill_n([4, 5, 11, 12])
+        print(h.bin_left_edges)
+        assert np.array_equal(h.bin_left_edges, [0, 10])
+        assert h.total == 4
+        assert h.mean() == 8.0
+
+        h.fill_n([-3, 120])
+        assert h.bin_left_edges[0] == -10
+        assert h.bin_count == 13
+
+
 if __name__ == "__main__":
     pytest.main(__file__)

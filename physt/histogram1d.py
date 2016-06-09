@@ -375,7 +375,6 @@ class Histogram1D(HistogramBase):
         """
         # TODO: See http://matplotlib.org/1.5.0/examples/api/filled_step.html
         # TODO: Implement statistics box as in ROOT
-        data = self
         if density:
             if cumulative:
                 data = (self / self.total).cumulative_frequencies
@@ -850,26 +849,12 @@ class AdaptiveHistogram1D(Histogram1D):
     def fill(self, value, weight=1.0):
         if self.bins.shape[0] == 0:
             left_edge = np.floor(value / self.bin_width) * self.bin_width
-            # self._min_bin = left_edge
             self._bins = np.asarray([[left_edge, left_edge + self.bin_width]])
             self._frequencies = np.asarray([weight])
             self._errors2 = np.asarray([weight ** 2])
         else:
+            self._force_bin_existence(value)
             bin = self.find_bin(value)
-            if bin < 0:
-                add = 0 - bin
-                self._frequencies = np.concatenate((np.zeros(add), self._frequencies))
-                self._errors2 = np.concatenate((np.zeros(add), self._errors2))
-                new_min = self.bin_left_edges[0] - add * self.bin_width
-                new_numpy_bins = new_min + self.bin_width * np.arange(add + self.bin_count + 1)
-                bin = 0
-                self._bins = bin_utils.make_bin_array(new_numpy_bins)
-            elif bin >= self.bin_count:
-                add = bin - self.bin_count + 1
-                self._frequencies = np.concatenate((self._frequencies, np.zeros(add)))
-                self._errors2 = np.concatenate((self._errors2, np.zeros(add)))
-                new_numpy_bins = self.bin_left_edges[0] + self.bin_width * np.arange(bin + 2)
-                self._bins = bin_utils.make_bin_array(new_numpy_bins)
             self._frequencies[bin] += weight
             self._errors2[bin] += weight ** 2               
 
@@ -877,25 +862,55 @@ class AdaptiveHistogram1D(Histogram1D):
         self._stats["sum2"] += weight * value ** 2
 
     def fill_n(self, values, weights=None, dropna=True):
+        values = np.asarray(values)
+        if dropna:
+            values = values[~np.isnan(values)]
         new_bins = binning.fixed_width_bins(values, bin_width=self.bin_width)
+        new_bins = bin_utils.make_bin_array(new_bins)
         frequencies, errors2, _, _, stats = calculate_frequencies(values, new_bins,
                                                                   weights=weights, validate_bins=False)
         if self.bins.shape[0] == 0:
             self._bins = new_bins
+            self._frequencies = frequencies
             self._errors2 = errors2
             self._stats = stats
         else:
-            if new_bins == self._bins:
-                # TODO: Simple addition
-            else:
-                # TODO: find bin union
-                bin_union = None
-                self.rebin(bin_union, check=False)
-                # TODO: rebin new_bins
+            add_left, _ = self._force_bin_existence(new_bins[0, 0])
+            _, add_right = self._force_bin_existence(new_bins[-1, 1])
+            left = np.where(self.bin_left_edges == new_bins[0, 0])[0][0]
+            right = left + new_bins.shape[0]
+            self._frequencies[left:right] += frequencies
+            self._errors2[left:right] += errors2
+            for key in self._stats:
+                self._stats[key] += stats.get(key, 0.0)
+
+    def _force_bin_existence(self, value):
+        """
+
+        Returns tuple (added_to_left, added_tor_right)
+        """
+        # TODO: Deal with rounding errors (now we're playing it safe)
+        add_left = 0
+        add_right = 0
+        new_bins = None
+
+        if value < self.bin_left_edges[0]:
+            add_left = int(np.ceil((self.bin_left_edges[0] - value) / self.bin_width))
+            self._frequencies = np.concatenate((np.zeros(add_left), self._frequencies))
+            self._errors2 = np.concatenate((np.zeros(add_left), self._errors2))
+        elif value > self.bin_right_edges[-1]:
+            add_right = int(np.ceil((value - self.bin_right_edges[-1]) / self.bin_width))
+            self._frequencies = np.concatenate((self._frequencies, np.zeros(add_right)))
+            self._errors2 = np.concatenate((self._errors2, np.zeros(add_right)))
+        if add_left or add_right:
+            new_min = self.bin_left_edges[0] - add_left * self.bin_width
+            new_bins = np.arange(self.bin_count + add_left + add_right + 1) * self.bin_width + new_min
+            self._bins = bin_utils.make_bin_array(new_bins)
+        return add_left, add_right
 
     def rebin(self, new_bins, check=True):
         if check:
             if not bin_utils.is_bin_subset(self.bins, new_bins):
                 raise RuntimeError("Incompatible rebinning")
-            # TODO: check
-        # Now do the rebinning (or maybe incorporate the checking?
+        self._force_bin_existence(new_bins[0,0])
+        self._force_bin_existence(new_bins[-1,1])
