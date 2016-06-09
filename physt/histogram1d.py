@@ -443,7 +443,8 @@ class Histogram1D(HistogramBase):
 
             # Automatically limit to positive frequencies
             ylim = ax.get_ylim()
-            ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
+            if data.size > 0 and data.max() > 0:
+                ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
             if self.name:
                 ax.set_title(self.name)
             if self.axis_name:
