@@ -952,6 +952,13 @@ class AdaptiveHistogram1D(Histogram1D):
         add_right = 0
         new_bins = None
 
+        if self.bin_count == 0:
+            left = np.floor(value / self.bin_width) * self.bin_width
+            right = left + self.bin_width
+            self._frequencies = np.array([0])
+            self._errors2 = np.array([0])
+            self._bins = np.array([[left, right]])
+            return 1, 0
         if value < self.bin_left_edges[0]:
             add_left = int(np.ceil((self.bin_left_edges[0] - value) / self.bin_width))
             self._frequencies = np.concatenate((np.zeros(add_left), self._frequencies))

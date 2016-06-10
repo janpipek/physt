@@ -87,5 +87,29 @@ class TestAdaptiveArithmetics(object):
 
         assert ha1 == ha3
 
+        ha4 = ha2 + ha1
+        assert ha1 == ha4
+
+    def test_adding_full(self):
+        ha1 = AdaptiveHistogram1D(10)
+        ha1.fill_n([1, 43, 23])
+
+        ha2 = AdaptiveHistogram1D(10)
+        ha2.fill_n([23, 51])
+
+        ha3 = ha1 + ha2
+        ha4 = ha2 + ha1
+        assert np.array_equal(ha3.frequencies, [1, 0, 2, 0, 1, 1])
+        assert np.array_equal(ha3.numpy_bins, [0, 10, 20, 30, 40, 50, 60])
+        assert ha4 == ha3
+
+    def test_multiplication(self):
+        ha1 = AdaptiveHistogram1D(10)
+        ha1.fill_n([1, 43, 23])
+        ha1 *= 2
+        ha1.fill_n([-2])
+        assert np.array_equal(ha1.frequencies, [1, 2, 0, 2, 0, 2])
+        assert isinstance(ha1, AdaptiveHistogram1D)
+
 if __name__ == "__main__":
     pytest.main(__file__)
