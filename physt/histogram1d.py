@@ -841,6 +841,8 @@ class AdaptiveHistogram1D(Histogram1D):
 
     In comparison with Histogram1D, it is a bit more limited - allows no holes, bins are all of the
     same width, no overflows/underflows, ...
+
+    Note that if your max value is equal to bin boundary, a new bin will be created for it.
     """
     def __init__(self, bin_width, sparse=False, **kwargs):
         bins = np.ndarray((0, 2), dtype=float)

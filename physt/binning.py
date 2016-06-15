@@ -204,7 +204,7 @@ def fixed_width_bins(data, bin_width, align=True, range=None, **kwargs):
         The left-most & right-most edge will be aligned to a multiple of this.
         If True, bin_width will be assumed
     range: Optional[tuple]
-        (min, max)
+        (min, max)    
 
     Returns
     -------
@@ -215,11 +215,13 @@ def fixed_width_bins(data, bin_width, align=True, range=None, **kwargs):
         raise RuntimeError("Bin width must be > 0.")
     if align == True:
         align = bin_width
-    min = range[0] if range else data.min()
-    max = range[1] if range else data.max()
+    val_min = range[0] if range else data.min()
+    val_max = range[1] if range else data.max()
     if align:
-        min = (min // align) * align
-        max = np.ceil(max / align) * align
+        min = np.floor(val_min / align) * align
+        max = np.ceil(val_max / align) * align
+        if max == val_max:
+            max += bin_width
     bincount = np.round((max - min) / bin_width).astype(int)   # (max - min) should be int or very close to it
     return np.arange(bincount + 1) * bin_width + min
 

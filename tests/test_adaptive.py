@@ -60,7 +60,7 @@ class TestFillNAdaptive(object):
 
         h.fill_n([-3, 120])
         assert h.bin_left_edges[0] == -10
-        assert h.bin_count == 13
+        assert h.bin_count == 14
 
     def test_with_weights(self):
         h = AdaptiveHistogram1D(10)
@@ -75,6 +75,12 @@ class TestFillNAdaptive(object):
             h.fill_n([0, 1], [2, 3, 4])
         with pytest.raises(RuntimeError):
             h.fill_n([0, 1, 2, 3], [2, 3, 4])
+
+    def test_empty_exact(self):
+        h = AdaptiveHistogram1D(10)
+        h.fill_n([10])
+        assert h.total == 1
+        assert np.array_equal(h.bin_left_edges, [10])
 
 
 class TestAdaptiveArithmetics(object):
