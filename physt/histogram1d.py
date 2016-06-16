@@ -376,7 +376,9 @@ class Histogram1D(HistogramBase):
             If cmap is used, minimum value to include in the colormap (lower are clipped, default: 0)
             Special value: "min" -> Minimum value is the minimum bin value
         cmap_max: float
-            If cmap is used, maximum value to include in the colormap (higher are clipped, default: maximum bin value)            
+            If cmap is used, maximum value to include in the colormap (higher are clipped, default: maximum bin value)       
+        label: str (Optional)
+            Label to include in the legend
 
         You can also specify arbitrary matplotlib arguments, they are forwarded to the respective plotting methods.
 
@@ -776,6 +778,8 @@ def calculate_frequencies(data, bins, weights=None, validate_bins=True, already_
         Weight of items smaller than the first bin
     overflow : float
         Weight of items larger than the last bin
+    stats: dict
+        { sum: ..., sum2: ...}
 
     Note
     ----
