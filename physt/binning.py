@@ -79,7 +79,7 @@ class BinningBase(object):
     def construct(cls, data, *args, **kwargs):
         raise NotImplementedError()
 
-    def as_static(self):
+    def as_static(self, copy):
         """Convert binning to a static form.
 
         Returns
@@ -87,9 +87,10 @@ class BinningBase(object):
         StaticBinning
             A new static binning with a copy of bins.
         """
-        return StaticBinning(self.bins.copy(), self.includes_right_edge)
+        return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
 
-    # TODO: implement as_adaptive()?
+    def copy(self):
+        raise NotImplementedError()
 
 
 class StaticBinning(BinningBase):
@@ -98,6 +99,22 @@ class StaticBinning(BinningBase):
     @classmethod
     def construct(cls, data=None, bins=None, **kwargs):
         return cls(bins=bins, **kwargs)
+
+    def as_static(self, copy=True):
+        """Convert binning to a static form.
+
+        Returns
+        -------
+        StaticBinning
+            A new static binning with a copy of bins.
+        """
+        if copy:
+            return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
+        else:
+            return self
+
+    def copy(self):
+        return self.as_static(True)
 
 
 class NumpyBinning(BinningBase):
@@ -145,6 +162,9 @@ class NumpyBinning(BinningBase):
     @property
     def numpy_bins(self):
         return self._numpy_bins
+
+    def copy(self):
+        return NumpyBinning(numpy_bins=self.numpy_bins, includes_right_edge=self.includes_right_edge)
 
 
 class FixedWidthBinning(BinningBase):
@@ -208,6 +228,9 @@ class FixedWidthBinning(BinningBase):
             self._numpy_bins = self._min + self._bin_width * np.arange(self._bin_count + 1)
         return self._numpy_bins
 
+    def copy(self):
+        return FixedWidthBinning(self._bin_width, self._bin_count, self._min, self.includes_right_edge, self._adaptive)
+
 
 class ExponentialBinning(BinningBase):
     """Binning schema with exponentially distributed bins."""
@@ -258,6 +281,9 @@ class ExponentialBinning(BinningBase):
             range = (np.log10(data.min()), np.log10(data.max()))
         log_width = (range[1] - range[0]) / bins
         return cls(log_min=range[0], log_width=log_width, bin_count=bins, **kwargs)
+
+    def copy(self):
+        return ExponentialBinning(self._log_min, self._log_width, self._bin_count, self.includes_right_edge)
 
 
 class HumanBinning(FixedWidthBinning):
@@ -310,8 +336,6 @@ class QuantileBinning(StaticBinning):
     def __init__(self, *args, **kwargs):
         raise RuntimeError("QuantileBinning does not allow instances.")
 
-    inconsecutive_allowed = False
-
     @classmethod
     def construct(cls, data=None, bins=10, qrange=(0.0, 1.0), **kwargs):
         """
@@ -338,6 +362,9 @@ class IntegerBinning(FixedWidthBinning):
 
     Designed for integer values. Bins are centered around integers
     like [0.5, 1.5)"""
+
+    def __init__(self, *args, **kwargs):
+        raise RuntimeError("IntegerBinning does not allow instances.")
 
     @classmethod
     def construct(cls, data=None, range=None, **kwargs):
@@ -381,7 +408,7 @@ def calculate_bins(array, _=None, *args, **kwargs):
 
     Returns
     -------
-    numpy.ndarray
+    BinningBase
         A two-dimensional array with pairs of bin edges (not necessarily consecutive).
 
     """
@@ -392,26 +419,26 @@ def calculate_bins(array, _=None, *args, **kwargs):
         array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
         bin_count = kwargs.pop("bins", ideal_bin_count(data=array))
-        bins = numpy_bins(array, bin_count, *args, **kwargs)
+        binning = NumpyBinning.construct(array, bin_count, *args, **kwargs)
     elif isinstance(_, int):
-        bins = numpy_bins(array, _, *args, **kwargs)
+        binning =  NumpyBinning.construct(array, _, *args, **kwargs)
     elif isinstance(_, str):
         # What about the ranges???
         if _ in bincount_methods:
             bin_count = ideal_bin_count(array, method=_)
-            bins = numpy_bins(array, bin_count, *args, **kwargs)
-        elif _ in binning_methods:
-            method = binning_methods[_]
-            bins = method(array, *args, **kwargs)
+            binning = NumpyBinning.construct(array, bin_count, *args, **kwargs)
+        elif _ in binning_dict:
+            method = binning_dict[_]
+            binning = method.construct(array, *args, **kwargs)
         else:
             raise RuntimeError("No binning method {0} available.".format(_))
     elif callable(_):
-        bins = _(array, *args, **kwargs)
+        binning = _(array, *args, **kwargs)
     elif np.iterable(_):
-        bins = _
+        binning = StaticBinning.construct(array, _, *args, **kwargs)
     else:
         raise RuntimeError("Binning {0} not understood.".format(_))
-    return make_bin_array(bins)
+    return binning
 
 
 def calculate_bins_nd(array, bins=None, *args, **kwargs):
@@ -466,119 +493,119 @@ def calculate_bins_nd(array, bins=None, *args, **kwargs):
         ]
     return bins
 
+
+binning_dict = {
+    "numpy" : NumpyBinning,
+    "exponential" : ExponentialBinning,
+    "quantile": QuantileBinning,
+    "fixed_width": FixedWidthBinning,
+    "integer": IntegerBinning,
+    "human" : HumanBinning
+}
+
+# try:
+#     from astropy.stats.histogram import histogram, knuth_bin_width, freedman_bin_width, scott_bin_width, bayesian_blocks
+#     import warnings
+#     warnings.filterwarnings("ignore", module="astropy\..*")
 #
-# binning_methods = {
-#     "numpy" : numpy_bins,
-#     "exponential" : exponential_bins,
-#     "quantile": quantile_bins,
-#     "fixed_width": fixed_width_bins,
-#     "integer": integer_bins,
-#     "human" : human_bins
-# }
-
-try:
-    from astropy.stats.histogram import histogram, knuth_bin_width, freedman_bin_width, scott_bin_width, bayesian_blocks
-    import warnings
-    warnings.filterwarnings("ignore", module="astropy\..*")
-
-    def astropy_bayesian_blocks(data, range=None, **kwargs):
-        """Binning schema based on Bayesian blocks (from astropy).
-
-        Computationally expensive for large data sets.
-
-        Parameters
-        ----------
-        data: arraylike
-        range: Optional[tuple]
-
-        Returns
-        -------
-        numpy.ndarray
-
-        See also
-        --------
-        astropy.stats.histogram.bayesian_blocks
-        astropy.stats.histogram.histogram
-        """
-        if range is not None:
-            data = data[(data >= range[0]) & (data <= range[1])]
-        edges = bayesian_blocks(data)
-        return edges
-
-    def astropy_knuth(data, range=None, **kwargs):
-        """Binning schema based on Knuth's rule (from astropy).
-
-        Computationally expensive for large data sets.
-
-        Parameters
-        ----------
-        data: arraylike
-        range: Optional[tuple]
-
-        Returns
-        -------
-        numpy.ndarray
-
-        See also
-        --------
-        astropy.stats.histogram.knuth_bin_width
-        astropy.stats.histogram.histogram
-        """
-        if range is not None:
-            data = data[(data >= range[0]) & (data <= range[1])]
-        _, edges = knuth_bin_width(data, True)
-        return edges
-
-    def astropy_scott(data, range=None, **kwargs):
-        """Binning schema based on Scott's rule (from astropy).
-
-        Parameters
-        ----------
-        data: arraylike
-        range: Optional[tuple]
-
-        Returns
-        -------
-        numpy.ndarray
-
-        See also
-        --------
-        astropy.stats.histogram.scott_bin_width
-        astropy.stats.histogram.histogram
-        """
-        if range is not None:
-            data = data[(data >= range[0]) & (data <= range[1])]
-        _, edges = scott_bin_width(data, True)
-        return edges
-
-    def astropy_freedman(data, range=None, **kwargs):
-        """Binning schema based on Freedman-Diaconis rule (from astropy).
-
-        Parameters
-        ----------
-        data: arraylike
-        range: Optional[tuple]
-
-        Returns
-        -------
-        numpy.ndarray
-
-        See also
-        --------
-        astropy.stats.histogram.freedman_bin_width
-        astropy.stats.histogram.histogram
-        """
-        if range is not None:
-            data = data[(data >= range[0]) & (data <= range[1])]
-        _, edges = freedman_bin_width(data, True)
-        return edges
-
-    binning_methods["astropy_blocks"] = astropy_bayesian_blocks
-    binning_methods["astropy_knuth"] = astropy_knuth
-    binning_methods["astropy_scott"] = astropy_scott
-    binning_methods["astropy_freedman"] = astropy_freedman
-except:
-    pass     # astropy is not required
+#     def astropy_bayesian_blocks(data, range=None, **kwargs):
+#         """Binning schema based on Bayesian blocks (from astropy).
+#
+#         Computationally expensive for large data sets.
+#
+#         Parameters
+#         ----------
+#         data: arraylike
+#         range: Optional[tuple]
+#
+#         Returns
+#         -------
+#         numpy.ndarray
+#
+#         See also
+#         --------
+#         astropy.stats.histogram.bayesian_blocks
+#         astropy.stats.histogram.histogram
+#         """
+#         if range is not None:
+#             data = data[(data >= range[0]) & (data <= range[1])]
+#         edges = bayesian_blocks(data)
+#         return edges
+#
+#     def astropy_knuth(data, range=None, **kwargs):
+#         """Binning schema based on Knuth's rule (from astropy).
+#
+#         Computationally expensive for large data sets.
+#
+#         Parameters
+#         ----------
+#         data: arraylike
+#         range: Optional[tuple]
+#
+#         Returns
+#         -------
+#         numpy.ndarray
+#
+#         See also
+#         --------
+#         astropy.stats.histogram.knuth_bin_width
+#         astropy.stats.histogram.histogram
+#         """
+#         if range is not None:
+#             data = data[(data >= range[0]) & (data <= range[1])]
+#         _, edges = knuth_bin_width(data, True)
+#         return edges
+#
+#     def astropy_scott(data, range=None, **kwargs):
+#         """Binning schema based on Scott's rule (from astropy).
+#
+#         Parameters
+#         ----------
+#         data: arraylike
+#         range: Optional[tuple]
+#
+#         Returns
+#         -------
+#         numpy.ndarray
+#
+#         See also
+#         --------
+#         astropy.stats.histogram.scott_bin_width
+#         astropy.stats.histogram.histogram
+#         """
+#         if range is not None:
+#             data = data[(data >= range[0]) & (data <= range[1])]
+#         _, edges = scott_bin_width(data, True)
+#         return edges
+#
+#     def astropy_freedman(data, range=None, **kwargs):
+#         """Binning schema based on Freedman-Diaconis rule (from astropy).
+#
+#         Parameters
+#         ----------
+#         data: arraylike
+#         range: Optional[tuple]
+#
+#         Returns
+#         -------
+#         numpy.ndarray
+#
+#         See also
+#         --------
+#         astropy.stats.histogram.freedman_bin_width
+#         astropy.stats.histogram.histogram
+#         """
+#         if range is not None:
+#             data = data[(data >= range[0]) & (data <= range[1])]
+#         _, edges = freedman_bin_width(data, True)
+#         return edges
+#
+#     binning_methods["astropy_blocks"] = astropy_bayesian_blocks
+#     binning_methods["astropy_knuth"] = astropy_knuth
+#     binning_methods["astropy_scott"] = astropy_scott
+#     binning_methods["astropy_freedman"] = astropy_freedman
+# except:
+#     pass     # astropy is not required
 
 
 def ideal_bin_count(data, method="default"):

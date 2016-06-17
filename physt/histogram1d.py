@@ -24,13 +24,13 @@ class Histogram1D(HistogramBase):
     These are the basic attributes that can be used in the constructor (see there)
     Other attributes are dynamic.
     """
-    def __init__(self, bins, frequencies=None, errors2=None, **kwargs):
+    def __init__(self, binning, frequencies=None, errors2=None, **kwargs):
         """Constructor
 
         Parameters
         ----------
-        bins: array_like
-            The bins, either as numpy-like 1D array of edges, or 2D array of edges
+        binning: physt.binning.BinningBase
+            The binning
         frequencies: Optional[array_like]
             The bin contents.
         keep_missed: Optional[bool]
@@ -48,13 +48,13 @@ class Histogram1D(HistogramBase):
         stats: dict
             Dictionary of various statistics ("sum", "sum2")
         """
-        self._bins = bin_utils.make_bin_array(bins)
+        self._binning = binning
 
         if frequencies is None:
-            self._frequencies = np.zeros(self._bins.shape[0])
+            self._frequencies = np.zeros(self.bins.shape[0])
         else:
             frequencies = np.asarray(frequencies, dtype=float)
-            if frequencies.shape != (self._bins.shape[0],):
+            if frequencies.shape != (self.bins.shape[0],):
                 raise RuntimeError("Values must have same dimension as bins.")
             if np.any(frequencies < 0):
                 raise RuntimeError("Cannot have negative frequencies.")
@@ -100,6 +100,7 @@ class Histogram1D(HistogramBase):
                 if i.shape != (self.bin_count,):
                     raise IndexError("Cannot index with masked array of a wrong dimension")
         elif isinstance(i, slice):
+            # TODO: Fix this
             if i.step:
                 raise IndexError("Cannot change the order of bins")
             if i.step == 1 or i.step is None:
@@ -111,6 +112,10 @@ class Histogram1D(HistogramBase):
                     overflow += self.frequencies[i.stop:].sum()
         return self.__class__(self.bins[i], self.frequencies[i], self.errors2[i], overflow=overflow,
                               underflow=underflow, name=self.name, axis_name=self.axis_name)
+
+    @property
+    def bins(self):
+        return self._binning.bins
 
     @property
     def ndim(self):
@@ -537,7 +542,7 @@ class Histogram1D(HistogramBase):
             overflow = 0
             inner_missed = 0
             errors2 = None
-        return self.__class__(np.copy(self.bins), frequencies, underflow=underflow, overflow=overflow, inner_missed=inner_missed,
+        return self.__class__(self._binning.copy(), frequencies, underflow=underflow, overflow=overflow, inner_missed=inner_missed,
                               name=self.name, axis_name=self.axis_name, keep_missed=self.keep_missed,
                               errors2=errors2)
 
@@ -752,7 +757,7 @@ class Histogram1D(HistogramBase):
         return s
 
 
-def calculate_frequencies(data, bins, weights=None, validate_bins=True, already_sorted=False):
+def calculate_frequencies(data, binning, weights=None, validate_bins=True, already_sorted=False):
     """Get frequencies and bin errors from the data.
 
     Parameters
@@ -791,7 +796,7 @@ def calculate_frequencies(data, bins, weights=None, validate_bins=True, already_
     sum2 = 0.0
 
     # Ensure correct binning
-    bins = bin_utils.make_bin_array(bins)
+    bins = binning.bins # bin_utils.make_bin_array(bins)
     if validate_bins:
         if bins.shape[0] == 0:
             raise RuntimeError("Cannot have histogram with 0 bins.")

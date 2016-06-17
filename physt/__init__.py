@@ -1,6 +1,6 @@
 from . import binning
 
-__version__ = str('0.3.2')
+__version__ = str('0.3.2.1')
 
 
 def histogram(data, _=None, *args, **kwargs):
@@ -70,11 +70,12 @@ def histogram(data, _=None, *args, **kwargs):
             array = array[~np.isnan(array)]
 
         # Get binning
-        bins = calculate_bins(array, _, *args, check_nan=not dropna, **kwargs)
+        binning = calculate_bins(array, _, *args, check_nan=not dropna, **kwargs)
+        # bins = binning.bins
 
         # Get frequencies
         frequencies, errors2, underflow, overflow, stats = calculate_frequencies(array,
-                                                                                 bins=bins,
+                                                                                 binning=binning,
                                                                                  weights=weights)
 
         # Construct the object
@@ -83,7 +84,7 @@ def histogram(data, _=None, *args, **kwargs):
             overflow = 0
         if hasattr(data, "name") and not axis_name:
             axis_name = data.name
-        return Histogram1D(bins=bins, frequencies=frequencies, errors2=errors2, overflow=overflow,
+        return Histogram1D(binning=binning, frequencies=frequencies, errors2=errors2, overflow=overflow,
                                        underflow=underflow, stats=stats,
                                        keep_missed=keep_missed, name=name, axis_name=axis_name)
 
