@@ -218,7 +218,7 @@ class Histogram1D(HistogramBase):
         numpy.ndarray
         """
         # TODO: If not consecutive, does not make sense
-        return np.concatenate((self.bin_left_edges, self.bin_right_edges[-1:]), axis=0)
+        return self._binning.numpy_bins
 
     @property
     def shape(self):
@@ -332,6 +332,10 @@ class Histogram1D(HistogramBase):
         Note: If a gap in unconsecutive bins is matched, underflow & overflow are not valid anymore.
         Note: Name was selected because of the eponymous method in ROOT
         """
+        if self._binning.is_adaptive():
+            add_left, add_right = self._binning.force_bin_existence(value)
+            self._reshape_data(add_left, add_right)
+
         ixbin = self.find_bin(value)
         if ixbin is None:
             self.overflow = np.nan
@@ -347,6 +351,49 @@ class Histogram1D(HistogramBase):
                 self._stats["sum"] += weight * value
                 self._stats["sum2"] += weight * value ** 2
         return ixbin
+
+    def fill_n(self, values, weights=None, dropna=True):
+        values = np.asarray(values)
+        if dropna:
+            values = values[~np.isnan(values)]
+        if self._binning.is_adaptive():
+            add_left1, add_right1 = self._binning.force_bin_existence(values.min())
+            add_left2, add_right2 = self._binning.force_bin_existence(values.max())
+            self._reshape_data(add_left1 + add_left2, add_right1 + add_right2)
+
+        frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self._binning,
+                                                                                  weights=weights, validate_bins=False)
+        self._frequencies += frequencies
+        self._errors2 += errors2
+        # TODO: check that adaptive does not produce under-/over-flows?
+        self.underflow += underflow
+        self.overflow += overflow
+        for key in self._stats:
+            self._stats[key] += stats.get(key, 0.0)
+
+    def _reshape_data(self, left, right):
+        """Reshape data to match new binning schema.
+
+        Fills frequencies and errors with 0.
+
+        Parameters
+        ----------
+        left: int
+            How many bins are added to the left
+        right: int
+            How many bins are added to the right
+
+        """
+        if self._frequencies is None or self._frequencies.shape[0] == 0:
+            self._frequencies = np.zeros(self.bin_count, dtype=float)
+            self._errors2 = np.zeros(self.bin_count, dtype=float)
+        else:
+            if left:
+                self._frequencies = np.concatenate((np.zeros(left), self._frequencies))
+                self._errors2 = np.concatenate((np.zeros(left), self._errors2))
+            if right:
+                self._frequencies = np.concatenate((self._frequencies, np.zeros(right)))
+                self._errors2 = np.concatenate((self._errors2, np.zeros(right)))
 
     def plot(self, histtype='bar', cumulative=False, density=False, errors=False, backend="matplotlib", ax=None, **kwargs):
         """Plot the histogram.
@@ -573,7 +620,7 @@ class Histogram1D(HistogramBase):
     def __iadd__(self, other):
         if np.isscalar(other):
             raise RuntimeError("Cannot add constant to histograms.")
-        if np.allclose(other.bins, self.bins):
+        elif self.has_same_bins(other):
             self._frequencies += other.frequencies
             self.underflow += other.underflow
             self.overflow += other.overflow
@@ -582,25 +629,33 @@ class Histogram1D(HistogramBase):
             if self._stats:
                 self._stats["sum"] += other._stats["sum"]
                 self._stats["sum2"] += other._stats["sum2"]
-        else:
-            raise RuntimeError("Bins must be the same when adding histograms.")
-        return self
+            return self
+        elif self._binning.is_adaptive():
+            if other.missed > 0:
+                raise RuntimeError("Cannot add histogram with missed values.")
+            if other.bin_count == 0:
+                return self
+            # TODO: Finish
+        raise RuntimeError("Cannot add histograms.")
 
     def __isub__(self, other):
-        if np.isscalar(other):
-            raise RuntimeError("Cannot add constant to histograms.")
-        if np.allclose(other.bins, self.bins):
-            self._frequencies -= other.frequencies
-            self.underflow -= other.underflow
-            self.overflow -= other.overflow
-            self.inner_missed -= other.inner_missed
-            self._errors2 += other.errors2
-            if self._stats:
-                self._stats["sum"] -= other._stats["sum"]
-                self._stats["sum2"] -= other._stats["sum2"]            
-        else:
-            raise RuntimeError("Bins must be the same when subtracting histograms.")
+        self.__iadd__(other * (-1))
         return self
+
+        # if np.isscalar(other):
+        #     raise RuntimeError("Cannot add constant to histograms.")
+        # if np.allclose(other.bins, self.bins):
+        #     self._frequencies -= other.frequencies
+        #     self.underflow -= other.underflow
+        #     self.overflow -= other.overflow
+        #     self.inner_missed -= other.inner_missed
+        #     self._errors2 += other.errors2
+        #     if self._stats:
+        #         self._stats["sum"] -= other._stats["sum"]
+        #         self._stats["sum2"] -= other._stats["sum2"]
+        # else:
+        #     raise RuntimeError("Bins must be the same when subtracting histograms.")
+        # return self
 
     def __imul__(self, other):
         if np.isscalar(other):

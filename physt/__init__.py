@@ -37,6 +37,8 @@ def histogram(data, _=None, *args, **kwargs):
         name of the histogram
     axis_name: str
         name of the variable on x axis
+    adaptive: bool
+        whether we want the bins to be modifiable (useful for continuous filling of a priori unknown data)
 
     Other numpy.histogram parameters are excluded, see the methods of the Histogram1D class itself.
 
@@ -52,6 +54,8 @@ def histogram(data, _=None, *args, **kwargs):
     from .histogram1d import Histogram1D, calculate_frequencies
     from .binnings import calculate_bins
 
+    adaptive = kwargs.pop("adaptive", False)
+
     if isinstance(data, tuple) and isinstance(data[0], str):    # Works for groupby DataSeries
         return histogram(data[1], _, *args, name=data[0], **kwargs)
     elif type(data).__name__ == "DataFrame":
@@ -65,18 +69,28 @@ def histogram(data, _=None, *args, **kwargs):
         axis_name = kwargs.pop("axis_name", None)
 
         # Convert to array
-        array = np.asarray(data).flatten()
-        if dropna:
-            array = array[~np.isnan(array)]
+        if data is not None:
+            array = np.asarray(data).flatten()
+            if dropna:
+                array = array[~np.isnan(array)]
+        else:
+            array = None
 
         # Get binning
-        binning = calculate_bins(array, _, *args, check_nan=not dropna, **kwargs)
+        binning = calculate_bins(array, _, *args, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs)
         # bins = binning.bins
 
         # Get frequencies
-        frequencies, errors2, underflow, overflow, stats = calculate_frequencies(array,
-                                                                                 binning=binning,
-                                                                                 weights=weights)
+        if array is not None:
+            frequencies, errors2, underflow, overflow, stats = calculate_frequencies(array,
+                                                                                     binning=binning,
+                                                                                     weights=weights)
+        else:
+            frequencies = None
+            errors2 = None
+            underflow = 0
+            overflow = 0
+            stats = {"sum": 0.0, "sum2": 0.0}
 
         # Construct the object
         if not keep_missed:
@@ -194,4 +208,5 @@ def h3(data, *args, **kwargs):
     histogramdd(data, *args, **kwargs)
 
 from .special import polar_histogram
-from .histogram1d import AdaptiveHistogram1D as adaptive_histogram_1d
+
+

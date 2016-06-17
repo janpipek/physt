@@ -13,6 +13,7 @@ class BinningBase(object):
     - if you modify the bins, be sure to put _bins and _numpy_bins into proper state (in some cases, None is sufficient)
     - the construct method should prepare bins etc.
     - checking of proper bins should be done in __init__
+    - if you want to support adaptive histogram, override _force_bin_existence
     """
     def __init__(self, bins=None, numpy_bins=None, includes_right_edge=False, integrity_check=True, adaptive=False):
         # TODO: Incorporate integrity_check parameter
@@ -58,6 +59,22 @@ class BinningBase(object):
 
     def is_adaptive(self):
         return self._adaptive
+
+    def force_bin_existence(self, value):
+        """Change schema so that there is a bin for value
+
+        Returns
+        -------
+        tuple
+            (added_to_left, added_tor_right)
+        """
+        if not self.is_adaptive():
+            raise RuntimeError("Histogram is not adaptive")
+        else:
+            return self._force_bin_existence(value)
+
+    def _force_bin_existence(self, value):
+        raise NotImplementedError()
 
     @property
     def bins(self):
@@ -191,6 +208,33 @@ class FixedWidthBinning(BinningBase):
         self._bins = None
         self._numpy_bins = None
         # TODO: We need to introduce shift, if we want to support adaptivity for IntegerBinning
+
+    def _force_bin_existence(self, value):
+        add_left = 0
+        add_right = 0
+
+        if self._bin_count == 0:
+            self._min = np.floor(value / self._bin_width) * self._bin_width    # TODO: who' abou' alignment?
+            self._bin_count = 1
+            self._bins = None
+            self._numpy_bins = None
+            return 1, 0
+        else:
+            if value < self.numpy_bins[0]:
+                add_left = int(np.ceil((self.numpy_bins[0] - value) / self._bin_width))
+                self._min -= add_left * self._bin_width
+                self._bin_count += add_left
+            elif value >= self.numpy_bins[-1]:
+                add_right = (value - self.numpy_bins[-1]) / self._bin_width
+                if add_right - np.floor(add_right) == 0:
+                    add_right = int(add_right + 1)
+                else:
+                    add_right = int(np.ceil(add_right))
+                self._bin_count += add_right
+            if add_left or add_right:
+                self._bins = None
+                self._numpy_bins = None
+            return add_left, add_right
 
     @classmethod
     def construct(cls, data=None, bin_width=1, range=None, includes_right_edge=False, **kwargs):
