@@ -279,7 +279,12 @@ class FixedWidthBinning(BinningBase):
         return self._numpy_bins
 
     def copy(self):
-        return FixedWidthBinning(self._bin_width, self._bin_count, self._min, self.includes_right_edge, self._adaptive)
+        return FixedWidthBinning(
+            bin_width=self._bin_width,
+            bin_count=self._bin_count,
+            min=self._min,
+            includes_right_edge=self.includes_right_edge,
+            adaptive=self._adaptive)
 
 
 class ExponentialBinning(BinningBase):
@@ -288,8 +293,7 @@ class ExponentialBinning(BinningBase):
 
     # TODO: Implement adaptivity
 
-    def __init__(self, log_min, log_width, bin_count, includes_right_edge=False):
-        adaptive = False
+    def __init__(self, log_min, log_width, bin_count, includes_right_edge=False, adaptive=False):
         super(ExponentialBinning, self).__init__(includes_right_edge=includes_right_edge, adaptive=adaptive)
         self._log_min = log_min
         self._log_width = log_width
