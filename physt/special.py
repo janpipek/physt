@@ -1,6 +1,6 @@
 from .histogram_nd import HistogramND
 from .histogram1d import Histogram1D
-from . import binning, histogram_nd
+from . import binnings, histogram_nd
 import numpy as np
 
 
@@ -36,6 +36,7 @@ class PolarHistogram(HistogramND):
         bins = self.bins[ax]
         name = kwargs.pop("name", self.name)
         klass = (RadialHistogram, AzimuthalHistogram)[ax]
+        # TODO: missed?
         return klass(bins=bins, errors2=errors2, name=name, frequencies=frequencies, **kwargs)
 
     def find_bin(self, value, axis=None, radial_coords=False):
@@ -149,6 +150,15 @@ class AzimuthalHistogram(Histogram1D):
     # TODO: Add special plotting (polar bar, polar ring)
 
 
+class SphericalHistogram(HistogramND):
+    def __init__(self, bins, frequencies=None, **kwargs):
+        if not "axis_names" in kwargs:
+            kwargs["axis_names"] = ("r", "theta", "phi")
+        if "dim" in kwargs:
+            kwargs.pop("dim")
+        super(SphericalHistogram, self).__init__(3, bins=bins, frequencies=frequencies, **kwargs)    
+
+
 def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwargs):
     rdata = np.hypot(ydata, xdata)
     phidata = np.arctan2(ydata, xdata)
@@ -164,7 +174,7 @@ def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwa
 
     if dropna:
         data = data[~np.isnan(data).any(axis=1)]
-    bins = binning.calculate_bins_nd(data, [radial_bins, phi_bins], *args, check_nan=not dropna, **kwargs)
+    bins = binnings.calculate_bins_nd(data, [radial_bins, phi_bins], *args, check_nan=not dropna, **kwargs)
 
     # Prepare remaining data
     weights = kwargs.pop("weights", None)
@@ -172,4 +182,3 @@ def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwa
                                                                   bins=bins,
                                                                   weights=weights)
     return PolarHistogram(bins=bins, frequencies=frequencies, errors2=errors2, missed=missed)
-

@@ -162,6 +162,10 @@ def histogramdd(data, bins=10, *args, **kwargs):
     from . import histogram_nd
     from .binnings import calculate_bins_nd
 
+    adaptive = kwargs.pop("adaptive", False)
+    if adaptive:
+        raise RuntimeError("Adaptive multi-dimensional histograms not yet supported.")
+
     # pandas - guess axis names
     if not "axis_names" in kwargs:
         if hasattr(data, "columns"):
