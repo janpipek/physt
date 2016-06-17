@@ -643,17 +643,17 @@ def ideal_bin_count(data, method="default"):
         else:
             return ideal_bin_count(data, "sturges")
     elif method == "sqrt":
-        return np.ceil(np.sqrt(n))
+        return int(np.ceil(np.sqrt(n)))
     elif method == "sturges":
-        return np.ceil(np.log2(n)) + 1
+        return int(np.ceil(np.log2(n)) + 1)
     elif method == "doane":
         if n < 3:
             return 1
         from scipy.stats import skew
         sigma = np.sqrt(6 * (n-2) / (n + 1) * (n + 3))
-        return np.ceil(1 + np.log2(n) + np.log2(1 + np.abs(skew(data)) / sigma))
+        return int(np.ceil(1 + np.log2(n) + np.log2(1 + np.abs(skew(data)) / sigma)))
     elif method == "rice":
-        return np.ceil(2 * np.power(n, 1 / 3))
+        return int(np.ceil(2 * np.power(n, 1 / 3)))
 
 
 bincount_methods = ["default", "sturges", "rice", "sqrt", "doane"]
