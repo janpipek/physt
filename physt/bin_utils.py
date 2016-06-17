@@ -7,7 +7,7 @@ def make_bin_array(bins):
     Parameters
     ----------
     bins: array_like
-        Array of edges or array of edge tuples.
+        Array of edges or array of edge tuples
 
     Returns
     -------
@@ -24,16 +24,34 @@ def make_bin_array(bins):
     """
     bins = np.asarray(bins)
     if bins.ndim == 1:
+        # if bins.shape[0] == 0:
+        #     raise RuntimeError("Needs at least one bin")
         return np.hstack((bins[:-1,np.newaxis], bins[1:,np.newaxis]))
     elif bins.ndim == 2:
         if bins.shape[1] != 2:
             raise RuntimeError("Binning schema with ndim==2 must have 2 columns")
+        # if bins.shape[0] == 0:
+        #     raise RuntimeError("Needs at least one bin")
         return bins  # Already correct, just pass
     else:
         raise RuntimeError("Binning schema must have ndim==1 or ndim==2")
 
 
 def to_numpy_bins(bins):
+    """Convert physt bin format to numpy edges.
+
+    Parameters
+    ----------
+    bins: array_like
+        1-D (n) or 2-D (n, 2) array of edges
+
+    Returns
+    -------
+    edges: np.ndarray
+        all edges    
+    """
+    if bins.ndim == 1:     # Already in the proper format
+        return bins
     if not is_consecutive(bins):
         raise RuntimeError("Cannot create numpy bins from inconsecutive")
     return np.concatenate([bins[:1, 0], bins[:, 1]])
@@ -150,4 +168,5 @@ def is_bin_subset(sub, sup):
 
 
 def is_bin_superset(sup, sub):
+    """Inverse of is_bin_subset"""
     return is_bin_subset(sub=sub, sup=sup)
