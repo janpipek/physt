@@ -1,7 +1,103 @@
 """Different binning algorithms/schemas for the histograms."""
 
 import numpy as np
-from .bin_utils import make_bin_array
+from .bin_utils import make_bin_array, is_consecutive, to_numpy_bins
+
+
+class BinningBase(object):
+    adaptive_allowed = False
+    inconsecutive_allowed = False
+    includes_right_edge = False
+    # storage_type = "both"
+
+    def is_consecutive(self, rtol=1.e-5, atol=1.e-8):
+        if self.inconsecutive_allowed:
+            return is_consecutive(self.bins, rtol, atol)
+        else:
+            return True
+
+    @property
+    def bins(self):
+        raise NotImplementedError()
+
+    @property
+    def numpy_bins(self):
+        raise NotImplementedError()
+
+    @classmethod
+    def construct(cls, data, *args, **kwargs):
+        raise NotImplementedError()
+
+
+class StaticBinning(BinningBase):
+    inconsecutive_allowed = True
+
+    def __init__(self, bins):
+        # Check
+        self._bins = bins
+
+    @property
+    def bins(self):
+        return self._bins
+
+    @property
+    def numpy_bins(self):
+        return to_numpy_bins(self._bins)
+
+
+    @classmethod
+    def construct(cls, bins, data=None, *args, **kwargs):
+        raise NotImplementedError()
+
+
+class NumpyBinning(BinningBase):
+    """Binning schema working as numpy.histogram.
+
+    Parameters
+    ----------
+    data: array_like, optional
+        This is optional if both bins and range are set
+    bins: int or array_like
+    range: Optional[tuple]
+        (min, max)
+
+    Returns
+    -------
+    numpy.ndarray
+
+    See Also
+    --------
+    numpy.histogram
+    """
+
+    includes_right_edge = True
+
+    def __init__(self, numpy_bins):
+        self._numpy_bins = numpy_bins
+
+    @classmethod
+    def construct(cls, data, bins=10, range=None, **kwargs):
+        if isinstance(bins, int):
+            if range:
+                bins = np.linspace(range[0], range[1], bins + 1)
+            else:
+                start = data.min()
+                stop = data.max()
+                bins = np.linspace(start, stop, bins + 1)
+        elif np.iterable(bins):
+            bins = np.asarray(bins)
+        else:
+            # Some numpy edge case
+            _, bins = np.histogram(data, bins, **kwargs)
+        return cls(bins)
+
+    @property
+    def bins(self):
+        return make_bin_array(self._numpy_bins)
+
+    @property
+    def numpy_bins(self):
+        return self._numpy_bins
 
 
 def calculate_bins(array, _=None, *args, **kwargs):
@@ -105,40 +201,6 @@ def calculate_bins_nd(array, bins=None, *args, **kwargs):
         for i in range(dim)
         ]
     return bins
-
-
-def numpy_bins(data=None, bins=10, range=None, **kwargs):
-    """Binning schema working as numpy.histogram.
-
-    Parameters
-    ----------
-    data: array_like, optional
-        This is optional if both bins and range are set
-    bins: int or array_like
-    range: Optional[tuple]
-        (min, max)
-
-    Returns
-    -------
-    numpy.ndarray
-
-    See Also
-    --------
-    numpy.histogram
-    """
-    if isinstance(bins, int):
-        if range:
-            return np.linspace(range[0], range[1], bins + 1)
-        else:
-            start = data.min()
-            stop = data.max()
-            return np.linspace(start, stop, bins + 1)
-    elif np.iterable(bins):
-        return np.asarray(bins).flatten()
-    else:
-        # Some numpy edge case
-        _, bins = np.histogram(data, bins, **kwargs)
-        return bins
 
 
 def exponential_bins(data=None, bins=None, range=None, **kwargs):
