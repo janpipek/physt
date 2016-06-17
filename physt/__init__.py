@@ -1,4 +1,4 @@
-from . import binning
+from . import binnings
 
 __version__ = str('0.3.2.1')
 
@@ -50,7 +50,7 @@ def histogram(data, _=None, *args, **kwargs):
     """
     import numpy as np
     from .histogram1d import Histogram1D, calculate_frequencies
-    from .binning import calculate_bins
+    from .binnings import calculate_bins
 
     if isinstance(data, tuple) and isinstance(data[0], str):    # Works for groupby DataSeries
         return histogram(data[1], _, *args, name=data[0], **kwargs)
@@ -146,7 +146,7 @@ def histogramdd(data, bins=10, *args, **kwargs):
     """
     import numpy as np
     from . import histogram_nd
-    from .binning import calculate_bins_nd
+    from .binnings import calculate_bins_nd
 
     # pandas - guess axis names
     if not "axis_names" in kwargs:

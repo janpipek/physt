@@ -59,7 +59,7 @@ author = 'Jan Pipek'
 import physt
 import physt.histogram1d
 import physt.bin_utils
-import physt.binning
+import physt.binnings
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

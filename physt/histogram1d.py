@@ -1,8 +1,8 @@
 import numpy as np
-from . import bin_utils, binning
+from . import bin_utils, binnings
 from .histogram_base import HistogramBase
 
-# TODO: Fix import
+# TODO: Fix I/O with binning
 
 
 class Histogram1D(HistogramBase):
@@ -31,7 +31,7 @@ class Histogram1D(HistogramBase):
 
         Parameters
         ----------
-        binning: physt.binning.BinningBase
+        binning: physt.binnings.BinningBase
             The binning
         frequencies: Optional[array_like]
             The bin contents.
@@ -551,6 +551,7 @@ class Histogram1D(HistogramBase):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
+        # TODO: Change to something in binning itself
         if not np.allclose(other.bins, self.bins):
             return False
         if not np.allclose(other.frequencies, self.frequencies):
@@ -766,7 +767,7 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
     ----------
     data : array_like
         Data items to work on.
-    bins : array_like
+    binning : physt.binnings.BinningBase
         A set of bins.
     weights : array_like, optional
         Weights of the items.
@@ -792,6 +793,7 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
     ----
     Checks that the bins are in a correct order (not necessarily consecutive)
     """
+    # TODO: Maybe change back to bins???
 
     # Statistics
     sum = 0.0
@@ -892,7 +894,7 @@ class AdaptiveHistogram1D(Histogram1D):
             values = values[~np.isnan(values)]
         if weights is not None and np.isscalar(weights):
             weights = np.ones_like(values) * weights
-        new_bins = binning.fixed_width_bins(values, bin_width=self.bin_width)
+        new_bins = binnings.fixed_width_bins(values, bin_width=self.bin_width)
         new_bins = bin_utils.make_bin_array(new_bins)
         frequencies, errors2, _, _, stats = calculate_frequencies(values, new_bins,
                                                                   weights=weights, validate_bins=False)
