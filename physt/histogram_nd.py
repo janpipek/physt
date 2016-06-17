@@ -7,13 +7,14 @@ class HistogramND(HistogramBase):
     """Multi-dimensional histogram data.
     """
 
-    def __init__(self, dimension, bins, frequencies=None, **kwargs):
+    def __init__(self, dimension, binnings, frequencies=None, **kwargs):
         self._dimension = dimension
+        self._binnings = binnings
+        self._bins = [binning.bins for binning in self._binnings]
 
         # Bins + checks
-        if len(bins) != self._dimension:
+        if len(self._bins) != self._dimension:
             raise RuntimeError("bins must be a sequence of {0} schemas".format(self._dimension))
-        self._bins = [bin_utils.make_bin_array(bins_i) for bins_i in bins]
 
         # Frequencies + checks
         if frequencies is None:
@@ -142,7 +143,7 @@ class HistogramND(HistogramBase):
             frequencies = None
             missed = 0
             errors2 = None
-        return self.__class__(bins=[np.copy(bins) for bins in self.bins],
+        return self.__class__(dimension=self.ndim, binnings=[binning.copy() for binning in self._binnings],
                               frequencies=frequencies, errors2=errors2,
                               name=self.name, axis_names=self.axis_names[:],
                               keep_missed=self.keep_missed, missed=missed)
@@ -161,16 +162,16 @@ class HistogramND(HistogramBase):
         errors2 = self.errors2.sum(axis=invert)
         name = kwargs.pop("name", self.name)
         axis_names = [name for i, name in enumerate(self.axis_names) if i in axes]
-        bins = [bins for i, bins in enumerate(self.bins) if i in axes]
+        bins = [bins for i, bins in enumerate(self._binnings) if i in axes]
         if len(axes) == 1:
             from .histogram1d import Histogram1D
-            return Histogram1D(bins=bins[0], frequencies=frequencies, errors2=errors2,
+            return Histogram1D(binning=bins[0], frequencies=frequencies, errors2=errors2,
                                axis_name=axis_names[0], name=name)
         elif len(axes) == 2:
-            return Histogram2D(bins=bins, frequencies=frequencies, errors2=errors2,
+            return Histogram2D(binning=bins, frequencies=frequencies, errors2=errors2,
                                axis_names=axis_names, name=name)
         else:
-            return HistogramND(dimension=len(axes), bins=bins, frequencies=frequencies, errors2=errors2,
+            return HistogramND(dimension=len(axes), binnings=bins, frequencies=frequencies, errors2=errors2,
                                axis_names=axis_names, name=name)
 
     def __eq__(self, other):
@@ -263,10 +264,9 @@ class Histogram2D(HistogramND):
     Its only addition is the plot() method
     """
 
-    def __init__(self, bins, frequencies=None, **kwargs):
-        if "dim" in kwargs:
-            kwargs.pop("dim")
-        super(Histogram2D, self).__init__(2, bins, frequencies, **kwargs)
+    def __init__(self, binnings, frequencies=None, **kwargs):
+        kwargs.pop("dimension", None)
+        super(Histogram2D, self).__init__(dimension=2, binnings=binnings, frequencies=frequencies, **kwargs)
 
     def plot(self, histtype='map', density=False, backend="matplotlib", ax=None, **kwargs):
         """Plot the 2D histogram.

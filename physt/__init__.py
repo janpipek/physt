@@ -180,7 +180,8 @@ def histogramdd(data, bins=10, *args, **kwargs):
         data = data[~np.isnan(data).any(axis=1)]
 
     # Prepare bins
-    bins = calculate_bins_nd(data, bins, *args, check_nan=not dropna, **kwargs)
+    bin_schemas = calculate_bins_nd(data, bins, *args, check_nan=not dropna, **kwargs)
+    bins = [binning.bins for binning in bin_schemas]
 
     # Prepare remaining data
     weights = kwargs.pop("weights", None)
@@ -188,9 +189,9 @@ def histogramdd(data, bins=10, *args, **kwargs):
                                                                       bins=bins,
                                                                       weights=weights)
     if dim == 2:
-        return histogram_nd.Histogram2D(bins, frequencies=frequencies, errors2=errors2, **kwargs)
+        return histogram_nd.Histogram2D(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, **kwargs)
     else:
-        return histogram_nd.HistogramND(dimension=dim, bins=bins, frequencies=frequencies, errors2=errors2, **kwargs)
+        return histogram_nd.HistogramND(dimension=dim, binnings=bin_schemas, frequencies=frequencies, errors2=errors2, **kwargs)
 
 
 # Aliases
