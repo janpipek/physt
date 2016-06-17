@@ -116,6 +116,12 @@ class StaticBinning(BinningBase):
     def copy(self):
         return self.as_static(True)
 
+    def __getitem__(self, item):
+        copy = self.copy()
+        copy._bins = self._bins[item]
+        # TODO: check for the right_edge??
+        return copy
+
 
 class NumpyBinning(BinningBase):
     """Binning schema working as numpy.histogram.

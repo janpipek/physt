@@ -2,6 +2,8 @@ import numpy as np
 from . import bin_utils, binning
 from .histogram_base import HistogramBase
 
+# TODO: Fix import
+
 
 class Histogram1D(HistogramBase):
     """One-dimensional histogram data.
@@ -110,7 +112,7 @@ class Histogram1D(HistogramBase):
                     underflow += self.frequencies[0:i.start].sum()
                 if i.stop:
                     overflow += self.frequencies[i.stop:].sum()
-        return self.__class__(self.bins[i], self.frequencies[i], self.errors2[i], overflow=overflow,
+        return self.__class__(self._binning.as_static(copy=False)[i], self.frequencies[i], self.errors2[i], overflow=overflow,
                               underflow=underflow, name=self.name, axis_name=self.axis_name)
 
     @property
