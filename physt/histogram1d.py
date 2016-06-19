@@ -357,10 +357,7 @@ class Histogram1D(HistogramBase):
         if dropna:
             values = values[~np.isnan(values)]
         if self._binning.is_adaptive():
-            add_left1, add_right1 = self._binning.force_bin_existence(values.min())
-            add_left2, add_right2 = self._binning.force_bin_existence(values.max())
-            self._reshape_data(add_left1 + add_left2, add_right1 + add_right2)
-
+            self._force_bin_existence(values=values)
         frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self._binning,
                                                                                   weights=weights, validate_bins=False)
         self._frequencies += frequencies
@@ -370,6 +367,15 @@ class Histogram1D(HistogramBase):
         self.overflow += overflow
         for key in self._stats:
             self._stats[key] += stats.get(key, 0.0)
+
+    def _force_bin_existence(self, values):
+        # TODO: Include right edge? Support for adding
+        if np.isscalar(values):
+            values = [values]
+        add_left1, add_right1 = self._binning.force_bin_existence(np.min(values))
+        add_left2, add_right2 = self._binning.force_bin_existence(np.max(values))
+        self._reshape_data(add_left1 + add_left2, add_right1 + add_right2)
+        return add_left1 + add_left2, add_right1 + add_right2
 
     def _reshape_data(self, left, right):
         """Reshape data to match new binning schema.
@@ -592,7 +598,7 @@ class Histogram1D(HistogramBase):
             inner_missed = 0
             errors2 = None
         return self.__class__(self._binning.copy(), frequencies, underflow=underflow, overflow=overflow, inner_missed=inner_missed,
-                              name=self.name, axis_name=self.axis_name, keep_missed=self.keep_missed,
+                              name=self.name, axis_name=self.axis_name, keep_missed=self.keep_missed, stats=self._stats,
                               errors2=errors2)
 
     def __eq__(self, other):
@@ -626,16 +632,28 @@ class Histogram1D(HistogramBase):
             self.overflow += other.overflow
             self.inner_missed += other.inner_missed
             self._errors2 += other.errors2
-            if self._stats:
-                self._stats["sum"] += other._stats["sum"]
-                self._stats["sum2"] += other._stats["sum2"]
+            if self._stats and other._stats:
+                for key in self._stats:
+                    self._stats[key] += other._stats[key]
+            return self
+        elif other.bin_count == 0:
             return self
         elif self._binning.is_adaptive():
             if other.missed > 0:
-                raise RuntimeError("Cannot add histogram with missed values.")
-            if other.bin_count == 0:
+                raise RuntimeError("Cannot adapt histogram with missed values.")
+            try:
+                bins1 = self._binning.as_fixed_width(False)
+                bins2 = other._binning.as_fixed_width(False)
+            except:
+                raise RuntimeError("Cannot find common binning for added histograms.")
+            if bins1.bin_width == bins2.bin_width:
+                addleft, _ = self._force_bin_existence([bins2.numpy_bins[0], bins2.numpy_bins[1]])
+                self._frequencies[addleft:addleft + bins2.bin_count] += other.frequencies
+                self._errors2[addleft:addleft + bins2.bin_count] += other._errors2
+                if self._stats and other._stats:
+                    for key in self._stats:
+                        self._stats[key] += other._stats[key]
                 return self
-            # TODO: Finish
         raise RuntimeError("Cannot add histograms.")
 
     def __isub__(self, other):
