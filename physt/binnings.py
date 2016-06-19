@@ -3,6 +3,7 @@
 import numpy as np
 from .bin_utils import make_bin_array, is_consecutive, to_numpy_bins, is_rising
 
+# TODO: Reduce number of classes + change construct into functions
 
 class BinningBase(object):
     """Abstract base class for binning.
@@ -194,12 +195,27 @@ class FixedWidthBinning(BinningBase):
     """Binning schema with predefined bin width."""
     adaptive_allowed = True
 
-    def __init__(self, bin_width, bin_count=0, min=-np.nan, includes_right_edge=False, adaptive=False):
+    def __init__(self, bin_width, bin_count=0, min=-np.nan, includes_right_edge=False, adaptive=False, shift=None,
+                 align=None):
         super(FixedWidthBinning, self).__init__(adaptive=adaptive, includes_right_edge=includes_right_edge)
+
+        if shift and align:
+            # TODO: Can be both at the same time?
+            pass
 
         if bin_width <= 0:
             raise RuntimeError("Bin width must be > 0.")
         self._bin_width = float(bin_width)
+
+        self._align = align
+        if align == False:
+            self._align_multiply = 1
+        elif align in [None, True]:
+            self._align = bin_width
+            self._align_multiply = 1
+        else:
+            # TODO: Check multiply of bin_width
+            self._align_multiply = self._align / bin_width
 
         if bin_count < 0:
             raise RuntimeError("Bin count must be >= 0.")
@@ -207,30 +223,37 @@ class FixedWidthBinning(BinningBase):
         self._min = min
         self._bins = None
         self._numpy_bins = None
-        # TODO: We need to introduce shift, if we want to support adaptivity for IntegerBinning
+        self._shift = shift or 0.0
 
-    def _force_bin_existence(self, value):
+    def _force_bin_existence(self, value, includes_right_edge=None):
         add_left = 0
         add_right = 0
 
+        if includes_right_edge is None:
+            includes_right_edge = self.includes_right_edge
+
         if self._bin_count == 0:
-            self._min = np.floor(value / self._bin_width) * self._bin_width    # TODO: who' abou' alignment?
-            self._bin_count = 1
+            if self._align:
+                self._min = np.floor((value - self._shift) / self._align) * self._align + self._shift  # TODO: who' abou' alignment?
+            else:
+                self._min = value
+            self._bin_count = self._align_multiply
             self._bins = None
             self._numpy_bins = None
-            return 1, 0
+            return self._bin_count, 0
         else:
+            align = self._align or self._bin_width
             if value < self.numpy_bins[0]:
-                add_left = int(np.ceil((self.numpy_bins[0] - value) / self._bin_width))
-                self._min -= add_left * self._bin_width
-                self._bin_count += add_left
+                add_left = int(np.ceil((self.numpy_bins[0] - value) / align))
+                self._min -= add_left * align
+                self._bin_count += add_left * self._align_multiply
             elif value >= self.numpy_bins[-1]:
-                add_right = (value - self.numpy_bins[-1]) / self._bin_width
-                if add_right - np.floor(add_right) == 0:
+                add_right = (value - self.numpy_bins[-1]) / align
+                if add_right - np.floor(add_right) == 0 and not includes_right_edge:
                     add_right = int(add_right + 1)
                 else:
                     add_right = int(np.ceil(add_right))
-                self._bin_count += add_right
+                self._bin_count += add_right * self._align_multiply
             if add_left or add_right:
                 self._bins = None
                 self._numpy_bins = None
@@ -244,31 +267,23 @@ class FixedWidthBinning(BinningBase):
         bin_width: float
         range: Optional[tuple]
             (min, max)
+        align: Optional[float]
+            Must be multiple of bin_width
 
         Returns
         -------
-        numpy.ndarray
+        FixedWidthBinning
         """
-        align = bin_width    # TODO: make this available...
-
-        # Get the range
+        result = cls(bin_width=bin_width, includes_right_edge=includes_right_edge, **kwargs)
         if range:
-            val_min, val_max = range
-        elif data is not None:
-            val_min, val_max = data.min(), data.max()
-        else:
-            val_min, val_max = None, None
-            min = -np.nan
-            bin_count = 0
-
-        if val_min is not None:
-            min = np.floor(val_min / align) * align
-            max = np.ceil(val_max / align) * align
-            if max == val_max and not includes_right_edge:
-                max += align
-            bin_count = np.round((max - min) / bin_width).astype(int)  # (max - min) should be int or very close to it
-
-        return cls(bin_width=bin_width, bin_count=bin_count, min=min, includes_right_edge=includes_right_edge, **kwargs)
+            result._force_bin_existence(range[0])
+            result._force_bin_existence(range[1], includes_right_edge=True)
+            if not kwargs.get("adaptive"):
+                return result     # Otherwise we want to adapt to data
+        if data is not None:
+            result._force_bin_existence(np.min(data))
+            result._force_bin_existence(np.max(data))
+        return result
 
     @property
     def numpy_bins(self):
@@ -284,6 +299,7 @@ class FixedWidthBinning(BinningBase):
             bin_count=self._bin_count,
             min=self._min,
             includes_right_edge=self.includes_right_edge,
+            shift=self._shift,
             adaptive=self._adaptive)
 
 
@@ -421,7 +437,7 @@ class IntegerBinning(FixedWidthBinning):
         raise RuntimeError("IntegerBinning does not allow instances.")
 
     @classmethod
-    def construct(cls, data=None, range=None, **kwargs):
+    def construct(cls, data=None, **kwargs):
         """
         Parameters
         ----------
@@ -432,17 +448,9 @@ class IntegerBinning(FixedWidthBinning):
         -------
         numpy.ndarray
         """
-        # TODO: Enable running with empty data
-        if range:
-            min = int(range[0]) - 0.5
-            max = int(range[1]) - 0.5
-        elif data is not None:
-            min = np.floor(data.min() - 0.5) + 0.5
-            max = np.ceil(data.max() + 0.5) - 0.5
-
-        bincount = np.round(max - min)
-        # TODO: Include shift parameter
-        return FixedWidthBinning(bin_width=1, bin_count=bincount, min=min, includes_right_edge=False, adaptive=kwargs.get("adaptive", False))
+        if "range" in kwargs:
+            kwargs["range"] = tuple(r - 0.5 for r in kwargs["range"])
+        return FixedWidthBinning.construct(data=data, bin_width=1, align=True, shift=0.5, **kwargs)
 
 
 def calculate_bins(array, _=None, *args, **kwargs):
