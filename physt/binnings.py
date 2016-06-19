@@ -107,6 +107,20 @@ class BinningBase(object):
         """
         return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
 
+    def as_fixed_width(self, copy):
+        """Convert bin to recipe with fixed width.
+
+        Returns
+        -------
+        FixedWidthBinning
+        """
+        if self.bin_count == 0:
+            raise RuntimeError("Cannot guess binning width with zero bins")
+        elif self.bin_count == 1 or self.is_consecutive() and np.allclose(np.diff(self.bins[1] - self.bins[0]), 0.0):
+            return FixedWidthBinning(min=self.bins[0][0], bin_count=self.bin_count, bin_width=self.bins[1] - self.bins[0])
+        else:
+            raise RuntimeError("Cannot create fixed-width binning from differing bin widths.")
+
     def copy(self):
         raise NotImplementedError()
 
@@ -209,6 +223,9 @@ class FixedWidthBinning(BinningBase):
 
         self._align = align
         if align == False:
+            if shift:
+                pass
+                # TODO: This is weird
             self._align_multiply = 1
         elif align in [None, True]:
             self._align = bin_width
@@ -223,6 +240,7 @@ class FixedWidthBinning(BinningBase):
         self._min = min
         self._bins = None
         self._numpy_bins = None
+        # TODO: reasonable shift detection for shift
         self._shift = shift or 0.0
 
     def _force_bin_existence(self, value, includes_right_edge=None):
@@ -237,6 +255,7 @@ class FixedWidthBinning(BinningBase):
                 self._min = np.floor((value - self._shift) / self._align) * self._align + self._shift  # TODO: who' abou' alignment?
             else:
                 self._min = value
+                self._shift = np.mod(self._min, self._bin_width)
             self._bin_count = self._align_multiply
             self._bins = None
             self._numpy_bins = None
@@ -298,9 +317,24 @@ class FixedWidthBinning(BinningBase):
             bin_width=self._bin_width,
             bin_count=self._bin_count,
             min=self._min,
+            align=self._align,
             includes_right_edge=self.includes_right_edge,
             shift=self._shift,
             adaptive=self._adaptive)
+
+    @property
+    def bin_width(self):
+        return self._bin_width
+
+    @property
+    def shift(self):
+        return self._shift
+
+    def as_fixed_width(self, copy=True):
+        if copy:
+            return self.copy()
+        else:
+            return self
 
 
 class ExponentialBinning(BinningBase):
