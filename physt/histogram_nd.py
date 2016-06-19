@@ -168,7 +168,7 @@ class HistogramND(HistogramBase):
             return Histogram1D(binning=bins[0], frequencies=frequencies, errors2=errors2,
                                axis_name=axis_names[0], name=name)
         elif len(axes) == 2:
-            return Histogram2D(binning=bins, frequencies=frequencies, errors2=errors2,
+            return Histogram2D(binnings=bins, frequencies=frequencies, errors2=errors2,
                                axis_names=axis_names, name=name)
         else:
             return HistogramND(dimension=len(axes), binnings=bins, frequencies=frequencies, errors2=errors2,

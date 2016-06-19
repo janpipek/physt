@@ -152,7 +152,7 @@ def histogramdd(data, bins=10, *args, **kwargs):
 
     Returns
     -------
-    HistogramND
+    physt.histogram_nd.HistogramND
 
     See Also
     --------
