@@ -373,6 +373,7 @@ class Histogram1D(HistogramBase):
             values = values[~np.isnan(values)]
         if self._binning.is_adaptive():
             map = self._binning.force_bin_existence(values)
+            print(map)
             self._reshape_data(self._binning.bin_count, map)
         frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self._binning,
                                                                                   weights=weights, validate_bins=False)

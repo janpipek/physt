@@ -86,9 +86,16 @@ class TestFillNAdaptive(object):
     def test_empty_exact(self):
         h = h1(None, "fixed_width", 10, adaptive=True)
         h.fill_n([10])
-        assert h.total == 1
         assert np.array_equal(h.bin_left_edges, [10])
+        assert np.array_equal(h.frequencies, [1])
+        assert h.total == 1
 
+
+# class TestChangeBins(object):
+#     def test_change_bin_simple(self):
+#         h = h1(None, "fixed_width", 10, adaptive=True)
+#         h.fill_n([10])
+#         assert False
 
 class TestAdaptiveArithmetics(object):
     def test_adding_empty(self):

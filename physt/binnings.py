@@ -99,11 +99,8 @@ class BinningBase(object):
 
         """
         # TODO: in-place arg
-        if self.bins == other.bins:
+        if np.array_equal(self.bins, other.bins):
             return None, None
-        elif is_bin_subset(other.bins, self.bins):
-            indices = np.searchsorted(other.bins[:,0], self.bins[:,0])
-            return None, enumerate(indices)
         elif not self.is_adaptive():
             raise RuntimeError("Cannot adapt non-adaptive binning.")
         else:
@@ -219,6 +216,11 @@ class StaticBinning(BinningBase):
         # TODO: check for the right_edge??
         return copy
 
+    def _adapt(self, other):
+        if is_bin_subset(other.bins, self.bins):
+            indices = np.searchsorted(other.bins[:,0], self.bins[:,0])
+            return None, list(enumerate(indices))
+
 
 class NumpyBinning(BinningBase):
     """Binning schema working as numpy.histogram.
@@ -239,22 +241,23 @@ class FixedWidthBinning(BinningBase):
     """Binning schema with predefined bin width."""
     adaptive_allowed = True
 
-    def __init__(self, bin_width, bin_count=0, min=-np.nan, includes_right_edge=False, adaptive=False, shift=0.0,
+    def __init__(self, bin_width, bin_count=0, min=None, includes_right_edge=False, adaptive=False, shift=None,
                  align=True):
         super(FixedWidthBinning, self).__init__(adaptive=adaptive, includes_right_edge=includes_right_edge)
-
+        # TODO: Check edge cases for min/shift/align
         if bin_width <= 0:
             raise RuntimeError("Bin width must be > 0.")
-        self._bin_width = float(bin_width)
-        self._align = align
-
+        if min is not None and shift is not None:
+            raise RuntimeError("Cannot set both minimum and shift for FixedWidthBinning")
         if bin_count < 0:
             raise RuntimeError("Bin count must be >= 0.")
+        self._bin_width = float(bin_width)
+        self._align = align
         self._bin_count = int(bin_count)
         self._min = min
+        self._shift = shift
         self._bins = None
         self._numpy_bins = None
-        self._shift = shift or 0.0     # TODO: shift implies align?
 
     def _force_bin_existence_single(self, value, includes_right_edge=None):
         if includes_right_edge is None:
@@ -262,10 +265,9 @@ class FixedWidthBinning(BinningBase):
 
         if self._bin_count == 0:
             if self._align:
-                self._min = np.floor((value - self._shift) / self.bin_width) * self.bin_width + self._shift  # TODO: who' abou' alignment?
+                self._min = np.floor((value - self._real_shift) / self.bin_width) * self.bin_width + self._real_shift  # TODO: who' abou' alignment?
             else:
                 self._min = value
-                self._shift = np.mod(self._min, self._bin_width)
             self._bin_count = 1
             self._bins = None
             self._numpy_bins = None
@@ -297,8 +299,11 @@ class FixedWidthBinning(BinningBase):
         else:
             min, max = np.min(values), np.max(values)
             result = self._force_bin_existence_single(min, includes_right_edge=includes_right_edge)
-            self._force_bin_existence_single(max, includes_right_edge=includes_right_edge)
-            return result
+            result2 = self._force_bin_existence_single(max, includes_right_edge=includes_right_edge)
+            if result is None:
+                return result2
+            else:
+                return result
 
     @property
     def numpy_bins(self):
@@ -316,10 +321,10 @@ class FixedWidthBinning(BinningBase):
         return FixedWidthBinning(
             bin_width=self._bin_width,
             bin_count=self._bin_count,
+            align=self._align,  # Not necessary
             min=self._min,
-            align=self._align,
-            includes_right_edge=self.includes_right_edge,
             shift=self._shift,
+            includes_right_edge=self.includes_right_edge,
             adaptive=self._adaptive)
 
     @property
@@ -340,21 +345,29 @@ class FixedWidthBinning(BinningBase):
         Parameters
         ----------
         other: BinningBase
+
+        Returns
+        -------
+        bin_map1: Iterable[tuple] or None
+        bin_map2: Iterable[tuple] or None
         """
         other = other.as_fixed_width()
         if self.bin_width != other.bin_width:
             raise RuntimeError("Cannot adapt fixed-width histograms with different widths")
-        if self.shift != other.shift:
+        if self._real_shift != other._real_shift:
             raise RuntimeError("Cannot adapt shifted fixed-width histograms")
         # Following operations modify schemas
         other = other.copy()
-        bin_map1 = self._force_bin_existence([other.first_edge, other.last_edge], includes_right_edge=False)
-        bin_map2 = other._force_bin_existence([self.first_edge, self.last_edge], includes_right_edge=False)
+        bin_map1 = self._force_bin_existence([other.first_edge, other.last_edge], includes_right_edge=True)
+        bin_map2 = other._force_bin_existence([self.first_edge, self.last_edge], includes_right_edge=True)
         return bin_map1, bin_map2
 
     @property
-    def shift(self):
-        return self._shift
+    def _real_shift(self):
+        if self._min:
+            return np.mod(self._min, self.bin_width)
+        else:
+            return self._shift or 0
 
     def as_fixed_width(self, copy=True):
         if copy:
