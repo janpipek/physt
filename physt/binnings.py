@@ -497,7 +497,7 @@ def quantile_binning(data=None, bins=10, qrange=(0.0, 1.0), **kwargs):
 
 def static_binning(data=None, bins=None, **kwargs):
     """Construct static binning with whatever bins."""
-    return StaticBinning(bins=bins, **kwargs)
+    return StaticBinning(bins=make_bin_array(bins), **kwargs)
 
 
 def integer_binning(data=None, **kwargs):

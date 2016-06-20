@@ -50,6 +50,9 @@ class Histogram1D(HistogramBase):
         stats: dict
             Dictionary of various statistics ("sum", "sum2")
         """
+        from .binnings import BinningBase, static_binning
+        if not isinstance(binning, BinningBase):
+            binning = static_binning(None, binning)
         self._binning = binning
 
         if frequencies is None:
