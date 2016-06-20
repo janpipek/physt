@@ -635,35 +635,39 @@ class Histogram1D(HistogramBase):
     def __iadd__(self, other):
         if np.isscalar(other):
             raise RuntimeError("Cannot add constant to histograms.")
-        elif self.has_same_bins(other):
+        if other.bin_count == 0:
+            return self
+        elif self.has_same_bins(other):     # Already OK
             self._frequencies += other.frequencies
-            self.underflow += other.underflow
+            self.underflow += other.underflow   # TODO: What if adaptive???
             self.overflow += other.overflow
             self.inner_missed += other.inner_missed
             self._errors2 += other.errors2
-            if self._stats and other._stats:
-                for key in self._stats:
-                    self._stats[key] += other._stats[key]
-            return self
-        elif other.bin_count == 0:
-            return self
         elif self._binning.is_adaptive():
             if other.missed > 0:
                 raise RuntimeError("Cannot adapt histogram with missed values.")
             try:
-                bins1 = self._binning.as_fixed_width(False)
-                bins2 = other._binning.as_fixed_width(False)
-            except:
+                new_bins = self._binning.copy()
+                bin_map, bin_map2 = new_bins.adapt(other._binning)
+                print(bin_map, bin_map2)
+                self.change_binning(new_bins, bin_map)
+                if bin_map2 is None:
+                    self._frequencies += other.frequencies
+                    self._errors2 += other.errors2
+                else:
+                    for old, new in bin_map2:
+                        self._frequencies[new] += other._frequencies[old]
+                        self._errors2[new] += other._frequencies[old]
+            except IOError:
                 raise RuntimeError("Cannot find common binning for added histograms.")
-            if bins1.bin_width == bins2.bin_width:
-                addleft, _ = self._force_bin_existence([bins2.numpy_bins[0], bins2.numpy_bins[1]])
-                self._frequencies[addleft:addleft + bins2.bin_count] += other.frequencies
-                self._errors2[addleft:addleft + bins2.bin_count] += other._errors2
-                if self._stats and other._stats:
-                    for key in self._stats:
-                        self._stats[key] += other._stats[key]
-                return self
-        raise RuntimeError("Cannot add histograms.")
+        # TODO: Add subset / superset
+        else:
+            raise RuntimeError("Cannot find common binning for added histograms.")
+
+        if self._stats and other._stats:
+            for key in self._stats:
+                self._stats[key] += other._stats[key]
+        return self
 
     def __isub__(self, other):
         self.__iadd__(other * (-1))

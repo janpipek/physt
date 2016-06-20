@@ -13,6 +13,7 @@ class HistogramBase(object):
         numpy.ndarray
             Two-dimensional array of bin edges, shape=(n, 2)
         """
+        # TODO: Fix
         return self._bins
 
     @property
