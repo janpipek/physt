@@ -220,6 +220,21 @@ class Histogram1D(HistogramBase):
         # TODO: If not consecutive, does not make sense
         return self._binning.numpy_bins
 
+    def change_binning(self, new_binning, bin_map):
+        """Set new binnning and update the bin contents according to a map.
+
+        Fills frequencies and errors with 0.
+        It's the caller's responsibility to provide correct binning and map.
+
+        Parameters
+        ----------
+        new_binning: physt.binnings.BinningBase
+        bin_map: Iterable[tuple]
+            tuples contain bin indices (old, new)
+        """
+        self._reshape_data(new_binning.bin_count, bin_map)
+        self._binning = new_binning
+
     @property
     def shape(self):
         return (self.bins.shape[0],)
@@ -333,8 +348,8 @@ class Histogram1D(HistogramBase):
         Note: Name was selected because of the eponymous method in ROOT
         """
         if self._binning.is_adaptive():
-            add_left, add_right = self._binning.force_bin_existence(value)
-            self._reshape_data(add_left, add_right)
+            map = self._binning.force_bin_existence(value)
+            self._reshape_data(self._binning.bin_count, map)
 
         ixbin = self.find_bin(value)
         if ixbin is None:
@@ -357,7 +372,8 @@ class Histogram1D(HistogramBase):
         if dropna:
             values = values[~np.isnan(values)]
         if self._binning.is_adaptive():
-            self._force_bin_existence(values=values)
+            map = self._binning.force_bin_existence(values)
+            self._reshape_data(self._binning.bin_count, map)
         frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self._binning,
                                                                                   weights=weights, validate_bins=False)
         self._frequencies += frequencies
@@ -377,29 +393,22 @@ class Histogram1D(HistogramBase):
         self._reshape_data(add_left1 + add_left2, add_right1 + add_right2)
         return add_left1 + add_left2, add_right1 + add_right2
 
-    def _reshape_data(self, left, right):
+    def _reshape_data(self, new_size, bin_map):
         """Reshape data to match new binning schema.
 
         Fills frequencies and errors with 0.
-
-        Parameters
-        ----------
-        left: int
-            How many bins are added to the left
-        right: int
-            How many bins are added to the right
-
         """
-        if self._frequencies is None or self._frequencies.shape[0] == 0:
-            self._frequencies = np.zeros(self.bin_count, dtype=float)
-            self._errors2 = np.zeros(self.bin_count, dtype=float)
+        if bin_map is None:
+            return
         else:
-            if left:
-                self._frequencies = np.concatenate((np.zeros(left), self._frequencies))
-                self._errors2 = np.concatenate((np.zeros(left), self._errors2))
-            if right:
-                self._frequencies = np.concatenate((self._frequencies, np.zeros(right)))
-                self._errors2 = np.concatenate((self._errors2, np.zeros(right)))
+            new_frequencies = np.zeros(new_size, dtype=float)
+            new_errors2 = np.zeros(new_size, dtype=float)
+            if self._frequencies is not None and self._frequencies.shape[0] > 0:
+                for (old, new) in bin_map:      # Generic enough
+                    new_frequencies[new] = self._frequencies[old]
+                    new_errors2[new] = self._errors2[old]
+            self._frequencies = new_frequencies
+            self._errors2 = new_errors2
 
     def plot(self, histtype='bar', cumulative=False, density=False, errors=False, backend="matplotlib", ax=None, **kwargs):
         """Plot the histogram.
@@ -920,150 +929,3 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
     stats = { "sum": sum, "sum2" : sum2}
 
     return frequencies, errors2, underflow, overflow, stats
-
-
-class AdaptiveHistogram1D(Histogram1D):
-    """Histogram with fixed-width bins that automatically adapts its bin count with new values filled.
-
-    In comparison with Histogram1D, it is a bit more limited - allows no holes, bins are all of the
-    same width, no overflows/underflows, ...
-
-    Note that if your max value is equal to bin boundary, a new bin will be created for it.
-    """
-    def __init__(self, bin_width, sparse=False, **kwargs):
-        bins = np.ndarray((0, 2), dtype=float)
-        super(AdaptiveHistogram1D, self).__init__(bins, **kwargs)
-        assert bin_width > 0
-        self.bin_width = bin_width
-        self.sparse = sparse
-        self._stats = { "sum": 0.0, "sum2" : 0.0}
-        if sparse:
-            raise NotImplementedError("Not yet implemented.")
-
-    def find_bin(self, value):
-        if self.bins.shape[0] == 0:
-            return 0
-        else:
-            return int(np.floor((value - self.bin_left_edges[0]) / self.bin_width))
-
-    def fill(self, value, weight=1.0):
-        if self.bins.shape[0] == 0:
-            left_edge = np.floor(value / self.bin_width) * self.bin_width
-            self._bins = np.asarray([[left_edge, left_edge + self.bin_width]])
-            self._frequencies = np.asarray([weight])
-            self._errors2 = np.asarray([weight ** 2])
-        else:
-            self._force_bin_existence(value)
-            bin = self.find_bin(value)
-            self._frequencies[bin] += weight
-            self._errors2[bin] += weight ** 2               
-
-        self._stats["sum"] += weight * value
-        self._stats["sum2"] += weight * value ** 2
-
-    def fill_n(self, values, weights=None, dropna=True):
-        values = np.asarray(values)
-        if dropna:
-            values = values[~np.isnan(values)]
-        if weights is not None and np.isscalar(weights):
-            weights = np.ones_like(values) * weights
-        new_bins = binnings.fixed_width_bins(values, bin_width=self.bin_width)
-        new_bins = bin_utils.make_bin_array(new_bins)
-        frequencies, errors2, _, _, stats = calculate_frequencies(values, new_bins,
-                                                                  weights=weights, validate_bins=False)
-
-        if self.bins.shape[0] == 0:
-            self._bins = new_bins
-            self._frequencies = frequencies
-            self._errors2 = errors2
-            self._stats = stats
-        else:
-            add_left, _ = self._force_bin_existence(new_bins[0, 0])
-            _, add_right = self._force_bin_existence(new_bins[-1, 1])
-            left = np.where(self.bin_left_edges == new_bins[0, 0])[0][0]
-            right = left + new_bins.shape[0]
-            self._frequencies[left:right] += frequencies
-            self._errors2[left:right] += errors2
-            for key in self._stats:
-                self._stats[key] += stats.get(key, 0.0)
-
-    def has_compatible_bins(self, other):
-        return np.allclose((other.bins % self.bin_width), 0)
-
-    def copy(self, include_frequencies=True):
-        result = self.__class__(bin_width=self.bin_width, name=self.name, axis_name=self.axis_name)
-        if include_frequencies:
-            result._bins = np.copy(self.bins)
-            result._frequencies = np.copy(self.frequencies)
-            result._errors2 = np.copy(self.errors2)
-            result._stats = self._stats.copy()
-        return result
-
-    def __iadd__(self, other):
-        if not isinstance(other, Histogram1D):
-            raise RuntimeError("Not a histogram")
-        if self.has_same_bins(other):
-            return Histogram1D.__iadd__(self, other)
-        elif self.has_compatible_bins(other):
-            if other.missed > 0:
-                raise RuntimeError("Cannot add histogram with missed values.")
-            if other.bin_count == 0:
-                return self
-            if isinstance(other, AdaptiveHistogram1D):
-                otherx = AdaptiveHistogram1D(self.bin_width)
-                otherx._frequencies = other.frequencies.copy()
-                otherx._errors2 = other.errors2.copy()
-                otherx._bins = other.bins.copy()      # Possibly fill gaps???
-                otherx._stats = other._stats.copy()
-                other = otherx
-            else:
-                other = other.copy()
-            self._force_bin_existence(other.min_edge)
-            self._force_bin_existence(other.max_edge)
-            other._force_bin_existence(self.min_edge)
-            other._force_bin_existence(self.max_edge)
-        else:
-            raise RuntimeError("Incompatible histograms")
-        self._frequencies += other.frequencies
-        self._errors2 += other.errors2
-        for key in self._stats:
-            self._stats[key] += other._stats.get(key, 0.0)
-        return self
-
-    def _force_bin_existence(self, value):
-        """
-
-        Returns tuple (added_to_left, added_tor_right)
-        """
-        # TODO: Deal with rounding errors (now we're playing it safe)
-        add_left = 0
-        add_right = 0
-        new_bins = None
-
-        if self.bin_count == 0:
-            left = np.floor(value / self.bin_width) * self.bin_width
-            right = left + self.bin_width
-            self._frequencies = np.array([0])
-            self._errors2 = np.array([0])
-            self._bins = np.array([[left, right]])
-            return 1, 0
-        if value < self.bin_left_edges[0]:
-            add_left = int(np.ceil((self.bin_left_edges[0] - value) / self.bin_width))
-            self._frequencies = np.concatenate((np.zeros(add_left), self._frequencies))
-            self._errors2 = np.concatenate((np.zeros(add_left), self._errors2))
-        elif value > self.bin_right_edges[-1]:
-            add_right = int(np.ceil((value - self.bin_right_edges[-1]) / self.bin_width))
-            self._frequencies = np.concatenate((self._frequencies, np.zeros(add_right)))
-            self._errors2 = np.concatenate((self._errors2, np.zeros(add_right)))
-        if add_left or add_right:
-            new_min = self.bin_left_edges[0] - add_left * self.bin_width
-            new_bins = np.arange(self.bin_count + add_left + add_right + 1) * self.bin_width + new_min
-            self._bins = bin_utils.make_bin_array(new_bins)
-        return add_left, add_right
-
-    def rebin(self, new_bins, check=True):
-        if check:
-            if not bin_utils.is_bin_subset(self.bins, new_bins):
-                raise RuntimeError("Incompatible rebinning")
-        self._force_bin_existence(new_bins[0,0])
-        self._force_bin_existence(new_bins[-1,1])

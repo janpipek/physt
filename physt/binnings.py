@@ -4,6 +4,8 @@ import numpy as np
 from .bin_utils import make_bin_array, is_consecutive, to_numpy_bins, is_rising
 
 # TODO: Reduce number of classes + change construct into functions
+# TODO: Locking and edit operations (like numpy read-only)
+
 
 class BinningBase(object):
     """Abstract base class for binning.
@@ -61,21 +63,44 @@ class BinningBase(object):
     def is_adaptive(self):
         return self._adaptive
 
-    def force_bin_existence(self, value):
+    def force_bin_existence(self, values):
         """Change schema so that there is a bin for value
+
+        Parameters
+        ----------
+        values: np.ndarray
+            All values we want bins for.
 
         Returns
         -------
-        tuple
-            (added_to_left, added_tor_right)
+        bin_map: Iterable[tuple] or None
+            None => There was no change in bins
+            Otherwise => the iterable contains tuples (old bin index, new bin index)
         """
+        # TODO: Rename to something less evil
         if not self.is_adaptive():
             raise RuntimeError("Histogram is not adaptive")
         else:
-            return self._force_bin_existence(value)
+            return self._force_bin_existence(values)
 
-    def _force_bin_existence(self, value):
+    def _force_bin_existence(self, values):
+        # TODO: in-place
         raise NotImplementedError()
+
+    # def union(self, other, inplace=False):
+    #     """Change schema so that it becomes a superset of another.
+    #
+    #     Parameters
+    #     ----------
+    #     other: BinningBase
+    #     inplace: bool
+    #
+    #     Returns
+    #     -------
+    #     BinningBase | None
+    #     """
+    #     # TODO: Real
+    #     raise NotImplementedError()
 
     @property
     def bins(self):
@@ -95,10 +120,16 @@ class BinningBase(object):
 
     @classmethod
     def construct(cls, data, *args, **kwargs):
+        # TODO: Remove
         raise NotImplementedError()
 
-    def as_static(self, copy):
+    def as_static(self, copy=True):
         """Convert binning to a static form.
+
+        Parameters
+        ----------
+        copy: bool
+            Ensure that we receive another object
 
         Returns
         -------
@@ -108,7 +139,12 @@ class BinningBase(object):
         return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
 
     def as_fixed_width(self, copy):
-        """Convert bin to recipe with fixed width.
+        """Convert binning to recipe with fixed width.
+
+        Parameters
+        ----------
+        copy: bool
+            Ensure that we receive another object
 
         Returns
         -------
@@ -243,10 +279,7 @@ class FixedWidthBinning(BinningBase):
         # TODO: reasonable shift detection for shift
         self._shift = shift or 0.0
 
-    def _force_bin_existence(self, value, includes_right_edge=None):
-        add_left = 0
-        add_right = 0
-
+    def _force_bin_existence_single(self, value, includes_right_edge=None):
         if includes_right_edge is None:
             includes_right_edge = self.includes_right_edge
 
@@ -259,9 +292,11 @@ class FixedWidthBinning(BinningBase):
             self._bin_count = self._align_multiply
             self._bins = None
             self._numpy_bins = None
-            return self._bin_count, 0
+            return ()
         else:
             align = self._align or self._bin_width
+            original_count = self.bin_count
+            add_left = add_right = 0
             if value < self.numpy_bins[0]:
                 add_left = int(np.ceil((self.numpy_bins[0] - value) / align))
                 self._min -= add_left * align
@@ -276,7 +311,18 @@ class FixedWidthBinning(BinningBase):
             if add_left or add_right:
                 self._bins = None
                 self._numpy_bins = None
-            return add_left, add_right
+                return ((i, i + add_left) for i in range(original_count))
+            else:
+                return None
+
+    def _force_bin_existence(self, values, includes_right_edge=None):
+        if np.isscalar(values):
+            return self._force_bin_existence_single(values, includes_right_edge=includes_right_edge)
+        else:
+            min, max = np.min(values), np.max(values)
+            result = self._force_bin_existence_single(min, includes_right_edge=includes_right_edge)
+            self._force_bin_existence_single(max, includes_right_edge=includes_right_edge)
+            return result
 
     @classmethod
     def construct(cls, data=None, bin_width=1, range=None, includes_right_edge=False, **kwargs):
@@ -325,6 +371,10 @@ class FixedWidthBinning(BinningBase):
     @property
     def bin_width(self):
         return self._bin_width
+
+    def union(self, other, inplace=False):
+        other = other.as_fixed_width()
+
 
     @property
     def shift(self):
