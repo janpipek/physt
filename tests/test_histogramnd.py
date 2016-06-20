@@ -84,7 +84,16 @@ class TestProjections(object):
         assert h3.shape == (5, 6, 7)
 
     def test_invalid(self):
-        assert False
+        data = np.random.rand(100, 4)
+        h = physt.histogramdd(data, (4, 5, 6, 7), axis_names=["1", "2", "3", "4"])
+        with pytest.raises(RuntimeError):
+            h.projection("1", "1")
+        with pytest.raises(RuntimeError):
+            h.projection("0", "1")
+        with pytest.raises(RuntimeError):
+            h.projection("1", "2", "3", "4", "5")
+        with pytest.raises(RuntimeError):
+            h.projection()
 
 if __name__ == "__main__":
     pytest.main(__file__)

@@ -152,7 +152,13 @@ class HistogramND(HistogramBase):
         axes = list(axes)
         for i, ax in enumerate(axes):
             if isinstance(ax, str):
+                if not ax in self.axis_names:
+                    raise RuntimeError("Invalid axis name for projection: " + ax)
                 axes[i] = self.axis_names.index(ax)
+        if not axes:
+            raise RuntimeError("No axis selected for projection")
+        if len(axes) != len(set(axes)):
+            raise RuntimeError("Duplicate axes in projection")
         invert = list(range(self.ndim))
         for ax in axes:
             invert.remove(ax)
