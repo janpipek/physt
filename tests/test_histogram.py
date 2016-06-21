@@ -10,7 +10,7 @@ import pytest
 class TestNumpyBins(object):
     def test_nbin(self):
         arr = np.random.rand(100)
-        hist = histogram(arr, 15)
+        hist = histogram(arr, bins=15)
         assert hist.bin_count == 15
         assert np.isclose(hist.bin_right_edges[-1], arr.max())
         assert np.isclose(hist.bin_left_edges[0], arr.min())
@@ -24,7 +24,7 @@ class TestNumpyBins(object):
 
     def test_range(self):
         arr = np.arange(0, 1.00, 0.01)
-        hist = histogram(arr, bins=10, range=(0.5, 1.0))
+        hist = histogram(arr, 10, range=(0.5, 1.0))
         assert hist.bin_count == 10
         assert hist.bin_left_edges[0] == 0.5
         assert hist.bin_right_edges[-1] == 1.0

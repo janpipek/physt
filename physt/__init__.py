@@ -3,11 +3,11 @@ from . import binnings
 __version__ = str('0.3.2.1')
 
 
-def histogram(data, _=None, *args, **kwargs):
+def histogram(data, bins=None, *args, **kwargs):
     """Facade function to create 1D histograms.
 
     This proceeds in three steps:
-    1) Based on magical parameter _, construct bins for the histogram
+    1) Based on magical parameter bins, construct bins for the histogram
     2) Calculate frequencies for the bins
     3) Construct the histogram object itself
 
@@ -22,7 +22,7 @@ def histogram(data, _=None, *args, **kwargs):
     ----------
     data : array_like, optional
         Container of all the values (tuple, list, np.ndarray, pd.Series)
-    _: int or sequence of scalars or callable or str, optional
+    bins: int or sequence of scalars or callable or str, optional
         If iterable => the bins themselves
         If int => number of bins for default binning
         If callable => use binning method (+ args, kwargs)
@@ -57,7 +57,7 @@ def histogram(data, _=None, *args, **kwargs):
     adaptive = kwargs.pop("adaptive", False)
 
     if isinstance(data, tuple) and isinstance(data[0], str):    # Works for groupby DataSeries
-        return histogram(data[1], _, *args, name=data[0], **kwargs)
+        return histogram(data[1], bins, *args, name=data[0], **kwargs)
     elif type(data).__name__ == "DataFrame":
         raise RuntimeError("Cannot create histogram from a pandas DataFrame. Use Series.")
     else:
@@ -77,7 +77,7 @@ def histogram(data, _=None, *args, **kwargs):
             array = None
 
         # Get binning
-        binning = calculate_bins(array, _, *args, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs)
+        binning = calculate_bins(array, bins, *args, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs)
         # bins = binning.bins
 
         # Get frequencies
