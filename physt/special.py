@@ -9,12 +9,12 @@ class PolarHistogram(HistogramND):
 
     This is a special case of a 2D histogram with transformed coordinates.
     """
-    def __init__(self, bins, frequencies=None, **kwargs):
+    def __init__(self, binnings, frequencies=None, **kwargs):
         if not "axis_names" in kwargs:
             kwargs["axis_names"] = ("r", "phi")
         if "dim" in kwargs:
             kwargs.pop("dim")
-        super(PolarHistogram, self).__init__(2, bins=bins, frequencies=frequencies, **kwargs)
+        super(PolarHistogram, self).__init__(2, binnings=binnings, frequencies=frequencies, **kwargs)
 
     @property
     def bin_sizes(self):
@@ -33,11 +33,11 @@ class PolarHistogram(HistogramND):
 
         frequencies = self.frequencies.sum(axis=invert)
         errors2 = self.errors2.sum(axis=invert)
-        bins = self.bins[ax]
+        binning = self._binnings[ax]
         name = kwargs.pop("name", self.name)
         klass = (RadialHistogram, AzimuthalHistogram)[ax]
         # TODO: missed?
-        return klass(bins=bins, errors2=errors2, name=name, frequencies=frequencies, **kwargs)
+        return klass(binning=binning, errors2=errors2, name=name, frequencies=frequencies, **kwargs)
 
     def find_bin(self, value, axis=None, radial_coords=False):
         if radial_coords:
@@ -174,11 +174,11 @@ def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwa
 
     if dropna:
         data = data[~np.isnan(data).any(axis=1)]
-    bins = binnings.calculate_bins_nd(data, [radial_bins, phi_bins], *args, check_nan=not dropna, **kwargs)
+    bin_schemas = binnings.calculate_bins_nd(data, [radial_bins, phi_bins], *args, check_nan=not dropna, **kwargs)
 
     # Prepare remaining data
     weights = kwargs.pop("weights", None)
     frequencies, errors2, missed = histogram_nd.calculate_frequencies(data, ndim=2,
-                                                                  bins=bins,
+                                                                  bins=[b.bins for b in bin_schemas],
                                                                   weights=weights)
-    return PolarHistogram(bins=bins, frequencies=frequencies, errors2=errors2, missed=missed)
+    return PolarHistogram(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, missed=missed)
