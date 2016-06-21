@@ -57,12 +57,12 @@ See more in docstring's and notebooks:
 * ND histograms(beta)
 * Some special histograms
   - 2D polar coordinates (with plotting)
-* Adaptive histogram for on-line filling of unknown data(beta)
+* Adaptive rebinning for on-line filling of unknown data(beta)
 * Understands any numpy-array-like object
 * Keep underflow / overflow
 * Basic numeric operations (* / + -)
 * Items / slice selection (including mask arrays)
-* Add new values (fill)
+* Add new values (fill, fill_n)
 * Cumulative values, densities
 * Simple statistics for original data (mean, std, sem)
 * Simple plotting (matplotlib, bokeh)
@@ -77,11 +77,14 @@ See more in docstring's and notebooks:
 
 ### Planned
 * Rebinning
-  - using reference to original data
+  - using reference to original data?
   - merging bins
 * Statistics (based on original data)?
 * Stacked histograms (with names)
 * More plotting backends
+
+### Not planned
+* Kernel density estimates: use your favourite statistics package (like `seaborn`)
 
 ## Dependencies
 
