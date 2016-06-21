@@ -638,8 +638,8 @@ def calculate_bins(array, _=None, *args, **kwargs):
         if _ in bincount_methods:
             bin_count = ideal_bin_count(array, method=_)
             binning = numpy_binning(array, bin_count, *args, **kwargs)
-        elif _ in binning_dict:
-            method = binning_dict[_]
+        elif _ in binning_methods:
+            method = binning_methods[_]
             binning = method(array, *args, **kwargs)
         else:
             raise RuntimeError("No binning method {0} available.".format(_))
@@ -706,7 +706,7 @@ def calculate_bins_nd(array, bins=None, *args, **kwargs):
 
 
 # TODO: Rename
-binning_dict = {
+binning_methods = {
     "numpy" : numpy_binning,
     "exponential" : exponential_binning,
     "quantile": quantile_binning,
