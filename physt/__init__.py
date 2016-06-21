@@ -206,11 +206,14 @@ h2 = histogram2d
 def h3(data, *args, **kwargs):
     import numpy as np
 
-    data = np.asarray(data)
+    if data and isinstance(data, (list, tuple)) and not np.isscalar(data[0]):
+        data = np.concatenate([item[:, np.newaxis] for item in data], axis=1)
+    else:
+        data = np.asarray(data)
     n, dim = data.shape
     if dim != 3:
         raise RuntimeError("Array must have shape (n, 3)")
-    histogramdd(data, *args, **kwargs)
+    return histogramdd(data, *args, **kwargs)
 
 from .special import polar_histogram
 
