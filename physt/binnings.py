@@ -629,7 +629,7 @@ def calculate_bins(array, _=None, *args, **kwargs):
     if "range" in kwargs:   # TODO: re-consider the usage of this parameter
         array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
-        bin_count = kwargs.pop("bins", ideal_bin_count(data=array))
+        bin_count = 10 # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
         binning = numpy_binning(array, bin_count, *args, **kwargs)
     elif isinstance(_, int):
         binning =  numpy_binning(array, _, *args, **kwargs)
