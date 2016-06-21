@@ -601,7 +601,7 @@ class Histogram1D(HistogramBase):
             self.overflow *= other
             self.underflow *= other
             self.inner_missed *= other
-            self._errors2 *= other
+            self._errors2 *= other ** 2
             if self._stats:
                 self._stats["sum"] *= other
                 self._stats["sum2"] *= other ** 2
@@ -616,7 +616,7 @@ class Histogram1D(HistogramBase):
             self.overflow /= other
             self.underflow /= other
             self.inner_missed /= other
-            self._errors2 /= other
+            self._errors2 /= other ** 2
             if self._stats:
                 self._stats["sum"] /= other
                 self._stats["sum2"] /= other ** 2            
