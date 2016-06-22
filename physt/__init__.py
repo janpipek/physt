@@ -131,7 +131,7 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
     return histogramdd(data, bins, *args, **kwargs)
 
 
-def histogramdd(data, bins=10, *args, **kwargs):
+def histogramdd(data, bins=10, *args, name=None, axis_names=None, **kwargs):
     """Facade function to create n-dimensional histograms.
 
     3D variant of this function is also aliased as "h3".
@@ -192,6 +192,9 @@ def histogramdd(data, bins=10, *args, **kwargs):
     frequencies, errors2, missed = histogram_nd.calculate_frequencies(data, ndim=dim,
                                                                       bins=bins,
                                                                       weights=weights)
+
+    kwargs["name"] = name
+    kwargs["axis_names"] = axis_names
     if dim == 2:
         return histogram_nd.Histogram2D(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, **kwargs)
     else:
