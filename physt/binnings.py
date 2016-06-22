@@ -14,7 +14,6 @@ class BinningBase(object):
     ----------
     - define at least one of the following properties: bins, numpy_bins (cached intercomputation exists)
     - if you modify the bins, be sure to put _bins and _numpy_bins into proper state (in some cases, None is sufficient)
-    - the construct method should prepare bins etc.
     - checking of proper bins should be done in __init__
     - if you want to support adaptive histogram, override _force_bin_existence
     """
@@ -108,21 +107,6 @@ class BinningBase(object):
 
     def _adapt(self, other):
         raise RuntimeError("Cannot adapt binning.")
-
-    # def union(self, other, inplace=False):
-    #     """Change schema so that it becomes a superset of another.
-    #
-    #     Parameters
-    #     ----------
-    #     other: BinningBase
-    #     inplace: bool
-    #
-    #     Returns
-    #     -------
-    #     BinningBase | None
-    #     """
-    #     # TODO: Real
-    #     raise NotImplementedError()
 
     @property
     def bins(self):
@@ -571,35 +555,6 @@ def exponential_binning(data=None, bins=None, range=None, **kwargs):
         range = (np.log10(data.min()), np.log10(data.max()))
     log_width = (range[1] - range[0]) / bins
     return ExponentialBinning(log_min=range[0], log_width=log_width, bin_count=bins, **kwargs)
-
-# def union(schema1, schema2):
-#     """
-#     Parameters
-#     ----------
-#     schema1: BinningBase
-#     schema2: BinningBase
-#
-#     Returns
-#     -------
-#     new_schema: BinningBase
-#     bin_map1: Iterable[tuple] or None
-#     bin_map2: Iterable[tuple] or None
-#     """
-#     if schema1.bins == schema2.bins:     # TODO: perhaps a more
-#         return schema1, None, None
-#
-#     # 1) Fixed-width variant for a more simple
-#     try:
-#         schema1 = schema1.as_fixed_width(copy=True)
-#         schema2 = schema2.as_fixed_width(copy=True)
-#
-#         return
-#     except:
-#         pass
-#
-#     # 2)
-#     schema1 = schema1.as_static(copy=True)
-#     schema2 = schema2.as_static(copy=True)
 
 
 def calculate_bins(array, _=None, *args, **kwargs):
