@@ -63,6 +63,7 @@ class PolarHistogram(HistogramND):
 
     def plot(self, histtype="map", density=False, backend="matplotlib", **kwargs):
         color = kwargs.pop("color", "frequency")
+        alpha = kwargs.pop("alpha", 1.0)
         show_zero = kwargs.pop("show_zero", True)
         cmap = kwargs.pop("cmap", "Greys")
 
@@ -117,7 +118,9 @@ class PolarHistogram(HistogramND):
                 for i in range(len(rpos)):
                     if dz[i] > 0 or show_zero:
                         bin_color = colors[i]
-                        bars = ax.bar(phipos[i], dr[i], width=dphi[i], bottom=rpos[i], color=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)), lw=kwargs.get("lw", 0.5))
+                        bars = ax.bar(phipos[i], dr[i], width=dphi[i], bottom=rpos[i], color=bin_color,
+                                      edgecolor=kwargs.get("grid_color", cmap(0.5)), lw=kwargs.get("lw", 0.5),
+                                      alpha=alpha)
                     #
                     #     if dz[i] > 0 or show_zero:
                     #         rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],

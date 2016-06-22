@@ -298,11 +298,14 @@ class Histogram2D(HistogramND):
             Display a colobar with range on the right of the axis
         grid_color: str
             Color of the grid in the colour map (default: middle of the colormap)
+        alpha: Optional[bool]
+            0.0..1.0 of the whole plot (not fully implemented, default: 1.0)
         lw: float
             Width of the grid lines
                 
         """
         color = kwargs.pop("color", "frequency")
+        alpha = kwargs.pop("alpha", 1.0)
         show_zero = kwargs.pop("show_zero", True)
         show_colorbar = kwargs.pop("show_colorbar", True)
         show_values = kwargs.pop("show_values", False)
@@ -366,7 +369,8 @@ class Histogram2D(HistogramND):
                 
                     if dz[i] > 0 or show_zero:
                         rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
-                                            facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)), lw=kwargs.get("lw", 0.5))
+                                            facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
+                                            lw=kwargs.get("lw", 0.5), alpha=alpha)
                         ax.add_patch(rect)
                         
                         if show_values:
@@ -374,9 +378,9 @@ class Histogram2D(HistogramND):
                             yiq_y = np.dot(bin_color[:3], [0.299, 0.587, 0.114])
                                 
                             if yiq_y > 0.5:
-                                text_color = (0.0, 0.0, 0.0, 1.0)
+                                text_color = (0.0, 0.0, 0.0, alpha)
                             else:
-                                text_color = (1.0, 1.0, 1.0, 1.0)
+                                text_color = (1.0, 1.0, 1.0, alpha)
                             ax.text(text_x[i], text_y[i], text, horizontalalignment='center', verticalalignment='center', color=text_color)                        
                                                 
                 ax.set_xlim(self.bins[0][0,0], self.bins[0][-1,1])
