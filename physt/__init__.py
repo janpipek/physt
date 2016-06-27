@@ -194,7 +194,8 @@ def histogramdd(data, bins=10, *args, name=None, axis_names=None, **kwargs):
                                                                       weights=weights)
 
     kwargs["name"] = name
-    kwargs["axis_names"] = axis_names
+    if axis_names:
+        kwargs["axis_names"] = axis_names
     if dim == 2:
         return histogram_nd.Histogram2D(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, **kwargs)
     else:
