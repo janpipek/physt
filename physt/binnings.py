@@ -225,21 +225,25 @@ class FixedWidthBinning(BinningBase):
     """Binning schema with predefined bin width."""
     adaptive_allowed = True
 
-    def __init__(self, bin_width, bin_count=0, min=None, includes_right_edge=False, adaptive=False, shift=None,
-                 align=True):
+    def __init__(self, bin_width, bin_count=0, times_min=None, min=None, includes_right_edge=False, adaptive=False,
+                 shift=None, align=True):
         super(FixedWidthBinning, self).__init__(adaptive=adaptive, includes_right_edge=includes_right_edge)
         # TODO: Check edge cases for min/shift/align
         if bin_width <= 0:
             raise RuntimeError("Bin width must be > 0.")
-        if min is not None and shift is not None:
-            raise RuntimeError("Cannot set both minimum and shift for FixedWidthBinning")
         if bin_count < 0:
             raise RuntimeError("Bin count must be >= 0.")
+        if (times_min is not None or shift is not None) and (min is not None):
+            raise RuntimeError("Cannot specify both min and (times_min or shift)")
         self._bin_width = float(bin_width)
         self._align = align
         self._bin_count = int(bin_count)
-        self._min = min
-        self._shift = shift
+        if min is not None:
+            self._times_min = np.floor(min / self.bin_width)
+            self._shift = min - self._times_min * self.bin_width
+        else:
+            self._times_min = times_min
+            self._shift = shift or 0.0
         self._bins = None
         self._numpy_bins = None
 
@@ -248,10 +252,9 @@ class FixedWidthBinning(BinningBase):
             includes_right_edge = self.includes_right_edge
 
         if self._bin_count == 0:
-            if self._align:
-                self._min = np.floor((value - self._real_shift) / self.bin_width) * self.bin_width + self._real_shift  # TODO: who' abou' alignment?
-            else:
-                self._min = value
+            self._times_min = np.floor((value - self._shift) / self.bin_width)
+            if not self._align:
+                self._shift = value - self._times_min * self.bin_width
             self._bin_count = 1
             self._bins = None
             self._numpy_bins = None
@@ -261,7 +264,7 @@ class FixedWidthBinning(BinningBase):
             add_left = add_right = 0
             if value < self.numpy_bins[0]:
                 add_left = int(np.ceil((self.numpy_bins[0] - value) / self.bin_width))
-                self._min -= add_left * self.bin_width
+                self._times_min -= add_left
                 self._bin_count += add_left
             elif value >= self.numpy_bins[-1]:
                 add_right = (value - self.numpy_bins[-1]) /  self.bin_width
@@ -290,11 +293,19 @@ class FixedWidthBinning(BinningBase):
                 return result
 
     @property
+    def first_edge(self):
+        return self._times_min * self._bin_width + self._shift
+
+    @property
+    def last_edge(self):
+        return (self._times_min + self._bin_count) * self._bin_width + self._shift
+
+    @property
     def numpy_bins(self):
         if self._numpy_bins is None:
             if self._bin_count == 0:
                 return np.zeros((0, 2), dtype=float)
-            self._numpy_bins = self._min + self._bin_width * np.arange(self._bin_count + 1)
+            self._numpy_bins = (self._times_min + np.arange(self._bin_count + 1)) * self._bin_width + self._shift
         return self._numpy_bins
 
     @property
@@ -306,7 +317,7 @@ class FixedWidthBinning(BinningBase):
             bin_width=self._bin_width,
             bin_count=self._bin_count,
             align=self._align,  # Not necessary
-            min=self._min,
+            times_min=self._times_min,
             shift=self._shift,
             includes_right_edge=self.includes_right_edge,
             adaptive=self._adaptive)
@@ -314,14 +325,6 @@ class FixedWidthBinning(BinningBase):
     @property
     def bin_width(self):
         return self._bin_width
-
-    @property
-    def first_edge(self):
-        return self._min
-
-    @property
-    def last_edge(self):
-        return self._min + self._bin_count * self.bin_width
 
     def _adapt(self, other):
         """
@@ -338,20 +341,13 @@ class FixedWidthBinning(BinningBase):
         other = other.as_fixed_width()
         if self.bin_width != other.bin_width:
             raise RuntimeError("Cannot adapt fixed-width histograms with different widths")
-        if self._real_shift != other._real_shift:
-            raise RuntimeError("Cannot adapt shifted fixed-width histograms")
+        if self._shift != other._shift:
+            raise RuntimeError("Cannot adapt shifted fixed-width histograms: {0} vs {1}".format(self._shift, other._shift))
         # Following operations modify schemas
         other = other.copy()
         bin_map1 = self._force_bin_existence([other.first_edge, other.last_edge], includes_right_edge=True)
         bin_map2 = other._force_bin_existence([self.first_edge, self.last_edge], includes_right_edge=True)
         return bin_map1, bin_map2
-
-    @property
-    def _real_shift(self):
-        if self._min:
-            return np.mod(self._min, self.bin_width)
-        else:
-            return self._shift or 0
 
     def as_fixed_width(self, copy=True):
         if copy:
@@ -438,6 +434,8 @@ def human_binning(data=None, bins=None, range=None, **kwargs):
     numpy.ndarray
     """
     subscales = np.array([0.5, 1, 2, 2.5, 5, 10])
+
+    # TODO: remove colliding kwargs
 
     if bins is None:
         bins = ideal_bin_count(data)
