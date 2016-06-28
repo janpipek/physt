@@ -5,7 +5,7 @@ from . import histogramdd as original_hdd
 def histogram1d(data, bins=None, *args, **kwargs):
     import dask
     if not hasattr(data, "dask"):
-        data = dask.array.from_array(data, chunks=data.size() / 100)
+        data = dask.array.from_array(data, chunks=data.shape[0] / 100)
 
     name = "dask_adaptive"
     if not kwargs.get("adaptive", True):

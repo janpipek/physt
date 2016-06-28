@@ -43,6 +43,7 @@ See more in docstring's and notebooks:
 - 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/2D%20Histograms.ipynb>
 - Special histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Special%20histograms.ipynb>
 - Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Adaptive%20histogram.ipynb>
+- Use dask for large (not "big") data: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Dask.ipynb>
 
 ## Installation
 
@@ -57,7 +58,8 @@ See more in docstring's and notebooks:
 * ND histograms(beta)
 * Some special histograms
   - 2D polar coordinates (with plotting)
-* Adaptive rebinning for on-line filling of unknown data(beta)
+* Adaptive rebinning for on-line filling of unknown data (beta)
+* Memory-effective histogramming of dask arrays (beta)
 * Understands any numpy-array-like object
 * Keep underflow / overflow
 * Basic numeric operations (* / + -)
