@@ -10,10 +10,10 @@ class HistogramND(HistogramBase):
     def __init__(self, dimension, binnings, frequencies=None, **kwargs):
         self._dimension = dimension
         self._binnings = binnings
-        self._bins = [binning.bins for binning in self._binnings]
+        # self._bins = [binning.bins for binning in self._binnings]
 
         # Bins + checks
-        if len(self._bins) != self._dimension:
+        if len(self._binnings) != self._dimension:
             raise RuntimeError("bins must be a sequence of {0} schemas".format(self._dimension))
 
         # Frequencies + checks
@@ -49,19 +49,30 @@ class HistogramND(HistogramBase):
             raise RuntimeError("Cannot have negative squared errors.")
 
     @property
+    def bins(self):
+        """Matrix of bins.
+
+        Returns
+        -------
+        numpy.ndarray
+            Two-dimensional array of bin edges, shape=(n, 2)
+        """
+        return [binning.bins for binning in self._binnings]
+
+    @property
+    def numpy_bins(self):
+        return [binning.numpy_bins for binning in self._binnings]
+
+    @property
     def ndim(self):
         return self._dimension
 
     @property
     def shape(self):
-        return tuple(bins_i.shape[0] for bins_i in self._bins)
+        return tuple(bins.bin_count for bins in self._binnings)
 
     def __getitem__(self, item):
         raise NotImplementedError()
-
-    @property
-    def numpy_bins(self):
-        return [bin_utils.to_numpy_bins(bins) for bins in self.bins]
 
     # Missing: cumulative_frequencies - does it make sense
 
@@ -153,7 +164,7 @@ class HistogramND(HistogramBase):
         if bin_map is None:    
             return
         else:
-            new_shape = self.shape[:]
+            new_shape = list(self.shape)
             new_shape[axis] = new_size            
             new_frequencies = np.zeros(new_shape, dtype=float)
             new_errors2 = np.zeros(new_shape, dtype=float)
@@ -171,7 +182,9 @@ class HistogramND(HistogramBase):
     def fill(self, value, weight=1):
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
-                map = binning.force_bin_existence(value[i])
+                #print("adaptive, forcing", value[i])
+                bin_map = binning.force_bin_existence(value[i])
+                #print("map", bin_map)
                 self._reshape_data(binning.bin_count, bin_map, i)
 
         ixbin = self.find_bin(value)

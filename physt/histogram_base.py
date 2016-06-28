@@ -4,17 +4,20 @@ import numpy as np
 class HistogramBase(object):
     """Behaviour shared between all histogram classes."""
 
-    @property
-    def bins(self):
-        """Matrix of bins.
+    # @property
+    # def bins(self):
+    #     Matrix of bins.
 
-        Returns
-        -------
-        numpy.ndarray
-            Two-dimensional array of bin edges, shape=(n, 2)
-        """
-        # TODO: Fix
-        return self._bins
+    #     Returns
+    #     -------
+    #     numpy.ndarray
+    #         Two-dimensional array of bin edges, shape=(n, 2)
+        
+    #     return [binning.bins for binning in self._binnings]
+
+    # @property
+    # def numpy_bins(self):
+    #     return [binning.numpy_bins for binning in self._binnings]
 
     @property
     def frequencies(self):

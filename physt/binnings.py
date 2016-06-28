@@ -252,14 +252,17 @@ class FixedWidthBinning(BinningBase):
             includes_right_edge = self.includes_right_edge
 
         if self._bin_count == 0:
+            #print("Beg from zero")
             self._times_min = np.floor((value - self._shift) / self.bin_width)
             if not self._align:
                 self._shift = value - self._times_min * self.bin_width
             self._bin_count = 1
             self._bins = None
             self._numpy_bins = None
+            #print("Bins: ", self.bin_count)
             return ()
         else:
+            #print("Beg from non-zero")
             original_count = self.bin_count
             add_left = add_right = 0
             if value < self.numpy_bins[0]:

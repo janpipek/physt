@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
-from physt import h1, h2
+from physt import h1, h2, histogramdd
 import numpy as np
 import pytest
 
@@ -94,6 +94,33 @@ class TestFillNAdaptive(object):
 class TestAdaptive2D(object):
     def test_create_empty(self):
         h = h2(None, None, "fixed_width", 10, adaptive=True)
+        for b in h._binnings:
+            assert b.is_adaptive()
+        assert h.ndim == 2
+
+    def test_create_nonempty(self):
+        d1 = [1, 21, 3]
+        d2 = [11, 12, 13]
+        h = h2(d1, d2, "fixed_width", 10, adaptive=True)
+        assert h.shape == (3, 1)
+
+    def test_fill_empty(self):
+        h = h2(None, None, "fixed_width", 10, adaptive=True)
+        h.fill([4, 14])
+        assert h.total == 1
+        assert np.array_equal(h.numpy_bins, [[0, 10], [10, 20]])
+
+    def test_fill_nonempty(self):
+        d1 = [1, 21, 3]
+        d2 = [11, 12, 13]
+        h = h2(d1, d2, "fixed_width", 10, adaptive=True)
+        h.fill([4, 54])
+        assert h.total == 4
+
+class TestAdaptiveND(object):
+    def test_create_empty(self):
+        h = histogramdd(None, "fixed_width", 10, dim=7, adaptive=True)
+        assert h.ndim == 7
 
 # class TestChangeBins(object):
 #     def test_change_bin_simple(self):
