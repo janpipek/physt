@@ -2,7 +2,7 @@ import sys
 import os
 sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 import physt
-from physt import histogram_nd
+from physt import histogram_nd, h2
 import numpy as np
 import pytest
 
@@ -122,6 +122,15 @@ class TestArithmetics(object):
         i = h + h
         assert np.array_equal(i.frequencies, freqs * 2)
         assert np.array_equal(i.errors2, freqs * 2)   
+
+    def test_addition_with_adaptive(self):
+        ha = h2([1], [11], "fixed_width", 10, adaptive=True)
+        hb = h2([10], [5], "fixed_width", 10, adaptive=True)
+        hha = ha + hb
+        assert hha == hb + ha
+        assert hha.shape == (2, 2)
+        assert hha.total == 2
+        assert np.array_equal(hha.frequencies, [[0, 1], [1, 0]])
 
     def test_subtraction_with_another(self):
         xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])

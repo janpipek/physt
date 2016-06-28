@@ -136,6 +136,9 @@ class HistogramND(HistogramBase):
             else:
                 return ixbin
 
+    def is_adaptive(self):
+        return all(binning.is_adaptive() for binning in self._binnings)
+
     def change_binning(self, new_binning, bin_map, axis=0):
         """Set new binnning and update the bin contents according to a map.
 
@@ -154,7 +157,7 @@ class HistogramND(HistogramBase):
         if axis < 0 or axis >= self.ndim:
             raise RuntimeError("Axis must be in range 0..(ndim-1)")
         self._reshape_data(new_binning.bin_count, bin_map, axis)
-        self._binning[axis] = new_binning     
+        self._binnings[axis] = new_binning     
 
     def _reshape_data(self, new_size, bin_map, axis=0):
         """Reshape data to match new binning schema.
@@ -287,11 +290,35 @@ class HistogramND(HistogramBase):
     def __iadd__(self, other):
         if np.isscalar(other):
             raise RuntimeError("Cannot add constant to histograms.")        
-        if not self.has_same_bins(other):
+        if other.ndim != self.ndim:
+                raise RuntimeError("Cannot add histograms with different dimensions.")            
+        elif self.has_same_bins(other):
+            self._frequencies += other.frequencies
+            self._errors2 += other.errors2 
+            self.missed += other.missed
+        elif self.is_adaptive():
+            if other.missed > 0:
+                raise RuntimeError("Cannot adapt histogram with missed values.")
+            try:
+                # TODO: Fix state after exception
+                # maps1 = []
+                maps2 = []
+                for i in range(self.ndim):
+                    new_bins = self._binnings[i].copy()
+                    map1, map2 = new_bins.adapt(other._binnings[i])
+                    self.change_binning(new_bins, map1, axis=i)
+                    # maps1.append(map1)
+                    maps2.append(map2)
+                import itertools
+                for indexes in itertools.product(*maps2):
+                    old = tuple(index[0] for index in indexes)
+                    new = tuple(index[1] for index in indexes)
+                    self._frequencies[new] += other._frequencies[old]
+                    self._errors2[new] += other._frequencies[old]
+            except:
+                raise # RuntimeError("Cannot find common binning for added histograms.")           
+        else:
             raise RuntimeError("Incompatible binning")
-        self._frequencies += other.frequencies
-        self._errors2 += other.errors2 
-        self.missed += other.missed
         return self
 
     def __imul__(self, other):
@@ -303,14 +330,7 @@ class HistogramND(HistogramBase):
         return self
 
     def __isub__(self, other):
-        if np.isscalar(other):
-            raise RuntimeError("Cannot subtract constant from histograms.")            
-        if not self.has_same_bins(other):
-            raise RuntimeError("Incompatible binning")
-        self._frequencies -= other.frequencies
-        self._errors2 += other.errors2 
-        self.missed -= other.missed
-        return self
+        return self.__iadd__(other * (-1))
 
     def __itruediv__(self, other):
         if not np.isscalar(other):

@@ -98,6 +98,7 @@ class TestAdaptive2D(object):
             assert b.is_adaptive()
         assert h.ndim == 2
 
+
     def test_create_nonempty(self):
         d1 = [1, 21, 3]
         d2 = [11, 12, 13]
@@ -121,6 +122,7 @@ class TestAdaptiveND(object):
     def test_create_empty(self):
         h = histogramdd(None, "fixed_width", 10, dim=7, adaptive=True)
         assert h.ndim == 7
+        assert h.is_adaptive()
 
 # class TestChangeBins(object):
 #     def test_change_bin_simple(self):
