@@ -1,7 +1,8 @@
 """Different binning algorithms/schemas for the histograms."""
 
 import numpy as np
-from .bin_utils import make_bin_array, is_consecutive, to_numpy_bins, is_rising, is_bin_subset
+from .bin_utils import (
+    make_bin_array, is_consecutive, to_numpy_bins, is_rising, is_bin_subset, to_numpy_bins_with_mask)
 
 # TODO: Reduce number of classes + change construct into functions
 # TODO: Locking and edit operations (like numpy read-only)
@@ -105,6 +106,11 @@ class BinningBase(object):
         else:
             return self._adapt(other)
 
+    def set_adaptive(self, value=True):
+        if value and not self.adaptive_allowed:
+            raise RuntimeError("Cannot change binning to adaptive.")
+        self._adaptive = value
+
     def _adapt(self, other):
         raise RuntimeError("Cannot adapt binning.")
 
@@ -123,6 +129,13 @@ class BinningBase(object):
         if self._numpy_bins is None:
             self._numpy_bins = to_numpy_bins(self.bins)
         return self._numpy_bins
+
+    @property
+    def numpy_bins_with_mask(self):
+        bwm = to_numpy_bins_with_mask(self.bins)
+        if not self.includes_right_edge:
+            bwm[0].append(np.inf)
+        return bwm
 
     @property
     def first_edge(self):
@@ -177,6 +190,9 @@ class BinningBase(object):
 
 class StaticBinning(BinningBase):
     inconsecutive_allowed = True
+
+    def __init__(self, bins, includes_right_edge=True, **kwargs):
+        super(StaticBinning, self).__init__(bins=bins, includes_right_edge=includes_right_edge)        
 
     def as_static(self, copy=True):
         """Convert binning to a static form.
@@ -239,7 +255,7 @@ class FixedWidthBinning(BinningBase):
         self._align = align
         self._bin_count = int(bin_count)
         if min is not None:
-            self._times_min = np.floor(min / self.bin_width)
+            self._times_min = int(np.floor(min / self.bin_width))
             self._shift = min - self._times_min * self.bin_width
         else:
             self._times_min = times_min
@@ -253,7 +269,7 @@ class FixedWidthBinning(BinningBase):
 
         if self._bin_count == 0:
             #print("Beg from zero")
-            self._times_min = np.floor((value - self._shift) / self.bin_width)
+            self._times_min = int(np.floor((value - self._shift) / self.bin_width))
             if not self._align:
                 self._shift = value - self._times_min * self.bin_width
             self._bin_count = 1
@@ -271,11 +287,14 @@ class FixedWidthBinning(BinningBase):
                 self._bin_count += add_left
             elif value >= self.numpy_bins[-1]:
                 add_right = (value - self.numpy_bins[-1]) /  self.bin_width
-                if add_right - np.floor(add_right) == 0 and not includes_right_edge:
-                    add_right = int(add_right + 1)
-                else:
-                    add_right = int(np.ceil(add_right))
+                # print(add_right, includes_right_edge)
+                #print(add_right - np.floor(add_right), add_right - np.floor(add_right) == 0)
+                add_right = int(np.ceil(add_right))
+                # print("Quindi", add_right)
                 self._bin_count += add_right
+                if self.last_edge == value and not includes_right_edge:
+                    add_right += 1
+                    self._bin_count += 1
             if add_left or add_right:
                 self._bins = None
                 self._numpy_bins = None
@@ -288,7 +307,7 @@ class FixedWidthBinning(BinningBase):
             return self._force_bin_existence_single(values, includes_right_edge=includes_right_edge)
         else:
             min, max = np.min(values), np.max(values)
-            result = self._force_bin_existence_single(min, includes_right_edge=includes_right_edge)
+            result = self._force_bin_existence_single(min)
             result2 = self._force_bin_existence_single(max, includes_right_edge=includes_right_edge)
             if result is None:
                 return result2
@@ -306,9 +325,10 @@ class FixedWidthBinning(BinningBase):
     @property
     def numpy_bins(self):
         if self._numpy_bins is None:
+            self._bins = None
             if self._bin_count == 0:
                 return np.zeros((0, 2), dtype=float)
-            self._numpy_bins = (self._times_min + np.arange(self._bin_count + 1)) * self._bin_width + self._shift
+            self._numpy_bins = (self._times_min + np.arange(self._bin_count + 1, dtype=int)) * self._bin_width + self._shift
         return self._numpy_bins
 
     @property
@@ -329,6 +349,26 @@ class FixedWidthBinning(BinningBase):
     def bin_width(self):
         return self._bin_width
 
+    def _force_new_min_max(self, new_min, new_max):
+        bin_map = None
+        add_right = add_left = 0
+        if new_min < self._times_min:
+            add_left = self._times_min - new_min
+        if new_max - self._times_min > self._bin_count:
+            add_right = new_max - self._times_min - self._bin_count
+        if add_left or add_right:
+            bin_map = ((i, i + add_left) for i in range(self._bin_count))
+            self._set_min_and_count(
+                self._times_min - add_left,
+                self._bin_count + add_left + add_right)
+        return bin_map
+
+    def _set_min_and_count(self, times_min, bin_count):
+        self._bin_count = bin_count
+        self._times_min = times_min
+        self._bins = None            
+        self._numpy_bins = None         
+
     def _adapt(self, other):
         """
 
@@ -348,8 +388,22 @@ class FixedWidthBinning(BinningBase):
             raise RuntimeError("Cannot adapt shifted fixed-width histograms: {0} vs {1}".format(self._shift, other._shift))
         # Following operations modify schemas
         other = other.copy()
-        bin_map1 = self._force_bin_existence([other.first_edge, other.last_edge], includes_right_edge=True)
-        bin_map2 = other._force_bin_existence([self.first_edge, self.last_edge], includes_right_edge=True)
+        if other.bin_count == 0:
+            return None, ()
+        if self.bin_count == 0:
+            self._set_min_and_count(other._times_min, other.bin_count)
+            return (), None
+        new_min = min(self._times_min, other._times_min)
+        new_max = max(self._times_min + self._bin_count, other._times_min + other._bin_count)
+
+        bin_map1 = self._force_new_min_max(new_min, new_max)
+        bin_map2 = other._force_new_min_max(new_min, new_max)
+
+        # bin_map1 = self._force_bin_existence([other.first_edge, other.last_edge], includes_right_edge=True)
+        # bin_map2 = other._force_bin_existence([self.first_edge, self.last_edge], includes_right_edge=True)
+        # if bin_map1:
+        # print("#1", bin_map1 and list(bin_map1))
+        # print("#2", bin_map2 and list(bin_map2))
         return bin_map1, bin_map2
 
     def as_fixed_width(self, copy=True):
@@ -365,7 +419,7 @@ class ExponentialBinning(BinningBase):
 
     # TODO: Implement adaptivity
 
-    def __init__(self, log_min, log_width, bin_count, includes_right_edge=False, adaptive=False):
+    def __init__(self, log_min, log_width, bin_count, includes_right_edge=True, adaptive=False):
         super(ExponentialBinning, self).__init__(includes_right_edge=includes_right_edge, adaptive=adaptive)
         self._log_min = log_min
         self._log_width = log_width
@@ -439,10 +493,10 @@ def human_binning(data=None, bins=None, range=None, **kwargs):
     subscales = np.array([0.5, 1, 2, 2.5, 5, 10])
 
     # TODO: remove colliding kwargs
-
+    if data is None and range is None:
+        raise RuntimeError("Cannot guess optimum bin width without data.")
     if bins is None:
-        bins = ideal_bin_count(data)
-    # TODO data or range check
+        bins = ideal_bin_count(data)    
     min_ = range[0] if range else data.min()
     max_ = range[1] if range else data.max()
     bw = (max_ - min_) / bins
@@ -524,8 +578,8 @@ def fixed_width_binning(data=None, bin_width=1, range=None, includes_right_edge=
         if not kwargs.get("adaptive"):
             return result  # Otherwise we want to adapt to data
     if data is not None and data.shape[0]:
-        result._force_bin_existence(np.min(data))
-        result._force_bin_existence(np.max(data))
+        # print("Jo, tady")
+        result._force_bin_existence([np.min(data), np.max(data)], includes_right_edge=includes_right_edge)
     return result
 
 

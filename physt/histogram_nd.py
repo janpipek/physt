@@ -139,6 +139,10 @@ class HistogramND(HistogramBase):
     def is_adaptive(self):
         return all(binning.is_adaptive() for binning in self._binnings)
 
+    def set_adaptive(self, value=True):
+        for binning in self._binnings:
+            binning.set_adaptive(value)
+
     def change_binning(self, new_binning, bin_map, axis=0):
         """Set new binnning and update the bin contents according to a map.
 
@@ -293,6 +297,7 @@ class HistogramND(HistogramBase):
         if other.ndim != self.ndim:
                 raise RuntimeError("Cannot add histograms with different dimensions.")            
         elif self.has_same_bins(other):
+            # print("Has same!!!!!!!!!!")
             self._frequencies += other.frequencies
             self._errors2 += other.errors2 
             self.missed += other.missed
@@ -300,21 +305,21 @@ class HistogramND(HistogramBase):
             if other.missed > 0:
                 raise RuntimeError("Cannot adapt histogram with missed values.")
             try:
+                other = other.copy()
+                other.set_adaptive(True)
+
                 # TODO: Fix state after exception
                 # maps1 = []
                 maps2 = []
                 for i in range(self.ndim):
                     new_bins = self._binnings[i].copy()
+
                     map1, map2 = new_bins.adapt(other._binnings[i])
                     self.change_binning(new_bins, map1, axis=i)
-                    # maps1.append(map1)
-                    maps2.append(map2)
-                import itertools
-                for indexes in itertools.product(*maps2):
-                    old = tuple(index[0] for index in indexes)
-                    new = tuple(index[1] for index in indexes)
-                    self._frequencies[new] += other._frequencies[old]
-                    self._errors2[new] += other._frequencies[old]
+                    other.change_binning(new_bins, map2, axis=i)
+                self._frequencies += other.frequencies
+                self._errors2 += other.errors2 
+
             except:
                 raise # RuntimeError("Cannot find common binning for added histograms.")           
         else:
@@ -503,10 +508,10 @@ class Histogram2D(HistogramND):
             raise RuntimeError("Unsupported hist type")
 
 
-def calculate_frequencies(data, ndim, bins, weights=None):
+def calculate_frequencies(data, ndim, binnings, weights=None):
     data = np.asarray(data)
 
-    edges_and_mask = [bin_utils.to_numpy_bins_with_mask(bins[i]) for i in range(ndim)]
+    edges_and_mask = [binning.numpy_bins_with_mask for binning in binnings]
     edges = [em[0] for em in edges_and_mask]
     masks = [em[1] for em in edges_and_mask]
 

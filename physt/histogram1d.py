@@ -223,21 +223,6 @@ class Histogram1D(HistogramBase):
         # TODO: If not consecutive, does not make sense
         return self._binning.numpy_bins
 
-    def change_binning(self, new_binning, bin_map):
-        """Set new binnning and update the bin contents according to a map.
-
-        Fills frequencies and errors with 0.
-        It's the caller's responsibility to provide correct binning and map.
-
-        Parameters
-        ----------
-        new_binning: physt.binnings.BinningBase
-        bin_map: Iterable[tuple]
-            tuples contain bin indices (old, new)
-        """
-        self._reshape_data(new_binning.bin_count, bin_map)
-        self._binning = new_binning
-
     def is_adaptive(self):
         return self._binning.is_adaptive()
 
@@ -390,6 +375,22 @@ class Histogram1D(HistogramBase):
         self.overflow += overflow
         for key in self._stats:
             self._stats[key] += stats.get(key, 0.0)
+
+    def change_binning(self, new_binning, bin_map):
+        """Set new binnning and update the bin contents according to a map.
+
+        Fills frequencies and errors with 0.
+        It's the caller's responsibility to provide correct binning and map.
+
+        Parameters
+        ----------
+        new_binning: physt.binnings.BinningBase
+        bin_map: Iterable[tuple]
+            tuples contain bin indices (old, new)
+        """
+        # print("change:", bin_map, new_binning.bin_count)
+        self._reshape_data(new_binning.bin_count, bin_map)
+        self._binning = new_binning
 
     def _reshape_data(self, new_size, bin_map):
         """Reshape data to match new binning schema.
@@ -643,11 +644,12 @@ class Histogram1D(HistogramBase):
             self._errors2 += other.errors2
         elif self._binning.is_adaptive():
             if other.missed > 0:
-                raise RuntimeError("Cannot adapt histogram with missed values.")
+                raise RuntimeError("Cannot adapt hist;ogram with missed values.")
             try:
                 # TODO: Fix state after exception
                 new_bins = self._binning.copy()
                 bin_map, bin_map2 = new_bins.adapt(other._binning)
+                # print(new_bins.bin_count, new_bins._times_min)
                 # print(bin_map, bin_map2)
                 self.change_binning(new_bins, bin_map)
                 if bin_map2 is None:
@@ -658,7 +660,7 @@ class Histogram1D(HistogramBase):
                         self._frequencies[new] += other._frequencies[old]
                         self._errors2[new] += other._frequencies[old]
             except:
-                raise RuntimeError("Cannot find common binning for added histograms.")
+                raise # RuntimeError("Cannot find common binning for added histograms.")
         # TODO: Add subset / superset
         else:
             raise RuntimeError("Cannot find common binning for added histograms.")

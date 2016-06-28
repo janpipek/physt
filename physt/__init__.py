@@ -199,12 +199,12 @@ def histogramdd(data, bins=10, *args, name=None, dim=None, axis_names=None, **kw
     # Prepare bins
     bin_schemas = calculate_bins_nd(data, bins, *args, check_nan=check_nan, adaptive=adaptive,
                                     **kwargs)
-    bins = [binning.bins for binning in bin_schemas]
+    #bins = [binning.bins for binning in bin_schemas]
 
     # Prepare remaining data
     weights = kwargs.pop("weights", None)
     frequencies, errors2, missed = histogram_nd.calculate_frequencies(data, ndim=dim,
-                                                                      bins=bins,
+                                                                      binnings=bin_schemas,
                                                                       weights=weights)
 
     kwargs["name"] = name
