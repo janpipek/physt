@@ -113,10 +113,11 @@ class TestAdaptive2D(object):
 
     def test_fill_nonempty(self):
         d1 = [1, 21, 3]
-        d2 = [11, 12, 13]
+        d2 = [10, 12, 20]
         h = h2(d1, d2, "fixed_width", 10, adaptive=True)
-        h.fill([4, 54])
+        h.fill([4, 60])
         assert h.total == 4
+        assert h.shape == (3, 6)
 
 class TestAdaptiveND(object):
     def test_create_empty(self):
@@ -162,6 +163,14 @@ class TestAdaptiveArithmetics(object):
         ha1 *= 2
         ha1.fill_n([-2])
         assert np.array_equal(ha1.frequencies, [1, 2, 0, 2, 0, 2])
+
+    def test_add_cross_2d(self):
+        d1 = np.asarray([1, 21, 3])
+        d2 = np.asarray([10, 12, 20])
+        h = h2(d1, d2, "fixed_width", 10, adaptive=True)
+        hb = h2(d1, d2 +10, "fixed_width", 10, adaptive=True)
+        hc = h + hb
+        assert np.array_equal(hc.numpy_bins[1], [10, 20, 30, 40])
 
 
 if __name__ == "__main__":
