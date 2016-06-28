@@ -52,7 +52,7 @@ def histogramdd(data, bins=None, *args, **kwargs):
     for h in dsk:
         h_ = dask.get(dsk, h)
         if h[0] == "dask_adaptive":
-            start += dask.get(dsk, h)
+            start += h_
     return start
 
 
