@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
-from physt import h1
+from physt import h1, h2
 import numpy as np
 import pytest
 
@@ -90,6 +90,10 @@ class TestFillNAdaptive(object):
         assert np.array_equal(h.frequencies, [1])
         assert h.total == 1
 
+
+class TestAdaptive2D(object):
+    def test_create_empty(self):
+        h = h2(None, None, "fixed_width", 10, adaptive=True)
 
 # class TestChangeBins(object):
 #     def test_change_bin_simple(self):

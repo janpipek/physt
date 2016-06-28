@@ -83,21 +83,25 @@ def to_numpy_bins_with_mask(bins):
     bins = np.asarray(bins)
     if bins.ndim == 1:
         edges = bins
-        mask = np.arange(bins.shape[0] - 1)
+        if bins.shape[0] > 1:
+            mask = np.arange(bins.shape[0] - 1)
+        else:
+            mask = []
     elif bins.ndim == 2:
         edges = []
         mask = []
         j = 0
-        edges.append(bins[0,0])
-        for i in range(bins.shape[0] - 1):
-            mask.append(j)
-            edges.append(bins[i,1])
-            if bins[i,1] != bins[i+1,0]:
-                edges.append(bins[i+1, 0])
+        if bins.shape[0] > 0:
+            edges.append(bins[0,0])
+            for i in range(bins.shape[0] - 1):
+                mask.append(j)
+                edges.append(bins[i,1])
+                if bins[i,1] != bins[i+1,0]:
+                    edges.append(bins[i+1, 0])
+                    j += 1
                 j += 1
-            j += 1
-        mask.append(j)
-        edges.append(bins[-1, 1])
+            mask.append(j)
+            edges.append(bins[-1, 1])
     else:
         raise RuntimeError("to_numpy_bins_with_mask: array with dim=1 or 2 expected")
     if not np.all(np.diff(edges) > 0):

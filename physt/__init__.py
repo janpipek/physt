@@ -125,13 +125,16 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
     if not "axis_names" in kwargs:
         if hasattr(data1, "name") and hasattr(data2, "name"):
             kwargs["axis_names"] = [data1.name, data2.name]
-    data1 = np.asarray(data1)
-    data2 = np.asarray(data2)
-    data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
-    return histogramdd(data, bins, *args, **kwargs)
+    if data1 is not None and data2 is not None:
+        data1 = np.asarray(data1)
+        data2 = np.asarray(data2)
+        data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
+    else:
+        data = None
+    return histogramdd(data, bins, *args, dim=2, **kwargs)
 
 
-def histogramdd(data, bins=10, *args, name=None, axis_names=None, **kwargs):
+def histogramdd(data, bins=10, *args, name=None, dim=None, axis_names=None, **kwargs):
     """Facade function to create n-dimensional histograms.
 
     3D variant of this function is also aliased as "h3".
@@ -148,7 +151,9 @@ def histogramdd(data, bins=10, *args, name=None, axis_names=None, **kwargs):
     name: str
         name of the histogram
     axis_names: Iterable[str]
-        names of the variable on x axis   
+        names of the variable on x axis  
+    adaptive:
+        whether the bins should be updated when new non-fitting value are filled 
 
     Returns
     -------
@@ -163,8 +168,7 @@ def histogramdd(data, bins=10, *args, name=None, axis_names=None, **kwargs):
     from .binnings import calculate_bins_nd
 
     adaptive = kwargs.pop("adaptive", False)
-    if adaptive:
-        raise RuntimeError("Adaptive multi-dimensional histograms not yet supported.")
+    dropna = kwargs.pop("dropna", False)
 
     # pandas - guess axis names
     if not "axis_names" in kwargs:
@@ -175,16 +179,26 @@ def histogramdd(data, bins=10, *args, name=None, axis_names=None, **kwargs):
                 pass # Perhaps columns has different meaning here.
 
     # Prepare and check data
-    data = np.asarray(data)
-    if data.ndim != 2:
-        raise RuntimeError("Array must have shape (n, d)")
-    n, dim = data.shape
-    dropna = kwargs.pop("dropna", False)
-    if dropna:
-        data = data[~np.isnan(data).any(axis=1)]
+    # Convert to array
+    if data is not None:
+        data = np.asarray(data)
+        if data.ndim != 2:
+            raise RuntimeError("Array must have shape (n, d)")        
+        if dim is not None and dim != data.shape[1]:
+            raise RuntimeError("Dimension mismatch: {0}!={1}".format(dim, data.shape[1]))
+        _, dim = data.shape
+        if dropna:
+            data = data[~np.isnan(data).any(axis=1)]      
+        check_nan = not dropna  
+    else:
+        if dim is None:
+            raise RuntimeError("You have to specify either data or its dimension.")        
+        data = np.zeros((0, dim))
+        check_nan = False
 
     # Prepare bins
-    bin_schemas = calculate_bins_nd(data, bins, *args, check_nan=not dropna, **kwargs)
+    bin_schemas = calculate_bins_nd(data, bins, *args, check_nan=check_nan, adaptive=adaptive,
+                                    **kwargs)
     bins = [binning.bins for binning in bin_schemas]
 
     # Prepare remaining data

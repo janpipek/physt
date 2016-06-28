@@ -520,7 +520,7 @@ def fixed_width_binning(data=None, bin_width=1, range=None, includes_right_edge=
         result._force_bin_existence(range[1], includes_right_edge=True)
         if not kwargs.get("adaptive"):
             return result  # Otherwise we want to adapt to data
-    if data is not None:
+    if data is not None and data.shape[0]:
         result._force_bin_existence(np.min(data))
         result._force_bin_existence(np.max(data))
     return result
@@ -613,7 +613,9 @@ def calculate_bins_nd(array, bins=None, *args, **kwargs):
     if kwargs.pop("check_nan", True):
         if np.any(np.isnan(array)):
             raise RuntimeError("Cannot calculate bins in presence of NaN's.")
-    n, dim = array.shape
+
+    if array is not None:
+        _, dim = array.shape
 
     # Prepare bins
     if isinstance(bins, (list, tuple)):

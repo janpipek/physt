@@ -86,7 +86,7 @@ class HistogramBase(object):
             for i in range(self.ndim):
                 if not np.allclose(self.bins[i], other.bins[i]):
                     return False
-                return True
+                return True        
 
     def has_compatible_bins(self, other):
         # By default, the bins must be the same

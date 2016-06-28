@@ -125,7 +125,55 @@ class HistogramND(HistogramBase):
             else:
                 return ixbin
 
+    def change_binning(self, new_binning, bin_map, axis=0):
+        """Set new binnning and update the bin contents according to a map.
+
+        Fills frequencies and errors with 0.
+        It's the caller's responsibility to provide correct binning and map.
+
+        Parameters
+        ----------
+        new_binning: physt.binnings.BinningBase
+        bin_map: Iterable[tuple]
+            tuples contain bin indices (old, new)
+        axis: int
+            What axis does the binning describe(0..ndim-1)
+        """
+        axis = int(axis)
+        if axis < 0 or axis >= self.ndim:
+            raise RuntimeError("Axis must be in range 0..(ndim-1)")
+        self._reshape_data(new_binning.bin_count, bin_map, axis)
+        self._binning[axis] = new_binning     
+
+    def _reshape_data(self, new_size, bin_map, axis=0):
+        """Reshape data to match new binning schema.
+
+        Fills frequencies and errors with 0.
+        """
+        if bin_map is None:    
+            return
+        else:
+            new_shape = self.shape[:]
+            new_shape[axis] = new_size            
+            new_frequencies = np.zeros(new_shape, dtype=float)
+            new_errors2 = np.zeros(new_shape, dtype=float)
+            if self._frequencies is not None and self._frequencies.shape[0] > 0:
+                for (old, new) in bin_map:      # Generic enough
+                    new_index = [slice(None) for i in range(self.ndim)]
+                    new_index[axis] = new
+                    old_index = [slice(None) for i in range(self.ndim)]
+                    old_index[axis] = old
+                    new_frequencies[new_index] = self._frequencies[old_index]
+                    new_errors2[new_index] = self._errors2[old_index]
+            self._frequencies = new_frequencies
+            self._errors2 = new_errors2   
+
     def fill(self, value, weight=1):
+        for i, binning in enumerate(self._binnings):
+            if binning.is_adaptive():
+                map = binning.force_bin_existence(value[i])
+                self._reshape_data(binning.bin_count, bin_map, i)
+
         ixbin = self.find_bin(value)
         if ixbin is None and self.keep_missed:
             self.missed += weight
@@ -133,6 +181,24 @@ class HistogramND(HistogramBase):
             self._frequencies[ixbin] += weight
             self.errors2[ixbin] += weight ** 2
         return ixbin
+
+    def fill_n(self, values, weights=None, dropna=True):
+        values = np.asarray(values)
+        if dropna:
+            values = values[~np.isnan(values)]
+        for i, binning in enumerate(self._binnings):
+            if binning.is_adaptive():
+                map = self._binning.force_bin_existence(values[:,i])
+                self._reshape_data(binning.bin_count, map, i)
+        frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self.ndim, self.bins,
+                                                                              weights=weights)
+        self._frequencies += frequencies
+        self._errors2 += errors2
+        # TODO: check that adaptive does not produce under-/over-flows?
+        self.underflow += underflow
+        self.overflow += overflow
+        for key in self._stats:
+            self._stats[key] += stats.get(key, 0.0)    
 
     def copy(self, include_frequencies=True):
         if include_frequencies:
@@ -422,17 +488,20 @@ def calculate_frequencies(data, ndim, bins, weights=None):
         total_weight = data.shape[0]
 
     # TODO: Right edges are not taken into account because they fall into inf bin
-    frequencies, _ = np.histogramdd(data, edges, weights=weights)
 
-    frequencies = frequencies[ixgrid].copy()
-
-    missing = total_weight - frequencies.sum()
-
-    if weights is not None:
-        err_freq, _ = np.histogramdd(data, edges, weights=weights ** 2)
-        errors2 = err_freq[ixgrid].copy()
+    if data.shape[0]:
+        frequencies, _ = np.histogramdd(data, edges, weights=weights)
+        frequencies = frequencies[ixgrid].copy()
+        missing = total_weight - frequencies.sum()
+        if weights is not None:
+            err_freq, _ = np.histogramdd(data, edges, weights=weights ** 2)
+            errors2 = err_freq[ixgrid].copy()
+        else:
+            errors2 = frequencies.copy()        
     else:
-        errors2 = frequencies.copy()
+        frequencies = None
+        missing = 0
+        errors2 = None
 
     return frequencies, errors2, missing
 
