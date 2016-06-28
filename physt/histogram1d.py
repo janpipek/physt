@@ -376,7 +376,7 @@ class Histogram1D(HistogramBase):
             values = values[~np.isnan(values)]
         if self._binning.is_adaptive():
             map = self._binning.force_bin_existence(values)
-            print(map)
+            # print(map)
             self._reshape_data(self._binning.bin_count, map)
         frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self._binning,
                                                                                   weights=weights, validate_bins=False)
@@ -387,15 +387,6 @@ class Histogram1D(HistogramBase):
         self.overflow += overflow
         for key in self._stats:
             self._stats[key] += stats.get(key, 0.0)
-
-    def _force_bin_existence(self, values):
-        # TODO: Include right edge? Support for adding
-        if np.isscalar(values):
-            values = [values]
-        add_left1, add_right1 = self._binning.force_bin_existence(np.min(values))
-        add_left2, add_right2 = self._binning.force_bin_existence(np.max(values))
-        self._reshape_data(add_left1 + add_left2, add_right1 + add_right2)
-        return add_left1 + add_left2, add_right1 + add_right2
 
     def _reshape_data(self, new_size, bin_map):
         """Reshape data to match new binning schema.
@@ -653,7 +644,7 @@ class Histogram1D(HistogramBase):
             try:
                 new_bins = self._binning.copy()
                 bin_map, bin_map2 = new_bins.adapt(other._binning)
-                print(bin_map, bin_map2)
+                # print(bin_map, bin_map2)
                 self.change_binning(new_bins, bin_map)
                 if bin_map2 is None:
                     self._frequencies += other.frequencies
