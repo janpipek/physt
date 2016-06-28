@@ -238,6 +238,9 @@ class Histogram1D(HistogramBase):
         self._reshape_data(new_binning.bin_count, bin_map)
         self._binning = new_binning
 
+    def is_adaptive(self):
+        return self._binning.is_adaptive()
+
     @property
     def shape(self):
         return (self.bins.shape[0],)
@@ -642,6 +645,7 @@ class Histogram1D(HistogramBase):
             if other.missed > 0:
                 raise RuntimeError("Cannot adapt histogram with missed values.")
             try:
+                # TODO: Fix state after exception
                 new_bins = self._binning.copy()
                 bin_map, bin_map2 = new_bins.adapt(other._binning)
                 # print(bin_map, bin_map2)
@@ -653,7 +657,7 @@ class Histogram1D(HistogramBase):
                     for old, new in bin_map2:
                         self._frequencies[new] += other._frequencies[old]
                         self._errors2[new] += other._frequencies[old]
-            except IOError:
+            except:
                 raise RuntimeError("Cannot find common binning for added histograms.")
         # TODO: Add subset / superset
         else:
@@ -665,8 +669,7 @@ class Histogram1D(HistogramBase):
         return self
 
     def __isub__(self, other):
-        self.__iadd__(other * (-1))
-        return self
+        return self.__iadd__(other * (-1))
 
         # if np.isscalar(other):
         #     raise RuntimeError("Cannot add constant to histograms.")
