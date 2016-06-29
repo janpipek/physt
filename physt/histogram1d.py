@@ -120,7 +120,26 @@ class Histogram1D(HistogramBase):
 
     @property
     def bins(self):
-        return self._binning.bins
+        """Array of all bin edges.
+
+        Returns
+        -------
+        numpy.ndarray
+            Wide-format [[leftedge1, rightedge1], ... [leftedgeN, rightedgeN]]
+        """
+        # TODO: Read-only copy
+        return self._binning.bins  # TODO: or this should be read-only copy?
+
+    @property
+    def numpy_bins(self):
+        """Bins in the format of numpy.
+
+        Returns
+        -------
+        numpy.ndarray
+        """
+        # TODO: If not consecutive, does not make sense
+        return self._binning.numpy_bins        
 
     @property
     def ndim(self):
@@ -153,7 +172,16 @@ class Histogram1D(HistogramBase):
         return self.underflow + self.overflow + self.inner_missed
 
     def mean(self):
-        if self._stats:
+        """Statistical mean of all values entered into histogram.
+
+        This number is precise, because we keep the necessary data
+        separate from bin contents.
+        
+        Returns
+        -------
+        float            
+        """
+        if self._stats:    # TODO: should be true always?    
             if self.total > 0:
                 return self._stats["sum"] / self.total
             else:
@@ -162,6 +190,20 @@ class Histogram1D(HistogramBase):
             return None    # TODO: or error
 
     def std(self, ddof=0):
+        """Standard deviation of all values entered into histogram.
+
+        This number is precise, because we keep the necessary data
+        separate from bin contents.
+
+        Parameters
+        ----------
+        ddof: int
+            Not yet used.        
+        
+        Returns
+        -------
+        float            
+        """        
         # TODO: Add DOF
         if self._stats:
             return np.sqrt(self.variance(ddof=ddof))
@@ -169,6 +211,20 @@ class Histogram1D(HistogramBase):
             return None    # TODO: or error
 
     def variance(self, ddof=0):
+        """Statistical variance of all values entered into histogram.
+
+        This number is precise, because we keep the necessary data
+        separate from bin contents.
+
+        Parameters
+        ----------
+        ddof: int
+            Not yet used.
+        
+        Returns
+        -------
+        float            
+        """        
         # TODO: Add DOF
         # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
         if self._stats:
@@ -186,18 +242,6 @@ class Histogram1D(HistogramBase):
     #     else:
     #         return None
 
-    @property
-    def total_width(self):
-        """Total width of all bins.
-
-        In inconsecutive histograms, the missing intervals are not counted in.
-
-        Returns
-        -------
-        float
-        """
-        return self.bin_sizes.sum()
-
     def normalize(self, inplace=False):
         """Normalize the histogram, so that the total weight is equal to 1.
 
@@ -212,22 +256,24 @@ class Histogram1D(HistogramBase):
         else:
             return self / self.total
 
-    @property
-    def numpy_bins(self):
-        """Bins in the format of numpy.
+    def is_adaptive(self):
+        """Whether the binning can be changed with operations.
 
         Returns
         -------
-        numpy.ndarray
+        bool
         """
-        # TODO: If not consecutive, does not make sense
-        return self._binning.numpy_bins
-
-    def is_adaptive(self):
         return self._binning.is_adaptive()
 
     @property
     def shape(self):
+        """Shape of histogram's data.
+
+        Returns
+        -------
+        tuple[int]
+            One-element tuple
+        """
         return (self.bins.shape[0],)
 
     @property
@@ -262,10 +308,22 @@ class Histogram1D(HistogramBase):
 
     @property
     def min_edge(self):
+        """Left edge of the first bin.
+
+        Returns
+        -------
+        float
+        """        
         return self.bin_left_edges[0]
 
     @property
     def max_edge(self):
+        """Right edge of the last bin.
+
+        Returns
+        -------
+        float
+        """        
         return self.bin_right_edges[-1]
 
     @property
@@ -287,6 +345,18 @@ class Histogram1D(HistogramBase):
         numpy.ndarray
         """
         return self.bin_right_edges - self.bin_left_edges
+
+    @property
+    def total_width(self):
+        """Total width of all bins.
+
+        In inconsecutive histograms, the missing intervals are not counted in.
+
+        Returns
+        -------
+        float
+        """
+        return self.bin_widths.sum()        
 
     @property
     def bin_sizes(self):
@@ -359,6 +429,15 @@ class Histogram1D(HistogramBase):
         return ixbin
 
     def fill_n(self, values, weights=None, dropna=True):
+        """Update histograms with a set of values.
+
+        Parameters
+        ----------
+        values: array_like
+        weights: Optional[array_like]
+        drop_na: Optional[bool]
+            If true (default), all nan's are skipped.
+        """
         values = np.asarray(values)
         if dropna:
             values = values[~np.isnan(values)]
@@ -396,6 +475,12 @@ class Histogram1D(HistogramBase):
         """Reshape data to match new binning schema.
 
         Fills frequencies and errors with 0.
+
+        Parameters
+        ----------
+        new_size: int
+        bin_map: Iterable[(old, new)] or None
+            If none, we can keep the data unchanged.
         """
         if bin_map is None:
             return
@@ -672,21 +757,6 @@ class Histogram1D(HistogramBase):
 
     def __isub__(self, other):
         return self.__iadd__(other * (-1))
-
-        # if np.isscalar(other):
-        #     raise RuntimeError("Cannot add constant to histograms.")
-        # if np.allclose(other.bins, self.bins):
-        #     self._frequencies -= other.frequencies
-        #     self.underflow -= other.underflow
-        #     self.overflow -= other.overflow
-        #     self.inner_missed -= other.inner_missed
-        #     self._errors2 += other.errors2
-        #     if self._stats:
-        #         self._stats["sum"] -= other._stats["sum"]
-        #         self._stats["sum2"] -= other._stats["sum2"]
-        # else:
-        #     raise RuntimeError("Bins must be the same when subtracting histograms.")
-        # return self
 
     def __imul__(self, other):
         if np.isscalar(other):
