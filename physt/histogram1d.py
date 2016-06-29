@@ -755,6 +755,10 @@ class Histogram1D(HistogramBase):
                 self._stats[key] += other._stats[key]
         return self
 
+    def __radd__(self, other):
+        if other == 0:
+            return self
+
     def __isub__(self, other):
         return self.__iadd__(other * (-1))
 
