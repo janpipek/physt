@@ -758,6 +758,8 @@ class Histogram1D(HistogramBase):
     def __radd__(self, other):
         if other == 0:
             return self
+        else:
+            return self + other
 
     def __isub__(self, other):
         return self.__iadd__(other * (-1))

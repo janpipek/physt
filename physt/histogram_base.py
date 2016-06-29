@@ -109,6 +109,12 @@ class HistogramBase(object):
         new += other
         return new
 
+    def __radd__(self, other):
+        if other == 0:    # Enable sum()
+            return self
+        else:
+            return self + other        
+
     def __sub__(self, other):
         new = self.copy()
         new -= other

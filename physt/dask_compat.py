@@ -7,27 +7,13 @@ options = {
 }
 
 
-def histogram1d(data, bins=None, *args, **kwargs):
-    compute = kwargs.pop("compute", True)
-    method = kwargs.pop("dask_method", "threaded")
+def _run_dask(name, data, compute, method, func):
     import dask
-    if not hasattr(data, "dask"):
-        data = dask.array.from_array(data, chunks=int(data.shape[0] / options["chunk_split"]))
-
-    name = "dask_adaptive"
-    if not kwargs.get("adaptive", True):
-        raise RuntimeError("Only adaptive histograms supported for dask (currently).")
-    kwargs["adaptive"] = True
-    def block_hist(array):
-        return original_h1(array, bins, *args, **kwargs)
-
     data_hash = str(id(data))[-6:]
-    graph = dict(("{0}-{1}-{2}".format(name, data_hash, i), (block_hist, k))
+    graph = dict(("{0}-{1}-{2}".format(name, data_hash, i), (func, k))
                     for i, k in enumerate(dask.core.flatten(data._keys())))
     items = list(graph.keys())
     graph.update(data.dask)   
-    #initial_name = "{0}-{1}-initial".format(name, data_hash)
-    # graph[initial_name] = original_h1(None, bins, *args, **kwargs)
     result_name = "{0}-{1}-result".format(name, data_hash)
     graph[result_name] = (sum, items)
     if compute:
@@ -40,8 +26,25 @@ def histogram1d(data, bins=None, *args, **kwargs):
     else:
         return graph, result_name
 
-    
 
+def histogram1d(data, bins=None, *args, **kwargs):
+    import dask
+    if not hasattr(data, "dask"):
+        data = dask.array.from_array(data, chunks=int(data.shape[0] / options["chunk_split"]))
+
+    if not kwargs.get("adaptive", True):
+        raise RuntimeError("Only adaptive histograms supported for dask (currently).")
+    kwargs["adaptive"] = True
+    
+    def block_hist(array):
+        return original_h1(array, bins, *args, **kwargs)
+    
+    return _run_dask(
+        name="dask_adaptive1d",
+        data=data,
+        compute=kwargs.pop("compute", True),
+        method=kwargs.pop("dask_method", "threaded"),
+        func=block_hist)
 
 
 h1 = histogram1d
@@ -52,10 +55,8 @@ def histogramdd(data, bins=None, *args, **kwargs):
     from dask.array.rechunk import rechunk
     if not hasattr(data, "dask"):
         data = dask.array.from_array(data, chunks=(int(data.shape[0] / options["chunk_split"]), data.shape[1]))
-
-    # print(data.shape)
-    data = rechunk(data, {1: data.shape[1]})
-    # print(data.chunks)
+    else:
+        data = rechunk(data, {1: data.shape[1]})
 
     name = "dask_adaptive"
     if not kwargs.get("adaptive", True):
@@ -64,15 +65,12 @@ def histogramdd(data, bins=None, *args, **kwargs):
     def block_hist(array):
         return original_hdd(array, bins, *args, **kwargs)
   
-    dsk = dict(((name, i, 0), (block_hist, k))
-                    for i, k in enumerate(dask.core.flatten(data._keys())))
-    dsk.update(data.dask)   
-    start = original_hdd(None, bins, *args, **kwargs)
-    for h in dsk:
-        h_ = dask.get(dsk, h)
-        if h[0] == "dask_adaptive":
-            start += h_
-    return start
+    return _run_dask(
+        name="dask_adaptive2d",
+        data=data,
+        compute=kwargs.pop("compute", True),
+        method=kwargs.pop("dask_method", "threaded"),
+        func=block_hist)
 
 
 def histogram2d(data1, data2, bins=None, *args, **kwargs):
