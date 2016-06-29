@@ -1,3 +1,11 @@
+0.3.3 (29th June 2016)
+----------------------
+- Fix: Many bugs
+- Changed: Binnings eworked to classes
+- Updated: Adaptive histogram
+- Added: Adaptive histogram multi-dimensional
+- Added: Basic support for dask (alpha)
+
 0.3.2 (3rd June 2016)
 ---------------------
 - Fix: arithmetics with ND histograms

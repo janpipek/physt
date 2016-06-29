@@ -1,6 +1,6 @@
 from . import binnings
 
-__version__ = str('0.3.2.1')
+__version__ = str('0.3.3')
 
 
 def histogram(data, bins=None, *args, **kwargs):

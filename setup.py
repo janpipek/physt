@@ -16,7 +16,7 @@ options = dict(
     url='https://github.com/janpipek/physt',
     install_requires = ['numpy'],
     extras_require = {
-        # 'all' : []
+        'all' : ['dask']
     },
     entry_points = {
         'console_scripts' : [
