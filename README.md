@@ -90,6 +90,7 @@ See more in docstring's and notebooks:
 
 ## Dependencies
 
+- Python 3.5 targeted, 2.7 passes unit tests
 - numpy
 - (optional) matplotlib - simple output
 - (optional) bokeh - simple output

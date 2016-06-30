@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from . import binnings
 
-__version__ = str('0.3.3')
+__version__ = str('0.3.4')
 
 
 def histogram(data, bins=None, *args, **kwargs):
@@ -134,7 +135,7 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
     return histogramdd(data, bins, *args, dim=2, **kwargs)
 
 
-def histogramdd(data, bins=10, *args, name=None, dim=None, axis_names=None, **kwargs):
+def histogramdd(data, bins=10, *args, **kwargs):
     """Facade function to create n-dimensional histograms.
 
     3D variant of this function is also aliased as "h3".
@@ -169,6 +170,9 @@ def histogramdd(data, bins=10, *args, name=None, dim=None, axis_names=None, **kw
 
     adaptive = kwargs.pop("adaptive", False)
     dropna = kwargs.pop("dropna", False)
+    name = kwargs.pop("name", None)
+    dim = kwargs.pop("dim", None)
+    axis_names = kwargs.pop("axis_names", None)
 
     # pandas - guess axis names
     if not "axis_names" in kwargs:

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 """Different binning algorithms/schemas for the histograms."""
 
 import numpy as np

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from .histogram_nd import HistogramND
 from .histogram1d import Histogram1D
 from . import binnings, histogram_nd
@@ -173,7 +174,8 @@ def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwa
             phi_range = kwargs["phi_range"]        
         elif "range" in "kwargs":
             phi_range = kwargs["range"][1]
-        phi_bins = np.linspace(*phi_range, phi_bins + 1)
+        phi_range = list(phi_range) + [phi_bins + 1]
+        phi_bins = np.linspace(*phi_range)
 
     if dropna:
         data = data[~np.isnan(data).any(axis=1)]
