@@ -966,7 +966,7 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
 
     # Create 1D arrays to work on
     data = np.asarray(data).flatten()
-    if weights:
+    if weights is not None:
         weights = np.asarray(weights, dtype=float).flatten()
         if weights.shape != data.shape:
             raise RuntimeError("Weight must have the same shape as data")
