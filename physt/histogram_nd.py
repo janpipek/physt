@@ -6,16 +6,19 @@ import numpy as np
 
 class HistogramND(HistogramBase):
     """Multi-dimensional histogram data.
+
+    Attributes
+    ----------
+
     """
 
     def __init__(self, dimension, binnings, frequencies=None, **kwargs):
-        self._dimension = dimension
-        self._binnings = binnings
-        # self._bins = [binning.bins for binning in self._binnings]
-
         # Bins + checks
-        if len(self._binnings) != self._dimension:
-            raise RuntimeError("bins must be a sequence of {0} schemas".format(self._dimension))
+        if len(binnings) != dimension:
+            raise RuntimeError("bins must be a sequence of {0} schemas".format(dimension))
+
+        # self.ndim = dimension
+        self._binnings = binnings
 
         # Frequencies + checks
         if frequencies is None:
@@ -34,8 +37,8 @@ class HistogramND(HistogramBase):
 
         # Names etc.
         self.name = kwargs.get("name", None)
-        self.axis_names = kwargs.get("axis_names", ["axis{0}".format(i) for i in range(self._dimension)])
-        if len(self.axis_names) != self._dimension:
+        self.axis_names = kwargs.get("axis_names", ["axis{0}".format(i) for i in range(self.ndim)])
+        if len(self.axis_names) != self.ndim:
             raise RuntimeError("The length of axis names must be equal to histogram dimension.")
 
         # Errors + checks
@@ -62,15 +65,7 @@ class HistogramND(HistogramBase):
 
     @property
     def numpy_bins(self):
-        return [binning.numpy_bins for binning in self._binnings]
-
-    @property
-    def ndim(self):
-        return self._dimension
-
-    @property
-    def shape(self):
-        return tuple(bins.bin_count for bins in self._binnings)
+        return [binning.numpy_bins for binning in self._binnings]  
 
     def __getitem__(self, item):
         raise NotImplementedError()
@@ -87,14 +82,14 @@ class HistogramND(HistogramBase):
     def bin_sizes(self):
         # TODO: Some kind of caching?
         sizes = self.get_bin_widths(0)
-        for i in range(1, self._dimension):
+        for i in range(1, self.ndim):
             sizes = np.outer(sizes, self.get_bin_widths(i))
         return sizes
 
     @property
     def total_size(self):
         """The default size of the bin space."""
-        return np.product([self.get_bin_widths(i) for i in range(self._dimension)])
+        return np.product([self.get_bin_widths(i) for i in range(self.ndim)])
 
     def get_bin_left_edges(self, axis=None):
         if axis is not None:
@@ -131,18 +126,11 @@ class HistogramND(HistogramBase):
             else:
                 return None
         else:
-            ixbin = tuple(self.find_bin(value[i], i) for i in range(self._dimension))
+            ixbin = tuple(self.find_bin(value[i], i) for i in range(self.ndim))
             if None in ixbin:
                 return None
             else:
                 return ixbin
-
-    def is_adaptive(self):
-        return all(binning.is_adaptive() for binning in self._binnings)
-
-    def set_adaptive(self, value=True):
-        for binning in self._binnings:
-            binning.set_adaptive(value)
 
     def change_binning(self, new_binning, bin_map, axis=0):
         """Set new binnning and update the bin contents according to a map.
@@ -277,7 +265,7 @@ class HistogramND(HistogramBase):
             return False
         if not self.ndim == other.ndim:
             return False
-        for i in range(self._dimension):
+        for i in range(self.ndim):
             if not np.allclose(other.bins[i], self.bins[i]):
                 return False
         if not np.allclose(other.errors2, self.errors2):

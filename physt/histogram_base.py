@@ -3,7 +3,21 @@ import numpy as np
 
 
 class HistogramBase(object):
-    """Behaviour shared between all histogram classes."""
+    """Behaviour shared between all histogram classes.
+
+    The most important daughter classes are:
+    - Histogram1D
+    - HistogramND   
+
+    Attributes
+    ----------
+    _binnings : Iterable[BinningBase]
+        Schema for binning(s)
+    _frequencies : array_like
+        Bin contents
+    _errors2 : array_like
+        Square errors associated with the bin contents
+    """
 
     # @property
     # def bins(self):
@@ -21,27 +35,75 @@ class HistogramBase(object):
     #     return [binning.numpy_bins for binning in self._binnings]
 
     @property
+    def shape(self):
+        """Shape of histogram's data.
+
+        Returns
+        -------
+        tuple[int]
+            One-element tuple
+        """        
+        return tuple(bins.bin_count for bins in self._binnings)
+
+    @property
+    def ndim(self):
+        """Dimensionality of histogram's data.
+
+        i.e. the number of axes along which we bin the values.
+
+        Returns
+        -------
+        int
+        """
+        return len(self._binnings)
+
+
+    @property
+    def bin_count(self):
+        """Total number of bins.
+
+        Returns
+        -------
+        int
+        """
+        return np.product(self.shape)        
+
+    @property
     def frequencies(self):
         """Frequencies (values) of the histogram.
 
         Returns
         -------
         numpy.ndarray
-            One-dimensional array of bin frequencies
+            Array of bin frequencies
         """
         return self._frequencies
 
     @property
     def densities(self):
-        """Frequencies normalized by bin widths.
+        """Frequencies normalized by bin sizes.
 
-        Useful when bins are not of the same width.
+        Useful when bins are not of the same size.
 
         Returns
         -------
         numpy.ndarray
         """
-        return (self._frequencies / self.bin_sizes) / self.total
+        return (self._frequencies / self.bin_sizes)
+
+    def normalize(self, inplace=False):
+        """Normalize the histogram, so that the total weight is equal to 1.
+
+        See also
+        --------
+        densities
+
+        """
+        if inplace:
+            self /= self.total
+            return self
+        else:
+            return self / self.total        
 
     @property
     def errors2(self):
@@ -73,8 +135,72 @@ class HistogramBase(object):
         """
         return self._frequencies.sum()
 
+    def is_adaptive(self):
+        """Whether the binning can be changed with operations.
+
+        Returns
+        -------
+        bool
+        """
+        return all(binning.is_adaptive() for binning in self._binnings)
+
+    def set_adaptive(self, value=True):
+        for binning in self._binnings:
+            binning.set_adaptive(value)
+
+    def change_binning(self, new_binning, bin_map, axis=0):
+        """Set new binnning and update the bin contents according to a map.
+
+        Fills frequencies and errors with 0.
+        It's the caller's responsibility to provide correct binning and map.
+
+        Parameters
+        ----------
+        new_binning: physt.binnings.BinningBase
+        bin_map: Iterable[tuple]
+            tuples contain bin indices (old, new)
+        axis: int
+            What axis does the binning describe(0..ndim-1)
+        """
+        axis = int(axis)
+        if axis < 0 or axis >= self.ndim:
+            raise RuntimeError("Axis must be in range 0..(ndim-1)")
+        self._reshape_data(new_binning.bin_count, bin_map, axis)
+        self._binnings[axis] = new_binning    
+
+    def _reshape_data(self, new_size, bin_map, axis=0):
+        """Reshape data to match new binning schema.
+
+        Fills frequencies and errors with 0.
+
+        Parameters
+        ----------
+        new_size: int
+        bin_map: Iterable[(old, new)] or None
+            If none, we can keep the data unchanged.
+        axis:
+            On which axis to apply        
+        """
+        if bin_map is None:    
+            return
+        else:
+            new_shape = list(self.shape)
+            new_shape[axis] = new_size            
+            new_frequencies = np.zeros(new_shape, dtype=float)
+            new_errors2 = np.zeros(new_shape, dtype=float)
+            if self._frequencies is not None and self._frequencies.shape[0] > 0:
+                for (old, new) in bin_map:      # Generic enough
+                    new_index = [slice(None) for i in range(self.ndim)]
+                    new_index[axis] = new
+                    old_index = [slice(None) for i in range(self.ndim)]
+                    old_index[axis] = old
+                    new_frequencies[new_index] = self._frequencies[old_index]
+                    new_errors2[new_index] = self._errors2[old_index]
+            self._frequencies = new_frequencies
+            self._errors2 = new_errors2           
+
     def has_same_bins(self, other):
-        """Whether two histogram share the same binning.
+        """Whether two histograms share the same binning.
 
         Returns
         -------

@@ -17,7 +17,6 @@ class Histogram1D(HistogramBase):
     Attributes
     ----------
     frequencies: numpy.ndarray
-    bins: numpy.ndarray
     errors2: numpy.ndarray
     underflow: float
     name: str
@@ -54,7 +53,7 @@ class Histogram1D(HistogramBase):
         from .binnings import BinningBase, static_binning
         if not isinstance(binning, BinningBase):
             binning = static_binning(None, binning)
-        self._binning = binning
+        self._binnings = [ binning ]
 
         if frequencies is None:
             self._frequencies = np.zeros(self.bins.shape[0])
@@ -120,6 +119,15 @@ class Histogram1D(HistogramBase):
                               underflow=underflow, name=self.name, axis_name=self.axis_name)
 
     @property
+    def _binning(self):
+        """Adapter property for HistogramBase interface"""
+        return self._binnings[0]
+
+    @_binning.setter
+    def _binning(self, value):
+        self._binnings = [value]
+
+    @property
     def bins(self):
         """Array of all bin edges.
 
@@ -141,10 +149,6 @@ class Histogram1D(HistogramBase):
         """
         # TODO: If not consecutive, does not make sense
         return self._binning.numpy_bins        
-
-    @property
-    def ndim(self):
-        return 1
 
     @property
     def cumulative_frequencies(self):
@@ -242,50 +246,6 @@ class Histogram1D(HistogramBase):
     #         return 1 / total * np.sqrt(self.variance)
     #     else:
     #         return None
-
-    def normalize(self, inplace=False):
-        """Normalize the histogram, so that the total weight is equal to 1.
-
-        See also
-        --------
-        densities
-
-        """
-        if inplace:
-            self /= self.total
-            return self
-        else:
-            return self / self.total
-
-    def is_adaptive(self):
-        """Whether the binning can be changed with operations.
-
-        Returns
-        -------
-        bool
-        """
-        return self._binning.is_adaptive()
-
-    @property
-    def shape(self):
-        """Shape of histogram's data.
-
-        Returns
-        -------
-        tuple[int]
-            One-element tuple
-        """
-        return (self.bins.shape[0],)
-
-    @property
-    def bin_count(self):
-        """Total number of bins.
-
-        Returns
-        -------
-        int
-        """
-        return np.product(self.shape)
 
     @property
     def bin_left_edges(self):
@@ -456,32 +416,8 @@ class Histogram1D(HistogramBase):
         for key in self._stats:
             self._stats[key] += stats.get(key, 0.0)
 
-    def change_binning(self, new_binning, bin_map):
-        """Set new binnning and update the bin contents according to a map.
-
-        Fills frequencies and errors with 0.
-        It's the caller's responsibility to provide correct binning and map.
-
-        Parameters
-        ----------
-        new_binning: physt.binnings.BinningBase
-        bin_map: Iterable[tuple]
-            tuples contain bin indices (old, new)
-        """
-        # print("change:", bin_map, new_binning.bin_count)
-        self._reshape_data(new_binning.bin_count, bin_map)
-        self._binning = new_binning
-
-    def _reshape_data(self, new_size, bin_map):
-        """Reshape data to match new binning schema.
-
-        Fills frequencies and errors with 0.
-
-        Parameters
-        ----------
-        new_size: int
-        bin_map: Iterable[(old, new)] or None
-            If none, we can keep the data unchanged.
+    def _reshape_data(self, new_size, bin_map, axis=0):
+        """Optimized version of HistogramBase._reshape_data
         """
         if bin_map is None:
             return
@@ -490,8 +426,8 @@ class Histogram1D(HistogramBase):
             new_errors2 = np.zeros(new_size, dtype=float)
             if self._frequencies is not None and self._frequencies.shape[0] > 0:
                 for (old, new) in bin_map:      # Generic enough
-                    new_frequencies[new] = self._frequencies[old]
-                    new_errors2[new] = self._errors2[old]
+                    new_frequencies[new] += self._frequencies[old]
+                    new_errors2[new] += self._errors2[old]
             self._frequencies = new_frequencies
             self._errors2 = new_errors2
 
