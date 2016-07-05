@@ -1,3 +1,7 @@
+0.3.5 (5th July 2016)
+---------------------
+- Added: Merging of bins
+
 0.3.4 (30th June 2016)
 ----------------------
 - Added: Support for Python 2.7
