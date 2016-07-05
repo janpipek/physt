@@ -163,7 +163,7 @@ class BinningBase(object):
         """
         return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
 
-    def as_fixed_width(self, copy):
+    def as_fixed_width(self, copy=True):
         """Convert binning to recipe with fixed width.
 
         Parameters
@@ -190,6 +190,33 @@ class BinningBase(object):
         """
         raise NotImplementedError()
 
+    def apply_bin_map(self, bin_map):
+        """
+
+        Parameters
+        ----------
+        bin_map: Iterator(tuple)
+            The bins must be in ascending order
+
+        Returns
+        -------
+        BinningBase
+        """
+        length = max(item[1] for item in bin_map) + 1
+        bins = np.empty((length, 2), dtype=float)
+        bins[:] = np.nan
+        for old, new in bin_map:
+            if np.isnan(bins[new, 0]):
+                bins[new, :] = self.bins[old, :]
+            else:
+                if bins[new, 1] != self.bins[old, 0]:
+                    raise RuntimeError("Merging non-consecutive bins")
+                bins[new, 1] = self.bins[old, 1]
+        if np.any(np.isnan(bins)):
+            raise RuntimeError("New binning is not complete.")
+        includes_right_edge = (self.includes_right_edge and bins[-1, 1] == self.bins[-1, 1])
+        binning = StaticBinning(bins, includes_right_edge=includes_right_edge)
+        return binning
 
 class StaticBinning(BinningBase):
     inconsecutive_allowed = True

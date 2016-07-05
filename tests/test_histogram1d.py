@@ -3,6 +3,7 @@ import os
 sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 from physt.histogram1d import Histogram1D
 from physt.binnings import StaticBinning
+from physt import h1
 import numpy as np
 import pytest
 
@@ -242,6 +243,15 @@ class TestArithmetic(object):
         assert np.allclose(new.frequencies, example.frequencies / 2)
         new /= 2
         assert np.allclose(new.frequencies, example.frequencies / 4)
+
+
+class TestMerging(object):
+    def test_2(self):
+        data = np.random.rand(100)
+        hh = h1(data, 120)
+        hha = h1(data, 60)
+        hhb = hh.merge_bins(2, inplace=False)
+        assert hha == hhb
 
 
 class TestConversion(object):

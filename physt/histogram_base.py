@@ -168,6 +168,24 @@ class HistogramBase(object):
         self._reshape_data(new_binning.bin_count, bin_map, axis)
         self._binnings[axis] = new_binning    
 
+    def merge_bins(self, amount=None, min_frequency=None, axis=None, inplace=True):
+        if not inplace:
+            histogram = self.copy()
+            histogram.merge_bins(amount, min_frequency=min_frequency, axis=axis)
+            return histogram
+        elif axis is None:
+            for i in range(self.ndim):
+                self.merge_bins(amount=amount, axis=i)
+        else:
+            if amount is not None:
+                if not amount == int(amount):
+                    raise RuntimeError("Amount must be integer")
+                bin_map = [(i, i // amount) for i in range(self.shape[axis])]
+                new_binning = self._binnings[axis].apply_bin_map(bin_map)
+                self.change_binning(new_binning, bin_map, axis=axis)
+            else:
+                raise NotImplementedError("Not yet implemented.")
+
     def _reshape_data(self, new_size, bin_map, axis=0):
         """Reshape data to match new binning schema.
 

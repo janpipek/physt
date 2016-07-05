@@ -152,5 +152,15 @@ class TestArithmetics(object):
             h - 4               
 
 
+class TestMerging(object):
+    def test_2(self):
+        data1 = np.random.rand(100)
+        data2 = np.random.rand(100)
+        hh = h2(data1, data2, 120)
+        hha = h2(data1, data2, 60)
+        hhb = hh.merge_bins(2, inplace=False)
+        assert hha == hhb
+
+
 if __name__ == "__main__":
     pytest.main(__file__)
