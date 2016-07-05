@@ -130,50 +130,7 @@ class HistogramND(HistogramBase):
             if None in ixbin:
                 return None
             else:
-                return ixbin
-
-    def change_binning(self, new_binning, bin_map, axis=0):
-        """Set new binnning and update the bin contents according to a map.
-
-        Fills frequencies and errors with 0.
-        It's the caller's responsibility to provide correct binning and map.
-
-        Parameters
-        ----------
-        new_binning: physt.binnings.BinningBase
-        bin_map: Iterable[tuple]
-            tuples contain bin indices (old, new)
-        axis: int
-            What axis does the binning describe(0..ndim-1)
-        """
-        axis = int(axis)
-        if axis < 0 or axis >= self.ndim:
-            raise RuntimeError("Axis must be in range 0..(ndim-1)")
-        self._reshape_data(new_binning.bin_count, bin_map, axis)
-        self._binnings[axis] = new_binning     
-
-    def _reshape_data(self, new_size, bin_map, axis=0):
-        """Reshape data to match new binning schema.
-
-        Fills frequencies and errors with 0.
-        """
-        if bin_map is None:    
-            return
-        else:
-            new_shape = list(self.shape)
-            new_shape[axis] = new_size            
-            new_frequencies = np.zeros(new_shape, dtype=float)
-            new_errors2 = np.zeros(new_shape, dtype=float)
-            if self._frequencies is not None and self._frequencies.shape[0] > 0:
-                for (old, new) in bin_map:      # Generic enough
-                    new_index = [slice(None) for i in range(self.ndim)]
-                    new_index[axis] = new
-                    old_index = [slice(None) for i in range(self.ndim)]
-                    old_index[axis] = old
-                    new_frequencies[new_index] = self._frequencies[old_index]
-                    new_errors2[new_index] = self._errors2[old_index]
-            self._frequencies = new_frequencies
-            self._errors2 = new_errors2   
+                return ixbin 
 
     def fill(self, value, weight=1):
         for i, binning in enumerate(self._binnings):

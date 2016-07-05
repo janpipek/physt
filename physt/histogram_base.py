@@ -176,7 +176,7 @@ class HistogramBase(object):
         Parameters
         ----------
         new_size: int
-        bin_map: Iterable[(old, new)] or None
+        bin_map: Iterable[(old, new)] or int or None
             If none, we can keep the data unchanged.
         axis:
             On which axis to apply        
@@ -188,16 +188,28 @@ class HistogramBase(object):
             new_shape[axis] = new_size            
             new_frequencies = np.zeros(new_shape, dtype=float)
             new_errors2 = np.zeros(new_shape, dtype=float)
-            if self._frequencies is not None and self._frequencies.shape[0] > 0:
+            self._apply_bin_map(
+                old_frequencies=self._frequencies, new_frequencies=new_frequencies,
+                old_errors2=self._errors2, new_errors2=new_errors2,
+                bin_map=bin_map, axis=axis)                
+            self._frequencies = new_frequencies
+            self._errors2 = new_errors2    
+
+    def _apply_bin_map(self, old_frequencies, new_frequencies, old_errors2, new_errors2, bin_map, axis=0):
+        if old_frequencies is not None and old_frequencies.shape[axis] > 0:
+            if isinstance(bin_map, int):
+                new_index = [slice(None) for i in range(self.ndim)]
+                new_index[axis] = slice(bin_map, bin_map + old_frequencies.shape[axis])          
+                new_frequencies[new_index] += old_frequencies
+                new_errors2[new_index] += old_errors2
+            else:
                 for (old, new) in bin_map:      # Generic enough
                     new_index = [slice(None) for i in range(self.ndim)]
                     new_index[axis] = new
                     old_index = [slice(None) for i in range(self.ndim)]
                     old_index[axis] = old
-                    new_frequencies[new_index] = self._frequencies[old_index]
-                    new_errors2[new_index] = self._errors2[old_index]
-            self._frequencies = new_frequencies
-            self._errors2 = new_errors2           
+                    new_frequencies[new_index] += old_frequencies[old_index]
+                    new_errors2[new_index] += old_errors2[old_index]       
 
     def has_same_bins(self, other):
         """Whether two histograms share the same binning.

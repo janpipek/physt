@@ -416,20 +416,20 @@ class Histogram1D(HistogramBase):
         for key in self._stats:
             self._stats[key] += stats.get(key, 0.0)
 
-    def _reshape_data(self, new_size, bin_map, axis=0):
-        """Optimized version of HistogramBase._reshape_data
-        """
-        if bin_map is None:
-            return
-        else:
-            new_frequencies = np.zeros(new_size, dtype=float)
-            new_errors2 = np.zeros(new_size, dtype=float)
-            if self._frequencies is not None and self._frequencies.shape[0] > 0:
-                for (old, new) in bin_map:      # Generic enough
-                    new_frequencies[new] += self._frequencies[old]
-                    new_errors2[new] += self._errors2[old]
-            self._frequencies = new_frequencies
-            self._errors2 = new_errors2
+    # def _reshape_data(self, new_size, bin_map, axis=0):
+    #     """Optimized version of HistogramBase._reshape_data
+    #     """
+    #     if bin_map is None:
+    #         return
+    #     else:
+    #         new_frequencies = np.zeros(new_size, dtype=float)
+    #         new_errors2 = np.zeros(new_size, dtype=float)
+    #         if self._frequencies is not None and self._frequencies.shape[0] > 0:
+    #             for (old, new) in bin_map:      # Generic enough
+    #                 new_frequencies[new] += self._frequencies[old]
+    #                 new_errors2[new] += self._errors2[old]
+    #         self._frequencies = new_frequencies
+    #         self._errors2 = new_errors2
 
     def plot(self, histtype='bar', cumulative=False, density=False, errors=False, backend="matplotlib", ax=None, **kwargs):
         """Plot the histogram.

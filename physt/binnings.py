@@ -74,9 +74,11 @@ class BinningBase(object):
 
         Returns
         -------
-        bin_map: Iterable[tuple] or None
+        bin_map: Iterable[tuple] or None or int
             None => There was no change in bins
+            int => The bins are only shifted (allows mass assignment)
             Otherwise => the iterable contains tuples (old bin index, new bin index)
+                new bin index can occur multiple times, which corresponds to bin merging
         """
         # TODO: Rename to something less evil
         if not self.is_adaptive():
@@ -299,7 +301,8 @@ class FixedWidthBinning(BinningBase):
             if add_left or add_right:
                 self._bins = None
                 self._numpy_bins = None
-                return ((i, i + add_left) for i in range(original_count))
+                return add_left
+                # return ((i, i + add_left) for i in range(original_count))
             else:
                 return None
 
