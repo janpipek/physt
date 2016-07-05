@@ -169,22 +169,58 @@ class HistogramBase(object):
         self._binnings[axis] = new_binning    
 
     def merge_bins(self, amount=None, min_frequency=None, axis=None, inplace=True):
+        """Reduce the number of bins and add their content:
+
+        Parameters
+        ----------
+        amount: int
+            How many adjacent bins to join together.
+        min_frequency: float
+            Try to have at least this value in each bin
+            (this is not enforce e.g. for minima between high bins)
+        axis: int or None
+            On which axis to do this (None => all)
+        inplace:
+            Whether to modify this histogram or return a new one
+
+        Returns
+        -------
+        HistogramBase or None
+            if inplace, return
+        """
         if not inplace:
             histogram = self.copy()
             histogram.merge_bins(amount, min_frequency=min_frequency, axis=axis)
             return histogram
         elif axis is None:
             for i in range(self.ndim):
-                self.merge_bins(amount=amount, axis=i)
+                self.merge_bins(amount=amount, min_frequency=min_frequency, axis=i)
         else:
             if amount is not None:
                 if not amount == int(amount):
                     raise RuntimeError("Amount must be integer")
-                bin_map = [(i, i // amount) for i in range(self.shape[axis])]
-                new_binning = self._binnings[axis].apply_bin_map(bin_map)
-                self.change_binning(new_binning, bin_map, axis=axis)
+                bin_map = [(i, i // amount) for i in range(self.shape[axis])]    
+            elif min_frequency is not None:
+                if self.ndim == 1:
+                    check = self.frequencies
+                else:
+                    check = self.projection(axis).frequencies
+                bin_map = []
+                current_new = 0
+                current_sum = 0
+                for i, freq in enumerate(check):
+                    if freq >= min_frequency and current_sum > 0:
+                        current_sum = 0
+                        current_new += 1
+                    bin_map.append((i, current_new))
+                    current_sum += freq
+                    if current_sum > min_frequency:
+                        current_sum = 0
+                        current_new += 1
             else:
                 raise NotImplementedError("Not yet implemented.")
+            new_binning = self._binnings[axis].apply_bin_map(bin_map)
+            self.change_binning(new_binning, bin_map, axis=axis)
 
     def _reshape_data(self, new_size, bin_map, axis=0):
         """Reshape data to match new binning schema.
