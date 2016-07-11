@@ -326,6 +326,13 @@ class TestDtype(object):
         with pytest.raises(RuntimeError):
             example = h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
 
+    def test_update(self):
+        example = h1(values)
+        example.dtype = np.int16
+        assert example.dtype == np.int16
+        assert example.frequencies.dtype == np.int16
+        # assert example.errors2 = np.int16
+
 
 if __name__ == "__main__":
     pytest.main(__file__)

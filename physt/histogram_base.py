@@ -67,6 +67,24 @@ class HistogramBase(object):
         """
         return self._frequencies.dtype
 
+    @dtype.setter
+    def dtype(self, value):
+        value = np.dtype(value)
+        ok = False
+        if np.issubdtype(value, np.integer):
+            if np.issubdtype(self.dtype, np.integer):
+                ok = True
+            elif np.array_equal(self._frequencies, self._errors2):
+                ok = True
+        elif np.issubdtype(value, np.float):
+            ok = True
+        if ok:
+            self._frequencies = self._frequencies.astype(value)
+            self._errors2 = self._errors2.astype(value)
+            # TODO: Overflows and underflows and stuff...
+        else:
+            raise RuntimeError("Cannot convert ")
+
     @property
     def bin_count(self):
         """Total number of bins.
