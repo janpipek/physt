@@ -58,7 +58,7 @@ class Histogram1D(HistogramBase):
         if frequencies is None:
             self._frequencies = np.zeros(self.bins.shape[0])
         else:
-            frequencies = np.asarray(frequencies, dtype=float)
+            frequencies = np.asarray(frequencies)
             if frequencies.shape != (self.bins.shape[0],):
                 raise RuntimeError("Values must have same dimension as bins.")
             if np.any(frequencies < 0):
@@ -858,7 +858,7 @@ class Histogram1D(HistogramBase):
         return s
 
 
-def calculate_frequencies(data, binning, weights=None, validate_bins=True, already_sorted=False):
+def calculate_frequencies(data, binning, weights=None, validate_bins=True, already_sorted=False, dtype=None):
     """Get frequencies and bin errors from the data.
 
     Parameters
@@ -873,6 +873,8 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
         If True (default), bins are validated to be in ascending order.
     already_sorted : bool, optional
         If True, the data being entered are already sorted, no need to sort them once more.
+    dtype: Optional[type]
+        Underlying type for the histogram. If weights are specified, default is float. Otherwise long        
 
     Returns
     -------
@@ -905,14 +907,17 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
         if not bin_utils.is_rising(bins):
             raise RuntimeError("Bins must be rising.")
 
+    if dtype is None:
+        dtype = float if weights is None else np.int64
+
     # Create 1D arrays to work on
     data = np.asarray(data).flatten()
     if weights is not None:
-        weights = np.asarray(weights, dtype=float).flatten()
+        weights = np.asarray(weights, dtype=dtype).flatten()
         if weights.shape != data.shape:
             raise RuntimeError("Weight must have the same shape as data")
     else:
-        weights = np.ones(data.shape, dtype=int)
+        weights = np.ones(data.shape, dtype=dtype)
 
     # Data sorting
     if not already_sorted:
@@ -921,8 +926,8 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
         weights = weights[args]
 
     # Fill frequencies and errors
-    frequencies = np.zeros(bins.shape[0], dtype=float)
-    errors2 = np.zeros(bins.shape[0], dtype=float)
+    frequencies = np.zeros(bins.shape[0], dtype=dtype)
+    errors2 = np.zeros(bins.shape[0], dtype=dtype)
     for xbin, bin in enumerate(bins):
         start = np.searchsorted(data, bin[0], side="left")
         if xbin == 0:
