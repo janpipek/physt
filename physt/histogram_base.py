@@ -69,6 +69,13 @@ class HistogramBase(object):
 
     @dtype.setter
     def dtype(self, value):
+        """Change data type of the histogram.
+
+        Allowed conversions:
+        - from integral to float types
+        - between the same category of type (float/integer)
+        - from float types to integer if weights are trivial
+        """
         value = np.dtype(value)
         ok = False
         if np.issubdtype(value, np.integer):
@@ -83,7 +90,7 @@ class HistogramBase(object):
             self._errors2 = self._errors2.astype(value)
             # TODO: Overflows and underflows and stuff...
         else:
-            raise RuntimeError("Cannot convert ")
+            raise RuntimeError("Cannot change histogram dtype.")
 
     @property
     def bin_count(self):
