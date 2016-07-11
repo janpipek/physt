@@ -1,37 +1,54 @@
 from ..histogram1d import Histogram1D
+from ..histogram_nd import Histogram2D
 from ..binnings import fixed_width_binning
 import codecs
 import numpy as np
 
 
 def load_csv(path):
-    meta = {}
+    """Loads a histogram as output from Geant4 analysis tools in CSV format.
+
+    Parameters
+    ----------
+    path: str
+        Path to the CSV file
+    """
+    meta = []
     data = []
     with codecs.open(path, encoding="ASCII") as in_file:
         for line in in_file:
             if line.startswith("#"):
                 key, value = line[1:].strip().split(" ", 1)
-                meta[key] = value   # TODO: There are duplicit entries :-()
+                meta.append((key, value))   # TODO: There are duplicit entries :-()
             else:
                 try:
                     data.append([float(frag) for frag in line.split(",")])
                 except:
                     pass
     data = np.asarray(data)    
-    ndim = int(meta["dimension"])
+    ndim = int(_get(meta, "dimension"))
     if ndim == 1:
         return _create_h1(data, meta)
     elif ndim == 2:
         return _create_h2(data, meta)
 
 
+def _get(pseudodict, key, single=True):
+    """Helper method for getting values from "multi-dict"s"""
+    matches = [item[1] for item in pseudodict if item[0] == key]
+    if single:
+        return matches[0]
+    else:
+        return matches        
+
+
 def _create_h1(data, meta):
-    _, bin_count, min_, max_ = meta["axis"].split()
+    _, bin_count, min_, max_ = _get(meta, "axis").split()
     bin_count = int(bin_count)
     min_ = float(min_)
     max_ = float(max_)
     binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_))
-    h = Histogram1D(binning, name=meta["title"])
+    h = Histogram1D(binning, name=_get(meta, "title"))
     h._frequencies = data[1:-1,1]
     h._errors2 = data[1:-1,2]
     h.underflow = data[0,1]
@@ -44,4 +61,23 @@ def _create_h1(data, meta):
 
 
 def _create_h2(data, meta):
-    raise NotImplementedError()
+    binnings = []
+    axes = _get(meta, "axis", False)
+    for axis in axes:
+        _, bin_count, min_, max_ = axis.split()
+        bin_count = int(bin_count)
+        min_ = float(min_)
+        max_ = float(max_)
+        binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_)) 
+        binnings.append(binning)       
+
+    h = Histogram2D(binnings, name=_get(meta, "title"))
+
+    # TODO: Are the shapes in correct order?
+    frequencies = data[:,1].reshape([b + 2 for b in h.shape])
+    h._frequencies = frequencies[1:-1,1:-1]
+
+    errors2 = data[:,2].reshape([b + 2 for b in h.shape])
+    h._errors = errors2[1:-1,1:-1]
+
+    return h
