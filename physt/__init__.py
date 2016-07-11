@@ -40,6 +40,8 @@ def histogram(data, bins=None, *args, **kwargs):
         name of the variable on x axis
     adaptive: bool
         whether we want the bins to be modifiable (useful for continuous filling of a priori unknown data)
+    dtype: type
+        customize underlying data type: default int64 (without weight) or float (with weights)
 
     Other numpy.histogram parameters are excluded, see the methods of the Histogram1D class itself.
 
@@ -56,6 +58,7 @@ def histogram(data, bins=None, *args, **kwargs):
     from .binnings import calculate_bins
 
     adaptive = kwargs.pop("adaptive", False)
+    dtype = kwargs.pop("dtype", None)
 
     if isinstance(data, tuple) and isinstance(data[0], str):    # Works for groupby DataSeries
         return histogram(data[1], bins, *args, name=data[0], **kwargs)
@@ -85,7 +88,8 @@ def histogram(data, bins=None, *args, **kwargs):
         if array is not None:
             frequencies, errors2, underflow, overflow, stats = calculate_frequencies(array,
                                                                                      binning=binning,
-                                                                                     weights=weights)
+                                                                                     weights=weights,
+                                                                                     dtype=dtype)
         else:
             frequencies = None
             errors2 = None

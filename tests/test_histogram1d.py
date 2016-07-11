@@ -309,6 +309,24 @@ class TestFill(object):
         copy.fill(1.44, weight=2.2)
         assert np.allclose(copy.frequencies, [4, 3.2, 3, 7.2])
 
+
+class TestDtype(object):
+    def test_simple(self):
+        example = h1(values)
+        assert example.dtype == np.int64
+
+    def test_with_weights(self):
+        example = h1(values, weights=[1, 2, 2.1, 3.2])
+        assert example.dtype == np.float
+
+    def test_explicit(self):
+        example = h1(values, dtype=float)
+        assert example.dtype == float
+
+        with pytest.raises(RuntimeError):
+            example = h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
+
+
 if __name__ == "__main__":
     pytest.main(__file__)
 

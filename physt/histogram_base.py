@@ -57,6 +57,15 @@ class HistogramBase(object):
         """
         return len(self._binnings)
 
+    @property
+    def dtype(self):
+        """Data type of the histogram.
+
+        Returns
+        -------
+        type
+        """
+        return self._frequencies.dtype
 
     @property
     def bin_count(self):
