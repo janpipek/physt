@@ -469,7 +469,8 @@ class Histogram1D(HistogramBase):
             If cmap is used, maximum value to include in the colormap (higher are clipped, default: maximum bin value)       
         label: str (Optional)
             Label to include in the legend
-
+        show_values: bool
+            Whether to show numbers above the bin
         You can also specify arbitrary matplotlib arguments, they are forwarded to the respective plotting methods.
 
         Returns
@@ -503,6 +504,7 @@ class Histogram1D(HistogramBase):
         ticks = kwargs.pop("ticks", None)
         stats_box = kwargs.pop("stats_box", False)
         cmap = kwargs.pop("cmap", None)
+        show_values = kwargs.pop("show_values", False)
 
         if backend == "matplotlib":
             import matplotlib.pyplot as plt
@@ -527,6 +529,9 @@ class Histogram1D(HistogramBase):
                         cmap = plt.get_cmap(cmap)
                     bar_kwargs["color"] = cmap(norm(data))                   
                 ax.bar(self.bin_left_edges, data, self.bin_widths, **bar_kwargs)
+                if show_values:
+                    for x, y in zip(self.bin_centers, data):
+                        ax.text(x, y, str(y), ha='center', va='bottom')
             elif histtype == "scatter":
                 if errors:
                     ax.errorbar(self.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "o"), ecolor=kwargs.get("ecolor", "black"))
