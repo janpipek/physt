@@ -88,7 +88,11 @@ class TestArithmetics(object):
         assert np.array_equal(h.frequencies, freqs)
         i = h * 2
         assert np.array_equal(i.frequencies, freqs * 2)
-        assert np.array_equal(i.errors2, freqs * 4)        
+        assert np.array_equal(i.errors2, freqs * 4) 
+
+        i = h * 0.5
+        assert np.array_equal(i.frequencies, freqs * 0.5)
+        assert np.array_equal(i.errors2, freqs * 0.25)       
 
     def test_multiply_by_other(self):
         xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])

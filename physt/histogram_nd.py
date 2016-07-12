@@ -24,7 +24,7 @@ class HistogramND(HistogramBase):
         if frequencies is None:
             self._frequencies = np.zeros(self.shape)
         else:
-            frequencies = np.array(frequencies, dtype=float)
+            frequencies = np.asarray(frequencies)
             if frequencies.shape != self.shape:
                 raise RuntimeError("Values must have same dimension as bins.")
             if np.any(frequencies < 0):
@@ -33,7 +33,7 @@ class HistogramND(HistogramBase):
 
         # Missed values
         self.keep_missed = kwargs.get("keep_missed", True)
-        self.missed = kwargs.get("missed", 0)
+        self._missed = np.array([kwargs.get("missed", 0)])
 
         # Names etc.
         self.name = kwargs.get("name", None)
@@ -142,7 +142,7 @@ class HistogramND(HistogramBase):
 
         ixbin = self.find_bin(value)
         if ixbin is None and self.keep_missed:
-            self.missed += weight
+            self._missed += weight
         else:
             self._frequencies[ixbin] += weight
             self.errors2[ixbin] += weight ** 2
@@ -246,7 +246,7 @@ class HistogramND(HistogramBase):
             # print("Has same!!!!!!!!!!")
             self._frequencies += other.frequencies
             self._errors2 += other.errors2 
-            self.missed += other.missed
+            self._missed += other._missed
         elif self.is_adaptive():
             if other.missed > 0:
                 raise RuntimeError("Cannot adapt histogram with missed values.")
@@ -274,10 +274,12 @@ class HistogramND(HistogramBase):
 
     def __imul__(self, other):
         if not np.isscalar(other):
-            raise RuntimeError("Histograms may be multiplied only by a constant.")  
+            raise RuntimeError("Histograms may be multiplied only by a constant.")
+        if np.issubdtype(self.dtype, int) and np.issubdtype(type(other), float):
+            self.dtype = float
         self._frequencies *= other
         self._errors2 *= other ** 2
-        self.missed *= other
+        self._missed *= other
         return self
 
     def __isub__(self, other):
@@ -285,10 +287,12 @@ class HistogramND(HistogramBase):
 
     def __itruediv__(self, other):
         if not np.isscalar(other):
-            raise RuntimeError("Histograms may be divided only by a constant.")  
+            raise RuntimeError("Histograms may be divided only by a constant.")
+        if np.issubdtype(self.dtype, int):
+            self.dtype = float
         self._frequencies /= other
         self._errors2 /= other ** 2
-        self.missed /= other
+        self._missed /= other
         return self
 
     # def to_xarray(self):
@@ -454,17 +458,31 @@ class Histogram2D(HistogramND):
             raise RuntimeError("Unsupported hist type")
 
 
-def calculate_frequencies(data, ndim, binnings, weights=None):
+def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
+    """
+
+    Parameters
+    ----------
+
+    dtype: Optional[type]
+        Underlying type for the histogram. If weights are specified, default is float. Otherwise int64
+    """
     data = np.asarray(data)
 
     edges_and_mask = [binning.numpy_bins_with_mask for binning in binnings]
     edges = [em[0] for em in edges_and_mask]
     masks = [em[1] for em in edges_and_mask]
 
+    if dtype is None:
+        dtype = np.int64 if weights is None else np.float    
+
     ixgrid = np.ix_(*masks) # Indexer to select parts we want
 
     if weights is not None:
-        weights = np.asarray(weights)
+        import numbers
+        if issubclass(dtype, numbers.Integral):
+            raise RuntimeError("Histograms with weights cannot have integral dtype")
+        weights = np.asarray(weights, dtype=dtype)
         if weights.shape != (data.shape[0],):
             raise RuntimeError("Invalid weights shape.")
         total_weight = weights.sum()
@@ -475,11 +493,12 @@ def calculate_frequencies(data, ndim, binnings, weights=None):
 
     if data.shape[0]:
         frequencies, _ = np.histogramdd(data, edges, weights=weights)
-        frequencies = frequencies[ixgrid].copy()
+        frequencies = frequencies.astype(dtype)      # Automatically copy
+        frequencies = frequencies[ixgrid]
         missing = total_weight - frequencies.sum()
         if weights is not None:
             err_freq, _ = np.histogramdd(data, edges, weights=weights ** 2)
-            errors2 = err_freq[ixgrid].copy()
+            errors2 = err_freq[ixgrid].astype(dtype) # Automatically copy
         else:
             errors2 = frequencies.copy()        
     else:

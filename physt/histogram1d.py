@@ -66,9 +66,12 @@ class Histogram1D(HistogramBase):
             self._frequencies = frequencies
 
         self.keep_missed = kwargs.get("keep_missed", True)
-        self.underflow = kwargs.get("underflow", 0)
-        self.overflow = kwargs.get("overflow", 0)
-        self.inner_missed = kwargs.get("inner_missed", 0)
+        
+        self._missed = np.array([
+            kwargs.get("underflow", 0),
+            kwargs.get("overflow", 0),
+            kwargs.get("inner_missed", 0)
+        ])
         self.name = kwargs.get("name", None)
         self.axis_name = kwargs.get("axis_name", self.name)
         self._stats = kwargs.get("stats", None)
@@ -163,18 +166,29 @@ class Histogram1D(HistogramBase):
         return self._frequencies.cumsum()
 
     @property
-    def missed(self):
-        """Sum of underflow and overflow.
+    def underflow(self):
+        return self._missed[0]
 
-        Returns
-        -------
-        float
 
-        Note
-        ----
-        To be consistent with n-dimensional histograms.
-        """
-        return self.underflow + self.overflow + self.inner_missed
+    @underflow.setter
+    def underflow(self, value):
+        self._missed[0] = value    
+
+    @property
+    def overflow(self):
+        return self._missed[1]
+
+    @overflow.setter
+    def overflow(self, value):
+        self._missed[1] = value
+
+    @property
+    def inner_missed(self):
+        return self._missed[2]
+
+    @inner_missed.setter
+    def inner_missed(self, value):
+        self._missed[2] = value
 
     def mean(self):
         """Statistical mean of all values entered into histogram.

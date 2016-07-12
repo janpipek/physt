@@ -88,6 +88,7 @@ class HistogramBase(object):
         if ok:
             self._frequencies = self._frequencies.astype(value)
             self._errors2 = self._errors2.astype(value)
+            self._missed = self._missed.astype(value)
             # TODO: Overflows and underflows and stuff...
         else:
             raise RuntimeError("Cannot change histogram dtype.")
@@ -168,6 +169,16 @@ class HistogramBase(object):
         float
         """
         return self._frequencies.sum()
+
+    @property
+    def missed(self):
+        """Total number (weight) of entries that missed the bins.
+
+        Returns
+        -------
+        float
+        """
+        return self._missed.sum()
 
     def is_adaptive(self):
         """Whether the binning can be changed with operations.

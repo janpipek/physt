@@ -117,7 +117,7 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
 
     Returns
     -------
-    Histogram2D
+    physt.histogram_nd.Histogram2D
 
     See Also
     --------
@@ -159,6 +159,8 @@ def histogramdd(data, bins=10, *args, **kwargs):
         names of the variable on x axis  
     adaptive:
         whether the bins should be updated when new non-fitting value are filled 
+    dtype: Optional[type]
+        Underlying type for the histogram. If weights are specified, default is float. Otherwise int64
 
     Returns
     -------
