@@ -71,7 +71,7 @@ class Histogram1D(HistogramBase):
             kwargs.get("underflow", 0),
             kwargs.get("overflow", 0),
             kwargs.get("inner_missed", 0)
-        ])
+        ], dtype=self._frequencies.dtype)
         self.name = kwargs.get("name", None)
         self.axis_name = kwargs.get("axis_name", self.name)
         self._stats = kwargs.get("stats", None)
@@ -671,78 +671,6 @@ class Histogram1D(HistogramBase):
         if not other.axis_name == self.axis_name:
             return False
         return True
-
-    def __iadd__(self, other):
-        if np.isscalar(other):
-            raise RuntimeError("Cannot add constant to histograms.")
-        if other.bin_count == 0:
-            return self
-        elif self.has_same_bins(other):     # Already OK
-            self._frequencies += other.frequencies
-            self.underflow += other.underflow   # TODO: What if adaptive???
-            self.overflow += other.overflow
-            self.inner_missed += other.inner_missed
-            self._errors2 += other.errors2
-        elif self._binning.is_adaptive():
-            if other.missed > 0:
-                raise RuntimeError("Cannot adapt hist;ogram with missed values.")
-            try:
-                # TODO: Fix state after exception
-                new_bins = self._binning.copy()
-                bin_map, bin_map2 = new_bins.adapt(other._binning)
-                # print(new_bins.bin_count, new_bins._times_min)
-                # print(bin_map, bin_map2)
-                self.change_binning(new_bins, bin_map)
-                if bin_map2 is None:
-                    self._frequencies += other.frequencies
-                    self._errors2 += other.errors2
-                else:
-                    for old, new in bin_map2:
-                        self._frequencies[new] += other._frequencies[old]
-                        self._errors2[new] += other._frequencies[old]
-            except:
-                raise # RuntimeError("Cannot find common binning for added histograms.")
-        # TODO: Add subset / superset
-        else:
-            raise RuntimeError("Cannot find common binning for added histograms.")
-
-        if self._stats and other._stats:
-            for key in self._stats:
-                self._stats[key] += other._stats[key]
-        return self
-
-    def __isub__(self, other):
-        return self.__iadd__(other * (-1))
-
-    def __imul__(self, other):
-        if np.isscalar(other):
-            self._frequencies = self._frequencies.astype(float)
-            self._frequencies *= other
-            self.overflow *= other
-            self.underflow *= other
-            self.inner_missed *= other
-            self._errors2 *= other ** 2
-            if self._stats:
-                self._stats["sum"] *= other
-                self._stats["sum2"] *= other ** 2
-        else:
-            raise RuntimeError("Histograms can be multiplied only by a constant.")
-        return self
-
-    def __itruediv__(self, other):
-        if np.isscalar(other):
-            self._frequencies = self._frequencies.astype(float)
-            self._frequencies /= other
-            self.overflow /= other
-            self.underflow /= other
-            self.inner_missed /= other
-            self._errors2 /= other ** 2
-            if self._stats:
-                self._stats["sum"] /= other
-                self._stats["sum2"] /= other ** 2            
-        else:
-            raise RuntimeError("Histograms can be divided only by a constant.")
-        return self
 
     def to_dataframe(self):
         """Convert to pandas DataFrame.
