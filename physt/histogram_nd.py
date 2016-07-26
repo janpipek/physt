@@ -311,16 +311,16 @@ class Histogram2D(HistogramND):
         format_value = kwargs.pop("format_value", str)
 
         if density:
-            dz = self.densities.flatten()
+            dz = self.densities
         else:
-            dz = self.frequencies.flatten()
+            dz = self.frequencies
 
         if backend == "matplotlib":
             import matplotlib.pyplot as plt
             import matplotlib.cm as cm
             import matplotlib.colors as colors
 
-            if color == "frequency":
+            if color == "frequency":           
                 cmap = kwargs.pop("cmap", "Greys")
                 cmap_max = kwargs.pop("cmap_max", dz.max())
                 cmap_min = kwargs.pop("cmap_min", 0)
@@ -330,74 +330,91 @@ class Histogram2D(HistogramND):
                 
                 if isinstance(cmap, str):
                     cmap = plt.get_cmap(cmap)
-                colors = cmap(norm(dz))
             else:
                 colors = color   # TODO: does not work for map
 
-            if histtype == "bar3d":
-                from mpl_toolkits.mplot3d import Axes3D
-                xpos, ypos = (arr.flatten() for arr in self.get_bin_centers())
-                zpos = np.zeros_like(ypos)
-                dx, dy = (arr.flatten() for arr in self.get_bin_widths())
-
+            if histtype == "image":
                 if not ax:
-                    fig = plt.figure()
-                    ax = fig.add_subplot(111, projection='3d')
-
-                ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors)
-                ax.set_xlabel(self.axis_names[0])
-                ax.set_ylabel(self.axis_names[1])
-                ax.set_zlabel("density" if density else "frequency")
-                if self.name:
-                    ax.set_title(self.name)
-            elif histtype == "map":
-                if not ax:
-                    fig = plt.figure()
-                    ax = fig.add_subplot(111)
+                    fig, ax = plt.subplots()
                 else:
                     fig = ax.get_figure()
 
-                xpos, ypos = (arr.flatten() for arr in self.get_bin_left_edges())
-                if show_values:
-                    text_x, text_y = (arr.flatten() for arr in self.get_bin_centers())
-                
-                dx, dy = (arr.flatten() for arr in self.get_bin_widths())
+                ax.imshow(dz.T[::-1,:], cmap=cmap,
+                          extent=(self.bins[0][0,0], self.bins[0][-1,1], self.bins[1][0,0], self.bins[1][-1,1]),
+                          aspect="auto", alpha=alpha)
 
-                for i in range(len(xpos)):
-                    bin_color = colors[i]
-                
-                    if dz[i] > 0 or show_zero:
-                        rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
-                                            facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
-                                            lw=kwargs.get("lw", 0.5), alpha=alpha)
-                        ax.add_patch(rect)
-                        
-                        if show_values:
-                            text = format_value(dz[i])
-                            yiq_y = np.dot(bin_color[:3], [0.299, 0.587, 0.114])
-                                
-                            if yiq_y > 0.5:
-                                text_color = (0.0, 0.0, 0.0, alpha)
-                            else:
-                                text_color = (1.0, 1.0, 1.0, alpha)
-                            ax.text(text_x[i], text_y[i], text, horizontalalignment='center', verticalalignment='center', color=text_color)                        
-                                                
-                ax.set_xlim(self.bins[0][0,0], self.bins[0][-1,1])
-                ax.set_ylim(self.bins[1][0,0], self.bins[1][-1,1])
-                ax.autoscale_view()
-                ax.set_xlabel(self.axis_names[0])
-                ax.set_ylabel(self.axis_names[1])
                 if self.name:
                     ax.set_title(self.name)
-
-                if show_colorbar:
-                    mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
-                    mappable.set_array(dz)
-
-                    fig.colorbar(mappable, ax=ax)
-                fig.tight_layout()
             else:
-                raise RuntimeError("Unsupported hist type")
+                dz = dz.flatten()
+                if color == "frequency":           
+                    colors = cmap(norm(dz))
+
+                if histtype == "bar3d":
+                    from mpl_toolkits.mplot3d import Axes3D
+                    xpos, ypos = (arr.flatten() for arr in self.get_bin_centers())
+                    zpos = np.zeros_like(ypos)
+                    dx, dy = (arr.flatten() for arr in self.get_bin_widths())
+
+                    if not ax:
+                        fig = plt.figure()
+                        ax = fig.add_subplot(111, projection='3d')
+
+                    ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors)
+                    ax.set_xlabel(self.axis_names[0])
+                    ax.set_ylabel(self.axis_names[1])
+                    ax.set_zlabel("density" if density else "frequency")
+                    if self.name:
+                        ax.set_title(self.name)
+                elif histtype == "map":
+                    if not ax:
+                        fig = plt.figure()
+                        ax = fig.add_subplot(111)
+                    else:
+                        fig = ax.get_figure()
+
+                    xpos, ypos = (arr.flatten() for arr in self.get_bin_left_edges())
+                    if show_values:
+                        text_x, text_y = (arr.flatten() for arr in self.get_bin_centers())
+                    
+                    dx, dy = (arr.flatten() for arr in self.get_bin_widths())
+
+                    for i in range(len(xpos)):
+                        bin_color = colors[i]
+                    
+                        if dz[i] > 0 or show_zero:
+                            rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
+                                                facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
+                                                lw=kwargs.get("lw", 0.5), alpha=alpha)
+                            ax.add_patch(rect)
+                            
+                            if show_values:
+                                text = format_value(dz[i])
+                                yiq_y = np.dot(bin_color[:3], [0.299, 0.587, 0.114])
+                                    
+                                if yiq_y > 0.5:
+                                    text_color = (0.0, 0.0, 0.0, alpha)
+                                else:
+                                    text_color = (1.0, 1.0, 1.0, alpha)
+                                ax.text(text_x[i], text_y[i], text, horizontalalignment='center', verticalalignment='center', color=text_color)                        
+                                                    
+                    ax.set_xlim(self.bins[0][0,0], self.bins[0][-1,1])
+                    ax.set_ylim(self.bins[1][0,0], self.bins[1][-1,1])
+                    ax.autoscale_view()
+                    ax.set_xlabel(self.axis_names[0])
+                    ax.set_ylabel(self.axis_names[1])
+                    if self.name:
+                        ax.set_title(self.name)
+
+                    if show_colorbar:
+                        mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
+                        mappable.set_array(dz)
+
+                        fig.colorbar(mappable, ax=ax)
+                                               
+                else:
+                    raise RuntimeError("Unsupported hist type")
+            fig.tight_layout()  
             return ax
         else:
             raise RuntimeError("Unsupported hist type")
