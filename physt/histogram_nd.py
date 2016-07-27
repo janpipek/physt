@@ -61,7 +61,7 @@ class HistogramND(HistogramBase):
 
         Returns
         -------
-        numpy.ndarray
+        Iterable[np.ndarray]
             Two-dimensional array of bin edges, shape=(n, 2)
         """
         return [binning.bins for binning in self._binnings]

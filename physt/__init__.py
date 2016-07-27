@@ -81,7 +81,9 @@ def histogram(data, bins=None, *args, **kwargs):
             array = None
 
         # Get binning
-        binning = calculate_bins(array, bins, *args, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs)
+        binning = calculate_bins(array, bins, *args,
+                                 check_nan=not dropna and array is not None,
+                                 adaptive=adaptive, **kwargs)
         # bins = binning.bins
 
         # Get frequencies
@@ -104,8 +106,8 @@ def histogram(data, bins=None, *args, **kwargs):
         if hasattr(data, "name") and not axis_name:
             axis_name = data.name
         return Histogram1D(binning=binning, frequencies=frequencies, errors2=errors2, overflow=overflow,
-                                       underflow=underflow, stats=stats,
-                                       keep_missed=keep_missed, name=name, axis_name=axis_name)
+                            underflow=underflow, stats=stats,
+                            keep_missed=keep_missed, name=name, axis_name=axis_name)
 
 
 def histogram2d(data1, data2, bins=10, *args, **kwargs):
@@ -223,7 +225,8 @@ def histogramdd(data, bins=10, *args, **kwargs):
     if dim == 2:
         return histogram_nd.Histogram2D(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, **kwargs)
     else:
-        return histogram_nd.HistogramND(dimension=dim, binnings=bin_schemas, frequencies=frequencies, errors2=errors2, **kwargs)
+        return histogram_nd.HistogramND(dimension=dim, binnings=bin_schemas,
+                                        frequencies=frequencies, errors2=errors2, **kwargs)
 
 
 # Aliases

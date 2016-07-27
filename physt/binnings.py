@@ -5,7 +5,7 @@ import numpy as np
 from .bin_utils import (
     make_bin_array, is_consecutive, to_numpy_bins, is_rising, is_bin_subset, to_numpy_bins_with_mask)
 
-# TODO: Reduce number of classes + change construct into functions
+
 # TODO: Locking and edit operations (like numpy read-only)
 
 
@@ -459,7 +459,7 @@ class ExponentialBinning(BinningBase):
     @property
     def numpy_bins(self):
         if self._bin_count == 0:
-            return np.ndarray((0), dtype=float)
+            return np.ndarray((0,), dtype=float)
         if self._numpy_bins is None:
             log_bins = self._log_min + np.arange(self._bin_count + 1) * self._log_width
             self._numpy_bins = 10 ** log_bins

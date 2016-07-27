@@ -93,11 +93,11 @@ def to_numpy_bins_with_mask(bins):
         mask = []
         j = 0
         if bins.shape[0] > 0:
-            edges.append(bins[0,0])
+            edges.append(bins[0, 0])
             for i in range(bins.shape[0] - 1):
                 mask.append(j)
-                edges.append(bins[i,1])
-                if bins[i,1] != bins[i+1,0]:
+                edges.append(bins[i, 1])
+                if bins[i, 1] != bins[i+1, 0]:
                     edges.append(bins[i+1, 0])
                     j += 1
                 j += 1
@@ -144,7 +144,7 @@ def is_consecutive(bins, rtol=1.e-5, atol=1.e-8):
         return True
     else:
         bins = make_bin_array(bins)
-        return np.allclose(bins[1:,0], bins[:-1,1], rtol, atol)
+        return np.allclose(bins[1:, 0], bins[:-1, 1], rtol, atol)
 
 
 def is_bin_subset(sub, sup):
