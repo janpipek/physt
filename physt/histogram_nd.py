@@ -376,6 +376,11 @@ class Histogram2D(HistogramND):
                     if self.name:
                         ax.set_title(self.name)
                 elif histtype == "map":
+                    if hasattr(alpha, '__call__'):
+                        alpha_f = alpha
+                    else:
+                        alpha_f = lambda _: alpha
+
                     if not ax:
                         fig = plt.figure()
                         ax = fig.add_subplot(111)
@@ -389,6 +394,7 @@ class Histogram2D(HistogramND):
                     dx, dy = (arr.flatten() for arr in self.get_bin_widths())
 
                     for i in range(len(xpos)):
+                        alpha = alpha_f(dz[i])
                         bin_color = colors[i]
                     
                         if dz[i] > 0 or show_zero:
