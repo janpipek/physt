@@ -17,6 +17,8 @@ class HistogramBase(object):
         Bin contents
     _errors2 : array_like
         Square errors associated with the bin contents
+    _meta_data : dict
+
     """
 
     # @property
@@ -42,7 +44,7 @@ class HistogramBase(object):
         -------
         tuple[int]
             One-element tuple
-        """        
+        """
         return tuple(bins.bin_count for bins in self._binnings)
 
     @property
@@ -63,7 +65,7 @@ class HistogramBase(object):
 
         Returns
         -------
-        type
+        np.dtype
         """
         return self._frequencies.dtype
 
@@ -77,6 +79,8 @@ class HistogramBase(object):
         - from float types to integer if weights are trivial
         """
         value = np.dtype(value)
+        if value.kind not in "iuf":
+            raise RuntimeError("Unsupported dtype. Only integer/floating-point types are supported.")
         ok = False
         if np.issubdtype(value, np.integer):
             if np.issubdtype(self.dtype, np.integer):
@@ -92,6 +96,15 @@ class HistogramBase(object):
             # TODO: Overflows and underflows and stuff...
         else:
             raise RuntimeError("Cannot change histogram dtype.")
+
+    def _coerce_dtype(self, other_dtype):
+        other_dtype = np.dtype(other_dtype)
+        if other_dtype.kind == self.dtype.kind:
+            pass
+        elif self.dtype.kind in "iu":
+            self.dtype = other_dtype
+        else:
+            pass # not changing - already float
 
     @property
     def bin_count(self):
@@ -124,7 +137,7 @@ class HistogramBase(object):
         -------
         numpy.ndarray
         """
-        return (self._frequencies / self.bin_sizes)
+        return self._frequencies / self.bin_sizes
 
     def normalize(self, inplace=False):
         """Normalize the histogram, so that the total weight is equal to 1.
@@ -360,6 +373,7 @@ class HistogramBase(object):
             raise RuntimeError("Cannot add histograms with different dimensions.")            
         elif self.has_same_bins(other):
             # print("Has same!!!!!!!!!!")
+            self._coerce_dtype(other.dtype)
             self._frequencies += other.frequencies
             self._errors2 += other.errors2 
             self._missed += other._missed
@@ -369,6 +383,8 @@ class HistogramBase(object):
             try:
                 other = other.copy()
                 other.set_adaptive(True)
+
+                self._coerce_dtype(other.dtype)
 
                 # TODO: Fix state after exception
                 # maps1 = []
@@ -429,8 +445,7 @@ class HistogramBase(object):
     def __itruediv__(self, other):
         if not np.isscalar(other):
             raise RuntimeError("Histograms may be divided only by a constant.")
-        if np.issubdtype(self.dtype, int):
-            self.dtype = float
+        self._coerce_dtype(np.float64)
         self._frequencies /= other
         self._errors2 /= other ** 2
         self._missed /= other
