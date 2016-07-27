@@ -53,6 +53,7 @@ class PolarHistogram(HistogramND):
         else:
             return ixbin
 
+    # TODO: Adapt to "transform"
     def fill(self, value, weight=1, radial_coords=False):
         ixbin = self.find_bin(value, radial_coords=radial_coords)
         if ixbin is None and self.keep_missed:
@@ -61,6 +62,8 @@ class PolarHistogram(HistogramND):
             self._frequencies[ixbin] += weight
             self.errors2[ixbin] += weight ** 2
         return ixbin
+
+    # TODO: Implement fill_n
 
     def plot(self, histtype="map", density=False, backend="matplotlib", **kwargs):
         color = kwargs.pop("color", "frequency")
@@ -184,6 +187,6 @@ def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwa
     # Prepare remaining data
     weights = kwargs.pop("weights", None)
     frequencies, errors2, missed = histogram_nd.calculate_frequencies(data, ndim=2,
-                                                                  bins=[b.bins for b in bin_schemas],
+                                                                  binnings=bin_schemas,
                                                                   weights=weights)
     return PolarHistogram(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, missed=missed)
