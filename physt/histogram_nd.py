@@ -301,6 +301,10 @@ class Histogram2D(HistogramND):
             0.0..1.0 of the whole plot (not fully implemented, default: 1.0)
         lw: float
             Width of the grid lines
+        transform: Callable
+            Map values using a function to enhance the colormap range
+        interpolation: str
+            Parameter for "image" plot type, with the meaning of matplotlib.pyplot.imshow. Default ("nearest") seems to be the best option.
                 
         """
         color = kwargs.pop("color", "frequency")
@@ -309,11 +313,15 @@ class Histogram2D(HistogramND):
         show_colorbar = kwargs.pop("show_colorbar", True)
         show_values = kwargs.pop("show_values", False)
         format_value = kwargs.pop("format_value", str)
+        transform = kwargs.pop("transform", lambda x: x)   # TODO: Can't we use some matplotlib param for that?
+        interpolation = kwargs.pop("interpolation", "nearest")
 
         if density:
             dz = self.densities
         else:
             dz = self.frequencies
+
+        color_dz = transform(dz)
 
         if backend == "matplotlib":
             import matplotlib.pyplot as plt
@@ -322,10 +330,10 @@ class Histogram2D(HistogramND):
 
             if color == "frequency":           
                 cmap = kwargs.pop("cmap", "Greys")
-                cmap_max = kwargs.pop("cmap_max", dz.max())
+                cmap_max = kwargs.pop("cmap_max", color_dz.max())
                 cmap_min = kwargs.pop("cmap_min", 0)
                 if cmap_min == "min":
-                    cmap_min = dz.min()
+                    cmap_min = color_dz.min()
                 norm = colors.Normalize(cmap_min, cmap_max, clip=True)
                 
                 if isinstance(cmap, str):
@@ -339,16 +347,17 @@ class Histogram2D(HistogramND):
                 else:
                     fig = ax.get_figure()
 
-                ax.imshow(dz.T[::-1,:], cmap=cmap,
+                ax.imshow(color_dz.T[::-1,:], cmap=cmap,
                           extent=(self.bins[0][0,0], self.bins[0][-1,1], self.bins[1][0,0], self.bins[1][-1,1]),
-                          aspect="auto", alpha=alpha)
+                          aspect="auto", alpha=alpha, interpolation=interpolation)
 
                 if self.name:
                     ax.set_title(self.name)
             else:
                 dz = dz.flatten()
+                color_dz = color_dz.flatten()
                 if color == "frequency":           
-                    colors = cmap(norm(dz))
+                    colors = cmap(norm(color_dz))
 
                 if histtype == "bar3d":
                     from mpl_toolkits.mplot3d import Axes3D
@@ -408,7 +417,7 @@ class Histogram2D(HistogramND):
 
                     if show_colorbar:
                         mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
-                        mappable.set_array(dz)
+                        mappable.set_array(color_dz)
 
                         fig.colorbar(mappable, ax=ax)
                                                
