@@ -1,3 +1,9 @@
+0.3.6 (27th July 2016)
+---------------------
+- Added: Histogram dtypes (beta)
+- Added: image plot type for Histogram2D
+- Fix: Broken polar histogram
+
 0.3.5 (5th July 2016)
 ---------------------
 - Added: Merging of bins
