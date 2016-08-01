@@ -66,12 +66,15 @@ class Histogram1D(HistogramBase):
             self._frequencies = frequencies
 
         self.keep_missed = kwargs.get("keep_missed", True)
-        
-        self._missed = np.array([
-            kwargs.get("underflow", 0),
-            kwargs.get("overflow", 0),
-            kwargs.get("inner_missed", 0)
-        ], dtype=self._frequencies.dtype)
+
+        if self.keep_missed:
+            self._missed = np.array([
+                kwargs.get("underflow", 0),
+                kwargs.get("overflow", 0),
+                kwargs.get("inner_missed", 0)
+            ], dtype=self._frequencies.dtype)
+        else:
+            self._missed = np.array([np.nan, np.nan, np.nan])        
         self.name = kwargs.get("name", None)
         self.axis_name = kwargs.get("axis_name", self.name)
         self._stats = kwargs.get("stats", None)
@@ -101,6 +104,7 @@ class Histogram1D(HistogramBase):
         """
         underflow = np.nan
         overflow = np.nan
+        keep_missed=False
         if isinstance(i, int):
             return self.bins[i], self.frequencies[i]
         elif isinstance(i, np.ndarray):
@@ -108,6 +112,7 @@ class Histogram1D(HistogramBase):
                 if i.shape != (self.bin_count,):
                     raise IndexError("Cannot index with masked array of a wrong dimension")
         elif isinstance(i, slice):
+            keep_missed=self.keep_missed
             # TODO: Fix this
             if i.step:
                 raise IndexError("Cannot change the order of bins")
@@ -118,8 +123,9 @@ class Histogram1D(HistogramBase):
                     underflow += self.frequencies[0:i.start].sum()
                 if i.stop:
                     overflow += self.frequencies[i.stop:].sum()
-        return self.__class__(self._binning.as_static(copy=False)[i], self.frequencies[i], self.errors2[i], overflow=overflow,
-                              underflow=underflow, name=self.name, axis_name=self.axis_name)
+        # Masked arrays or item list or ...
+        return self.__class__(self._binning.as_static(copy=False)[i], self.frequencies[i], self.errors2[i], overflow=overflow, keep_missed=keep_missed,
+                              underflow=underflow, name=self.name, axis_name=self.axis_name, dtype=self.dtype)
 
     @property
     def _binning(self):
@@ -167,8 +173,9 @@ class Histogram1D(HistogramBase):
 
     @property
     def underflow(self):
+        if not self.keep_missed:
+            return np.nan
         return self._missed[0]
-
 
     @underflow.setter
     def underflow(self, value):
@@ -176,6 +183,8 @@ class Histogram1D(HistogramBase):
 
     @property
     def overflow(self):
+        if not self.keep_missed:
+            return np.nan                
         return self._missed[1]
 
     @overflow.setter
@@ -184,6 +193,8 @@ class Histogram1D(HistogramBase):
 
     @property
     def inner_missed(self):
+        if not self.keep_missed:
+            return np.nan                
         return self._missed[2]
 
     @inner_missed.setter
