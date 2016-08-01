@@ -496,6 +496,10 @@ class Histogram1D(HistogramBase):
             Label to include in the legend
         show_values: bool
             Whether to show numbers above the bin
+        xscale: Optional[str]
+            Can be: log            
+        yscale: Optional[str]
+            Can be: log
         You can also specify arbitrary matplotlib arguments, they are forwarded to the respective plotting methods.
 
         Returns
@@ -530,6 +534,8 @@ class Histogram1D(HistogramBase):
         stats_box = kwargs.pop("stats_box", False)
         cmap = kwargs.pop("cmap", None)
         show_values = kwargs.pop("show_values", False)
+        xscale = kwargs.pop("xscale", None)
+        yscale = kwargs.pop("yscale", None)
 
         if backend == "matplotlib":
             import matplotlib.pyplot as plt
@@ -582,7 +588,14 @@ class Histogram1D(HistogramBase):
                 ax.set_title(self.name)
             if self.axis_name:
                 ax.set_xlabel(self.axis_name)
+            if yscale == "log":
+                ylim = (abs(data.min()) * 0.9, ylim[1])
             ax.set_ylim(ylim)
+
+            if xscale:
+                ax.set_xscale(xscale)
+            if yscale:
+                ax.set_yscale(yscale)
 
             # Stats box 
             if stats_box:
