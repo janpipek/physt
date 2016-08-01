@@ -1,3 +1,8 @@
+0.3.7 (1st August 2016)
+-----------------------
+- Added: xscale/yscale, xlim/ylim argument for 1D plots
+- Fix: a few minor bugs
+
 0.3.6 (27th July 2016)
 ---------------------
 - Added: Histogram dtypes (beta)
