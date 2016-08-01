@@ -496,6 +496,10 @@ class Histogram1D(HistogramBase):
             Label to include in the legend
         show_values: bool
             Whether to show numbers above the bin
+        xlim: str | range
+            "fit" | "keep" | "auto", (x0, x1)
+        ylim: str | range
+            "fit" | "keep" | "auto", (y0, y1)
         xscale: Optional[str]
             Can be: log            
         yscale: Optional[str]
@@ -536,6 +540,8 @@ class Histogram1D(HistogramBase):
         show_values = kwargs.pop("show_values", False)
         xscale = kwargs.pop("xscale", None)
         yscale = kwargs.pop("yscale", None)
+        ylim = kwargs.pop("ylim", "auto")
+        xlim = kwargs.pop("xlim", "auto")
 
         if backend == "matplotlib":
             import matplotlib.pyplot as plt
@@ -581,16 +587,33 @@ class Histogram1D(HistogramBase):
                 ax.set_xticks(self.bin_centers)
 
             # Automatically limit to positive frequencies
-            ylim = ax.get_ylim()
-            if data.size > 0 and data.max() > 0:
-                ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
+            if ylim is not "keep":
+                if isinstance(ylim, tuple):
+                    pass
+                else:
+                    ylim = ax.get_ylim()
+                    if data.size > 0 and data.max() > 0:
+                        ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
+                    if yscale == "log":
+                        ylim = (abs(data[data > 0].min()) * 0.9, ylim[1] * 1.1)
+                ax.set_ylim(ylim)
+
+            if xlim is not "keep":
+                if isinstance(xlim, tuple):
+                    pass
+                else:
+                    xlim = ax.get_xlim()
+                    if len(self.bin_centers) > 2:
+                        xlim = (self.bin_left_edges[0], self.bin_right_edges[-1])
+                    if xscale == "log":
+                        if xlim[0] <= 0:
+                            raise RuntimeError("Cannot use logarithmic scale for non-positive bins.")
+                ax.set_xlim(xlim)
+
             if self.name:
                 ax.set_title(self.name)
             if self.axis_name:
-                ax.set_xlabel(self.axis_name)
-            if yscale == "log":
-                ylim = (abs(data.min()) * 0.9, ylim[1])
-            ax.set_ylim(ylim)
+                ax.set_xlabel(self.axis_name)          
 
             if xscale:
                 ax.set_xscale(xscale)
