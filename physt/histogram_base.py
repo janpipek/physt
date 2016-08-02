@@ -355,6 +355,11 @@ class HistogramBase(object):
             else:
                 self.fill(value)
 
+    @property
+    def plot(self):
+        from .plotting import Plotter
+        return Plotter(self)
+
     def __add__(self, other):
         new = self.copy()
         new += other
