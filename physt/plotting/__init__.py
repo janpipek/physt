@@ -3,43 +3,38 @@ from collections import OrderedDict
 
 backends = OrderedDict()
 
-from . import matplotlib as mpl_backend 
-backends["matplotlib"] = mpl_backend
-from . import bokeh as bokeh_backend
-backends["bokeh"] = bokeh_backend
+# from . import matplotlib as mpl_backend 
+# backends["matplotlib"] = mpl_backend
+# from . import bokeh as bokeh_backend
+# backends["bokeh"] = bokeh_backend
 
-# try:
-#     from . import matplotlib as mpl_backend 
-#     backends["matplotlib"] = mpl_backend
-# except:
-#     pass
+try:
+    from . import matplotlib as mpl_backend 
+    backends["matplotlib"] = mpl_backend
+except:
+    pass
 
-# try:
-#     from . import bokeh as bokeh_backend
-#     backends["bokeh"] = bokeh_backend
-# except:
-#     pass
+try:
+    from . import bokeh as bokeh_backend
+    backends["bokeh"] = bokeh_backend
+except:
+    pass
 
-default_backend = None
+default_backend = list(backends.keys())[0]
 
 
-def _get_backend(**kwargs):
-    if "backend" in kwargs:
-        name = kwargs.pop("backend")
-    elif default_backend:
-        name = default_backend
-    else:
-        name = list(backends.keys())[0]
+def _get_backend(kwargs={}):
+    name = kwargs.pop("backend", default_backend)
     return name, backends[name]
 
 
-def plot(histogram, histtype=None, *args, **kwargs):
-    backend_name, backend = _get_backend(**kwargs)
+def plot(histogram, histtype=None, **kwargs):
+    backend_name, backend = _get_backend(kwargs)
     if histtype is None:
         histtype = [t for t in backend.types if histogram.ndim in backend.dims[t]][0]
     if histtype in backend.types:
         method = getattr(backend, histtype)
-        return method(histogram, *args, **kwargs)
+        return method(histogram, **kwargs)
     else:
         raise RuntimeError("Histogram type error: {0} missing in backend {1}".format(histtype, backend_name))
 
@@ -52,14 +47,9 @@ class Plotter(object):
         return plot(self.h, histtype, **kwargs)
 
     def __getattr__(self, name):
-        _, backend = _get_backend()
-        if name in dir(self):
-            method = getattr(backend, name)
-            def f(**kwargs):
-                return method(self.h, **kwargs)
-            return f
-        else:
-            raise AttributeError()
+        def f(**kwargs):
+            return plot(self.h, name, **kwargs)
+        return f
 
     def __dir__(self):
         _, backend = _get_backend()

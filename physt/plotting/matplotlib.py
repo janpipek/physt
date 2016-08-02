@@ -4,7 +4,7 @@ import matplotlib.colors as colors
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-from .common import get_data, transform_data
+from .common import get_data, transform_data, get_err_data
 
 
 types = ("bar", "scatter", "line", "map", "bar3d", "image")
@@ -19,25 +19,105 @@ dims = {
 }
 
 
-def bar(h1, **kwargs):
+def bar(h1, errors=False, **kwargs):
     fig, ax = get_axes(kwargs)
 
+    stats_box = kwargs.pop("stats_box", False)
+    show_values = kwargs.pop("show_values", False)
+    density = kwargs.pop("density", False)
+    cumulative = kwargs.pop("cumulative", False)
+
+    data = get_data(h1, cumulative=cumulative, density=density) 
+    transformed = transform_data(data, kwargs)
+
+    if "cmap" in kwargs:
+        cmap = get_cmap(kwargs)
+        _, cmap_data = get_cmap_data(transformed, kwargs)
+        colors = cmap(cmap_data)
+    else:
+        colors = kwargs.pop("color", "blue")    
+
+    apply_xy_lims(ax, h1, data, kwargs)
+    add_ticks(ax, h1, kwargs)
+    
+    if errors:
+        err_data = get_err_data(h1, cumulative=cumulative, density=density)
+        kwargs["yerr"] = err_data
+        if not "ecolor" in kwargs:
+            kwargs["ecolor"] = "black"        
+
+    ax.bar(h1.bin_left_edges, data, h1.bin_widths, color=colors, **kwargs)
     add_labels(h1, ax)
+
+    if show_values:
+        add_values(ax, h1, data)
+    if stats_box:
+        add_stats_box(h1, ax)
+
     return ax
 
 
-def scatter(h1, **kwargs):
+def scatter(h1, errors=False, **kwargs):
     fig, ax = get_axes(kwargs)
 
+    stats_box = kwargs.pop("stats_box", False)
+    show_values = kwargs.pop("show_values", False)
+    density = kwargs.pop("density", False)
+    cumulative = kwargs.pop("cumulative", False)
+
+    data = get_data(h1, cumulative=cumulative, density=density)
+    transformed = transform_data(data, kwargs)
+
+    if "cmap" in kwargs:
+        cmap = get_cmap(kwargs)
+        _, cmap_data = get_cmap_data(transformed, kwargs)
+        kwargs["color"] = cmap(cmap_data)
+    else:
+        kwargs["color"] = kwargs.pop("color", "blue")   
+
+    apply_xy_lims(ax, h1, data, kwargs)
+    add_ticks(ax, h1, kwargs)    
+
+    if errors:
+        err_data = get_err_data(h1, cumulative=cumulative, density=density)
+        ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "o"), ecolor=kwargs.get("ecolor", "black"))
+    else:
+        ax.scatter(h1.bin_centers, data, **kwargs)
+
     add_labels(h1, ax)
+
+    if show_values:
+        add_values(ax, h1, data)
+    if stats_box:
+        add_stats_box(h1, ax)    
     return ax
 
 
 
-def line(h1, **kwargs):
+def line(h1, errors=False, **kwargs):
     fig, ax = get_axes(kwargs)
 
+    stats_box = kwargs.pop("stats_box", False)
+    show_values = kwargs.pop("show_values", False)
+    density = kwargs.pop("density", False)
+    cumulative = kwargs.pop("cumulative", False)
+
+    data = get_data(h1, cumulative=cumulative, density=density) 
+    apply_xy_lims(ax, h1, data, kwargs)
+    add_ticks(ax, h1, kwargs)   
+
+    if errors:
+        err_data = get_err_data(h1, cumulative=cumulative, density=density)
+        ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "-"), ecolor=kwargs.get("ecolor", "black"), **kwargs)
+    else:
+        ax.plot(h1.bin_centers, data, **kwargs)
+
     add_labels(h1, ax)
+
+    if stats_box:
+        add_stats_box(h1, ax)
+    if show_values:
+        add_values(ax, h1, data)
     return ax
 
 
@@ -186,8 +266,9 @@ def get_alpha_data(data, kwargs):
 def add_labels(h, ax):
     if h.name:
         ax.set_title(h.name)
-    if hasattr(h, "axis_name") and h.axis_name:
-        ax.set_xlabel(h.axis_name)
+    if hasattr(h, "axis_name"):
+        if h.axis_name:
+            ax.set_xlabel(h.axis_name)
     else:
         if h.axis_names[0]:
             ax.set_xlabel(h.axis_names[0])
@@ -195,9 +276,66 @@ def add_labels(h, ax):
             ax.set_ylabel(h.axis_names[1])
     ax.get_figure().tight_layout()
 
+def add_values(ax, h1, data):
+    for x, y in zip(h1.bin_centers, data):
+        ax.text(x, y, str(y), ha='center', va='bottom')  
+
 
 def add_colorbar(fig, cmap, cmap_data, norm):
     mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
     mappable.set_array(cmap_data)   # TODO: Or what???
 
-    fig.colorbar(mappable, ax=ax)            
+    fig.colorbar(mappable, ax=ax)     
+
+
+def add_stats_box(h1, ax):
+    # place a text box in upper left in axes coords
+    text = "Total: {0}\nMean: {1:.2f}\nStd.dev: {2:.2f}".format(h1.total, h1.mean(), h1.std())
+    ax.text(0.05, 0.95, text, transform=ax.transAxes,
+            verticalalignment='top', horizontalalignment='left')      
+
+
+def apply_xy_lims(ax, h1, data, kwargs):
+    xscale = kwargs.pop("xscale", None)
+    yscale = kwargs.pop("yscale", None)
+    ylim = kwargs.pop("ylim", "auto")
+    xlim = kwargs.pop("xlim", "auto")
+
+    if ylim is not "keep":
+        if isinstance(ylim, tuple):
+            pass
+        else:
+            ylim = ax.get_ylim()
+            if data.size > 0 and data.max() > 0:
+                ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
+            if yscale == "log":
+                ylim = (abs(data[data > 0].min()) * 0.9, ylim[1] * 1.1)
+        ax.set_ylim(ylim)
+
+    if xlim is not "keep":
+        if isinstance(xlim, tuple):
+            pass
+        else:
+            xlim = ax.get_xlim()
+            if len(h1.bin_centers) > 2:
+                xlim = (h1.bin_left_edges[0], h1.bin_right_edges[-1])
+            if xscale == "log":
+                if xlim[0] <= 0:
+                    raise RuntimeError("Cannot use logarithmic scale for non-positive bins.")
+        ax.set_xlim(xlim)
+
+    if xscale:
+        ax.set_xscale(xscale)
+    if yscale:
+        ax.set_yscale(yscale)
+
+
+def add_ticks(ax, h1, kwargs):
+    ticks = kwargs.pop("ticks", None)
+    if not ticks:
+        return
+    elif ticks == "center":
+        ax.set_xticks(h1.bin_centers)
+    elif ticks == "edge":
+        ax.set_xticks(h1.bin_left_edges)
+
