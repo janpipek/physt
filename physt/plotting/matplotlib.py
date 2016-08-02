@@ -4,7 +4,7 @@ import matplotlib.colors as colors
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-from .common import get_data
+from .common import get_data, transform_data
 
 
 types = ("bar", "scatter", "line", "map", "bar3d", "image")
@@ -41,8 +41,64 @@ def line(h1, **kwargs):
     return ax
 
 
-def map(h2, **kwargs):
+def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
     fig, ax = get_axes(kwargs)
+
+    format_value = kwargs.pop("format_value", lambda x: x)
+    transform = kwargs.get("transform", False)
+
+    if show_colorbar is None:
+        show_colorbar = not transform
+
+
+    data = get_data(h2, cumulative=False, flatten=True, density=kwargs.pop("density", False))    
+    transformed = transform_data(data, kwargs)
+    
+
+    cmap = get_cmap(kwargs)
+    norm, cmap_data = get_cmap_data(transformed, kwargs)
+    colors = cmap(cmap_data)    
+
+    xpos, ypos = (arr.flatten() for arr in h2.get_bin_left_edges())
+    dx, dy = (arr.flatten() for arr in h2.get_bin_widths())
+    text_x, text_y = (arr.flatten() for arr in h2.get_bin_centers())
+
+    xlim = kwargs.get("xlim", (h2.bins[0][0,0], h2.bins[0][-1,1]))
+    ylim = kwargs.get("ylim", (h2.bins[1][0,0], h2.bins[1][-1,1]))
+    ax.set_xlim(*xlim)
+    ax.set_ylim(*ylim)
+    ax.autoscale_view() 
+
+    alphas = get_alpha_data(cmap_data, kwargs)
+    if np.isscalar(alphas):
+        alphas = np.ones_like(data) * alphas
+
+    for i in range(len(xpos)):
+        bin_color = colors[i]
+        alpha = alphas[i]
+
+        if data[i] != 0 or show_zero:
+            rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
+                facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
+                lw=kwargs.get("lw", 0.5), alpha=alpha)
+            ax.add_patch(rect)
+
+            if show_values:
+                text = format_value(data[i])
+                yiq_y = np.dot(bin_color[:3], [0.299, 0.587, 0.114])
+                    
+                if yiq_y > 0.5:
+                    text_color = (0.0, 0.0, 0.0, kwargs.get("text_alpha", alpha))
+                else:
+                    text_color = (1.0, 1.0, 1.0, kwargs.get("text_alpha", alpha))
+                ax.text(text_x[i], text_y[i], text, horizontalalignment='center', verticalalignment='center', color=text_color, clip_on=True)              
+
+    if show_colorbar:
+        if transform:
+            raise RuntimeError("Cannot plot colorbar with transformed values.")
+        mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
+        mappable.set_array(cmap_data)
+        fig.colorbar(mappable, ax=ax)
 
     add_labels(h2, ax)
     return ax
@@ -50,21 +106,16 @@ def map(h2, **kwargs):
 
 def bar3d(h2, **kwargs):
     fig, ax = get_axes(kwargs, use_3d=True)
-
     density = kwargs.pop("density", False)
-
-    data = get_data(h2, density=density, cumulative=False, flatten=True)
-
-    colors = None
-    if "color" in kwargs:
-        colors = kwargs.pop("color")
+    data = get_data(h2, cumulative=False, flatten=True, density=density)
+    transformed = transform_data(data, kwargs)
     
-    if "cmap" in kwargs or colors == "frequency":
+    if "cmap" in kwargs:
         cmap = get_cmap(kwargs)
-        _, cmap_data = get_cmap_data(data, kwargs)
+        _, cmap_data = get_cmap_data(transformed, kwargs)
         colors = cmap(cmap_data)
     else:
-        colors = "blue"
+        colors = kwargs.pop("color", "blue")
     
     xpos, ypos = (arr.flatten() for arr in h2.get_bin_centers())
     zpos = np.zeros_like(ypos)
@@ -81,8 +132,9 @@ def image(h2, **kwargs):
     # ! Fatto
     fig, ax = get_axes(kwargs)
     cmap = get_cmap(kwargs)   # h2 as well?
-    data = get_data(h2, density=kwargs.pop("density", False), cumulative=False)
-    _, cmap_data = get_cmap_data(data, kwargs)
+    data = get_data(h2, cumulative=False, density=kwargs.pop("density", False))
+    transformed = transform_data(data, kwargs)
+    _, cmap_data = get_cmap_data(transformed, kwargs)
 
     if not "interpolation" in kwargs:
         kwargs["interpolation"] = "nearest"
@@ -115,17 +167,20 @@ def get_cmap(kwargs):
     return cmap
 
 
-def get_cmap_data(data, kwargs):
-    transform = kwargs.pop("transform", lambda x: x)
-
-    data = np.asarray(transform(data))
-  
+def get_cmap_data(data, kwargs): 
     cmap_max = kwargs.pop("cmap_max", data.max())
     cmap_min = kwargs.pop("cmap_min", 0)
     if cmap_min == "min":
         cmap_min = data.min()
     norm = colors.Normalize(cmap_min, cmap_max, clip=True)
     return norm, norm(data)
+
+
+def get_alpha_data(data, kwargs):
+    alpha = kwargs.pop("alpha", 1)
+    if hasattr(alpha, "__call__"):
+        return np.vectorize(alpha)(data)
+    return alpha
 
 
 def add_labels(h, ax):
