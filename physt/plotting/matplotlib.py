@@ -219,7 +219,7 @@ def image(h2, **kwargs):
     if not "interpolation" in kwargs:
         kwargs["interpolation"] = "nearest"
 
-    ax.imshow(cmap_data[::-1,:], cmap=cmap,
+    ax.imshow(cmap_data.T[::-1,:], cmap=cmap,
         extent=(h2.bins[0][0,0], h2.bins[0][-1,1], h2.bins[1][0,0], h2.bins[1][-1,1]),
         aspect="auto", **kwargs)
 
