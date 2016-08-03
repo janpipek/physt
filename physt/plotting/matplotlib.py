@@ -166,11 +166,13 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
             if show_values:
                 text = format_value(data[i])
                 yiq_y = np.dot(bin_color[:3], [0.299, 0.587, 0.114])
-                    
-                if yiq_y > 0.5:
-                    text_color = (0.0, 0.0, 0.0, kwargs.get("text_alpha", alpha))
-                else:
-                    text_color = (1.0, 1.0, 1.0, kwargs.get("text_alpha", alpha))
+                
+                text_color = kwargs.get("text_color", None)
+                if not text_color:
+                    if yiq_y > 0.5:
+                        text_color = (0.0, 0.0, 0.0, kwargs.get("text_alpha", alpha))
+                    else:
+                        text_color = (1.0, 1.0, 1.0, kwargs.get("text_alpha", alpha))
                 ax.text(text_x[i], text_y[i], text, horizontalalignment='center', verticalalignment='center', color=text_color, clip_on=True)              
 
     if show_colorbar:
@@ -243,7 +245,14 @@ def get_axes(kwargs, use_3d=False):
 def get_cmap(kwargs):
     cmap = kwargs.pop("cmap", "Greys")
     if isinstance(cmap, str):
-        cmap = plt.get_cmap(cmap)
+        try:
+            cmap = plt.get_cmap(cmap)
+        except BaseException as exc:
+            try:
+                import seaborn.apionly as sns
+                cmap = sns.color_palette(as_cmap=True)
+            except ImportError:
+                raise exc
     return cmap
 
 
