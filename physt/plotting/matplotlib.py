@@ -26,6 +26,7 @@ def bar(h1, errors=False, **kwargs):
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
+    label = kwargs.pop("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density) 
     transformed = transform_data(data, kwargs)
@@ -46,7 +47,7 @@ def bar(h1, errors=False, **kwargs):
         if not "ecolor" in kwargs:
             kwargs["ecolor"] = "black"        
 
-    ax.bar(h1.bin_left_edges, data, h1.bin_widths, color=colors, **kwargs)
+    ax.bar(h1.bin_left_edges, data, h1.bin_widths, label=label, color=colors, **kwargs)
     add_labels(h1, ax)
 
     if show_values:
@@ -91,7 +92,6 @@ def scatter(h1, errors=False, **kwargs):
     if stats_box:
         add_stats_box(h1, ax)    
     return ax
-
 
 
 def line(h1, errors=False, **kwargs):
@@ -229,7 +229,41 @@ def image(h2, **kwargs):
     return ax
 
 
+def pair_bars(first, second, **kwargs):
+    """
+
+    Parameters
+    ----------
+    first: Histogram1D
+    second: Histogram1D
+    color1:
+    color2:
+    """
+    _, ax = get_axes(kwargs)
+    color1 = kwargs.pop("color1", "red")
+    color2 = kwargs.pop("color2", "blue")
+    title = kwargs.pop("title", "{0} - {1}".format(first.name, second.name))
+    xlim = kwargs.pop("xlim", (min(first.bin_left_edges[0], first.bin_left_edges[0]), max(first.bin_right_edges[-1], second.bin_right_edges[-1])))
+
+    bar(first * (-1), color=color1, ax=ax, ylim="keep", **kwargs)
+    bar(second, color=color2, ax=ax, ylim="keep", **kwargs)
+    ax.set_title(title)
+    ticks = np.abs(ax.get_yticks())
+    if np.allclose(np.rint(ticks), ticks):
+        ax.set_yticklabels(ticks.astype(int))
+    else:
+        ax.set_yticklabels(ticks)
+    ax.set_xlim(xlim)
+    ax.legend()
+    return ax
+
+
 def get_axes(kwargs, use_3d=False):
+    """
+    Returns
+    ------
+    tuple(plt.Figure, plt.Axes)
+    """
     figsize = kwargs.pop("figsize", None)
     if "ax" in kwargs:
         ax = kwargs.pop("ax")
@@ -285,6 +319,7 @@ def add_labels(h, ax):
             ax.set_ylabel(h.axis_names[1])
     ax.get_figure().tight_layout()
 
+
 def add_values(ax, h1, data):
     for x, y in zip(h1.bin_centers, data):
         ax.text(x, y, str(y), ha='center', va='bottom')  
@@ -313,7 +348,7 @@ def apply_xy_lims(ax, h1, data, kwargs):
     if ylim is not "keep":
         if isinstance(ylim, tuple):
             pass
-        else:
+        elif ylim:
             ylim = ax.get_ylim()
             if data.size > 0 and data.max() > 0:
                 ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
@@ -324,7 +359,7 @@ def apply_xy_lims(ax, h1, data, kwargs):
     if xlim is not "keep":
         if isinstance(xlim, tuple):
             pass
-        else:
+        elif xlim:
             xlim = ax.get_xlim()
             if len(h1.bin_centers) > 2:
                 xlim = (h1.bin_left_edges[0], h1.bin_right_edges[-1])
