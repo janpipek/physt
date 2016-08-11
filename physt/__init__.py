@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from . import binnings
 
-__version__ = str('0.3.8.1')
+__version__ = str('0.3.9')
 
 
 def histogram(data, bins=None, *args, **kwargs):
@@ -123,7 +123,7 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
 
     See Also
     --------
-    numpy.histogram2d    
+    numpy.histogram2d
     histogramdd
     """
     import numpy as np
@@ -158,9 +158,9 @@ def histogramdd(data, bins=10, *args, **kwargs):
     name: str
         name of the histogram
     axis_names: Iterable[str]
-        names of the variable on x axis  
+        names of the variable on x axis
     adaptive:
-        whether the bins should be updated when new non-fitting value are filled 
+        whether the bins should be updated when new non-fitting value are filled
     dtype: Optional[type]
         Underlying type for the histogram. If weights are specified, default is float. Otherwise int64
 
@@ -170,7 +170,7 @@ def histogramdd(data, bins=10, *args, **kwargs):
 
     See Also
     --------
-    numpy.histogramdd  
+    numpy.histogramdd
     """
     import numpy as np
     from . import histogram_nd
@@ -195,16 +195,16 @@ def histogramdd(data, bins=10, *args, **kwargs):
     if data is not None:
         data = np.asarray(data)
         if data.ndim != 2:
-            raise RuntimeError("Array must have shape (n, d)")        
+            raise RuntimeError("Array must have shape (n, d)")
         if dim is not None and dim != data.shape[1]:
             raise RuntimeError("Dimension mismatch: {0}!={1}".format(dim, data.shape[1]))
         _, dim = data.shape
         if dropna:
-            data = data[~np.isnan(data).any(axis=1)]      
-        check_nan = not dropna  
+            data = data[~np.isnan(data).any(axis=1)]
+        check_nan = not dropna
     else:
         if dim is None:
-            raise RuntimeError("You have to specify either data or its dimension.")        
+            raise RuntimeError("You have to specify either data or its dimension.")
         data = np.zeros((0, dim))
         check_nan = False
 
@@ -247,5 +247,3 @@ def h3(data, *args, **kwargs):
     return histogramdd(data, *args, **kwargs)
 
 from .special import polar_histogram
-
-

@@ -1,3 +1,9 @@
+0.3.9 (11th August 2016)
+------------------------
+- Changed: moved dask support to compat package
+- Added: pair_plot for two histograms
+- Fix: a few minor bugs
+
 0.3.8 (2nd August 2016)
 -----------------------
 - Changed: Refactor plotting to a module (no code rewrite required)
