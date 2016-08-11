@@ -1,6 +1,6 @@
 from __future__ import absolute_import
-from . import h1 as original_h1
-from . import histogramdd as original_hdd
+from .. import h1 as original_h1
+from .. import histogramdd as original_hdd
 
 
 options = {
