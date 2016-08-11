@@ -7,7 +7,7 @@ class HistogramBase(object):
 
     The most important daughter classes are:
     - Histogram1D
-    - HistogramND   
+    - HistogramND
 
     Attributes
     ----------
@@ -29,7 +29,7 @@ class HistogramBase(object):
     #     -------
     #     numpy.ndarray
     #         Two-dimensional array of bin edges, shape=(n, 2)
-        
+
     #     return [binning.bins for binning in self._binnings]
 
     # @property
@@ -114,7 +114,7 @@ class HistogramBase(object):
         -------
         int
         """
-        return np.product(self.shape)        
+        return np.product(self.shape)
 
     @property
     def frequencies(self):
@@ -151,7 +151,7 @@ class HistogramBase(object):
             self /= self.total
             return self
         else:
-            return self / self.total        
+            return self / self.total
 
     @property
     def errors2(self):
@@ -224,7 +224,7 @@ class HistogramBase(object):
         if axis < 0 or axis >= self.ndim:
             raise RuntimeError("Axis must be in range 0..(ndim-1)")
         self._reshape_data(new_binning.bin_count, bin_map, axis)
-        self._binnings[axis] = new_binning    
+        self._binnings[axis] = new_binning
 
     def merge_bins(self, amount=None, min_frequency=None, axis=None, inplace=True):
         """Reduce the number of bins and add their content:
@@ -257,7 +257,7 @@ class HistogramBase(object):
             if amount is not None:
                 if not amount == int(amount):
                     raise RuntimeError("Amount must be integer")
-                bin_map = [(i, i // amount) for i in range(self.shape[axis])]    
+                bin_map = [(i, i // amount) for i in range(self.shape[axis])]
             elif min_frequency is not None:
                 if self.ndim == 1:
                     check = self.frequencies
@@ -291,27 +291,27 @@ class HistogramBase(object):
         bin_map: Iterable[(old, new)] or int or None
             If none, we can keep the data unchanged.
         axis:
-            On which axis to apply        
+            On which axis to apply
         """
-        if bin_map is None:    
+        if bin_map is None:
             return
         else:
             new_shape = list(self.shape)
-            new_shape[axis] = new_size            
-            new_frequencies = np.zeros(new_shape, dtype=float)
-            new_errors2 = np.zeros(new_shape, dtype=float)
+            new_shape[axis] = new_size
+            new_frequencies = np.zeros(new_shape, dtype=self._frequencies.dtype)
+            new_errors2 = np.zeros(new_shape, dtype=self._frequencies.dtype)
             self._apply_bin_map(
                 old_frequencies=self._frequencies, new_frequencies=new_frequencies,
                 old_errors2=self._errors2, new_errors2=new_errors2,
-                bin_map=bin_map, axis=axis)                
+                bin_map=bin_map, axis=axis)
             self._frequencies = new_frequencies
-            self._errors2 = new_errors2    
+            self._errors2 = new_errors2
 
     def _apply_bin_map(self, old_frequencies, new_frequencies, old_errors2, new_errors2, bin_map, axis=0):
         if old_frequencies is not None and old_frequencies.shape[axis] > 0:
             if isinstance(bin_map, int):
                 new_index = [slice(None) for i in range(self.ndim)]
-                new_index[axis] = slice(bin_map, bin_map + old_frequencies.shape[axis])          
+                new_index[axis] = slice(bin_map, bin_map + old_frequencies.shape[axis])
                 new_frequencies[new_index] += old_frequencies
                 new_errors2[new_index] += old_errors2
             else:
@@ -321,7 +321,7 @@ class HistogramBase(object):
                     old_index = [slice(None) for i in range(self.ndim)]
                     old_index[axis] = old
                     new_frequencies[new_index] += old_frequencies[old_index]
-                    new_errors2[new_index] += old_errors2[old_index]       
+                    new_errors2[new_index] += old_errors2[old_index]
 
     def has_same_bins(self, other):
         """Whether two histograms share the same binning.
@@ -331,14 +331,14 @@ class HistogramBase(object):
         bool
         """
         if self.shape != other.shape:
-            return False                 
+            return False
         elif self.ndim == 1:
             return np.allclose(self.bins, other.bins)
         elif self.ndim > 1:
             for i in range(self.ndim):
                 if not np.allclose(self.bins[i], other.bins[i]):
                     return False
-            return True        
+            return True
 
     def has_compatible_bins(self, other):
         # By default, the bins must be the same
@@ -373,14 +373,14 @@ class HistogramBase(object):
 
     def __iadd__(self, other):
         if np.isscalar(other):
-            raise RuntimeError("Cannot add constant to histograms.")        
+            raise RuntimeError("Cannot add constant to histograms.")
         if other.ndim != self.ndim:
-            raise RuntimeError("Cannot add histograms with different dimensions.")            
+            raise RuntimeError("Cannot add histograms with different dimensions.")
         elif self.has_same_bins(other):
             # print("Has same!!!!!!!!!!")
             self._coerce_dtype(other.dtype)
             self._frequencies += other.frequencies
-            self._errors2 += other.errors2 
+            self._errors2 += other.errors2
             self._missed += other._missed
         elif self.is_adaptive():
             if other.missed > 0:
@@ -401,17 +401,17 @@ class HistogramBase(object):
                     self.change_binning(new_bins, map1, axis=i)
                     other.change_binning(new_bins, map2, axis=i)
                 self._frequencies += other.frequencies
-                self._errors2 += other.errors2 
+                self._errors2 += other.errors2
 
             except:
-                raise # RuntimeError("Cannot find common binning for added histograms.")           
+                raise # RuntimeError("Cannot find common binning for added histograms.")
         else:
             raise RuntimeError("Incompatible binning")
-            
+
         if self._stats and other._stats:
             for key in self._stats:
                 self._stats[key] += other._stats[key]
-        return self        
+        return self
 
     def __sub__(self, other):
         new = self.copy()
@@ -419,7 +419,7 @@ class HistogramBase(object):
         return new
 
     def __isub__(self, other):
-        return self.__iadd__(other * (-1))        
+        return self.__iadd__(other * (-1))
 
     def __mul__(self, other):
         new = self.copy()
@@ -436,8 +436,8 @@ class HistogramBase(object):
         self._missed *= other
         if self._stats:
             self._stats["sum"] *= other
-            self._stats["sum2"] *= other ** 2        
-        return self        
+            self._stats["sum2"] *= other ** 2
+        return self
 
     def __rmul__(self, other):
         return self * other
@@ -456,8 +456,8 @@ class HistogramBase(object):
         self._missed /= other
         if self._stats:
             self._stats["sum"] /= other
-            self._stats["sum2"] /= other ** 2            
-        return self        
+            self._stats["sum2"] /= other ** 2
+        return self
 
     def __array__(self):
         """Convert to numpy array.
@@ -472,4 +472,3 @@ class HistogramBase(object):
         frequencies
         """
         return self.frequencies
-
