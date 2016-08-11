@@ -68,7 +68,7 @@ class HistogramND(HistogramBase):
 
     @property
     def numpy_bins(self):
-        return [binning.numpy_bins for binning in self._binnings]  
+        return [binning.numpy_bins for binning in self._binnings]
 
     def __getitem__(self, item):
         raise NotImplementedError()
@@ -133,7 +133,7 @@ class HistogramND(HistogramBase):
             if None in ixbin:
                 return None
             else:
-                return ixbin 
+                return ixbin
 
     def fill(self, value, weight=1):
         for i, binning in enumerate(self._binnings):
@@ -167,7 +167,7 @@ class HistogramND(HistogramBase):
         self.underflow += underflow
         self.overflow += overflow
         for key in self._stats:
-            self._stats[key] += stats.get(key, 0.0)    
+            self._stats[key] += stats.get(key, 0.0)
 
     def copy(self, include_frequencies=True):
         if include_frequencies:
@@ -273,6 +273,21 @@ class Histogram2D(HistogramND):
         kwargs.pop("dimension", None)
         super(Histogram2D, self).__init__(dimension=2, binnings=binnings, frequencies=frequencies, **kwargs)
 
+    @property
+    def T(self):
+        """Histogram with swapped axes.
+
+        Returns
+        -------
+        Histogram2D
+        """
+        a_copy = self.copy()
+        a_copy._binnings = list(reversed(a_copy._binnings))
+        a_copy.axis_names = list(reversed(a_copy.axis_names))
+        a_copy._frequencies = a_copy._frequencies.T
+        a_copy._errors2 = a_copy._errors2.T
+        return a_copy
+
 
 def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
     """
@@ -290,7 +305,7 @@ def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
     masks = [em[1] for em in edges_and_mask]
 
     if dtype is None:
-        dtype = np.int64 if weights is None else np.float    
+        dtype = np.int64 if weights is None else np.float
 
     ixgrid = np.ix_(*masks) # Indexer to select parts we want
 
@@ -316,11 +331,10 @@ def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
             err_freq, _ = np.histogramdd(data, edges, weights=weights ** 2)
             errors2 = err_freq[ixgrid].astype(dtype) # Automatically copy
         else:
-            errors2 = frequencies.copy()        
+            errors2 = frequencies.copy()
     else:
         frequencies = None
         missing = 0
         errors2 = None
 
     return frequencies, errors2, missing
-
