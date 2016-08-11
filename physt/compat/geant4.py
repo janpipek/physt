@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+"""Support for Geant4 histograms saved in CSV format."""
+
 from ..histogram1d import Histogram1D
 from ..histogram_nd import Histogram2D
 from ..binnings import fixed_width_binning
@@ -12,6 +15,10 @@ def load_csv(path):
     ----------
     path: str
         Path to the CSV file
+
+    Returns
+    -------
+    physt.histogram1d.Histogram1D or physt.histogram_nd.Histogram2D
     """
     meta = []
     data = []
@@ -25,7 +32,7 @@ def load_csv(path):
                     data.append([float(frag) for frag in line.split(",")])
                 except:
                     pass
-    data = np.asarray(data)    
+    data = np.asarray(data)
     ndim = int(_get(meta, "dimension"))
     if ndim == 1:
         return _create_h1(data, meta)
@@ -39,7 +46,7 @@ def _get(pseudodict, key, single=True):
     if single:
         return matches[0]
     else:
-        return matches        
+        return matches
 
 
 def _create_h1(data, meta):
@@ -68,8 +75,8 @@ def _create_h2(data, meta):
         bin_count = int(bin_count)
         min_ = float(min_)
         max_ = float(max_)
-        binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_)) 
-        binnings.append(binning)       
+        binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_))
+        binnings.append(binning)
 
     h = Histogram2D(binnings, name=_get(meta, "title"))
 

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
@@ -20,6 +21,12 @@ dims = {
 
 
 def bar(h1, errors=False, **kwargs):
+    """Bar plot of 1D histograms.
+
+    Parameters
+    ----------
+    h1: Histogram1D
+    """
     fig, ax = get_axes(kwargs)
 
     stats_box = kwargs.pop("stats_box", False)
@@ -28,7 +35,7 @@ def bar(h1, errors=False, **kwargs):
     cumulative = kwargs.pop("cumulative", False)
     label = kwargs.pop("label", h1.name)
 
-    data = get_data(h1, cumulative=cumulative, density=density) 
+    data = get_data(h1, cumulative=cumulative, density=density)
     transformed = transform_data(data, kwargs)
 
     if "cmap" in kwargs:
@@ -36,16 +43,16 @@ def bar(h1, errors=False, **kwargs):
         _, cmap_data = get_cmap_data(transformed, kwargs)
         colors = cmap(cmap_data)
     else:
-        colors = kwargs.pop("color", "blue")    
+        colors = kwargs.pop("color", "blue")
 
     apply_xy_lims(ax, h1, data, kwargs)
     add_ticks(ax, h1, kwargs)
-    
+
     if errors:
         err_data = get_err_data(h1, cumulative=cumulative, density=density)
         kwargs["yerr"] = err_data
         if not "ecolor" in kwargs:
-            kwargs["ecolor"] = "black"        
+            kwargs["ecolor"] = "black"
 
     ax.bar(h1.bin_left_edges, data, h1.bin_widths, label=label, color=colors, **kwargs)
     add_labels(h1, ax)
@@ -59,6 +66,12 @@ def bar(h1, errors=False, **kwargs):
 
 
 def scatter(h1, errors=False, **kwargs):
+    """Scatter plot of 1D histogram.
+
+    Parameters
+    ----------
+    h1: Histogram1D
+    """
     fig, ax = get_axes(kwargs)
 
     stats_box = kwargs.pop("stats_box", False)
@@ -74,10 +87,10 @@ def scatter(h1, errors=False, **kwargs):
         _, cmap_data = get_cmap_data(transformed, kwargs)
         kwargs["color"] = cmap(cmap_data)
     else:
-        kwargs["color"] = kwargs.pop("color", "blue")   
+        kwargs["color"] = kwargs.pop("color", "blue")
 
     apply_xy_lims(ax, h1, data, kwargs)
-    add_ticks(ax, h1, kwargs)    
+    add_ticks(ax, h1, kwargs)
 
     if errors:
         err_data = get_err_data(h1, cumulative=cumulative, density=density)
@@ -90,11 +103,19 @@ def scatter(h1, errors=False, **kwargs):
     if show_values:
         add_values(ax, h1, data)
     if stats_box:
-        add_stats_box(h1, ax)    
+        add_stats_box(h1, ax)
     return ax
 
 
 def line(h1, errors=False, **kwargs):
+    """Line plot of 1D histogram.
+
+    Parameters
+    ----------
+    h1: Histogram1D
+    errors: bool
+        Whether to draw error bars.
+    """
     fig, ax = get_axes(kwargs)
 
     stats_box = kwargs.pop("stats_box", False)
@@ -102,9 +123,9 @@ def line(h1, errors=False, **kwargs):
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
 
-    data = get_data(h1, cumulative=cumulative, density=density) 
+    data = get_data(h1, cumulative=cumulative, density=density)
     apply_xy_lims(ax, h1, data, kwargs)
-    add_ticks(ax, h1, kwargs)   
+    add_ticks(ax, h1, kwargs)
 
     if errors:
         err_data = get_err_data(h1, cumulative=cumulative, density=density)
@@ -131,13 +152,13 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
         show_colorbar = not transform
 
 
-    data = get_data(h2, cumulative=False, flatten=True, density=kwargs.pop("density", False))    
+    data = get_data(h2, cumulative=False, flatten=True, density=kwargs.pop("density", False))
     transformed = transform_data(data, kwargs)
-    
+
 
     cmap = get_cmap(kwargs)
     norm, cmap_data = get_cmap_data(transformed, kwargs)
-    colors = cmap(cmap_data)    
+    colors = cmap(cmap_data)
 
     xpos, ypos = (arr.flatten() for arr in h2.get_bin_left_edges())
     dx, dy = (arr.flatten() for arr in h2.get_bin_widths())
@@ -147,7 +168,7 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
     ylim = kwargs.get("ylim", (h2.bins[1][0,0], h2.bins[1][-1,1]))
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
-    ax.autoscale_view() 
+    ax.autoscale_view()
 
     alphas = get_alpha_data(cmap_data, kwargs)
     if np.isscalar(alphas):
@@ -166,14 +187,14 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
             if show_values:
                 text = format_value(data[i])
                 yiq_y = np.dot(bin_color[:3], [0.299, 0.587, 0.114])
-                
+
                 text_color = kwargs.get("text_color", None)
                 if not text_color:
                     if yiq_y > 0.5:
                         text_color = (0.0, 0.0, 0.0, kwargs.get("text_alpha", alpha))
                     else:
                         text_color = (1.0, 1.0, 1.0, kwargs.get("text_alpha", alpha))
-                ax.text(text_x[i], text_y[i], text, horizontalalignment='center', verticalalignment='center', color=text_color, clip_on=True)              
+                ax.text(text_x[i], text_y[i], text, horizontalalignment='center', verticalalignment='center', color=text_color, clip_on=True)
 
     if show_colorbar:
         if transform:
@@ -187,18 +208,19 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
 
 
 def bar3d(h2, **kwargs):
+    """Plot of 2D histograms as 3D boxes."""
     fig, ax = get_axes(kwargs, use_3d=True)
     density = kwargs.pop("density", False)
     data = get_data(h2, cumulative=False, flatten=True, density=density)
     transformed = transform_data(data, kwargs)
-    
+
     if "cmap" in kwargs:
         cmap = get_cmap(kwargs)
         _, cmap_data = get_cmap_data(transformed, kwargs)
         colors = cmap(cmap_data)
     else:
         colors = kwargs.pop("color", "blue")
-    
+
     xpos, ypos = (arr.flatten() for arr in h2.get_bin_centers())
     zpos = np.zeros_like(ypos)
     dx, dy = (arr.flatten() for arr in h2.get_bin_widths())
@@ -211,7 +233,21 @@ def bar3d(h2, **kwargs):
 
 
 def image(h2, **kwargs):
-    # ! Fatto
+    """Plot of 2D histograms based on pixmaps.
+
+    Similar to map, but it:
+    - has fewer options
+    - is much more effective (enables thousands)
+    - does not support irregular bins
+
+    Parameters
+    ----------
+    h2: physt.histogram_nd.Histogram2D
+    interpolation: str
+        interpolation parameter passed to imshow, default: "nearest" (creates rectangles)
+    """
+
+    # TODO: Check regular bins.
     fig, ax = get_axes(kwargs)
     cmap = get_cmap(kwargs)   # h2 as well?
     data = get_data(h2, cumulative=False, density=kwargs.pop("density", False))
@@ -230,7 +266,7 @@ def image(h2, **kwargs):
 
 
 def pair_bars(first, second, **kwargs):
-    """
+    """Draw two different histograms mirrored in one figure.
 
     Parameters
     ----------
@@ -259,7 +295,20 @@ def pair_bars(first, second, **kwargs):
 
 
 def get_axes(kwargs, use_3d=False):
-    """
+    """Prepare the axis to draw into.
+
+    Parameters
+    ----------
+    use_3d: bool
+        If yes, an axis with 3D projection is created.
+
+    Kwargs
+    ------
+    ax: Optional[plt.Axes]
+        An already existing axis to be used.
+    figsize: Optional[tuple]
+        Size of the new figure.
+
     Returns
     ------
     tuple(plt.Figure, plt.Axes)
@@ -290,7 +339,7 @@ def get_cmap(kwargs):
     return cmap
 
 
-def get_cmap_data(data, kwargs): 
+def get_cmap_data(data, kwargs):
     cmap_max = kwargs.pop("cmap_max", data.max())
     cmap_min = kwargs.pop("cmap_min", 0)
     if cmap_min == "min":
@@ -307,6 +356,7 @@ def get_alpha_data(data, kwargs):
 
 
 def add_labels(h, ax):
+    """Add axis and plot labels."""
     if h.name:
         ax.set_title(h.name)
     if hasattr(h, "axis_name"):
@@ -321,22 +371,23 @@ def add_labels(h, ax):
 
 
 def add_values(ax, h1, data):
+    """Show value next to each bin in a 1D plot."""
     for x, y in zip(h1.bin_centers, data):
-        ax.text(x, y, str(y), ha='center', va='bottom')  
+        ax.text(x, y, str(y), ha='center', va='bottom')
 
 
-def add_colorbar(fig, cmap, cmap_data, norm):
+def add_colorbar(ax, cmap, cmap_data, norm):
+    fig = ax.get_figure()
     mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
     mappable.set_array(cmap_data)   # TODO: Or what???
-
-    fig.colorbar(mappable, ax=ax)     
+    fig.colorbar(mappable, ax=ax)
 
 
 def add_stats_box(h1, ax):
     # place a text box in upper left in axes coords
     text = "Total: {0}\nMean: {1:.2f}\nStd.dev: {2:.2f}".format(h1.total, h1.mean(), h1.std())
     ax.text(0.05, 0.95, text, transform=ax.transAxes,
-            verticalalignment='top', horizontalalignment='left')      
+            verticalalignment='top', horizontalalignment='left')
 
 
 def apply_xy_lims(ax, h1, data, kwargs):
@@ -382,4 +433,3 @@ def add_ticks(ax, h1, kwargs):
         ax.set_xticks(h1.bin_centers)
     elif ticks == "edge":
         ax.set_xticks(h1.bin_left_edges)
-

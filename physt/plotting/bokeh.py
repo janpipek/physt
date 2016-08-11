@@ -1,4 +1,5 @@
-from bokeh.plotting import figure, output_file, show 
+from __future__ import absolute_import
+from bokeh.plotting import figure, output_file, show
 from bokeh.charts import Bar, Scatter
 from bokeh.charts import show as bokeh_show
 from bokeh.models import HoverTool, Range1d
@@ -19,7 +20,7 @@ def scatter(h1, show=True, **kwargs):
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
 
-    data = get_data(h1, cumulative=cumulative, density=density) 
+    data = get_data(h1, cumulative=cumulative, density=density)
 
     plot_data = {
         "x" : h1.bin_centers,
@@ -35,7 +36,7 @@ def bar(h1, show=True, **kwargs):
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
 
-    data = get_data(h1, cumulative=cumulative, density=density) 
+    data = get_data(h1, cumulative=cumulative, density=density)
 
     plot_data = ColumnDataSource(data={
         "top" : data,
