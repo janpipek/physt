@@ -26,6 +26,7 @@ def bar(h1, errors=False, **kwargs):
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
+    label = kwargs.pop("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density) 
     transformed = transform_data(data, kwargs)
@@ -46,7 +47,7 @@ def bar(h1, errors=False, **kwargs):
         if not "ecolor" in kwargs:
             kwargs["ecolor"] = "black"        
 
-    ax.bar(h1.bin_left_edges, data, h1.bin_widths, color=colors, **kwargs)
+    ax.bar(h1.bin_left_edges, data, h1.bin_widths, label=label, color=colors, **kwargs)
     add_labels(h1, ax)
 
     if show_values:
@@ -91,7 +92,6 @@ def scatter(h1, errors=False, **kwargs):
     if stats_box:
         add_stats_box(h1, ax)    
     return ax
-
 
 
 def line(h1, errors=False, **kwargs):
@@ -166,11 +166,13 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
             if show_values:
                 text = format_value(data[i])
                 yiq_y = np.dot(bin_color[:3], [0.299, 0.587, 0.114])
-                    
-                if yiq_y > 0.5:
-                    text_color = (0.0, 0.0, 0.0, kwargs.get("text_alpha", alpha))
-                else:
-                    text_color = (1.0, 1.0, 1.0, kwargs.get("text_alpha", alpha))
+                
+                text_color = kwargs.get("text_color", None)
+                if not text_color:
+                    if yiq_y > 0.5:
+                        text_color = (0.0, 0.0, 0.0, kwargs.get("text_alpha", alpha))
+                    else:
+                        text_color = (1.0, 1.0, 1.0, kwargs.get("text_alpha", alpha))
                 ax.text(text_x[i], text_y[i], text, horizontalalignment='center', verticalalignment='center', color=text_color, clip_on=True)              
 
     if show_colorbar:
@@ -219,7 +221,7 @@ def image(h2, **kwargs):
     if not "interpolation" in kwargs:
         kwargs["interpolation"] = "nearest"
 
-    ax.imshow(cmap_data[::-1,:], cmap=cmap,
+    ax.imshow(cmap_data.T[::-1,:], cmap=cmap,
         extent=(h2.bins[0][0,0], h2.bins[0][-1,1], h2.bins[1][0,0], h2.bins[1][-1,1]),
         aspect="auto", **kwargs)
 
@@ -227,7 +229,41 @@ def image(h2, **kwargs):
     return ax
 
 
+def pair_bars(first, second, **kwargs):
+    """
+
+    Parameters
+    ----------
+    first: Histogram1D
+    second: Histogram1D
+    color1:
+    color2:
+    """
+    _, ax = get_axes(kwargs)
+    color1 = kwargs.pop("color1", "red")
+    color2 = kwargs.pop("color2", "blue")
+    title = kwargs.pop("title", "{0} - {1}".format(first.name, second.name))
+    xlim = kwargs.pop("xlim", (min(first.bin_left_edges[0], first.bin_left_edges[0]), max(first.bin_right_edges[-1], second.bin_right_edges[-1])))
+
+    bar(first * (-1), color=color1, ax=ax, ylim="keep", **kwargs)
+    bar(second, color=color2, ax=ax, ylim="keep", **kwargs)
+    ax.set_title(title)
+    ticks = np.abs(ax.get_yticks())
+    if np.allclose(np.rint(ticks), ticks):
+        ax.set_yticklabels(ticks.astype(int))
+    else:
+        ax.set_yticklabels(ticks)
+    ax.set_xlim(xlim)
+    ax.legend()
+    return ax
+
+
 def get_axes(kwargs, use_3d=False):
+    """
+    Returns
+    ------
+    tuple(plt.Figure, plt.Axes)
+    """
     figsize = kwargs.pop("figsize", None)
     if "ax" in kwargs:
         ax = kwargs.pop("ax")
@@ -243,7 +279,14 @@ def get_axes(kwargs, use_3d=False):
 def get_cmap(kwargs):
     cmap = kwargs.pop("cmap", "Greys")
     if isinstance(cmap, str):
-        cmap = plt.get_cmap(cmap)
+        try:
+            cmap = plt.get_cmap(cmap)
+        except BaseException as exc:
+            try:
+                import seaborn.apionly as sns
+                cmap = sns.color_palette(as_cmap=True)
+            except ImportError:
+                raise exc
     return cmap
 
 
@@ -276,6 +319,7 @@ def add_labels(h, ax):
             ax.set_ylabel(h.axis_names[1])
     ax.get_figure().tight_layout()
 
+
 def add_values(ax, h1, data):
     for x, y in zip(h1.bin_centers, data):
         ax.text(x, y, str(y), ha='center', va='bottom')  
@@ -304,7 +348,7 @@ def apply_xy_lims(ax, h1, data, kwargs):
     if ylim is not "keep":
         if isinstance(ylim, tuple):
             pass
-        else:
+        elif ylim:
             ylim = ax.get_ylim()
             if data.size > 0 and data.max() > 0:
                 ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
@@ -315,7 +359,7 @@ def apply_xy_lims(ax, h1, data, kwargs):
     if xlim is not "keep":
         if isinstance(xlim, tuple):
             pass
-        else:
+        elif xlim:
             xlim = ax.get_xlim()
             if len(h1.bin_centers) > 2:
                 xlim = (h1.bin_left_edges[0], h1.bin_right_edges[-1])
