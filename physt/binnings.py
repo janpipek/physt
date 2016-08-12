@@ -231,6 +231,11 @@ class StaticBinning(BinningBase):
         -------
         StaticBinning
             A new static binning with a copy of bins.
+
+        Parameters
+        ----------
+        copy : bool
+            if True, returns itself (already satisfying conditions).
         """
         if copy:
             return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
@@ -255,9 +260,10 @@ class StaticBinning(BinningBase):
 class NumpyBinning(BinningBase):
     """Binning schema working as numpy.histogram.
     """
-    def __init__(self, numpy_bins, includes_right_edge=True):
-        # Check: rising
-        super(NumpyBinning, self).__init__(numpy_bins=numpy_bins, includes_right_edge=includes_right_edge)
+    def __init__(self, numpy_bins, includes_right_edge=True, **kwargs):
+        if not is_rising(numpy_bins):
+            raise RuntimeError("Bins not in rising order.")
+        super(NumpyBinning, self).__init__(numpy_bins=numpy_bins, includes_right_edge=includes_right_edge, **kwargs)
 
     @property
     def numpy_bins(self):
@@ -484,7 +490,7 @@ def numpy_binning(data, bins=10, range=None, *args, **kwargs):
 
     Returns
     -------
-    numpy.ndarray
+    NumpyBinning
 
     See Also
     --------
@@ -519,7 +525,7 @@ def human_binning(data=None, bins=None, range=None, **kwargs):
 
     Returns
     -------
-    numpy.ndarray
+    FixedWidthBinning
     """
     subscales = np.array([0.5, 1, 2, 2.5, 5, 10])
 
@@ -556,7 +562,7 @@ def quantile_binning(data=None, bins=10, qrange=(0.0, 1.0), **kwargs):
 
     Returns
     -------
-    numpy.ndarray
+    StaticBinning
     """
 
     if np.isscalar(bins):
@@ -578,9 +584,9 @@ def integer_binning(data=None, **kwargs):
     range: Optional[Tuple[int]]
         min (included) and max integer (excluded) bin
 
-     Returns
+    Returns
     -------
-    numpy.ndarray
+    StaticBinning
     """
     if "range" in kwargs:
         kwargs["range"] = tuple(r - 0.5 for r in kwargs["range"])
@@ -626,7 +632,7 @@ def exponential_binning(data=None, bins=None, range=None, **kwargs):
 
     Returns
     -------
-    numpy.ndarray
+    ExponentialBinning
 
     See also
     --------
@@ -697,6 +703,10 @@ def calculate_bins_nd(array, bins=None, *args, **kwargs):
     """Find optimal binning from arguments (n-dimensional variant)
 
     Usage similar to `calculate_bins`.
+
+    Returns
+    -------
+    List[BinningBase]
     """
     if kwargs.pop("check_nan", True):
         if np.any(np.isnan(array)):

@@ -123,6 +123,7 @@ def is_rising(bins):
     -------
     bool
     """
+    # TODO: Optimize for numpy bins
     bins = make_bin_array(bins)
     if np.any(bins[:,0] >= bins[:,1]):
         return False
