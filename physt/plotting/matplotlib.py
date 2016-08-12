@@ -194,7 +194,8 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
                         text_color = (0.0, 0.0, 0.0, kwargs.get("text_alpha", alpha))
                     else:
                         text_color = (1.0, 1.0, 1.0, kwargs.get("text_alpha", alpha))
-                ax.text(text_x[i], text_y[i], text, horizontalalignment='center', verticalalignment='center', color=text_color, clip_on=True)
+                ax.text(text_x[i], text_y[i], text, horizontalalignment='center',
+                        verticalalignment='center', color=text_color, clip_on=True)
 
     if show_colorbar:
         if transform:
@@ -373,7 +374,7 @@ def add_labels(h, ax):
 def add_values(ax, h1, data):
     """Show value next to each bin in a 1D plot."""
     for x, y in zip(h1.bin_centers, data):
-        ax.text(x, y, str(y), ha='center', va='bottom')
+        ax.text(x, y, str(y), ha='center', va='bottom', clip_on=True)
 
 
 def add_colorbar(ax, cmap, cmap_data, norm):
