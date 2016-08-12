@@ -1,3 +1,9 @@
+0.3.10 (12th August 2016)
+-------------------------
+- Added: astropy binning schemes (return)
+- Added: Histogram2D.T - a fast transpose
+- Fix: a few minor bugs in plotting
+
 0.3.9 (11th August 2016)
 ------------------------
 - Changed: moved dask support to compat package
