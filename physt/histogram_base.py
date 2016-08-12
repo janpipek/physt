@@ -77,6 +77,10 @@ class HistogramBase(object):
         - from integral to float types
         - between the same category of type (float/integer)
         - from float types to integer if weights are trivial
+
+        Parameters
+        ----------
+        value: np.dtype or something convertible to it.
         """
         value = np.dtype(value)
         if value.kind not in "iuf":
@@ -203,6 +207,14 @@ class HistogramBase(object):
         return all(binning.is_adaptive() for binning in self._binnings)
 
     def set_adaptive(self, value=True):
+        """Change the histogram binning to (non)adaptive.
+
+        This requires binning in all dimensions to allow this.
+
+        Parameters
+        ----------
+        value : bool
+        """
         for binning in self._binnings:
             binning.set_adaptive(value)
 
@@ -289,8 +301,10 @@ class HistogramBase(object):
         ----------
         new_size: int
         bin_map: Iterable[(old, new)] or int or None
-            If none, we can keep the data unchanged.
-        axis:
+            If None, we can keep the data unchanged.
+            If int, it is offset by which to shift the data (can be 0)
+            If iterable, pairs specify which old bin should go into which new bin
+        axis: int
             On which axis to apply
         """
         if bin_map is None:
@@ -308,6 +322,27 @@ class HistogramBase(object):
             self._errors2 = new_errors2
 
     def _apply_bin_map(self, old_frequencies, new_frequencies, old_errors2, new_errors2, bin_map, axis=0):
+        """Fill new data arrays using a map.
+
+        Parameters
+        ----------
+        old_frequencies : np.ndarray
+            Source of frequencies data
+        new_frequencies : np.ndarray
+            Target of frequencies data
+        old_errors2 : np.ndarray
+            Source of errors data
+        new_errors2 : np.ndarray
+            Target of errors data
+        bin_map: Iterable[(old, new)] or int or None
+            As in _reshape_data
+        axis: int
+            On which axis to apply
+
+        See also
+        --------
+        HistogramBase._reshape_data
+        """
         if old_frequencies is not None and old_frequencies.shape[axis] > 0:
             if isinstance(bin_map, int):
                 new_index = [slice(None) for i in range(self.ndim)]
@@ -340,10 +375,11 @@ class HistogramBase(object):
                     return False
             return True
 
-    def has_compatible_bins(self, other):
-        # By default, the bins must be the same
-        # Overridden
-        return self.has_same_bins()
+    # Unused?
+    # def has_compatible_bins(self, other):
+    #     # By default, the bins must be the same
+    #     # Overridden
+    #     return self.has_same_bins()
 
     def fill_n(self, values, weights=None):
         if weights is not None:
@@ -357,6 +393,12 @@ class HistogramBase(object):
 
     @property
     def plot(self):
+        """Proxy to plotting.
+
+        Returns
+        -------
+        physt.plotting.Plotter
+        """
         from .plotting import Plotter
         return Plotter(self)
 
