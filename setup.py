@@ -16,7 +16,7 @@ options = dict(
     url='https://github.com/janpipek/physt',
     install_requires = ['numpy'],
     extras_require = {
-        'all' : ['dask']
+        'all' : ['dask', 'matplotlib', 'bokeh']
     },
     entry_points = {
         'console_scripts' : [
