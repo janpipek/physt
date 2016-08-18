@@ -266,7 +266,7 @@ class HistogramND(HistogramBase):
 class Histogram2D(HistogramND):
     """Specialized 2D variant of the general HistogramND class.
 
-    Its only addition is the plot() method
+    In contrast to general HistogramND, it is plottable.
     """
 
     def __init__(self, binnings, frequencies=None, **kwargs):

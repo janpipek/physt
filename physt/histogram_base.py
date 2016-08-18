@@ -98,6 +98,12 @@ class HistogramBase(object):
             raise RuntimeError("Cannot change histogram dtype.")
 
     def _coerce_dtype(self, other_dtype):
+        """Possibly change the type to allow correct operations with other operand.
+
+        Parameters
+        ----------
+        other_dtype : np.dtype or type
+        """
         other_dtype = np.dtype(other_dtype)
         if other_dtype.kind == self.dtype.kind:
             pass

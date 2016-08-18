@@ -164,10 +164,7 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
     dx, dy = (arr.flatten() for arr in h2.get_bin_widths())
     text_x, text_y = (arr.flatten() for arr in h2.get_bin_centers())
 
-    xlim = kwargs.get("xlim", (h2.bins[0][0,0], h2.bins[0][-1,1]))
-    ylim = kwargs.get("ylim", (h2.bins[1][0,0], h2.bins[1][-1,1]))
-    ax.set_xlim(*xlim)
-    ax.set_ylim(*ylim)
+    apply_xy_lims(ax, h2, data=data, kwargs=kwargs)
     ax.autoscale_view()
 
     alphas = get_alpha_data(cmap_data, kwargs)
@@ -256,6 +253,8 @@ def image(h2, **kwargs):
 
     if not "interpolation" in kwargs:
         kwargs["interpolation"] = "nearest"
+
+    apply_xy_lims(ax, h2, data=data, kwargs=kwargs)
 
     ax.imshow(cmap_data.T[::-1,:], cmap=cmap,
         extent=(h2.bins[0][0,0], h2.bins[0][-1,1], h2.bins[1][0,0], h2.bins[1][-1,1]),
@@ -391,6 +390,15 @@ def add_stats_box(h1, ax):
 
 
 def apply_xy_lims(ax, h1, data, kwargs):
+    """Apply axis limits and scales from kwargs.
+
+    Parameters
+    ----------
+    ax : plt.Axes
+    h1 : Histogram1D or Histogram2D
+    data : np.ndarray
+        The frequencies or densities or otherwise manipulated data
+    """
     xscale = kwargs.pop("xscale", None)
     yscale = kwargs.pop("yscale", None)
     ylim = kwargs.pop("ylim", "auto")
@@ -401,10 +409,19 @@ def apply_xy_lims(ax, h1, data, kwargs):
             pass
         elif ylim:
             ylim = ax.get_ylim()
-            if data.size > 0 and data.max() > 0:
-                ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
-            if yscale == "log":
-                ylim = (abs(data[data > 0].min()) * 0.9, ylim[1] * 1.1)
+            if h1.ndim == 1:
+                if data.size > 0 and data.max() > 0:
+                    ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
+                if yscale == "log":
+                    ylim = (abs(data[data > 0].min()) * 0.9, ylim[1] * 1.1)
+            elif h1.ndim == 2:
+                if h1.shape[1] >= 2:
+                    ylim = (h1.get_bin_left_edges(1)[0], h1.get_bin_right_edges(1)[-1])
+                    if yscale == "log":
+                        if ylim[0] <= 0:
+                            raise RuntimeError("Cannot use logarithmic scale for non-positive bins.")
+            else:
+                raise RuntimeError("Invalid dimension: {0}".format(h1.ndim))
         ax.set_ylim(ylim)
 
     if xlim is not "keep":
@@ -412,11 +429,16 @@ def apply_xy_lims(ax, h1, data, kwargs):
             pass
         elif xlim:
             xlim = ax.get_xlim()
-            if len(h1.bin_centers) > 2:
-                xlim = (h1.bin_left_edges[0], h1.bin_right_edges[-1])
-            if xscale == "log":
-                if xlim[0] <= 0:
-                    raise RuntimeError("Cannot use logarithmic scale for non-positive bins.")
+            if h1.shape[0] >= 2:
+                if h1.ndim == 1:
+                    xlim = (h1.bin_left_edges[0], h1.bin_right_edges[-1])
+                elif h1.ndim == 2:
+                    xlim = (h1.get_bin_left_edges(0)[0], h1.get_bin_right_edges(0)[-1])
+                else:
+                    raise RuntimeError("Invalid dimension: {0}".format(h1.ndim))
+                if xscale == "log":
+                    if xlim[0] <= 0:
+                        raise RuntimeError("Cannot use logarithmic scale for non-positive bins.")
         ax.set_xlim(xlim)
 
     if xscale:

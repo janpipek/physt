@@ -91,7 +91,7 @@ class BinningBase(object):
         raise NotImplementedError()
 
     def adapt(self, other):
-        """
+        """Adapt this binning so that it contains all bins of another binning.
 
         Parameters
         ----------
@@ -222,7 +222,7 @@ class StaticBinning(BinningBase):
     inconsecutive_allowed = True
 
     def __init__(self, bins, includes_right_edge=True, **kwargs):
-        super(StaticBinning, self).__init__(bins=bins, includes_right_edge=includes_right_edge)        
+        super(StaticBinning, self).__init__(bins=bins, includes_right_edge=includes_right_edge)
 
     def as_static(self, copy=True):
         """Convert binning to a static form.
@@ -397,8 +397,8 @@ class FixedWidthBinning(BinningBase):
     def _set_min_and_count(self, times_min, bin_count):
         self._bin_count = bin_count
         self._times_min = times_min
-        self._bins = None            
-        self._numpy_bins = None         
+        self._bins = None
+        self._numpy_bins = None
 
     def _adapt(self, other):
         """
@@ -527,7 +527,7 @@ def human_binning(data=None, bins=None, range=None, **kwargs):
     if data is None and range is None:
         raise RuntimeError("Cannot guess optimum bin width without data.")
     if bins is None:
-        bins = ideal_bin_count(data)    
+        bins = ideal_bin_count(data)
     min_ = range[0] if range else data.min()
     max_ = range[1] if range else data.max()
     bw = (max_ - min_) / bins
