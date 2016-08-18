@@ -424,37 +424,23 @@ class Histogram1D(HistogramBase):
         drop_na: Optional[bool]
             If true (default), all nan's are skipped.
         """
+        # TODO: Unify with HistogramBase
         values = np.asarray(values)
         if dropna:
             values = values[~np.isnan(values)]
         if self._binning.is_adaptive():
             map = self._binning.force_bin_existence(values)
-            # print(map)
             self._reshape_data(self._binning.bin_count, map)
         frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self._binning,
                                                                                   weights=weights, validate_bins=False)
         self._frequencies += frequencies
         self._errors2 += errors2
         # TODO: check that adaptive does not produce under-/over-flows?
-        self.underflow += underflow
-        self.overflow += overflow
+        if self.keep_missed:
+            self.underflow += underflow
+            self.overflow += overflow
         for key in self._stats:
             self._stats[key] += stats.get(key, 0.0)
-
-    # def _reshape_data(self, new_size, bin_map, axis=0):
-    #     """Optimized version of HistogramBase._reshape_data
-    #     """
-    #     if bin_map is None:
-    #         return
-    #     else:
-    #         new_frequencies = np.zeros(new_size, dtype=float)
-    #         new_errors2 = np.zeros(new_size, dtype=float)
-    #         if self._frequencies is not None and self._frequencies.shape[0] > 0:
-    #             for (old, new) in bin_map:      # Generic enough
-    #                 new_frequencies[new] += self._frequencies[old]
-    #                 new_errors2[new] += self._errors2[old]
-    #         self._frequencies = new_frequencies
-    #         self._errors2 = new_errors2
 
     def copy(self, include_frequencies=True):
         """A deep copy of the histogram.
