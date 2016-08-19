@@ -26,6 +26,8 @@ def bar(h1, errors=False, **kwargs):
     Parameters
     ----------
     h1: Histogram1D
+    errors: bool
+        Whether to draw error bars.
     """
     fig, ax = get_axes(kwargs)
 
@@ -71,6 +73,8 @@ def scatter(h1, errors=False, **kwargs):
     Parameters
     ----------
     h1: Histogram1D
+    errors: bool
+        Whether to draw error bars.
     """
     fig, ax = get_axes(kwargs)
 
@@ -112,8 +116,8 @@ def line(h1, errors=False, **kwargs):
 
     Parameters
     ----------
-    h1: Histogram1D
-    errors: bool
+    h1 : Histogram1D
+    errors : bool
         Whether to draw error bars.
     """
     fig, ax = get_axes(kwargs)
@@ -143,6 +147,18 @@ def line(h1, errors=False, **kwargs):
 
 
 def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
+    """Coloured-rectangle plot of 2D histogram.
+
+    Parameters
+    ----------
+    h2 : Histogram2D
+    show_zero : Optional[bool]
+        Whether to show coloured box for bins with 0 frequency (otherwise background).
+    show_values : Optional[bool]
+        Whether to show labels with frequencies/densities in the middle of the bin
+    show_colorbar : Optional[bool]
+        Whether to show colorbar next to the plot.
+    """
     fig, ax = get_axes(kwargs)
 
     format_value = kwargs.pop("format_value", lambda x: x)
@@ -206,7 +222,12 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
 
 
 def bar3d(h2, **kwargs):
-    """Plot of 2D histograms as 3D boxes."""
+    """Plot of 2D histograms as 3D boxes.
+
+    Parameters
+    ----------
+    h2 : Histogram2D
+    """
     fig, ax = get_axes(kwargs, use_3d=True)
     density = kwargs.pop("density", False)
     data = get_data(h2, cumulative=False, flatten=True, density=density)
@@ -356,7 +377,13 @@ def get_alpha_data(data, kwargs):
 
 
 def add_labels(h, ax):
-    """Add axis and plot labels."""
+    """Add axis and plot labels.
+
+    Parameters
+    ----------
+    ax : plt.Axes
+    h : Histogram1D or Histogram2D
+    """
     if h.name:
         ax.set_title(h.name)
     if hasattr(h, "axis_name"):
@@ -399,6 +426,11 @@ def apply_xy_lims(ax, h1, data, kwargs):
     h1 : Histogram1D or Histogram2D
     data : np.ndarray
         The frequencies or densities or otherwise manipulated data
+    kwargs: dict
+        xscale : Optional[str]
+        yscale : Optional[str]
+        xlim :
+        ylim :
     """
     xscale = kwargs.pop("xscale", None)
     yscale = kwargs.pop("yscale", None)
