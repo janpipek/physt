@@ -9,6 +9,11 @@ class HistogramBase(object):
     - Histogram1D
     - HistogramND
 
+    The methods you should override:
+    - fill
+    - fill_n (optional)
+    - copy
+
     Attributes
     ----------
     _binnings : Iterable[BinningBase]
@@ -18,23 +23,10 @@ class HistogramBase(object):
     _errors2 : array_like
         Square errors associated with the bin contents
     _meta_data : dict
+    name: str
+        Name to be displayed for the histogram
 
     """
-
-    # @property
-    # def bins(self):
-    #     Matrix of bins.
-
-    #     Returns
-    #     -------
-    #     numpy.ndarray
-    #         Two-dimensional array of bin edges, shape=(n, 2)
-
-    #     return [binning.bins for binning in self._binnings]
-
-    # @property
-    # def numpy_bins(self):
-    #     return [binning.numpy_bins for binning in self._binnings]
 
     @property
     def shape(self):
@@ -132,7 +124,7 @@ class HistogramBase(object):
 
         Returns
         -------
-        numpy.ndarray
+        np.ndarray
             Array of bin frequencies
         """
         return self._frequencies
@@ -145,12 +137,16 @@ class HistogramBase(object):
 
         Returns
         -------
-        numpy.ndarray
+        np.ndarray
         """
         return self._frequencies / self.bin_sizes
 
     def normalize(self, inplace=False):
         """Normalize the histogram, so that the total weight is equal to 1.
+
+        Returns
+        -------
+        HistogramBase
 
         See also
         --------
@@ -169,17 +165,17 @@ class HistogramBase(object):
 
         Returns
         -------
-        numpy.ndarray
+        np.ndarray
         """
         return self._errors2
 
     @property
     def errors(self):
-        """Bin errors
+        """Bin errors.
 
         Returns
         -------
-        numpy.ndarray
+        np.ndarray
         """
         return np.sqrt(self.errors2)
 
@@ -388,6 +384,21 @@ class HistogramBase(object):
     #     return self.has_same_bins()
 
     def fill_n(self, values, weights=None):
+        """Add more values at once.
+
+        This (default) implementation uses a simple loop to add values using `fill` method
+
+        Parameters
+        ----------
+        values: Iterable
+            Values to add
+        weights: Optional[Iterable]
+            Optional values to assign to each value
+
+        Note
+        ----
+        This method should be overloaded with a more efficient one.
+        """
         if weights is not None:
             if weights.shape != values.shape[0]:
                 raise RuntimeError("Wrong shape of weights")
@@ -512,7 +523,7 @@ class HistogramBase(object):
 
         Returns
         -------
-        numpy.ndarray
+        np.ndarray
             The array of frequencies
 
         See also
