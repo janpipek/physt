@@ -192,7 +192,7 @@ class HistogramND(HistogramBase):
             self._missed += weight
         else:
             self._frequencies[ixbin] += weight
-            self.errors2[ixbin] += weight ** 2
+            self._errors2[ixbin] += weight ** 2
         return ixbin
 
     def fill_n(self, values, weights=None, dropna=True):
@@ -234,13 +234,14 @@ class HistogramND(HistogramBase):
             frequencies = None
             missed = 0
             errors2 = None
-        return self.__class__(dimension=self.ndim, binnings=[binning.copy() for binning in self._binnings],
+        return self.__class__(dimension=self.ndim,
+                              binnings=[binning.copy() for binning in self._binnings],
                               frequencies=frequencies, errors2=errors2,
                               name=self.name, axis_names=self.axis_names[:],
                               keep_missed=self.keep_missed, missed=missed)
 
     def projection(self, *axes, **kwargs):
-        """Reduce dimensionality by summing by axis/axes.
+        """Reduce dimensionality by summing along axis/axes.
 
         Parameters
         ----------
