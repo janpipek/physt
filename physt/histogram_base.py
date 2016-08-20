@@ -412,12 +412,16 @@ class HistogramBase(object):
     def plot(self):
         """Proxy to plotting.
 
+        This attribute is a special proxy to plotting. In the most
+        simple cases, it can be used as a method. For more sophisticated
+        use, see the documentation for physt.plotting package.
+
         Returns
         -------
-        physt.plotting.Plotter
+        physt.plotting.PlottingProxy
         """
-        from .plotting import Plotter
-        return Plotter(self)
+        from .plotting import PlottingProxy
+        return PlottingProxy(self)
 
     def __add__(self, other):
         new = self.copy()

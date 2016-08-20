@@ -1,7 +1,8 @@
+"""
+Functions that are shared by several (all) backends.
+
+"""
 from __future__ import absolute_import
-
-"""Functions that are shared by several (all) backends."""
-
 import numpy as np
 
 

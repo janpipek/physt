@@ -1,3 +1,8 @@
+"""
+Bokeh backend for plotting in physt.
+
+This is very basic.
+"""
 from __future__ import absolute_import
 from bokeh.plotting import figure, output_file, show
 from bokeh.charts import Bar, Scatter

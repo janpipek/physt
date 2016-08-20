@@ -1,3 +1,11 @@
+"""
+Plotting for physt histograms.
+
+Available backends:
+- matplotlib
+- bokeh
+"""
+
 from __future__ import absolute_import
 from collections import OrderedDict
 
@@ -31,6 +39,8 @@ else:
 
 def _get_backend(name=None):
     """Get a plotting backend.
+
+    Tries to get it using the name - or the default one.
 
     Parameters
     ----------
@@ -68,7 +78,7 @@ def plot(histogram, histtype=None, backend=None, **kwargs):
         raise RuntimeError("Histogram type error: {0} missing in backend {1}".format(histtype, backend_name))
 
 
-class Plotter(object):
+class PlottingProxy(object):
     """Proxy enabling to call plotting methods on histogram objects.
 
     It can be used both as a method or as an object containing methods. In any case,
