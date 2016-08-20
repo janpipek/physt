@@ -8,7 +8,7 @@ import numpy as np
 from .common import get_data, transform_data, get_err_data
 
 
-types = ("bar", "scatter", "line", "map", "bar3d", "image")
+types = ("bar", "scatter", "line", "map", "bar3d", "image", "polar_map")
 
 dims = {
     "bar": [1],
@@ -16,7 +16,8 @@ dims = {
     "line": [1],
     "map": [2],
     "bar3d": [2],
-    "image": [2]
+    "image": [2],
+    "polar_map": [2]
 }
 
 
@@ -286,6 +287,36 @@ def image(h2, **kwargs):
     return ax
 
 
+def polar_map(hist, show_zero=True, **kwargs):
+    """Polar map of polar histograms."""
+    fig, ax = get_axes(kwargs, use_polar=True)
+
+    data = get_data(hist, cumulative=False, flatten=True, density=kwargs.pop("density", False))
+    transformed = transform_data(data, kwargs)
+
+    cmap = get_cmap(kwargs)
+    norm, cmap_data = get_cmap_data(transformed, kwargs)
+    colors = cmap(cmap_data)
+
+    rpos, phipos = (arr.flatten() for arr in hist.get_bin_left_edges())
+    dr, dphi  = (arr.flatten() for arr in hist.get_bin_widths())
+    rmax, _ =  (arr.flatten() for arr in hist.get_bin_right_edges())
+
+    alphas = get_alpha_data(cmap_data, kwargs)
+    if np.isscalar(alphas):
+        alphas = np.ones_like(data) * alphas
+
+    for i in range(len(rpos)):
+        if transformed[i] > 0 or show_zero:
+            bin_color = colors[i]
+            bars = ax.bar(phipos[i], dr[i], width=dphi[i], bottom=rpos[i], color=bin_color,
+                          edgecolor=kwargs.get("grid_color", cmap(0.5)), lw=kwargs.get("lw", 0.5),
+                          alpha=alphas[i])
+
+    ax.set_rmax(rmax.max())
+    return ax
+
+
 def pair_bars(first, second, **kwargs):
     """Draw two different histograms mirrored in one figure.
 
@@ -315,7 +346,7 @@ def pair_bars(first, second, **kwargs):
     return ax
 
 
-def get_axes(kwargs, use_3d=False):
+def get_axes(kwargs, use_3d=False, use_polar=False):
     """Prepare the axis to draw into.
 
     Parameters
@@ -341,6 +372,9 @@ def get_axes(kwargs, use_3d=False):
     elif use_3d:
         fig = plt.figure(figsize=figsize)
         ax = fig.add_subplot(111, projection='3d')
+    elif use_polar:
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_subplot(111, projection='polar')
     else:
         fig, ax = plt.subplots(figsize=figsize)
     return fig, ax

@@ -45,8 +45,8 @@ class PolarHistogram(HistogramND):
             r, phi = value
             # TODO: phi modulo
         else:
-            r= np.hypot(value[1], value[0])
-            phi = np.arctan2(value[1], value[0])        
+            r = np.hypot(value[1], value[0])
+            phi = np.arctan2(value[1], value[0])
         ixbin = (HistogramND.find_bin(self, r, 0),  HistogramND.find_bin(self, phi, 1))
         if None in ixbin:
             return None
@@ -62,81 +62,6 @@ class PolarHistogram(HistogramND):
             self._frequencies[ixbin] += weight
             self.errors2[ixbin] += weight ** 2
         return ixbin
-
-    # TODO: Implement fill_n
-
-    def plot(self, histtype="map", density=False, backend="matplotlib", **kwargs):
-        color = kwargs.pop("color", "frequency")
-        alpha = kwargs.pop("alpha", 1.0)
-        show_zero = kwargs.pop("show_zero", True)
-        cmap = kwargs.pop("cmap", "Greys")
-
-        if backend == "matplotlib":
-            import matplotlib.pyplot as plt
-            import matplotlib.cm as cm
-            import matplotlib.colors as colors
-
-            if density:
-                dz = self.densities.flatten()
-            else:
-                dz = self.frequencies.flatten()
-
-            if color == "frequency":
-                cmap_max = kwargs.pop("cmap_max", dz.max())
-                cmap_min = kwargs.pop("cmap_min", 0)
-                if cmap_min == "min":
-                    cmap_min = dz.min()
-                norm = colors.Normalize(cmap_min, cmap_max, clip=True)
-
-                if isinstance(cmap, str):
-                    cmap = plt.get_cmap(cmap)
-                colors = cmap(norm(dz))
-            else:
-                colors = color   # TODO: does not work for map
-
-            if histtype == "map":
-                figsize = kwargs.pop("figsize", None)
-                fig = plt.figure(figsize=figsize)
-                ax = fig.add_subplot(111, projection='polar')
-
-                # ypos, xpos = (arr.flatten() for arr in self.get_bin_left_edges())
-                # # if show_values:
-                # #     text_x, text_y = (arr.flatten() for arr in self.get_bin_centers())
-                #
-                # dy, dx = (arr.flatten() for arr in self.get_bin_widths())
-                #
-                # for i in range(len(xpos)):
-                #     bin_color = colors[i]
-                #
-                #     if dz[i] > 0 or show_zero:
-                #         rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
-                #                              facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
-                #                              lw=kwargs.get("lw", 0.5))
-                #         ax.add_patch(rect)
-                # ax.autoscale()
-                rpos, phipos = (arr.flatten() for arr in self.get_bin_left_edges())
-                # _, phipos = (arr.flatten() for arr in self.get_bin_centers())
-                dr, dphi  = (arr.flatten() for arr in self.get_bin_widths())
-                rmax, _ =  (arr.flatten() for arr in self.get_bin_right_edges())
-
-                for i in range(len(rpos)):
-                    if dz[i] > 0 or show_zero:
-                        bin_color = colors[i]
-                        bars = ax.bar(phipos[i], dr[i], width=dphi[i], bottom=rpos[i], color=bin_color,
-                                      edgecolor=kwargs.get("grid_color", cmap(0.5)), lw=kwargs.get("lw", 0.5),
-                                      alpha=alpha)
-                    #
-                    #     if dz[i] > 0 or show_zero:
-                    #         rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
-                    #                              facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
-                    #                              lw=kwargs.get("lw", 0.5))
-                    #         ax.add_patch(rect)
-                ax.set_rmax(rmax.max())
-            else:
-                raise RuntimeError("Unsupported hist type")
-            return ax
-        else:
-            raise RuntimeError("Unsupported hist type")
 
 
 class RadialHistogram(Histogram1D):
@@ -163,7 +88,7 @@ class SphericalHistogram(HistogramND):
             kwargs["axis_names"] = ("r", "theta", "phi")
         if "dim" in kwargs:
             kwargs.pop("dim")
-        super(SphericalHistogram, self).__init__(3, bins=bins, frequencies=frequencies, **kwargs)    
+        super(SphericalHistogram, self).__init__(3, bins=bins, frequencies=frequencies, **kwargs)
 
 
 def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwargs):
@@ -174,7 +99,7 @@ def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwa
     if isinstance(phi_bins, int):
         phi_range = (-np.pi, np.pi)
         if "phi_range" in "kwargs":
-            phi_range = kwargs["phi_range"]        
+            phi_range = kwargs["phi_range"]
         elif "range" in "kwargs":
             phi_range = kwargs["range"][1]
         phi_range = list(phi_range) + [phi_bins + 1]
