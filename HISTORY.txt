@@ -1,3 +1,9 @@
+0.3.11 (22nd August 2016)
+-------------------------
+- Changed: transform parameter in matplotlib plotting -> cmap_normalize
+- Changed: show_colorbar parameter works in "image" matplotlib plotting
+- Changed: "special" histogram plotting less "special"
+
 0.3.10 (12th August 2016)
 -------------------------
 - Added: astropy binning schemes (return)
@@ -22,7 +28,8 @@
 0.3.6 (27th July 2016)
 ---------------------
 - Added: Histogram dtypes (beta)
-- Added: image plot type for Histogram2D
+- Added: "image" plot type for Histogram2D
+- Added: Geant4 CSV histograms input
 - Fix: Broken polar histogram
 
 0.3.5 (5th July 2016)
