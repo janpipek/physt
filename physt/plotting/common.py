@@ -33,10 +33,3 @@ def get_err_data(h, density=False, cumulative=False, flatten=False):
     if flatten:
         data = data.flatten()
     return data
-
-
-def transform_data(data, kwargs):
-    transform = kwargs.pop("transform", lambda x:x)
-    if not isinstance(transform, np.ufunc):
-        transform = np.vectorize(transform, otypes='f')
-    return transform(data)

@@ -28,7 +28,7 @@ import matplotlib.colors as colors
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-from .common import get_data, transform_data, get_err_data
+from .common import get_data, get_err_data
 
 
 types = ("bar", "scatter", "line", "map", "bar3d", "image", "polar_map")
@@ -66,11 +66,11 @@ def bar(h1, errors=False, **kwargs):
     label = kwargs.pop("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density)
-    transformed = transform_data(data, kwargs)
+    # transformed = transform_data(data, kwargs)
 
     if "cmap" in kwargs:
         cmap = _get_cmap(kwargs)
-        _, cmap_data = _get_cmap_data(transformed, kwargs)
+        _, cmap_data = _get_cmap_data(data, kwargs)
         colors = cmap(cmap_data)
     else:
         colors = kwargs.pop("color", "blue")
@@ -116,11 +116,11 @@ def scatter(h1, errors=False, **kwargs):
     cumulative = kwargs.pop("cumulative", False)
 
     data = get_data(h1, cumulative=cumulative, density=density)
-    transformed = transform_data(data, kwargs)
+    # transformed = transform_data(data, kwargs)
 
     if "cmap" in kwargs:
         cmap = _get_cmap(kwargs)
-        _, cmap_data = _get_cmap_data(transformed, kwargs)
+        _, cmap_data = _get_cmap_data(data, kwargs)
         kwargs["color"] = cmap(cmap_data)
     else:
         kwargs["color"] = kwargs.pop("color", "blue")
@@ -182,7 +182,7 @@ def line(h1, errors=False, **kwargs):
     return ax
 
 
-def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
+def map(h2, show_zero=True, show_values=False, show_colorbar=True, **kwargs):
     """Coloured-rectangle plot of 2D histogram.
 
     Parameters
@@ -216,17 +216,13 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
     fig, ax = _get_axes(kwargs)
 
     format_value = kwargs.pop("format_value", lambda x: x)
-    transform = kwargs.get("transform", False)
-
-    if show_colorbar is None:
-        show_colorbar = not transform
 
     data = get_data(h2, cumulative=False, flatten=True, density=kwargs.pop("density", False))
-    transformed = transform_data(data, kwargs)
+    # transformed = transform_data(data, kwargs)
 
 
     cmap = _get_cmap(kwargs)
-    norm, cmap_data = _get_cmap_data(transformed, kwargs)
+    norm, cmap_data = _get_cmap_data(data, kwargs)
     colors = cmap(cmap_data)
 
     xpos, ypos = (arr.flatten() for arr in h2.get_bin_left_edges())
@@ -264,12 +260,7 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=None, **kwargs):
                         verticalalignment='center', color=text_color, clip_on=True)
 
     if show_colorbar:
-        if transform:
-            raise RuntimeError("Cannot plot colorbar with transformed values.")
-        mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
-        mappable.set_array(cmap_data)
-        fig.colorbar(mappable, ax=ax)
-
+        _add_colorbar(ax, cmap, cmap_data, norm)
     _add_labels(h2, ax)
     return ax
 
@@ -288,11 +279,11 @@ def bar3d(h2, **kwargs):
     fig, ax = _get_axes(kwargs, use_3d=True)
     density = kwargs.pop("density", False)
     data = get_data(h2, cumulative=False, flatten=True, density=density)
-    transformed = transform_data(data, kwargs)
+    # transformed = transform_data(data, kwargs)
 
     if "cmap" in kwargs:
         cmap = _get_cmap(kwargs)
-        _, cmap_data = _get_cmap_data(transformed, kwargs)
+        _, cmap_data = _get_cmap_data(data, kwargs)
         colors = cmap(cmap_data)
     else:
         colors = kwargs.pop("color", "blue")
@@ -308,7 +299,7 @@ def bar3d(h2, **kwargs):
     return ax
 
 
-def image(h2, **kwargs):
+def image(h2, show_colorbar=True, **kwargs):
     """Plot of 2D histograms based on pixmaps.
 
     Similar to map, but it:
@@ -331,11 +322,17 @@ def image(h2, **kwargs):
     fig, ax = _get_axes(kwargs)
     cmap = _get_cmap(kwargs)   # h2 as well?
     data = get_data(h2, cumulative=False, density=kwargs.pop("density", False))
-    transformed = transform_data(data, kwargs)
-    _, cmap_data = _get_cmap_data(transformed, kwargs)
+    # transformed = transform_data(data, kwargs)
+    norm, cmap_data = _get_cmap_data(data, kwargs)
+
+    for binning in h2._binnings:
+        if not binning.is_regular():
+            raise RuntimeError("Histograms with irregular bins cannot be plotted using image method.")
 
     if not "interpolation" in kwargs:
         kwargs["interpolation"] = "nearest"
+    if kwargs.get("xscale") == "log" or kwargs.get("yscale") == "log":
+        raise RuntimeError("Cannot use logarithmic axes with image plots.")
 
     _apply_xy_lims(ax, h2, data=data, kwargs=kwargs)
 
@@ -343,7 +340,10 @@ def image(h2, **kwargs):
         extent=(h2.bins[0][0,0], h2.bins[0][-1,1], h2.bins[1][0,0], h2.bins[1][-1,1]),
         aspect="auto", **kwargs)
 
+    if show_colorbar:
+        _add_colorbar(ax, cmap, cmap_data, norm)
     _add_labels(h2, ax)
+
     return ax
 
 
@@ -359,10 +359,10 @@ def polar_map(hist, show_zero=True, **kwargs):
     fig, ax = _get_axes(kwargs, use_polar=True)
 
     data = get_data(hist, cumulative=False, flatten=True, density=kwargs.pop("density", False))
-    transformed = transform_data(data, kwargs)
+    # transformed = transform_data(data, kwargs)
 
     cmap = _get_cmap(kwargs)
-    norm, cmap_data = _get_cmap_data(transformed, kwargs)
+    norm, cmap_data = _get_cmap_data(data, kwargs)
     colors = cmap(cmap_data)
 
     rpos, phipos = (arr.flatten() for arr in hist.get_bin_left_edges())
@@ -374,7 +374,7 @@ def polar_map(hist, show_zero=True, **kwargs):
         alphas = np.ones_like(data) * alphas
 
     for i in range(len(rpos)):
-        if transformed[i] > 0 or show_zero:
+        if data[i] > 0 or show_zero:
             bin_color = colors[i]
             bars = ax.bar(phipos[i], dr[i], width=dphi[i], bottom=rpos[i], color=bin_color,
                           edgecolor=kwargs.get("grid_color", cmap(0.5)), lw=kwargs.get("lw", 0.5),
@@ -490,17 +490,24 @@ def _get_cmap_data(data, kwargs):
         By default 0. If "min", minimum value of the data.
     cmap_max : Optional[float]
         By default, maximum value of the data
+    cmap_normalize : str or colors.Normalize
 
     Returns
     -------
     normalizer : colors.Normalize
     normalized_data : array_like
     """
-    cmap_max = kwargs.pop("cmap_max", data.max())
-    cmap_min = kwargs.pop("cmap_min", 0)
-    if cmap_min == "min":
-        cmap_min = data.min()
-    norm = colors.Normalize(cmap_min, cmap_max, clip=True)
+    norm = kwargs.pop("cmap_normalize", None)
+    if norm == "log":
+        cmap_max = kwargs.pop("cmap_max", data.max())
+        cmap_min = kwargs.pop("cmap_min", data[data > 0].min())
+        norm = colors.LogNorm(cmap_min, cmap_max)
+    elif not norm:
+        cmap_max = kwargs.pop("cmap_max", data.max())
+        cmap_min = kwargs.pop("cmap_min", 0)
+        if cmap_min == "min":
+            cmap_min = data.min()
+        norm = colors.Normalize(cmap_min, cmap_max, clip=True)
     return norm, norm(data)
 
 
