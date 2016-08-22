@@ -51,7 +51,32 @@ class BinningBase(object):
     def includes_right_edge(self):
         return self._includes_right_edge
 
+    def is_regular(self, rtol=1.e-5, atol=1.e-8):
+        """Whether all bins have the same width.
+
+        Parameters
+        ----------
+        rtol, atol : float
+            numpy tolerance parameters
+
+        Returns
+        -------
+        bool
+        """
+        return np.allclose(np.diff(self.bins[1] - self.bins[0]), 0.0, rtol=rtol, atol=atol)
+
     def is_consecutive(self, rtol=1.e-5, atol=1.e-8):
+        """Whether all bins are in a growing order.
+
+        Parameters
+        ----------
+        rtol, atol : float
+            numpy tolerance parameters
+
+        Returns
+        -------
+        bool
+        """
         if self.inconsecutive_allowed:
             if self._consecutive is None:
                 if self._numpy_bins is not None:
@@ -62,6 +87,12 @@ class BinningBase(object):
             return True
 
     def is_adaptive(self):
+        """Whether the binning can be adapted to include values not currently spanned.
+
+        Returns
+        -------
+        bool
+        """
         return self._adaptive
 
     def force_bin_existence(self, values):
@@ -177,7 +208,7 @@ class BinningBase(object):
         """
         if self.bin_count == 0:
             raise RuntimeError("Cannot guess binning width with zero bins")
-        elif self.bin_count == 1 or self.is_consecutive() and np.allclose(np.diff(self.bins[1] - self.bins[0]), 0.0):
+        elif self.bin_count == 1 or self.is_consecutive() and self.is_regular():
             return FixedWidthBinning(min=self.bins[0][0], bin_count=self.bin_count, bin_width=self.bins[1] - self.bins[0])
         else:
             raise RuntimeError("Cannot create fixed-width binning from differing bin widths.")
@@ -298,6 +329,9 @@ class FixedWidthBinning(BinningBase):
             self._shift = shift or 0.0
         self._bins = None
         self._numpy_bins = None
+
+    def is_regular(self, *args, **kwargs):
+        return True
 
     def _force_bin_existence_single(self, value, includes_right_edge=None):
         if includes_right_edge is None:
@@ -461,6 +495,9 @@ class ExponentialBinning(BinningBase):
         self._log_min = log_min
         self._log_width = log_width
         self._bin_count = bin_count
+
+    def is_regular(self, *args, **kwargs):
+        return False
 
     @property
     def numpy_bins(self):
