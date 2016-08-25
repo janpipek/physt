@@ -383,7 +383,7 @@ class HistogramBase(object):
     #     # Overridden
     #     return self.has_same_bins()
 
-    def fill_n(self, values, weights=None):
+    def fill_n(self, values, weights=None, **kwargs):
         """Add more values at once.
 
         This (default) implementation uses a simple loop to add values using `fill` method
@@ -404,9 +404,9 @@ class HistogramBase(object):
                 raise RuntimeError("Wrong shape of weights")
         for i, value in enumerate(values):
             if weights is not None:
-                self.fill(value, weights[i])
+                self.fill(value, weights[i], **kwargs)
             else:
-                self.fill(value)
+                self.fill(value, **kwargs)
 
     @property
     def plot(self):

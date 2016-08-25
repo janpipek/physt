@@ -179,15 +179,15 @@ class HistogramND(HistogramBase):
             else:
                 return ixbin
 
-    def fill(self, value, weight=1):
+    def fill(self, value, weight=1, **kwargs):
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
                 #print("adaptive, forcing", value[i])
                 bin_map = binning.force_bin_existence(value[i])
                 #print("map", bin_map)
                 self._reshape_data(binning.bin_count, bin_map, i)
-
-        ixbin = self.find_bin(value)
+        #
+        ixbin = self.find_bin(value, **kwargs)
         if ixbin is None and self.keep_missed:
             self._missed += weight
         else:
@@ -250,10 +250,12 @@ class HistogramND(HistogramBase):
             numbers or names. Must contain at least one axis.
         name: Optional[str]
             Name for the projected histogram (default: same)
+        type: Optional[type]
+            If set, predefined class for the projection
 
         Returns
         -------
-        HistogramND or Histogram2D or Histogram1D
+        HistogramND or Histogram2D or Histogram1D (or others in special cases)
         """
         axes = list(axes)
         for i, ax in enumerate(axes):
@@ -277,13 +279,16 @@ class HistogramND(HistogramBase):
         bins = [bins for i, bins in enumerate(self._binnings) if i in axes]
         if len(axes) == 1:
             from .histogram1d import Histogram1D
-            return Histogram1D(binning=bins[0], frequencies=frequencies, errors2=errors2,
+            klass = kwargs.get("type", Histogram1D)
+            return klass(binning=bins[0], frequencies=frequencies, errors2=errors2,
                                axis_name=axis_names[0], name=name)
         elif len(axes) == 2:
-            return Histogram2D(binnings=bins, frequencies=frequencies, errors2=errors2,
+            klass = kwargs.get("type", Histogram2D)
+            return klass(binnings=bins, frequencies=frequencies, errors2=errors2,
                                axis_names=axis_names, name=name)
         else:
-            return HistogramND(dimension=len(axes), binnings=bins, frequencies=frequencies, errors2=errors2,
+            klass = kwargs.get("type", HistogramND)
+            return klass(dimension=len(axes), binnings=bins, frequencies=frequencies, errors2=errors2,
                                axis_names=axis_names, name=name)
 
     def __eq__(self, other):
