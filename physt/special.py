@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from .histogram_base import HistogramBase
 from .histogram_nd import HistogramND
 from .histogram1d import Histogram1D
 from . import binnings, histogram_nd
@@ -24,21 +25,16 @@ class PolarHistogram(HistogramND):
         return sizes
 
     def projection(self, axis_name, **kwargs):
-        if axis_name == self.axis_names[0]:
+        if isinstance(axis_name, int):
+            ax = axis_name
+        elif axis_name == self.axis_names[0]:
             ax = 0
         elif axis_name == self.axis_names[1]:
             ax = 1
         else:
-            raise RuntimeError("Invalid axis for projection.")
-        invert = 1 - ax
-
-        frequencies = self.frequencies.sum(axis=invert)
-        errors2 = self.errors2.sum(axis=invert)
-        binning = self._binnings[ax]
-        name = kwargs.pop("name", self.name)
+            raise RuntimeError("Unknown axis: {0}".format(axis_name))
         klass = (RadialHistogram, AzimuthalHistogram)[ax]
-        # TODO: missed?
-        return klass(binning=binning, errors2=errors2, name=name, frequencies=frequencies, **kwargs)
+        return HistogramND.projection(self, ax, type=klass, **kwargs)
 
     def find_bin(self, value, axis=None, radial_coords=False):
         if radial_coords:
@@ -47,21 +43,21 @@ class PolarHistogram(HistogramND):
         else:
             r = np.hypot(value[1], value[0])
             phi = np.arctan2(value[1], value[0])
-        ixbin = (HistogramND.find_bin(self, r, 0),  HistogramND.find_bin(self, phi, 1))
-        if None in ixbin:
-            return None
-        else:
-            return ixbin
-
-    # TODO: Adapt to "transform"
-    def fill(self, value, weight=1, radial_coords=False):
-        ixbin = self.find_bin(value, radial_coords=radial_coords)
-        if ixbin is None and self.keep_missed:
-            self.missed += weight
-        else:
-            self._frequencies[ixbin] += weight
-            self.errors2[ixbin] += weight ** 2
-        return ixbin
+        return HistogramND.find_bin(self, (r, phi))
+    #
+    # def fill(self, value, weight=1, radial_coords=False):
+    #     # TODO: Adapt to "transform"???
+    #     ixbin = self.find_bin(value, radial_coords=radial_coords)
+    #     if ixbin is None and self.keep_missed:
+    #         self._missed += weight
+    #     else:
+    #         self._frequencies[ixbin] += weight
+    #         self._errors2[ixbin] += weight ** 2
+    #     return ixbin
+    #
+    # def fill_n(self, values, weights=None, dropna=True, radial_coords=False):
+    #     HistogramBase.fill_n(self, values=values, weights=weights, dropna=dropna,
+    #                          radial_coords=radial_coords)
 
 
 class RadialHistogram(Histogram1D):
@@ -73,22 +69,46 @@ class RadialHistogram(Histogram1D):
     def bin_sizes(self):
         return self.bin_right_edges ** 2 - self.bin_left_edges ** 2
 
+    def fill_n(self, values, weights=None, dropna=True):
+        # TODO: Implement?
+        raise NotImplementedError("Radial histogram is not (yet) modifiable")
+
+    def fill(self, value, weight=1):
+        # TODO: Implement?
+        raise NotImplementedError("Radial histogram is not (yet) modifiable")
+
 
 class AzimuthalHistogram(Histogram1D):
     """Projection of polar histogram to 1D with respect to phi.
 
     This is a special case of a 1D histogram with transformed coordinates.
     """
+    # TODO: What about fill(_n)? Should it be 1D or 2D?
     # TODO: Add special plotting (polar bar, polar ring)
+    def fill_n(self, values, weights=None, dropna=True):
+        raise NotImplementedError("Azimuthal histogram is not (yet) modifiable")
+
+    def fill(self, value, weight=1):
+        raise NotImplementedError("Azimuthal histogram is not (yet) modifiable")
 
 
 class SphericalHistogram(HistogramND):
     def __init__(self, bins, frequencies=None, **kwargs):
         if not "axis_names" in kwargs:
             kwargs["axis_names"] = ("r", "theta", "phi")
-        if "dim" in kwargs:
-            kwargs.pop("dim")
+        kwargs.pop("dim", False)
         super(SphericalHistogram, self).__init__(3, bins=bins, frequencies=frequencies, **kwargs)
+
+    def find_bin(self, value, axis=None, spherical_coords=False):
+        if spherical_coords:
+            r, theta, phi = value
+        else:
+            x, y, z = value
+            r = np.sqrt(x ** 2, y ** 2, z ** 2)
+            theta = np.arccos(z / r)
+            phi = np.arctan2(x, y)
+        return HistogramND.find_bin(self, (r, theta, phi))
+
 
 
 def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwargs):
