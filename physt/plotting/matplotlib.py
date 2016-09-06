@@ -322,7 +322,6 @@ def image(h2, show_colorbar=True, **kwargs):
     fig, ax = _get_axes(kwargs)
     cmap = _get_cmap(kwargs)   # h2 as well?
     data = get_data(h2, cumulative=False, density=kwargs.pop("density", False))
-    # transformed = transform_data(data, kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
 
     for binning in h2._binnings:
@@ -336,7 +335,7 @@ def image(h2, show_colorbar=True, **kwargs):
 
     _apply_xy_lims(ax, h2, data=data, kwargs=kwargs)
 
-    ax.imshow(cmap_data.T[::-1,:], cmap=cmap,
+    ax.imshow(data.T[::-1,:], cmap=cmap, norm=norm,
         extent=(h2.bins[0][0,0], h2.bins[0][-1,1], h2.bins[1][0,0], h2.bins[1][-1,1]),
         aspect="auto", **kwargs)
 
