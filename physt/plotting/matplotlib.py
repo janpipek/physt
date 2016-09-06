@@ -472,7 +472,12 @@ def _get_cmap(kwargs):
             cmap = plt.get_cmap(cmap)
         except BaseException as exc:
             try:
-                import seaborn.apionly as sns
+                # Trick to use seaborn palettes without clearing the seaborn style
+                import sys
+                if "seaborn" in sys.modules.keys():
+                    sns = sys.modules["seaborn"]
+                else:
+                    import seaborn.apionly as sns
                 cmap = sns.color_palette(as_cmap=True)
             except ImportError:
                 raise exc
