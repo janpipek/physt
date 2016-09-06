@@ -1,3 +1,7 @@
+0.3.12 (6th September 2016)
+---------------------------
+- Fix: a few minor bugs
+
 0.3.11 (22nd August 2016)
 -------------------------
 - Changed: transform parameter in matplotlib plotting -> cmap_normalize
