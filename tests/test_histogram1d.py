@@ -309,6 +309,15 @@ class TestFill(object):
         copy.fill(1.44, weight=2.2)
         assert np.allclose(copy.frequencies, [4, 3.2, 3, 7.2])
 
+    def test_fill_dtype(self):
+        h = Histogram1D([[0,1], [1, 2], [2, 3]], [1, 2, 3])
+        assert h.dtype == np.int64
+        assert np.allclose(h.frequencies, [1, 2, 3])
+
+        h.fill(1.3, weight=2.2)
+        # assert h.dtype == np.float
+        assert np.allclose(h.frequencies, [1, 4.2, 3])
+
 
 class TestDtype(object):
     def test_simple(self):
@@ -365,6 +374,7 @@ class TestDtype(object):
 
         with pytest.raises(TypeError):
             example * complex(4, 5)
+
 
 if __name__ == "__main__":
     pytest.main(__file__)

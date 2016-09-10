@@ -180,6 +180,7 @@ class HistogramND(HistogramBase):
                 return ixbin
 
     def fill(self, value, weight=1, **kwargs):
+        self._coerce_dtype(float)
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
                 #print("adaptive, forcing", value[i])
@@ -199,6 +200,9 @@ class HistogramND(HistogramBase):
         values = np.asarray(values)
         if dropna:
             values = values[~np.isnan(values)]
+        if weights:
+            weights = np.asarray(weights)
+            self._coerce_dtype(weights.dtype)
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
                 map = self._binning.force_bin_existence(values[:,i])
@@ -355,7 +359,7 @@ class Histogram2D(HistogramND):
 
         Returns
         -------
-        Histogram2D
+        Histogram2D - a copy with swapped axes
         """
         a_copy = self.copy()
         a_copy._binnings = list(reversed(a_copy._binnings))

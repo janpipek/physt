@@ -394,6 +394,7 @@ class Histogram1D(HistogramBase):
         Note: If a gap in unconsecutive bins is matched, underflow & overflow are not valid anymore.
         Note: Name was selected because of the eponymous method in ROOT
         """
+        self._coerce_dtype(type(weight))
         if self._binning.is_adaptive():
             map = self._binning.force_bin_existence(value)
             self._reshape_data(self._binning.bin_count, map)
@@ -431,6 +432,9 @@ class Histogram1D(HistogramBase):
         if self._binning.is_adaptive():
             map = self._binning.force_bin_existence(values)
             self._reshape_data(self._binning.bin_count, map)
+        if weights:
+            weights = np.asarray(weights)
+            self._coerce_dtype(weights.dtype)
         frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self._binning,
                                                                                   weights=weights, validate_bins=False)
         self._frequencies += frequencies
