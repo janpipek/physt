@@ -34,5 +34,6 @@ class TestNumpyBins(object):
 
         hist = histogram(arr, bins=10, range=(0.5, 1.0), keep_missed=False)
         assert hist.total == 50
-        assert hist.underflow == 0
-        assert hist.overflow == 0
+        assert np.isnan(hist.underflow)
+        assert np.isnan(hist.overflow)
+
