@@ -92,7 +92,10 @@ Using conda:
 * More plotting backends
 
 ### Not planned
-* Kernel density estimates: use your favourite statistics package (like `seaborn`)
+* Kernel density estimates - use your favourite statistics package (like `seaborn`)
+* Rebinning using interpolation - it should be trivial to use `rebin` (<https://github.com/jhykes/rebin>) with physt
+
+Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
