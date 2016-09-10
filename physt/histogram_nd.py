@@ -13,7 +13,7 @@ class HistogramND(HistogramBase):
     """
 
     def __init__(self, dimension, binnings, frequencies=None, **kwargs):
-        """Constuctor
+        """Constructor
 
         Parameters
         ----------
@@ -120,8 +120,12 @@ class HistogramND(HistogramBase):
         Returns
         -------
         float
+
+        Note
+        ----
+        Perhaps not optimized, but should work also with transformed axes
         """
-        return np.product([self.get_bin_widths(i) for i in range(self.ndim)])
+        return np.sum(self.bin_sizes)
 
     def get_bin_left_edges(self, axis=None):
         if axis is not None:

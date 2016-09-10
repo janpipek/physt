@@ -28,6 +28,11 @@ class TestHistogramND(object):
         assert h == h2
         assert np.array_equal(h.bins, h2.bins)
 
+    def test_total_size(self):
+        data = np.random.rand(100)
+        h = physt.histogram2d(data, data, range=(0, 0.5))
+        assert h.total_size == 0.25
+
 
 class TestProjections(object):
     def test_4_to_3(self):
