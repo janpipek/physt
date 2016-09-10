@@ -9,6 +9,27 @@ import pytest
 #
 
 
+class TestCalculateBinsNd(object):
+    def test_range(self):
+        data1 = np.linspace(0, 10, 100)
+        data = np.array([data1, data1]).T
+        bins1, bins2 = binnings.calculate_bins_nd(data, range=(4, 5))
+        assert bins1.first_edge == 4
+        assert bins1.last_edge == 5
+        assert bins2.first_edge == 4
+        assert bins2.last_edge == 5
+
+    def test_range_partly_none(self):
+        data1 = np.linspace(0, 10, 100)
+        data = np.array([data1, data1]).T
+
+        bins1, bins2 = binnings.calculate_bins_nd(data, range=((4, 5), None))
+        assert bins1.first_edge == 4
+        assert bins1.last_edge == 5
+        assert bins2.first_edge == 0
+        assert bins2.last_edge == 10
+
+
 class TestNumpyBins(object):
     def test_int_behaviour(self):
         data = np.random.rand(100)

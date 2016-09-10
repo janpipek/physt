@@ -173,11 +173,17 @@ class BinningBase(object):
 
     @property
     def first_edge(self):
-        return self._bins[0][0]
+        if self._numpy_bins is None:
+            return self._numpy_bins[0]
+        else:
+            return self.bins[0][0]
 
     @property
     def last_edge(self):
-        return self._bins[-1][1]
+        if self._numpy_bins is None:
+            return self._numpy_bins[-1]
+        else:
+            return self.bins[-1][1]
 
     def as_static(self, copy=True):
         """Convert binning to a static form.
@@ -710,7 +716,7 @@ def calculate_bins(array, _=None, *args, **kwargs):
     if kwargs.pop("check_nan", True):
         if np.any(np.isnan(array)):
             raise RuntimeError("Cannot calculate bins in presence of NaN's.")
-    if "range" in kwargs:   # TODO: re-consider the usage of this parameter
+    if kwargs.get("range", None):   # TODO: re-consider the usage of this parameter
         array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
         bin_count = 10 # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
@@ -763,13 +769,10 @@ def calculate_bins_nd(array, bins=None, *args, **kwargs):
     args = list(args)
     range_ = kwargs.pop("range", None)
     if range_:
-        range_n = np.asarray(range_)
-        if range_n.shape == (2,):
+        if len(range_) == 2 and all(np.isscalar(i) for i in range_):
             range_ = dim * [range_]
-        elif range_n.shape == (dim, 2):
-            range_ = range_
-        else:
-            raise RuntimeError("1 or d tuples expected for the range")
+        elif len(range_) != dim:
+            raise RuntimeError("Wrong dimensionality of range")
     for i in range(len(args)):
         if isinstance(args[i], (list, tuple)):
             if len(args[i]) != dim:
