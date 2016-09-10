@@ -339,7 +339,32 @@ class TestDtype(object):
         example.dtype = np.int16
         assert example.dtype == np.int16
 
+    def test_hist_arithmetic(self):
+        example = h1(values, dtype=np.int32)
+        example2 = example.copy()
+        example2.dtype = np.float
+        example2 *= 1.01
 
+        example3 = example.copy()
+        example3.dtype = np.int64
+
+        assert (example + example2).dtype == np.float
+        assert (example2 + example).dtype == np.float
+        assert (example + example3).dtype == np.int64
+        assert (example3 - example).dtype == np.int64
+
+        example += example2
+        assert example.dtype == np.float
+
+    def test_scalar_arithmetic(self):
+        example = h1(values, dtype=np.int32)
+
+        assert (example / 3).dtype == np.float
+        assert (example * 3).dtype == np.int32
+        assert (example * 3.1).dtype == np.float
+
+        with pytest.raises(TypeError):
+            example * complex(4, 5)
 
 if __name__ == "__main__":
     pytest.main(__file__)

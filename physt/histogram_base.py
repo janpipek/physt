@@ -100,13 +100,9 @@ class HistogramBase(object):
         ----------
         other_dtype : np.dtype or type
         """
-        other_dtype = np.dtype(other_dtype)
-        if other_dtype.kind == self.dtype.kind:
-            pass
-        elif self.dtype.kind in "iu":
-            self.dtype = other_dtype
-        else:
-            pass # not changing - already float
+        new_dtype = np.find_common_type([self.dtype, other_dtype], [])
+        if new_dtype != self.dtype:
+            self.dtype = new_dtype
 
     @property
     def bin_count(self):

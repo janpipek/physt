@@ -31,7 +31,7 @@ class Histogram1D(HistogramBase):
 
         Parameters
         ----------
-        binning: physt.binnings.BinningBase
+        binning: physt.binnings.BinningBase or array_like
             The binning
         frequencies: Optional[array_like]
             The bin contents.
