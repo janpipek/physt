@@ -70,7 +70,10 @@ def plot(histogram, histtype=None, backend=None, **kwargs):
     """
     backend_name, backend = _get_backend(backend)
     if histtype is None:
-        histtype = [t for t in backend.types if histogram.ndim in backend.dims[t]][0]
+        histtypes = [t for t in backend.types if histogram.ndim in backend.dims[t]]
+        if not histtypes:
+            raise RuntimeError("No histogram type is supported for {0}".format(histogram.__class__.__name__))
+        histtype = histtypes[0]
     if histtype in backend.types:
         method = getattr(backend, histtype)
         return method(histogram, **kwargs)
