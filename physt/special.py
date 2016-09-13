@@ -4,9 +4,63 @@ from .histogram_nd import HistogramND
 from .histogram1d import Histogram1D
 from . import binnings, histogram_nd
 import numpy as np
+import math
 
 
-class PolarHistogram(HistogramND):
+class TransformedHistogramMixin(object):
+    """Histogram with non-cartesian (or otherwise transformed) axes.
+
+    This is a mixin, providing transform-aware find_bin, fill and fill_n.
+
+    When implementing, you are required to provide tbe following:
+    - `transform` method to convert rectangular
+    - `bin_sizes` property
+
+    In certain cases, you may want to have default axis names + projections.
+    """
+
+    def transform(self, value):
+        """Convert cartesian coordinates into internal ones.
+
+        Parameters
+        ----------
+        value : array_like
+            This method should accept both scalars and numpy arrays.
+
+        Returns
+        -------
+        float or array_like
+        """
+        raise NotImplementedError("TransformedHistogramMixin descendant must implement transform method.")
+
+    def find_bin(self, value, axis=None, transformed=False):
+        """
+
+        Parameters
+        ----------
+        value : array_like
+            Value with dimensionality equal to histogram.
+        transformed : bool
+            If true, the value is already transformed and has same axes as the bins.
+        """
+        if axis is None and not transformed:
+            value = self.transform(value)
+        return HistogramND.find_bin(self, value, axis=axis)
+
+    @property
+    def bin_sizes(self):
+        raise NotImplementedError("TransformedHistogramMixin descendant must implement bin_sizes property.")
+
+    def fill(self, value, weight=1, transformed=False):
+        return HistogramND.fill(self, value=value, weight=weight, transformed=transformed)
+
+    def fill_n(self, values, weights=None, dropna=True, transformed=False):
+        if not transformed:
+            values = self.transform(values)
+        HistogramND.fill_n(self, values=values, weights=weights, dropna=dropna)
+
+
+class PolarHistogram(TransformedHistogramMixin, HistogramND):
     """Polar histogram data.
 
     This is a special case of a 2D histogram with transformed coordinates.
@@ -20,9 +74,14 @@ class PolarHistogram(HistogramND):
 
     @property
     def bin_sizes(self):
-        sizes = self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2
+        sizes = 0.5 * (self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2)
         sizes = np.outer(sizes, self.get_bin_widths(1))
         return sizes
+
+    def transform(self, value):
+        r = np.hypot(value[1], value[0])
+        phi = np.arctan2(value[1], value[0]) % (2 * np.pi)
+        return (r, phi)
 
     def projection(self, axis_name, **kwargs):
         if isinstance(axis_name, int):
@@ -36,28 +95,7 @@ class PolarHistogram(HistogramND):
         klass = (RadialHistogram, AzimuthalHistogram)[ax]
         return HistogramND.projection(self, ax, type=klass, **kwargs)
 
-    def find_bin(self, value, axis=None, radial_coords=False):
-        if radial_coords:
-            r, phi = value
-            # TODO: phi modulo
-        else:
-            r = np.hypot(value[1], value[0])
-            phi = np.arctan2(value[1], value[0])
-        return HistogramND.find_bin(self, (r, phi))
-    #
-    # def fill(self, value, weight=1, radial_coords=False):
-    #     # TODO: Adapt to "transform"???
-    #     ixbin = self.find_bin(value, radial_coords=radial_coords)
-    #     if ixbin is None and self.keep_missed:
-    #         self._missed += weight
-    #     else:
-    #         self._frequencies[ixbin] += weight
-    #         self._errors2[ixbin] += weight ** 2
-    #     return ixbin
-    #
-    # def fill_n(self, values, weights=None, dropna=True, radial_coords=False):
-    #     HistogramBase.fill_n(self, values=values, weights=weights, dropna=dropna,
-    #                          radial_coords=radial_coords)
+    # TODO: fill_n() does not work
 
 
 class RadialHistogram(Histogram1D):
@@ -110,14 +148,25 @@ class SphericalHistogram(HistogramND):
         return HistogramND.find_bin(self, (r, theta, phi))
 
 
+def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, transformed=False, *args, **kwargs):
+    """
 
-def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, *args, **kwargs):
-    rdata = np.hypot(ydata, xdata)
-    phidata = np.arctan2(ydata, xdata)
+    Parameters
+    ----------
+    transformed : bool
+    phi_range : Optional[tuple]
+    range
+    """
+    if not transformed:
+        rdata = np.hypot(ydata, xdata)
+        phidata = np.arctan2(ydata, xdata) % (2 * np.pi)
+    else:
+        rdata = xdata
+        phidata = ydata
     data = np.concatenate([rdata[:, np.newaxis], phidata[:, np.newaxis]], axis=1)
     dropna = kwargs.pop("dropna", False)
     if isinstance(phi_bins, int):
-        phi_range = (-np.pi, np.pi)
+        phi_range = (0, 2 * np.pi)
         if "phi_range" in "kwargs":
             phi_range = kwargs["phi_range"]
         elif "range" in "kwargs":
