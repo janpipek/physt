@@ -1,3 +1,9 @@
+0.3.13 (12th September 2016)
+----------------------------
+- Added: TransformedHistogramMixin for special histograms
+- Fix: a few dtype-related bugs
+- Fix: a lot of polar histogram bugs
+
 0.3.12 (6th September 2016)
 ---------------------------
 - Fix: a few minor bugs

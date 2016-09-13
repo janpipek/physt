@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from . import binnings
 
-__version__ = str('0.3.12')
+__version__ = str('0.3.13')
 
 
 def histogram(data, bins=None, *args, **kwargs):
