@@ -5,6 +5,7 @@ from .histogram1d import Histogram1D
 from . import binnings, histogram_nd
 import numpy as np
 import math
+from functools import reduce
 
 
 class TransformedHistogramMixin(object):
@@ -13,12 +14,13 @@ class TransformedHistogramMixin(object):
     This is a mixin, providing transform-aware find_bin, fill and fill_n.
 
     When implementing, you are required to provide tbe following:
-    - `transform` method to convert rectangular
+    - `transform` method to convert rectangular (suggested to make it classmethod)
     - `bin_sizes` property
 
     In certain cases, you may want to have default axis names + projections.
     """
 
+    @classmethod
     def transform(self, value):
         """Convert cartesian coordinates into internal ones.
 
@@ -78,6 +80,7 @@ class PolarHistogram(TransformedHistogramMixin, HistogramND):
         sizes = np.outer(sizes, self.get_bin_widths(1))
         return sizes
 
+    @classmethod
     def transform(self, value):
         r = np.hypot(value[1], value[0])
         phi = np.arctan2(value[1], value[0]) % (2 * np.pi)
@@ -105,7 +108,7 @@ class RadialHistogram(Histogram1D):
     """
     @property
     def bin_sizes(self):
-        return self.bin_right_edges ** 2 - self.bin_left_edges ** 2
+        return (self.bin_right_edges ** 2 - self.bin_left_edges ** 2) * np.pi
 
     def fill_n(self, values, weights=None, dropna=True):
         # TODO: Implement?
@@ -130,22 +133,28 @@ class AzimuthalHistogram(Histogram1D):
         raise NotImplementedError("Azimuthal histogram is not (yet) modifiable")
 
 
-class SphericalHistogram(HistogramND):
-    def __init__(self, bins, frequencies=None, **kwargs):
+class SphericalHistogram(TransformedHistogramMixin, HistogramND):
+    def __init__(self, binnings, frequencies=None, **kwargs):
         if not "axis_names" in kwargs:
             kwargs["axis_names"] = ("r", "theta", "phi")
         kwargs.pop("dim", False)
-        super(SphericalHistogram, self).__init__(3, bins=bins, frequencies=frequencies, **kwargs)
+        super(SphericalHistogram, self).__init__(3, binnings=binnings, frequencies=frequencies, **kwargs)
 
-    def find_bin(self, value, axis=None, spherical_coords=False):
-        if spherical_coords:
-            r, theta, phi = value
-        else:
-            x, y, z = value
-            r = np.sqrt(x ** 2, y ** 2, z ** 2)
-            theta = np.arccos(z / r)
-            phi = np.arctan2(x, y)
-        return HistogramND.find_bin(self, (r, theta, phi))
+    @classmethod
+    def transform(self, value):
+        x, y, z = value
+        xy = np.hypot(x, y)
+        r = np.hypot(xy, z)
+        theta = np.arctan2(xy, z) % (2 * np.pi)
+        phi = np.arctan2(x, y) % (2 * np.pi)
+        return (r, theta, phi)
+
+    @property
+    def bin_sizes(self):
+        sizes = 0.5 * (self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2)
+        sizes2 = np.cos(self.get_bin_left_edges(1)) - np.cos(self.get_bin_right_edges(1))               # Hopefully correct
+        return reduce(np.multiply, np.ix_(sizes, sizes2, self.get_bin_widths(2)))
+        #return np.outer(sizes, sizes2, self.get_bin_widths(2))    # Correct
 
 
 def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, transformed=False, *args, **kwargs):
@@ -184,3 +193,23 @@ def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, transformed=
                                                                   binnings=bin_schemas,
                                                                   weights=weights)
     return PolarHistogram(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, missed=missed)
+
+
+def spherical_histogram(data=None, radial_bins="human", theta_bins=16, phi_bins=16, transformed=False, *args, **kwargs):
+    if not transformed:
+        rdata, thetadata, phidata = SphericalHistogram.transform(data.T)
+    else:
+        rdata, thetadata, phidata = data.T
+    data = np.concatenate([rdata[:, np.newaxis], thetadata[:, np.newaxis], phidata[:, np.newaxis]], axis=1)
+
+    dropna = kwargs.pop("dropna", False)
+    if dropna:
+        data = data[~np.isnan(data).any(axis=1)]
+
+    bin_schemas = binnings.calculate_bins_nd(data, [radial_bins, theta_bins, phi_bins], *args,
+                                             check_nan=not dropna, **kwargs)
+    weights = kwargs.pop("weights", None)
+    frequencies, errors2, missed = histogram_nd.calculate_frequencies(data, ndim=3,
+                                                                  binnings=bin_schemas,
+                                                                  weights=weights)
+    return SphericalHistogram(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, missed=missed)
