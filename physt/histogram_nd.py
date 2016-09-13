@@ -151,7 +151,7 @@ class HistogramND(HistogramBase):
 
         Parameters
         ----------
-        value: array-like
+        value: array_like
             Value with dimensionality equal to histogram
         axis: Optional[int]
             If set, find axis along an axis. Otherwise, find bins along all axes.
@@ -204,7 +204,7 @@ class HistogramND(HistogramBase):
     def fill_n(self, values, weights=None, dropna=True):
         values = np.asarray(values)
         if dropna:
-            values = values[~np.isnan(values)]
+            values = values[~np.isnan(values).any(axis=1)]
         if weights:
             weights = np.asarray(weights)
             self._coerce_dtype(weights.dtype)
@@ -212,15 +212,11 @@ class HistogramND(HistogramBase):
             if binning.is_adaptive():
                 map = self._binning.force_bin_existence(values[:,i])
                 self._reshape_data(binning.bin_count, map, i)
-        frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self.ndim, self.bins,
+        frequencies, errors2, missed = calculate_frequencies(values, self.ndim, self._binnings,
                                                                               weights=weights)
         self._frequencies += frequencies
         self._errors2 += errors2
-        # TODO: check that adaptive does not produce under-/over-flows?
-        self.underflow += underflow
-        self.overflow += overflow
-        for key in self._stats:
-            self._stats[key] += stats.get(key, 0.0)
+        self._missed[0] += missed
 
     def copy(self, include_frequencies=True):
         """Create a copy of histogram.
