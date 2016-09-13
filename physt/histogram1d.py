@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import numpy as np
 from . import bin_utils, binnings
 from .histogram_base import HistogramBase
+from .binnings import as_binning
 
 # TODO: Fix I/O with binning
 
@@ -51,9 +52,7 @@ class Histogram1D(HistogramBase):
             Dictionary of various statistics ("sum", "sum2")
         """
         from .binnings import BinningBase, static_binning
-        if not isinstance(binning, BinningBase):
-            binning = static_binning(None, binning)
-        self._binnings = [ binning ]
+        self._binnings = [as_binning(binning)]
 
         if frequencies is None:
             self._frequencies = np.zeros(self.bins.shape[0])

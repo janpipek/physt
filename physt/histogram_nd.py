@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from . import bin_utils
 from .histogram_base import HistogramBase
 import numpy as np
+from .binnings import as_binning
 
 
 class HistogramND(HistogramBase):
@@ -36,7 +37,7 @@ class HistogramND(HistogramBase):
             raise RuntimeError("bins must be a sequence of {0} schemas".format(dimension))
 
         # self.ndim = dimension
-        self._binnings = binnings
+        self._binnings = [as_binning(binning) for binning in binnings]
 
         # Frequencies + checks
         if frequencies is None:

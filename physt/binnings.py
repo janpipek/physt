@@ -255,6 +255,7 @@ class BinningBase(object):
         binning = StaticBinning(bins, includes_right_edge=includes_right_edge)
         return binning
 
+
 class StaticBinning(BinningBase):
     inconsecutive_allowed = True
 
@@ -962,3 +963,22 @@ def ideal_bin_count(data, method="default"):
 
 
 bincount_methods = ["default", "sturges", "rice", "sqrt", "doane"]
+
+def as_binning(obj, copy=False):
+    """Ensure that an object is a binning
+
+    Parameters
+    ---------
+    obj : BinningBase or array_like
+        Can be a binning, numpy-like bins or full physt bins
+    copy : bool
+        If true, ensure that the returned object is independent
+    """
+    if isinstance(obj, BinningBase):
+        if copy:
+            return obj.copy()
+        else:
+            return obj
+    else:
+        bins = make_bin_array(obj)
+        return StaticBinning(bins)
