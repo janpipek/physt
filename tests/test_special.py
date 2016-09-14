@@ -40,6 +40,7 @@ class TestSpherical(object):
         expected = np.asarray([[3, np.pi / 2, 0], [0, 0, 0], [np.sqrt(.5), .75 * np.pi, np.pi / 2]])
         assert np.allclose(expected, special.SphericalHistogram.transform(data))
 
+
 class TestCylindrical(object):
     def test_transform(self):
         t = special.CylindricalHistogram.transform([0, 0, 1])

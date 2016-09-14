@@ -222,7 +222,7 @@ def _prepare_data(data, transformed, klass,  *args, **kwargs):
     return data
 
 
-def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, transformed=False, *args, **kwargs):
+def polar_histogram(xdata, ydata, radial_bins="numpy", phi_bins=16, transformed=False, *args, **kwargs):
     """
 
     Parameters
@@ -233,10 +233,7 @@ def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, transformed=
     """
     dropna = kwargs.pop("dropna", True)
     data = np.concatenate([xdata[:, np.newaxis], ydata[:, np.newaxis]], axis=1)
-    print(data)
     data = _prepare_data(data, transformed=transformed, klass=PolarHistogram, dropna=dropna)
-    print(data)
-    # print(data.shape)
 
     if isinstance(phi_bins, int):
         phi_range = (0, 2 * np.pi)
@@ -255,7 +252,7 @@ def polar_histogram(xdata, ydata, radial_bins="human", phi_bins=16, transformed=
     return PolarHistogram(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, missed=missed)
 
 
-def spherical_histogram(data=None, radial_bins="human", theta_bins=16, phi_bins=16, transformed=False, *args, **kwargs):
+def spherical_histogram(data=None, radial_bins="numpy", theta_bins=16, phi_bins=16, transformed=False, *args, **kwargs):
     dropna = kwargs.pop("dropna", True)
     data = _prepare_data(data, transformed=transformed, klass=SphericalHistogram, dropna=dropna)
 
@@ -268,3 +265,18 @@ def spherical_histogram(data=None, radial_bins="human", theta_bins=16, phi_bins=
                                                                   binnings=bin_schemas,
                                                                   weights=weights)
     return SphericalHistogram(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, missed=missed)
+
+
+def cylindrical_histogram(data=None, rho_bins="numpy", phi_bins=16, z_bins="numpy", transformed=False, *args, **kwargs):
+    dropna = kwargs.pop("dropna", True)
+    data = _prepare_data(data, transformed=transformed, klass=CylindricalHistogram, dropna=dropna)
+
+    # TODO: Add arguments to construct bins
+
+    bin_schemas = binnings.calculate_bins_nd(data, [rho_bins, phi_bins, z_bins], *args,
+                                             check_nan=not dropna, **kwargs)
+    weights = kwargs.pop("weights", None)
+    frequencies, errors2, missed = histogram_nd.calculate_frequencies(data, ndim=3,
+                                                                  binnings=bin_schemas,
+                                                                  weights=weights)
+    return CylindricalHistogram(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, missed=missed)
