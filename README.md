@@ -41,7 +41,7 @@ See more in docstring's and notebooks:
 - Binning: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Binning.ipynb>
 - Bokeh plots: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Bokeh%20examples.ipynb>
 - 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/2D%20Histograms.ipynb>
-- Special histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Special%20histograms.ipynb>
+- Special histograms (polar, spherical, cylindrical - *beta*): <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Special%20histograms.ipynb>
 - Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Adaptive%20histogram.ipynb>
 - Use dask for large (not "big") data: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Dask.ipynb>
 
@@ -60,14 +60,16 @@ Using conda:
 ### Implemented
 
 * 1D histograms
-* 2D histograms(beta)
-* ND histograms(beta)
+* 2D histograms
+* ND histograms
 * Some special histograms
   - 2D polar coordinates (with plotting)
+  - 3D spherical / cylindrical coordinates (beta)
 * Adaptive rebinning for on-line filling of unknown data (beta)
+- Non-consecutive bins
 * Memory-effective histogramming of dask arrays (beta)
 * Understands any numpy-array-like object
-* Keep underflow / overflow
+* Keep underflow / overflow / missed bins
 * Basic numeric operations (* / + -)
 * Items / slice selection (including mask arrays)
 * Add new values (fill, fill_n)
