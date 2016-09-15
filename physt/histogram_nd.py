@@ -212,8 +212,8 @@ class HistogramND(HistogramBase):
             if binning.is_adaptive():
                 map = self._binning.force_bin_existence(values[:,i])
                 self._reshape_data(binning.bin_count, map, i)
-        frequencies, errors2, missed = calculate_frequencies(values, self.ndim, self._binnings,
-                                                                              weights=weights)
+        frequencies, errors2, missed = calculate_frequencies(values, self.ndim,
+                                                             self._binnings, weights=weights)
         self._frequencies += frequencies
         self._errors2 += errors2
         self._missed[0] += missed
@@ -245,6 +245,24 @@ class HistogramND(HistogramBase):
                               name=self.name, axis_names=self.axis_names[:],
                               keep_missed=self.keep_missed, missed=missed)
 
+    def _get_projection_axes(self, *axes):
+        axes = list(axes)
+        for i, ax in enumerate(axes):
+            if isinstance(ax, str):
+                if not ax in self.axis_names:
+                    raise RuntimeError("Invalid axis name for projection: " + ax)
+                axes[i] = self.axis_names.index(ax)
+        if not axes:
+            raise RuntimeError("No axis selected for projection")
+        if len(axes) != len(set(axes)):
+            raise RuntimeError("Duplicate axes in projection")
+        invert = list(range(self.ndim))
+        for ax in axes:
+            invert.remove(ax)
+        axes = tuple(axes)
+        invert = tuple(invert)
+        return (axes, invert)
+
     def projection(self, *axes, **kwargs):
         """Reduce dimensionality by summing along axis/axes.
 
@@ -262,21 +280,7 @@ class HistogramND(HistogramBase):
         -------
         HistogramND or Histogram2D or Histogram1D (or others in special cases)
         """
-        axes = list(axes)
-        for i, ax in enumerate(axes):
-            if isinstance(ax, str):
-                if not ax in self.axis_names:
-                    raise RuntimeError("Invalid axis name for projection: " + ax)
-                axes[i] = self.axis_names.index(ax)
-        if not axes:
-            raise RuntimeError("No axis selected for projection")
-        if len(axes) != len(set(axes)):
-            raise RuntimeError("Duplicate axes in projection")
-        invert = list(range(self.ndim))
-        for ax in axes:
-            invert.remove(ax)
-        axes = tuple(axes)
-        invert = tuple(invert)
+        axes, invert = self._get_projection_axes(*axes)
         frequencies = self.frequencies.sum(axis=invert)
         errors2 = self.errors2.sum(axis=invert)
         name = kwargs.pop("name", self.name)
