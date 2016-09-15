@@ -26,6 +26,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 
 from .common import get_data, get_err_data
@@ -384,20 +385,40 @@ def polar_map(hist, show_zero=True, **kwargs):
     return ax
 
 
-def globe_map(hist, **kwargs):
+def globe_map(hist, show_zero=True, **kwargs):
     fig, ax = _get_axes(kwargs=kwargs, use_3d=True)
 
-    data = get_data(hist, cumulative=False, flatten=True, density=kwargs.pop("density", False))
+    data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
 
-    # r = 1
-    # x = r * np.outer(np.sin(hist.numpy_bins[0]), np.cos(hist.numpy_bins[1])) #.flatten()
-    # y = r * np.outer(np.sin(hist.numpy_bins[0]), np.sin(hist.numpy_bins[1])) #.flatten()
-    # z = r * np.outer(np.cos(hist.numpy_bins[0]), np.ones(hist.shape[1] + 1)) #.flatten()
-    #
-    # ax.plot_surface(x, y, z, color="b")
-    # ax.set_xlim(-1.1, 1.1)
-    # ax.set_ylim(-1.1, 1.1)
-    # ax.set_zlim(-1.1, 1.1)
+    cmap = _get_cmap(kwargs)
+    norm, cmap_data = _get_cmap_data(data, kwargs)
+    colors = cmap(cmap_data)
+
+    r = 1
+    xs = r * np.outer(np.sin(hist.numpy_bins[0]), np.cos(hist.numpy_bins[1]))
+    ys = r * np.outer(np.sin(hist.numpy_bins[0]), np.sin(hist.numpy_bins[1]))
+    zs = r * np.outer(np.cos(hist.numpy_bins[0]), np.ones(hist.shape[1] + 1))
+
+    for i in range(hist.shape[0]):
+        for j in range(hist.shape[1]):
+            if not show_zero and not data[i, j]:
+                continue
+            x = xs[i, j], xs[i, j+1], xs[i+1, j+1], xs[i+1, j]
+            y = ys[i, j], ys[i, j+1], ys[i+1, j+1], ys[i+1, j]
+            z = zs[i, j], zs[i, j+1], zs[i+1, j+1], zs[i+1, j]
+            verts = [list(zip(x, y,z))]
+            col = Poly3DCollection(verts)
+            col.set_facecolor(colors[i, j])
+            ax.add_collection3d(col)
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+
+    ax.plot_surface([], [], [], color="b")
+    ax.set_xlim(-1.1, 1.1)
+    ax.set_ylim(-1.1, 1.1)
+    ax.set_zlim(-1.1, 1.1)
 
     # ax.plot_surface(x, y, z, rstride=hist.shape[0], color="b")
 
