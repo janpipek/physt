@@ -31,7 +31,7 @@ import numpy as np
 from .common import get_data, get_err_data
 
 
-types = ("bar", "scatter", "line", "map", "bar3d", "image", "polar_map")
+types = ("bar", "scatter", "line", "map", "bar3d", "image", "polar_map", "globe_map")
 
 dims = {
     "bar": [1],
@@ -40,7 +40,8 @@ dims = {
     "map": [2],
     "bar3d": [2],
     "image": [2],
-    "polar_map": [2]
+    "polar_map": [2],
+    "globe_map": [2]
 }
 
 
@@ -381,6 +382,27 @@ def polar_map(hist, show_zero=True, **kwargs):
 
     ax.set_rmax(rmax.max())
     return ax
+
+
+def globe_map(hist, **kwargs):
+    fig, ax = _get_axes(kwargs=kwargs, use_3d=True)
+
+    data = get_data(hist, cumulative=False, flatten=True, density=kwargs.pop("density", False))
+
+    # r = 1
+    # x = r * np.outer(np.sin(hist.numpy_bins[0]), np.cos(hist.numpy_bins[1])) #.flatten()
+    # y = r * np.outer(np.sin(hist.numpy_bins[0]), np.sin(hist.numpy_bins[1])) #.flatten()
+    # z = r * np.outer(np.cos(hist.numpy_bins[0]), np.ones(hist.shape[1] + 1)) #.flatten()
+    #
+    # ax.plot_surface(x, y, z, color="b")
+    # ax.set_xlim(-1.1, 1.1)
+    # ax.set_ylim(-1.1, 1.1)
+    # ax.set_zlim(-1.1, 1.1)
+
+    # ax.plot_surface(x, y, z, rstride=hist.shape[0], color="b")
+
+    return ax
+
 
 
 def pair_bars(first, second, **kwargs):
