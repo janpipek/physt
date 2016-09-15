@@ -65,50 +65,15 @@ class TransformedHistogramMixin(object):
             values = self.transform(values)
         HistogramND.fill_n(self, values=values, weights=weights, dropna=dropna)
 
+    _projection_class_map = {}
 
-class PolarHistogram(TransformedHistogramMixin, HistogramND):
-    """2D histogram in polar coordinates.
-
-    This is a special case of a 2D histogram with transformed coordinates:
-    - r as radius in the (0, +inf) range
-    - phi as azimuthal angle in the (0, 2*pi) range
-
-    """
-    def __init__(self, binnings, frequencies=None, **kwargs):
-        if not "axis_names" in kwargs:
-            kwargs["axis_names"] = ("r", "phi")
-        if "dim" in kwargs:
-            kwargs.pop("dim")
-        super(PolarHistogram, self).__init__(2, binnings=binnings, frequencies=frequencies, **kwargs)
-
-    @property
-    def bin_sizes(self):
-        sizes = 0.5 * (self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2)
-        sizes = np.outer(sizes, self.get_bin_widths(1))
-        return sizes
-
-    @classmethod
-    def transform(self, value):
-        value = np.asarray(value, dtype=np.float64)
-        assert value.shape[-1] == 2
-        result = np.empty_like(value)
-        result[...,0] = np.hypot(value[...,1], value[...,0])
-        result[...,1] = np.arctan2(value[...,1], value[...,0]) % (2 * np.pi)
-        return result
-
-    def projection(self, axis_name, **kwargs):
-        if isinstance(axis_name, int):
-            ax = axis_name
-        elif axis_name == self.axis_names[0]:
-            ax = 0
-        elif axis_name == self.axis_names[1]:
-            ax = 1
+    def projection(self, *axes, **kwargs):
+        axes, _ = self._get_projection_axes(*axes)
+        if axes in self._projection_class_map:
+            klass = self._projection_class_map[axes]
+            return HistogramND.projection(self, *axes, type=klass, **kwargs)
         else:
-            raise RuntimeError("Unknown axis: {0}".format(axis_name))
-        klass = (RadialHistogram, AzimuthalHistogram)[ax]
-        return HistogramND.projection(self, ax, type=klass, **kwargs)
-
-    # TODO: fill_n() does not work
+            return HistogramND.projection(self, *axes, **kwargs)
 
 
 class RadialHistogram(Histogram1D):
@@ -143,10 +108,68 @@ class AzimuthalHistogram(Histogram1D):
         raise NotImplementedError("Azimuthal histogram is not (yet) modifiable")
 
 
+class PolarHistogram(TransformedHistogramMixin, HistogramND):
+    """2D histogram in polar coordinates.
+
+    This is a special case of a 2D histogram with transformed coordinates:
+    - r as radius in the (0, +inf) range
+    - phi as azimuthal angle in the (0, 2*pi) range
+
+    """
+    def __init__(self, binnings, frequencies=None, **kwargs):
+        if not "axis_names" in kwargs:
+            kwargs["axis_names"] = ("r", "phi")
+        if "dim" in kwargs:
+            kwargs.pop("dim")
+        super(PolarHistogram, self).__init__(2, binnings=binnings, frequencies=frequencies, **kwargs)
+
+    @property
+    def bin_sizes(self):
+        sizes = 0.5 * (self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2)
+        sizes = np.outer(sizes, self.get_bin_widths(1))
+        return sizes
+
+    @classmethod
+    def transform(self, value):
+        value = np.asarray(value, dtype=np.float64)
+        assert value.shape[-1] == 2
+        result = np.empty_like(value)
+        result[...,0] = np.hypot(value[...,1], value[...,0])
+        result[...,1] = np.arctan2(value[...,1], value[...,0]) % (2 * np.pi)
+        return result
+
+    _projection_class_map = {
+        (0,) : RadialHistogram,
+        (1,) : AzimuthalHistogram
+    }
+
+
+class DirectionalHistogram(TransformedHistogramMixin, HistogramND):
+    """2D histogram in spherical coordinates.
+
+    This is a special case of a 2D histogram with transformed coordinates:
+    - theta as angle between z axis and the vector, in the (0, 2*pi) range
+    - phi as azimuthal angle  (in the xy projection) in the (0, 2*pi) range
+    """
+
+    @property
+    def bin_sizes(self):
+        sizes1 = np.cos(self.get_bin_left_edges(0)) - np.cos(self.get_bin_right_edges(0))
+        sizes2 = self.get_bin_widths(1)
+        return reduce(np.multiply, np.ix_(sizes1, sizes2))
+
+    def __init__(self, binnings, frequencies=None, **kwargs):
+        if not "axis_names" in kwargs:
+            kwargs["axis_names"] = ("theta", "phi")
+        if "dim" in kwargs:
+            kwargs.pop("dim")
+        super(DirectionalHistogram, self).__init__(2, binnings=binnings, frequencies=frequencies, **kwargs)
+
+
 class SphericalHistogram(TransformedHistogramMixin, HistogramND):
     """3D histogram in spherical coordinates.
 
-    This is a special case of a 2D histogram with transformed coordinates:
+    This is a special case of a 3D histogram with transformed coordinates:
     - r as radius in the (0, +inf) range
     - theta as angle between z axis and the vector, in the (0, 2*pi) range
     - phi as azimuthal angle  (in the xy projection) in the (0, 2*pi) range
@@ -177,6 +200,10 @@ class SphericalHistogram(TransformedHistogramMixin, HistogramND):
          # Hopefully correct
         return reduce(np.multiply, np.ix_(sizes1, sizes2,sizes3))
         #return np.outer(sizes, sizes2, self.get_bin_widths(2))    # Correct
+
+    _projection_class_map = {
+        (1, 2) : DirectionalHistogram,
+    }
 
 
 class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
@@ -210,6 +237,10 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
         sizes2 = self.get_bin_widths(1)
         sizes3 = self.get_bin_widths(2)
         return reduce(np.multiply, np.ix_(sizes1, sizes2, sizes3))
+
+    _projection_class_map = {
+        (0, 1) : PolarHistogram,
+    }
 
 
 def _prepare_data(data, transformed, klass,  *args, **kwargs):
@@ -256,7 +287,23 @@ def spherical_histogram(data=None, radial_bins="numpy", theta_bins=16, phi_bins=
     dropna = kwargs.pop("dropna", True)
     data = _prepare_data(data, transformed=transformed, klass=SphericalHistogram, dropna=dropna)
 
-    # TODO: Add arguments to construct bins
+    if isinstance(theta_bins, int):
+        theta_range = (0, np.pi)
+        if "theta_range" in "kwargs":
+            theta_range = kwargs["theta_range"]
+        elif "range" in "kwargs":
+            theta_range = kwargs["range"][1]
+        theta_range = list(theta_range) + [theta_bins + 1]
+        theta_bins = np.linspace(*theta_range)
+
+    if isinstance(phi_bins, int):
+        phi_range = (0, 2 * np.pi)
+        if "phi_range" in "kwargs":
+            phi_range = kwargs["phi_range"]
+        elif "range" in "kwargs":
+            phi_range = kwargs["range"][2]
+        phi_range = list(phi_range) + [phi_bins + 1]
+        phi_bins = np.linspace(*phi_range)
 
     bin_schemas = binnings.calculate_bins_nd(data, [radial_bins, theta_bins, phi_bins], *args,
                                              check_nan=not dropna, **kwargs)
