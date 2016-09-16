@@ -206,10 +206,29 @@ class SphericalHistogram(TransformedHistogramMixin, HistogramND):
     }
 
 
+class CylinderSurfaceHistogram(TransformedHistogramMixin, HistogramND):
+    """2D histogram in coordinates on cylinder surface.
+
+    This is a special case of a 2D histogram with transformed coordinates:
+    - phi as azimuthal angle  (in the xy projection) in the (0, 2*pi) range
+    - z as the last direction without modification, in (-inf, +inf) range
+    """
+    def __init__(self, binnings, frequencies=None, **kwargs):
+        if not "axis_names" in kwargs:
+            kwargs["axis_names"] = ("phi", "z")
+        if "dim" in kwargs:
+            kwargs.pop("dim")
+        super(CylinderSurfaceHistogram, self).__init__(2, binnings=binnings, frequencies=frequencies, **kwargs)
+
+    _projection_class_map = {
+        (0,) : AzimuthalHistogram
+    }
+
+
 class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
     """3D histogram in cylindrical coordinates.
 
-    This is a special case of a 2D histogram with transformed coordinates:
+    This is a special case of a 3D histogram with transformed coordinates:
     - r as radius projection to xy plane in the (0, +inf) range
     - phi as azimuthal angle  (in the xy projection) in the (0, 2*pi) range
     - z as the last direction without modification, in (-inf, +inf) range
@@ -240,10 +259,14 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
 
     _projection_class_map = {
         (0, 1) : PolarHistogram,
+        (1, 2) : CylinderSurfaceHistogram
     }
 
 
 def _prepare_data(data, transformed, klass,  *args, **kwargs):
+    """Transform data for binning.
+    """
+    # TODO: Maybe include in the class itself?
     data = np.asarray(data)
     if not transformed:
         data = klass.transform(data)
@@ -254,7 +277,7 @@ def _prepare_data(data, transformed, klass,  *args, **kwargs):
 
 
 def polar_histogram(xdata, ydata, radial_bins="numpy", phi_bins=16, transformed=False, *args, **kwargs):
-    """
+    """Facade construction function for the PolarHistogram.
 
     Parameters
     ----------
@@ -284,6 +307,10 @@ def polar_histogram(xdata, ydata, radial_bins="numpy", phi_bins=16, transformed=
 
 
 def spherical_histogram(data=None, radial_bins="numpy", theta_bins=16, phi_bins=16, transformed=False, *args, **kwargs):
+    """Facade construction function for the SphericalHistogram.
+
+    """
+
     dropna = kwargs.pop("dropna", True)
     data = _prepare_data(data, transformed=transformed, klass=SphericalHistogram, dropna=dropna)
 
@@ -315,10 +342,21 @@ def spherical_histogram(data=None, radial_bins="numpy", theta_bins=16, phi_bins=
 
 
 def cylindrical_histogram(data=None, rho_bins="numpy", phi_bins=16, z_bins="numpy", transformed=False, *args, **kwargs):
+    """Facade construction function for the CylindricalHistogram.
+
+    """
+
     dropna = kwargs.pop("dropna", True)
     data = _prepare_data(data, transformed=transformed, klass=CylindricalHistogram, dropna=dropna)
 
-    # TODO: Add arguments to construct bins
+    if isinstance(phi_bins, int):
+        phi_range = (0, 2 * np.pi)
+        if "phi_range" in "kwargs":
+            phi_range = kwargs["phi_range"]
+        elif "range" in "kwargs":
+            phi_range = kwargs["range"][1]
+        phi_range = list(phi_range) + [phi_bins + 1]
+        phi_bins = np.linspace(*phi_range)
 
     bin_schemas = binnings.calculate_bins_nd(data, [rho_bins, phi_bins, z_bins], *args,
                                              check_nan=not dropna, **kwargs)
