@@ -74,7 +74,7 @@ Using pip:
 
 `pip install physt`
 
-Using conda:
+Using conda (not always up-to-date):
 
 `conda install -c janpipek physt`
 
@@ -89,7 +89,7 @@ Using conda:
   - 2D polar coordinates (with plotting)
   - 3D spherical / cylindrical coordinates (beta)
 * Adaptive rebinning for on-line filling of unknown data (beta)
-- Non-consecutive bins
+* Non-consecutive bins
 * Memory-effective histogramming of dask arrays (beta)
 * Understands any numpy-array-like object
 * Keep underflow / overflow / missed bins
@@ -99,7 +99,6 @@ Using conda:
 * Cumulative values, densities
 * Simple statistics for original data (mean, std, sem)
 * Simple plotting (matplotlib, bokeh)
-  - 2D support experimental
 * Algorithms for optimized binning
   - human-friendly
   - mathematical
@@ -135,4 +134,4 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Contribution
 
-I am looking for anyone interested in using / developing physt. You can contribut by reporting errors, implementing missing features and suggest new one.
+I am looking for anyone interested in using / developing physt. You can contribute by reporting errors, implementing missing features and suggest new one.
