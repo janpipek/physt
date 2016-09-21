@@ -1,3 +1,8 @@
+0.3.16 (21st September 2016)
+----------------------------
+- Added: cylinder_map plot type
+- Added: surface_map plot type
+
 0.3.15 (15th September 2016)
 ----------------------------
 - Added: globe_map plot for directional histograms
