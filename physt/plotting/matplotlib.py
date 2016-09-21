@@ -435,10 +435,14 @@ def cylinder_map(hist, show_zero=True, **kwargs):
     norm, cmap_data = _get_cmap_data(data, kwargs)
     colors = cmap(cmap_data)
 
-    r = 1
+    if hasattr(hist, "radius"):
+        r = kwargs.pop("radius", hist.radius)
+    else:
+        r = kwargs.pop("radius", 1)
+
     xs = r * np.outer(np.cos(hist.numpy_bins[0]), np.ones(hist.shape[1] + 1))
     ys = r * np.outer(np.sin(hist.numpy_bins[0]), np.ones(hist.shape[1] + 1))
-    zs = r * np.outer(np.ones(hist.shape[0] + 1), hist.numpy_bins[1])
+    zs = np.outer(np.ones(hist.shape[0] + 1), hist.numpy_bins[1])
 
     for i in range(hist.shape[0]):
         for j in range(hist.shape[1]):
@@ -457,8 +461,8 @@ def cylinder_map(hist, show_zero=True, **kwargs):
     ax.set_zlabel("z")
 
     ax.plot_surface([], [], [], color="b")
-    ax.set_xlim(-1.1, 1.1)
-    ax.set_ylim(-1.1, 1.1)
+    ax.set_xlim(-r * 1.1, r * 1.1)
+    ax.set_ylim(-r * 1.1, r * 1.1)
     ax.set_zlim(zs.min(), zs.max())
 
     # ax.plot_surface(x, y, z, rstride=hist.shape[0], color="b")

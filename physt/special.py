@@ -212,13 +212,20 @@ class CylinderSurfaceHistogram(TransformedHistogramMixin, HistogramND):
     This is a special case of a 2D histogram with transformed coordinates:
     - phi as azimuthal angle  (in the xy projection) in the (0, 2*pi) range
     - z as the last direction without modification, in (-inf, +inf) range
+
+    Attributes
+    ----------
+    radius: float
+        The radius of the surface. Useful for plotting
     """
-    def __init__(self, binnings, frequencies=None, **kwargs):
+    def __init__(self, binnings, frequencies=None, radius=1, **kwargs):
         if not "axis_names" in kwargs:
             kwargs["axis_names"] = ("phi", "z")
         if "dim" in kwargs:
             kwargs.pop("dim")
         super(CylinderSurfaceHistogram, self).__init__(2, binnings=binnings, frequencies=frequencies, **kwargs)
+
+        self.radius = radius
 
     _projection_class_map = {
         (0,) : AzimuthalHistogram
@@ -261,6 +268,12 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
         (0, 1) : PolarHistogram,
         (1, 2) : CylinderSurfaceHistogram
     }
+
+    def projection(self, *args, **kwargs):
+        result = TransformedHistogramMixin.projection(self, *args, **kwargs)
+        if isinstance(result, CylinderSurfaceHistogram):
+            result.radius = self.get_bin_right_edges(0)[-1]
+        return result
 
 
 def _prepare_data(data, transformed, klass,  *args, **kwargs):
