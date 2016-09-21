@@ -14,6 +14,9 @@ Plot functions for 2D histograms
 - image
 - bar3d
 - polar_map
+- surface_map
+- globe_map (for DirectionalHistogram)
+- cylinder_map (for CylinderSurfaceHistogram)
 
 Each plotting method supports many parameters. These are quite common
 and very often corresponding to a matplotlib parameter of a same name.
@@ -32,7 +35,7 @@ import numpy as np
 from .common import get_data, get_err_data
 
 
-types = ("bar", "scatter", "line", "map", "bar3d", "image", "polar_map", "globe_map", "cylinder_map")
+types = ("bar", "scatter", "line", "map", "bar3d", "image", "polar_map", "globe_map", "cylinder_map", "surface_map")
 
 dims = {
     "bar": [1],
@@ -43,7 +46,8 @@ dims = {
     "image": [2],
     "polar_map": [2],
     "globe_map": [2],
-    "cylinder_map": [2]
+    "cylinder_map": [2],
+    "surface_map": [2]
 }
 
 
@@ -210,11 +214,7 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, **kwargs):
 
     See Also
     --------
-    image, polar_map
-
-    Notes
-    -----
-    It is not possible to draw colorbar with transformed values.
+    image, polar_map, surface_map
     """
     fig, ax = _get_axes(kwargs)
 
@@ -463,6 +463,78 @@ def cylinder_map(hist, show_zero=True, **kwargs):
     ax.plot_surface([], [], [], color="b")
     ax.set_xlim(-r * 1.1, r * 1.1)
     ax.set_ylim(-r * 1.1, r * 1.1)
+    ax.set_zlim(zs.min(), zs.max())
+
+    # ax.plot_surface(x, y, z, rstride=hist.shape[0], color="b")
+
+    return ax
+
+
+def surface_map(hist, show_zero=True, x=(lambda x,y: x), y=(lambda x,y: y), z=(lambda x,y: 0), **kwargs):
+    """Coloured-rectangle plot of 2D histogram, placed on an arbitrary surface.
+
+    Each bin is mapped to a rectangle in 3D space using the x,y,z functions.
+
+    Parameters
+    ----------
+    hist : Histogram2D
+    show_zero : Optional[bool]
+        Whether to show coloured box for bins with 0 frequency (otherwise background).
+    x : function
+        Function with 2 parameters used to map bins to spatial x coordinate
+    y : function
+        Function with 2 parameters used to map bins to spatial y coordinate
+    z : function
+        Function with 2 parameters used to map bins to spatial z coordinate
+
+    Returns
+    -------
+    matplotlib.axes._subplots.Axes3DSubplot
+
+    See Also
+    --------
+    map, cylinder_map, globe_map
+    """
+    fig, ax = _get_axes(kwargs=kwargs, use_3d=True)
+
+    data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
+
+    cmap = _get_cmap(kwargs)
+    norm, cmap_data = _get_cmap_data(data, kwargs)
+    colors = cmap(cmap_data)
+
+    xs = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
+    ys = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
+    zs = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
+
+    edges_x = hist.numpy_bins[0]
+    edges_y = hist.numpy_bins[1]
+
+    for i in range(hist.shape[0] + 1):
+        for j in range(hist.shape[1] + 1):
+            xs[i, j] = x(edges_x[i], edges_y[j])
+            ys[i, j] = y(edges_x[i], edges_y[j])
+            zs[i, j] = z(edges_x[i], edges_y[j])
+
+    for i in range(hist.shape[0]):
+        for j in range(hist.shape[1]):
+            if not show_zero and not data[i, j]:
+                continue
+            x = xs[i, j], xs[i, j+1], xs[i+1, j+1], xs[i+1, j]
+            y = ys[i, j], ys[i, j+1], ys[i+1, j+1], ys[i+1, j]
+            z = zs[i, j], zs[i, j+1], zs[i+1, j+1], zs[i+1, j]
+            verts = [list(zip(x, y,z))]
+            col = Poly3DCollection(verts)
+            col.set_facecolor(colors[i, j])
+            ax.add_collection3d(col)
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+
+    ax.plot_surface([], [], [], color="b")   # Dummy plot
+    ax.set_xlim(xs.min(), xs.max())
+    ax.set_ylim(ys.min(), ys.max())
     ax.set_zlim(zs.min(), zs.max())
 
     # ax.plot_surface(x, y, z, rstride=hist.shape[0], color="b")
