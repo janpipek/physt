@@ -28,6 +28,8 @@ from __future__ import absolute_import
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
+import matplotlib.patches as patches
+import matplotlib.path as path
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
@@ -189,7 +191,7 @@ def line(h1, errors=False, **kwargs):
     return ax
 
 
-def map(h2, show_zero=True, show_values=False, show_colorbar=True, **kwargs):
+def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=None, **kwargs):
     """Coloured-rectangle plot of 2D histogram.
 
     Parameters
@@ -207,6 +209,10 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, **kwargs):
         Colour of text descriptions
     text_alpha : Optional[float]
         Alpha for the text labels only
+    x : Optional[Callable]
+        Transformation of x bin coordinates
+    y : Optional[Callable]
+        Transformation of y bin coordinates
 
     Returns
     -------
@@ -215,8 +221,23 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, **kwargs):
     See Also
     --------
     image, polar_map, surface_map
+
+    Notes
+    -----
+    If you transform axes using x or y parameters, the deduction of axis limits
+    does not work well automatically. Please, make sure to attend to it yourself.
+    The densities in transformed maps are calculated from original bins.
     """
     fig, ax = _get_axes(kwargs)
+
+    # Detect transformation
+    transformed = False
+    if x is not None or y is not None:
+        if not x:
+            x = lambda x, y: x
+        if not y:
+            y = lambda x, y: y
+        transformed = True
 
     format_value = kwargs.pop("format_value", lambda x: x)
 
@@ -244,9 +265,37 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, **kwargs):
         alpha = alphas[i]
 
         if data[i] != 0 or show_zero:
-            rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
-                facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
-                lw=kwargs.get("lw", 0.5), alpha=alpha)
+            if not transformed:
+                rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
+                    facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
+                    lw=kwargs.get("lw", 0.5), alpha=alpha)
+                tx, ty = text_x[i], text_y[i]
+
+            else:
+                # See http://matplotlib.org/users/path_tutorial.html
+                points = (
+                    (xpos[i], ypos[i]),
+                    (xpos[i] + dx[i], ypos[i]),
+                    (xpos[i] + dx[i], ypos[i] + dy[i]),
+                    (xpos[i], ypos[i] + dy[i]),
+                    (xpos[i], ypos[i])
+                )
+
+                verts = [(x(*p), y(*p)) for p in points]
+
+                codes = [path.Path.MOVETO,
+                         path.Path.LINETO,
+                         path.Path.LINETO,
+                         path.Path.LINETO,
+                         path.Path.CLOSEPOLY,
+                         ]
+
+                rect_path = path.Path(verts, codes)
+                rect = patches.PathPatch(rect_path, facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
+                    lw=kwargs.get("lw", 0.5), alpha=alpha)
+
+                tx = x(text_x[i], text_y[i])
+                ty = y(text_x[i], text_y[i])
             ax.add_patch(rect)
 
             if show_values:
@@ -259,7 +308,7 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, **kwargs):
                         text_color = (0.0, 0.0, 0.0, kwargs.get("text_alpha", alpha))
                     else:
                         text_color = (1.0, 1.0, 1.0, kwargs.get("text_alpha", alpha))
-                ax.text(text_x[i], text_y[i], text, horizontalalignment='center',
+                ax.text(tx, ty, text, horizontalalignment='center',
                         verticalalignment='center', color=text_color, clip_on=True)
 
     if show_colorbar:

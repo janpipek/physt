@@ -1,3 +1,7 @@
+0.3.17 (23rd September 2016)
+----------------------------
+- Added: possibility to transform coordinates in 2D maps
+
 0.3.16 (21st September 2016)
 ----------------------------
 - Added: cylinder_map plot type
