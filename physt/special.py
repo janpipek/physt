@@ -1,4 +1,22 @@
+"""Transformed histograms.
+
+These histograms use a transformation from input values to bins
+in a different coordinate system.
+
+There are three basic classes:
+
+* PolarHistogram
+* CylindricalHistogram
+* SphericalHistogram
+
+Apart from these, there are their projections into lower dimensions.
+
+And of course, it is possible to re-use the general transforming functionality
+by adding `TransformedHistogramMixin` among the custom histogram
+class superclasses.
+"""
 from __future__ import absolute_import
+
 from .histogram_base import HistogramBase
 from .histogram_nd import HistogramND
 from .histogram1d import Histogram1D
@@ -24,7 +42,7 @@ class TransformedHistogramMixin(object):
 
     @classmethod
     def transform(self, value):
-        """Convert cartesian coordinates into internal ones.
+        """Convert cartesian (general) coordinates into internal ones.
 
         Parameters
         ----------
