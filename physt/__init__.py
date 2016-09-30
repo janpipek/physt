@@ -237,7 +237,7 @@ h2 = histogram2d
 def h3(data, *args, **kwargs):
     import numpy as np
 
-    if data and isinstance(data, (list, tuple)) and not np.isscalar(data[0]):
+    if data is not None and isinstance(data, (list, tuple)) and not np.isscalar(data[0]):
         data = np.concatenate([item[:, np.newaxis] for item in data], axis=1)
     else:
         data = np.asarray(data)
