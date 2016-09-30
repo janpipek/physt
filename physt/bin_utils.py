@@ -49,7 +49,7 @@ def to_numpy_bins(bins):
     Returns
     -------
     edges: np.ndarray
-        all edges    
+        all edges
     """
     if bins.ndim == 1:     # Already in the proper format
         return bins
