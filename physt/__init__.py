@@ -47,7 +47,7 @@ def histogram(data, bins=None, *args, **kwargs):
 
     Returns
     -------
-    Histogram1D
+    physt.histogram1d.Histogram1D
 
     See Also
     --------
@@ -106,7 +106,7 @@ def histogram(data, bins=None, *args, **kwargs):
         if hasattr(data, "name") and not axis_name:
             axis_name = data.name
         return Histogram1D(binning=binning, frequencies=frequencies, errors2=errors2, overflow=overflow,
-                            underflow=underflow, stats=stats,
+                            underflow=underflow, stats=stats, dtype=dtype,
                             keep_missed=keep_missed, name=name, axis_name=axis_name)
 
 

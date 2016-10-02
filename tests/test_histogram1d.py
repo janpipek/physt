@@ -335,6 +335,20 @@ class TestDtype(object):
         with pytest.raises(RuntimeError):
             example = h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
 
+    def test_copy(self):
+        example = h1(values, dtype=np.int32)
+        assert example.dtype == np.int32
+        assert example.copy().dtype == np.int32
+
+    def test_coerce(self):
+        example = h1(values, dtype=np.int32)
+        example._coerce_dtype(np.int64)
+        assert example.dtype == np.int64
+        example._coerce_dtype(np.float)
+        assert example.dtype == np.float
+        example._coerce_dtype(np.int32)
+        assert example.dtype == np.float
+
     def test_update(self):
         example = h1(values)
         example.dtype = np.int16

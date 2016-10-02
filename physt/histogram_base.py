@@ -1,9 +1,12 @@
 from __future__ import absolute_import
 import numpy as np
+from .binnings import as_binning
 
 
 class HistogramBase(object):
-    """Behaviour shared between all histogram classes.
+    """Histogram base class.
+
+    Behaviour shared between all histogram classes.
 
     The most important daughter classes are:
     - Histogram1D
@@ -13,6 +16,9 @@ class HistogramBase(object):
     - fill
     - fill_n (optional)
     - copy
+
+    Underlying data type is int64 / float  or an explicitly specified
+    other type.
 
     Attributes
     ----------
@@ -27,6 +33,48 @@ class HistogramBase(object):
         Name to be displayed for the histogram
 
     """
+
+    def __init__(self, binnings, frequencies=None, errors2=None, **kwargs):
+        self._binnings = [as_binning(binning) for binning in binnings]
+
+        # Frequencies + appropriate dtypes
+        if frequencies is None:
+            dtype = kwargs.pop("dtype", np.int64)
+            self._frequencies = np.zeros(self.shape, dtype=dtype)
+        else:
+            dtype = kwargs.pop("dtype", None)
+            if dtype is not None:
+                frequencies = np.asarray(frequencies, dtype=dtype)
+            else:
+                frequencies = np.asarray(frequencies)
+                if np.issubdtype(frequencies.dtype, np.integer):
+                    frequencies = frequencies.astype(np.int64)
+                elif np.issubdtype(frequencies.dtype, np.float):
+                    frequencies = frequencies.astype(np.float64)
+                else:
+                    raise RuntimeError("Frequencies of type {0} not understood".format(frequencies.dtype))
+            dtype = frequencies.dtype
+            if frequencies.shape != self.shape:
+                raise RuntimeError("Values must have same dimension as bins.")
+            if np.any(frequencies < 0):
+                raise RuntimeError("Cannot have negative frequencies.")
+            self._frequencies = frequencies
+        self._dtype = dtype
+
+        # Errors
+        if errors2 is None:
+            self._errors2 = self._frequencies.copy()
+        else:
+            self._errors2 = np.asarray(errors2, dtype=self.dtype)
+        if np.any(self._errors2 < 0):
+            raise RuntimeError("Cannot have negative squared errors.")
+        if self._errors2.shape != self._frequencies.shape:
+            raise RuntimeError("Errors must have same dimension as frequencies.")
+
+        self.keep_missed = kwargs.get("keep_missed", True)
+        # Note: missed are dealt differently in 1D/ND cases
+
+        self.name = kwargs.get("name", None)
 
     @property
     def shape(self):
@@ -59,7 +107,7 @@ class HistogramBase(object):
         -------
         np.dtype
         """
-        return self._frequencies.dtype
+        return self._dtype
 
     @dtype.setter
     def dtype(self, value):
@@ -86,6 +134,7 @@ class HistogramBase(object):
         elif np.issubdtype(value, np.float):
             ok = True
         if ok:
+            self._dtype = value
             self._frequencies = self._frequencies.astype(value)
             self._errors2 = self._errors2.astype(value)
             self._missed = self._missed.astype(value)
@@ -373,11 +422,8 @@ class HistogramBase(object):
                     return False
             return True
 
-    # Unused?
-    # def has_compatible_bins(self, other):
-    #     # By default, the bins must be the same
-    #     # Overridden
-    #     return self.has_same_bins()
+    def fill(self, value, weight, **kwargs):
+        raise NotImplementedError("You have to define the `fill` method in Histogram class.")
 
     def fill_n(self, values, weights=None, **kwargs):
         """Add more values at once.
@@ -418,6 +464,11 @@ class HistogramBase(object):
         """
         from .plotting import PlottingProxy
         return PlottingProxy(self)
+
+    def __repr__(self):
+        s = "{0}(bins={1}, total={2}, dtype={3})".format(
+            self.__class__.__name__, self.shape, self.total, self.dtype)
+        return s
 
     def __add__(self, other):
         new = self.copy()

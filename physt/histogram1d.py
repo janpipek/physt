@@ -51,20 +51,7 @@ class Histogram1D(HistogramBase):
         stats: dict
             Dictionary of various statistics ("sum", "sum2")
         """
-        from .binnings import BinningBase, static_binning
-        self._binnings = [as_binning(binning)]
-
-        if frequencies is None:
-            self._frequencies = np.zeros(self.bins.shape[0])
-        else:
-            frequencies = np.asarray(frequencies)
-            if frequencies.shape != (self.bins.shape[0],):
-                raise RuntimeError("Values must have same dimension as bins.")
-            if np.any(frequencies < 0):
-                raise RuntimeError("Cannot have negative frequencies.")
-            self._frequencies = frequencies
-
-        self.keep_missed = kwargs.get("keep_missed", True)
+        HistogramBase.__init__(self, [binning], frequencies, errors2, **kwargs)
 
         if self.keep_missed:
             self._missed = np.array([
@@ -74,18 +61,9 @@ class Histogram1D(HistogramBase):
             ], dtype=self._frequencies.dtype)
         else:
             self._missed = np.array([np.nan, np.nan, np.nan])        
-        self.name = kwargs.get("name", None)
+
         self.axis_name = kwargs.get("axis_name", self.name)
         self._stats = kwargs.get("stats", None)
-
-        if errors2 is None:
-            self._errors2 = self._frequencies.copy()
-        else:
-            self._errors2 = np.asarray(errors2)
-        if np.any(self._errors2 < 0):
-            raise RuntimeError("Cannot have negative squared errors.")
-        if self._errors2.shape != self._frequencies.shape:
-            raise RuntimeError("Errors must have same dimension as frequencies.")
 
     def __getitem__(self, i):
         """Select sub-histogram or get one bin.
@@ -434,7 +412,7 @@ class Histogram1D(HistogramBase):
         if weights:
             weights = np.asarray(weights)
             self._coerce_dtype(weights.dtype)
-        frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self._binning,
+        frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self._binning, dtype=self.dtype,
                                                                                   weights=weights, validate_bins=False)
         self._frequencies += frequencies
         self._errors2 += errors2
@@ -457,6 +435,8 @@ class Histogram1D(HistogramBase):
         -------
         Histogram1D
         """
+        print("COPY")
+
         if include_frequencies:
             frequencies = np.copy(self.frequencies)
             underflow = self.underflow
@@ -469,7 +449,7 @@ class Histogram1D(HistogramBase):
             overflow = 0
             inner_missed = 0
             errors2 = None
-        return self.__class__(self._binning.copy(), frequencies, underflow=underflow, overflow=overflow, inner_missed=inner_missed,
+        return self.__class__(self._binning.copy(), frequencies, dtype=self.dtype, underflow=underflow, overflow=overflow, inner_missed=inner_missed,
                               name=self.name, axis_name=self.axis_name, keep_missed=self.keep_missed, stats=self._stats,
                               errors2=errors2)
 
@@ -612,7 +592,7 @@ class Histogram1D(HistogramBase):
         # TODO: Add stats
         return cls(**data)
 
-    def __repr__(self):
+    def __reerepr__(self):
         s = "{0}(bins={1}, total={2}".format(
             self.__class__.__name__, self.bins.shape[0], self.total)
         if self.underflow:
@@ -658,7 +638,6 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
     ----
     Checks that the bins are in a correct order (not necessarily consecutive)
     """
-    # TODO: Maybe change back to bins???
 
     # Statistics
     sum = 0.0
@@ -681,11 +660,11 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
         import numbers
         if issubclass(dtype, numbers.Integral):
             raise RuntimeError("Histograms with weights cannot have integral dtype")
-        weights = np.asarray(weights, dtype=dtype).flatten()
+        weights = np.asarray(weights, dtype=np.float64).flatten()
         if weights.shape != data.shape:
             raise RuntimeError("Weight must have the same shape as data")
     else:
-        weights = np.ones(data.shape, dtype=dtype)
+        weights = np.ones(data.shape, dtype=np.float64)
 
     # Data sorting
     if not already_sorted:

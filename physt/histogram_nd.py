@@ -36,40 +36,16 @@ class HistogramND(HistogramBase):
         if len(binnings) != dimension:
             raise RuntimeError("bins must be a sequence of {0} schemas".format(dimension))
 
-        # self.ndim = dimension
-        self._binnings = [as_binning(binning) for binning in binnings]
-
-        # Frequencies + checks
-        if frequencies is None:
-            self._frequencies = np.zeros(self.shape)
-        else:
-            frequencies = np.asarray(frequencies)
-            if frequencies.shape != self.shape:
-                raise RuntimeError("Values must have same dimension as bins.")
-            if np.any(frequencies < 0):
-                raise RuntimeError("Cannot have negative frequencies.")
-            self._frequencies = frequencies
+        HistogramBase.__init__(self, binnings, frequencies, **kwargs)
 
         # Missed values
-        self.keep_missed = kwargs.get("keep_missed", True)
         self._missed = np.array([kwargs.get("missed", 0)])
 
         # Names etc.
-        self.name = kwargs.get("name", None)
+
         self.axis_names = kwargs.get("axis_names", ["axis{0}".format(i) for i in range(self.ndim)])
         if len(self.axis_names) != self.ndim:
             raise RuntimeError("The length of axis names must be equal to histogram dimension.")
-
-        # Errors + checks
-        self._errors2 = kwargs.get("errors2")
-        if self._errors2 is None:
-            self._errors2 = self._frequencies.copy()
-        else:
-            self._errors2 = np.asarray(self._errors2)
-        if self._errors2.shape != self._frequencies.shape:
-            raise RuntimeError("Errors must have same dimension as frequencies.")
-        if np.any(self._errors2 < 0):
-            raise RuntimeError("Cannot have negative squared errors.")
 
     # Not supported yet
     _stats = None
@@ -241,7 +217,7 @@ class HistogramND(HistogramBase):
             errors2 = None
         return self.__class__(dimension=self.ndim,
                               binnings=[binning.copy() for binning in self._binnings],
-                              frequencies=frequencies, errors2=errors2,
+                              frequencies=frequencies, errors2=errors2, dtype=self.dtype,
                               name=self.name, axis_names=self.axis_names[:],
                               keep_missed=self.keep_missed, missed=missed)
 
