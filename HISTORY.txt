@@ -1,3 +1,8 @@
+0.3.18 (2nd October 2016)
+-------------------------
+- Fix: a few dtype-related bugs
+- Changed: refactor constructors to HistogramBase
+
 0.3.17 (23rd September 2016)
 ----------------------------
 - Added: possibility to transform coordinates in 2D maps
