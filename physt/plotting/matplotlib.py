@@ -436,6 +436,17 @@ def polar_map(hist, show_zero=True, **kwargs):
 
 
 def globe_map(hist, show_zero=True, **kwargs):
+    """
+
+    Parameters
+    ----------
+    hist : Histogram2D | physt.special.DirectionalHistogram
+    show_zero : bool
+
+    Returns
+    -------
+
+    """
     fig, ax = _get_axes(kwargs=kwargs, use_3d=True)
 
     data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
@@ -644,7 +655,7 @@ def _get_axes(kwargs, use_3d=False, use_polar=False):
     Returns
     ------
     fig : plt.Figure
-    ax : plt.Axes
+    ax : plt.Axes | Axes3D
     """
     figsize = kwargs.pop("figsize", None)
     if "ax" in kwargs:
@@ -899,7 +910,7 @@ def _add_ticks(ax, h1, kwargs):
     Parameters
     ----------
     ax : plt.Axes
-    h1 :
+    h1 : physt.histogram1d.Histogram1D
     ticks: {"center", "edge"}, optional
     """
     ticks = kwargs.pop("ticks", None)

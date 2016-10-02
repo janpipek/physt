@@ -106,7 +106,12 @@ class PlottingProxy(object):
         self.h = h
 
     def __call__(self, histtype=None, **kwargs):
-        """Use the plotter as callable."""
+        """Use the plotter as callable.
+
+        Parameters
+        ----------
+        histtype: Optional[str]
+        """
         return plot(self.h, histtype, **kwargs)
 
     def __getattr__(self, name):
