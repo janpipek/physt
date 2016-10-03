@@ -23,7 +23,10 @@ and very often corresponding to a matplotlib parameter of a same name.
 The very general keyword argument dict is sequentially forwarded to
 plotting helper functions that do part of the plotting job and popped of the used
 parameters.
+
 """
+# TODO: Write notes about the zorder argument
+
 from __future__ import absolute_import
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -139,7 +142,7 @@ def scatter(h1, errors=False, **kwargs):
 
     if errors:
         err_data = get_err_data(h1, cumulative=cumulative, density=density)
-        ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "o"), ecolor=kwargs.get("ecolor", "black"))
+        ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.pop("fmt", "o"), ecolor=kwargs.pop("ecolor", "black"), **kwargs)
     else:
         ax.scatter(h1.bin_centers, data, **kwargs)
 
@@ -178,7 +181,7 @@ def line(h1, errors=False, **kwargs):
 
     if errors:
         err_data = get_err_data(h1, cumulative=cumulative, density=density)
-        ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.get("fmt", "-"), ecolor=kwargs.get("ecolor", "black"), **kwargs)
+        ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.pop("fmt", "-"), ecolor=kwargs.pop("ecolor", "black"), **kwargs)
     else:
         ax.plot(h1.bin_centers, data, **kwargs)
 
@@ -213,6 +216,8 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
         Transformation of x bin coordinates
     y : Optional[Callable]
         Transformation of y bin coordinates
+    zorder : float
+        z-order in the axis (higher number above lower)
 
     Returns
     -------
@@ -241,6 +246,10 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
 
     format_value = kwargs.pop("format_value", lambda x: x)
 
+    rect_args = {}
+    if "zorder" in kwargs:
+        rect_args["zorder"] = kwargs.pop("zorder")
+
     data = get_data(h2, cumulative=False, flatten=True, density=kwargs.pop("density", False))
     # transformed = transform_data(data, kwargs)
 
@@ -268,7 +277,7 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
             if not transformed:
                 rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
                     facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
-                    lw=kwargs.get("lw", 0.5), alpha=alpha)
+                    lw=kwargs.get("lw", 0.5), alpha=alpha, **rect_args)
                 tx, ty = text_x[i], text_y[i]
 
             else:
@@ -292,7 +301,7 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
 
                 rect_path = path.Path(verts, codes)
                 rect = patches.PathPatch(rect_path, facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
-                    lw=kwargs.get("lw", 0.5), alpha=alpha)
+                    lw=kwargs.get("lw", 0.5), alpha=alpha, **rect_args)
 
                 tx = x(text_x[i], text_y[i])
                 ty = y(text_x[i], text_y[i])
@@ -309,7 +318,7 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
                     else:
                         text_color = (1.0, 1.0, 1.0, kwargs.get("text_alpha", alpha))
                 ax.text(tx, ty, text, horizontalalignment='center',
-                        verticalalignment='center', color=text_color, clip_on=True)
+                        verticalalignment='center', color=text_color, clip_on=True, **rect_args)
 
     if show_colorbar:
         _add_colorbar(ax, cmap, cmap_data, norm)
@@ -375,6 +384,7 @@ def image(h2, show_colorbar=True, **kwargs):
     cmap = _get_cmap(kwargs)   # h2 as well?
     data = get_data(h2, cumulative=False, density=kwargs.pop("density", False))
     norm, cmap_data = _get_cmap_data(data, kwargs)
+    # zorder = kwargs.pop("zorder", None)
 
     for binning in h2._binnings:
         if not binning.is_regular():
@@ -420,6 +430,10 @@ def polar_map(hist, show_zero=True, **kwargs):
     dr, dphi  = (arr.flatten() for arr in hist.get_bin_widths())
     rmax, _ =  (arr.flatten() for arr in hist.get_bin_right_edges())
 
+    bar_args = {}
+    if "zorder" in kwargs:
+        bar_args["zorder"] = kwargs.pop("zorder")
+
     alphas = _get_alpha_data(cmap_data, kwargs)
     if np.isscalar(alphas):
         alphas = np.ones_like(data) * alphas
@@ -429,7 +443,7 @@ def polar_map(hist, show_zero=True, **kwargs):
             bin_color = colors[i]
             bars = ax.bar(phipos[i], dr[i], width=dphi[i], bottom=rpos[i], color=bin_color,
                           edgecolor=kwargs.get("grid_color", cmap(0.5)), lw=kwargs.get("lw", 0.5),
-                          alpha=alphas[i])
+                          alpha=alphas[i], **bar_args)
 
     ax.set_rmax(rmax.max())
     return ax

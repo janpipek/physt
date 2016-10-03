@@ -1,3 +1,7 @@
+0.3.19 (3th October 2016)
+-------------------------
+- Added: support zorder for most matplotlib plotting functions
+
 0.3.18 (2nd October 2016)
 -------------------------
 - Fix: a few dtype-related bugs
