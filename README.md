@@ -1,5 +1,7 @@
 # physt
 
+[![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/Lobby.svg)](https://gitter.im/physt/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram, but designed for humans(TM) on steroids(TM).
 
 The goal is to unify different concepts of histograms as occurring in numpy, pandas, matplotlib, ROOT, etc.
