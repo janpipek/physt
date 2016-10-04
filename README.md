@@ -1,13 +1,13 @@
 # physt
 
-[![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/physt.svg)](https://gitter.im/physt/physt)
-
 P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram, but designed for humans(TM) on steroids(TM).
 
 The goal is to unify different concepts of histograms as occurring in numpy, pandas, matplotlib, ROOT, etc.
 and to create one representation that is easily manipulated with from the data point of view and at the same time provides
 nice integration into IPython notebook and various plotting options. In short, whatever you want to do with histograms,
 **physt** aims to be on your side.
+
+[![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/physt.svg)](https://gitter.im/physt/physt) [![PyPI version](https://badge.fury.io/py/physt.svg)](https://badge.fury.io/py/physt)
 
 ## Simple example
 
