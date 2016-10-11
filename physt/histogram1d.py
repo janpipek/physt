@@ -60,7 +60,7 @@ class Histogram1D(HistogramBase):
                 kwargs.get("inner_missed", 0)
             ], dtype=self._frequencies.dtype)
         else:
-            self._missed = np.array([np.nan, np.nan, np.nan])        
+            self._missed = np.array([np.nan, np.nan, np.nan])
 
         self.axis_name = kwargs.get("axis_name", self.name)
         self._stats = kwargs.get("stats", None)
@@ -134,7 +134,7 @@ class Histogram1D(HistogramBase):
         numpy.ndarray
         """
         # TODO: If not consecutive, does not make sense
-        return self._binning.numpy_bins        
+        return self._binning.numpy_bins
 
     @property
     def cumulative_frequencies(self):
@@ -156,12 +156,12 @@ class Histogram1D(HistogramBase):
 
     @underflow.setter
     def underflow(self, value):
-        self._missed[0] = value    
+        self._missed[0] = value
 
     @property
     def overflow(self):
         if not self.keep_missed:
-            return np.nan                
+            return np.nan
         return self._missed[1]
 
     @overflow.setter
@@ -171,7 +171,7 @@ class Histogram1D(HistogramBase):
     @property
     def inner_missed(self):
         if not self.keep_missed:
-            return np.nan                
+            return np.nan
         return self._missed[2]
 
     @inner_missed.setter
@@ -183,12 +183,12 @@ class Histogram1D(HistogramBase):
 
         This number is precise, because we keep the necessary data
         separate from bin contents.
-        
+
         Returns
         -------
-        float            
+        float
         """
-        if self._stats:    # TODO: should be true always?    
+        if self._stats:    # TODO: should be true always?
             if self.total > 0:
                 return self._stats["sum"] / self.total
             else:
@@ -205,12 +205,12 @@ class Histogram1D(HistogramBase):
         Parameters
         ----------
         ddof: int
-            Not yet used.        
-        
+            Not yet used.
+
         Returns
         -------
-        float            
-        """        
+        float
+        """
         # TODO: Add DOF
         if self._stats:
             return np.sqrt(self.variance(ddof=ddof))
@@ -227,11 +227,11 @@ class Histogram1D(HistogramBase):
         ----------
         ddof: int
             Not yet used.
-        
+
         Returns
         -------
-        float            
-        """        
+        float
+        """
         # TODO: Add DOF
         # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
         if self._stats:
@@ -276,7 +276,7 @@ class Histogram1D(HistogramBase):
         Returns
         -------
         float
-        """        
+        """
         return self.bin_left_edges[0]
 
     @property
@@ -286,7 +286,7 @@ class Histogram1D(HistogramBase):
         Returns
         -------
         float
-        """        
+        """
         return self.bin_right_edges[-1]
 
     @property
@@ -319,7 +319,7 @@ class Histogram1D(HistogramBase):
         -------
         float
         """
-        return self.bin_widths.sum()        
+        return self.bin_widths.sum()
 
     @property
     def bin_sizes(self):
@@ -538,70 +538,6 @@ class Histogram1D(HistogramBase):
         # TODO: Add stats
         return cls(**kwargs)
 
-    def to_json(self, path=None):
-        """Convert to JSON representation.
-
-        Parameters
-        ----------
-        path: Optional[str]
-            Where to write the JSON.
-
-        Returns
-        -------
-        str:
-            The JSON representation.
-        """
-        from collections import OrderedDict
-        import json
-        data = OrderedDict()
-        data["bins"] = self.bins.tolist()
-        data["frequencies"] = self.frequencies.tolist()
-        data["errors2"] = self.errors2.tolist()
-        data["keep_missed"] = self.keep_missed
-        data["underflow"] = float(self.underflow)
-        data["overflow"] = float(self.overflow)
-        # TODO: Add stats
-
-        text = json.dumps(data)
-        if path:
-            with open(path, "w", encoding="ascii") as f:
-                f.write(text)
-        return text
-
-    @classmethod
-    def from_json(cls, text=None, path=None):
-        """Read histogram from JSON representation.
-
-        Paramaters
-        ----------
-        text: Optional[str]
-            The JSON string itself.
-        path: Optional[str]
-            Path of the JSON file.
-
-        Returns
-        -------
-        Histogram1D
-        """
-        import json
-        if text:
-            data = json.loads(text)
-        else:
-            with open(path, "r") as f:
-                data = json.load(f)
-        # TODO: Add stats
-        return cls(**data)
-
-    def __reerepr__(self):
-        s = "{0}(bins={1}, total={2}".format(
-            self.__class__.__name__, self.bins.shape[0], self.total)
-        if self.underflow:
-            s += ", underflow={0}".format(self.underflow)
-        if self.overflow:
-            s += ", overflow={0}".format(self.overflow)
-        s += ")"
-        return s
-
 
 def calculate_frequencies(data, binning, weights=None, validate_bins=True, already_sorted=False, dtype=None):
     """Get frequencies and bin errors from the data.
@@ -619,7 +555,7 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
     already_sorted : bool, optional
         If True, the data being entered are already sorted, no need to sort them once more.
     dtype: Optional[type]
-        Underlying type for the histogram. If weights are specified, default is float. Otherwise long        
+        Underlying type for the histogram. If weights are specified, default is float. Otherwise long
 
     Returns
     -------

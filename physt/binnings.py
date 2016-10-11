@@ -47,6 +47,16 @@ class BinningBase(object):
     inconsecutive_allowed = False
     # TODO: adding allowed?
 
+    def to_dict(self):
+        from collections import OrderedDict
+        result = OrderedDict()
+        result["binning-type"] = type(self).__name__
+        self._update_dict(result)
+        return result
+
+    def _update_dict(self, a_dict):
+        raise NotImplementedError("Dictionary representation of {0} binning type is not implemented.")
+
     @property
     def includes_right_edge(self):
         return self._includes_right_edge
@@ -289,6 +299,9 @@ class StaticBinning(BinningBase):
         # TODO: check for the right_edge??
         return copy
 
+    def _update_dict(self, a_dict):
+        a_dict["bins"] = self.bins.tolist()
+
     def _adapt(self, other):
         if is_bin_subset(other.bins, self.bins):
             indices = np.searchsorted(other.bins[:,0], self.bins[:,0])
@@ -309,6 +322,9 @@ class NumpyBinning(BinningBase):
 
     def copy(self):
         return NumpyBinning(numpy_bins=self.numpy_bins, includes_right_edge=self.includes_right_edge)
+
+    def _update_dict(self, a_dict):
+        a_dict["numpy-bins"] = self.numpy_bins.tolist()
 
 
 class FixedWidthBinning(BinningBase):
@@ -490,6 +506,11 @@ class FixedWidthBinning(BinningBase):
         else:
             return self
 
+    def _update_dict(self, a_dict):
+        a_dict["bin-count"] = self.bin_count
+        a_dict["bin-width"] = self.bin_width
+        a_dict["bin-shift"] = self._shift
+        a_dict["bin-times-min"] = self._times_min
 
 class ExponentialBinning(BinningBase):
     """Binning schema with exponentially distributed bins."""
@@ -517,6 +538,11 @@ class ExponentialBinning(BinningBase):
 
     def copy(self):
         return ExponentialBinning(self._log_min, self._log_width, self._bin_count, self.includes_right_edge)
+
+    def _update_dict(self, a_dict):
+        a_dict["log-min"] = self._log_min
+        a_dict["log-width"] = self._log_width
+        a_dict["bin-count"] = self._bin_count
 
 
 def numpy_binning(data, bins=10, range=None, *args, **kwargs):

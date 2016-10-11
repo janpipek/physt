@@ -465,6 +465,45 @@ class HistogramBase(object):
         from .plotting import PlottingProxy
         return PlottingProxy(self)
 
+    def to_dict(self):
+        """Dictionary with all data in the histogram.
+
+        This is used for export into various formats (e.g. JSON)
+        If a descendant class needs to update the dictionary in some way
+        (put some more information), override the _update_dict method.
+
+        Returns
+        -------
+        collections.OrderedDict
+        """
+        from collections import OrderedDict
+        result = OrderedDict()
+        result["histogram-type"] = type(self).__name__
+        result["binnings"] = [ binning.to_dict() for binning in self._binnings ]
+        result["frequencies"] = self.frequencies.tolist()
+        result["dtype"] = str(self.dtype)
+        result["errors2"] = self.errors2.tolist()
+        return result
+
+    def _update_dict(self, a_dict):
+        pass
+
+    def to_json(self, path=None):
+        """Convert to JSON representation.
+
+        Parameters
+        ----------
+        path: Optional[str]
+            Where to write the JSON.
+
+        Returns
+        -------
+        str:
+            The JSON representation.
+        """
+        from .io import save_json
+        return save_json(self, path)
+
     def __repr__(self):
         s = "{0}(bins={1}, total={2}, dtype={3})".format(
             self.__class__.__name__, self.shape, self.total, self.dtype)
