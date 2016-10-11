@@ -8,7 +8,7 @@ data = np.random.normal(0, 10, (1000, 3))
 print(data)
 
 H = h3(data)
-vp.isosurface(H)
+vp.voxel(H)
 
 if __name__ == '__main__':
     app.run()
