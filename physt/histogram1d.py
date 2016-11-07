@@ -17,12 +17,8 @@ class Histogram1D(HistogramBase):
 
     Attributes
     ----------
-    frequencies: numpy.ndarray
-    errors2: numpy.ndarray
-    underflow: float
-    name: str
-    axis_name: str
-    keep_missed: bool
+    _stats : dict
+        
 
     These are the basic attributes that can be used in the constructor (see there)
     Other attributes are dynamic.
@@ -51,19 +47,30 @@ class Histogram1D(HistogramBase):
         stats: dict
             Dictionary of various statistics ("sum", "sum2")
         """
+        self._stats = kwargs.pop("stats", None)
+        
+        missed = [
+            kwargs.pop("underflow", 0),
+            kwargs.pop("overflow", 0),
+            kwargs.pop("inner_missed", 0)
+        ]
+        if "axis_name" in kwargs:
+            kwargs["axis_names"] = [kwargs.get("axis_name")]
+        
         HistogramBase.__init__(self, [binning], frequencies, errors2, **kwargs)
-
+        
         if self.keep_missed:
-            self._missed = np.array([
-                kwargs.get("underflow", 0),
-                kwargs.get("overflow", 0),
-                kwargs.get("inner_missed", 0)
-            ], dtype=self._frequencies.dtype)
+            self._missed = np.array(missed, dtype=self.dtype)
         else:
-            self._missed = np.array([np.nan, np.nan, np.nan])
+            self._missed = np.zeros(3, dtype=self.dtype)
 
-        self.axis_name = kwargs.get("axis_name", self.name)
-        self._stats = kwargs.get("stats", None)
+    @property
+    def axis_name(self):
+        return self.axis_names[0]
+
+    @axis_name.setter
+    def axis_name(self, value):
+        self.axis_names[0] = value
 
     def __getitem__(self, i):
         """Select sub-histogram or get one bin.

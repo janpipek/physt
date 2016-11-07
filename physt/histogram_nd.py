@@ -35,17 +35,17 @@ class HistogramND(HistogramBase):
         # Bins + checks
         if len(binnings) != dimension:
             raise RuntimeError("bins must be a sequence of {0} schemas".format(dimension))
+        if not "axis_names" in kwargs:
+            kwargs["axis_names"] = ["axis{0}".format(i) for i in range(dimension)]
+        missed = kwargs.pop("missed", 0)
 
         HistogramBase.__init__(self, binnings, frequencies, **kwargs)
-
-        # Missed values
-        self._missed = np.array([kwargs.get("missed", 0)])
-
-        # Names etc.
-
-        self.axis_names = kwargs.get("axis_names", ["axis{0}".format(i) for i in range(self.ndim)])
+        
         if len(self.axis_names) != self.ndim:
             raise RuntimeError("The length of axis names must be equal to histogram dimension.")
+
+        # Missed values
+        self._missed = np.array([missed], dtype=self.dtype)
 
     # Not supported yet
     _stats = None

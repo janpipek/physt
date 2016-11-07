@@ -16,9 +16,10 @@ class HistogramBase(object):
     - fill
     - fill_n (optional)
     - copy
+    - _update_dict (optional)
 
     Underlying data type is int64 / float  or an explicitly specified
-    other type.
+    other type (_dtype).
 
     Attributes
     ----------
@@ -29,12 +30,31 @@ class HistogramBase(object):
     _errors2 : array_like
         Square errors associated with the bin contents
     _meta_data : dict
-    name: str
-        Name to be displayed for the histogram
+        All meta-data (names, user-custom values, ...). Anything can be put in.
+        When exported, all information is kept.
+    _dtype : np.dtype
+        Type of the frequencies and also errors (int64, float64 or user-overridden)
+    _missed : array_like
+        Various storage for missed values in different histogram types
+        (1 value for multi-dimensional, 3 values for one-dimensional)
 
     """
 
     def __init__(self, binnings, frequencies=None, errors2=None, **kwargs):
+        """Constructor
+        
+        All keyword arguments not listed below become items in the _meta_data
+        dictionary.
+        
+        Parameters
+        ----------
+        binnings : Iterable[BinningBase or array_like]
+        frequencies : Optional[array_like]
+        errors2 : Optional[array_like]
+        dtype : np.dtype
+        keep_missed : bool      
+        
+        """
         self._binnings = [as_binning(binning) for binning in binnings]
 
         # Frequencies + appropriate dtypes
@@ -71,10 +91,42 @@ class HistogramBase(object):
         if self._errors2.shape != self._frequencies.shape:
             raise RuntimeError("Errors must have same dimension as frequencies.")
 
-        self.keep_missed = kwargs.get("keep_missed", True)
+        self.keep_missed = kwargs.pop("keep_missed", True)
         # Note: missed are dealt differently in 1D/ND cases
 
-        self.name = kwargs.get("name", None)
+        # Meta data
+        self._meta_data = kwargs.copy()
+
+    @property
+    def meta_data(self):
+        return self._meta_data
+
+    @property
+    def name(self):
+        """Name of the histogram (stored in meta-data)."""
+        return self._meta_data.get("name", None)
+        
+    @property
+    def title(self):
+        """Title of the histogram to be displayed when plotted (stored in meta-data)."""
+        return self._meta_data.get("title", self.name)
+        
+    @title.setter
+    def title(self, value):
+        self._meta_data["title"] = str(value)
+
+    @name.setter
+    def name(self, value):
+        self._meta_data["name"] = value
+
+    @property
+    def axis_names(self):
+        """Names of axes (stored in meta-data)."""
+        return self._meta_data.get("axis_names", ["unknown"] * self.ndim)
+
+    @axis_names.setter
+    def axis_names(self, value):
+        self._meta_data["axis_names"] = value
 
     @property
     def shape(self):
@@ -483,9 +535,22 @@ class HistogramBase(object):
         result["frequencies"] = self.frequencies.tolist()
         result["dtype"] = str(self.dtype)
         result["errors2"] = self.errors2.tolist()
+        result["meta-data"] = self._meta_data
+        result["missed"] = self._missed.tolist()
+        result["missed-keep"] = self.keep_missed
+        self._update_dict(result)
         return result
 
     def _update_dict(self, a_dict):
+        """Update the dictionary for export.
+        
+        Override if you want to customize the process.
+        
+        Parameters
+        ----------
+        a_dict : OrderedDict
+            Dictionary exported by the default implementation of to_dict
+        """
         pass
 
     def to_json(self, path=None):
