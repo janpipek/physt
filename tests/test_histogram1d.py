@@ -74,6 +74,14 @@ class TestCopy(object):
         errors2 = [1, 0, 4, 2.6]
         h1 = Histogram1D(bins, values, errors2)
         assert h1.copy() == h1
+        
+    def test_copy_meta(self):
+        bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
+        values = [4, 0, 3, 7.2]
+        errors2 = [1, 0, 4, 2.6]
+        h1 = Histogram1D(bins, values, errors2, custom1="custom1", name="name")
+        copy = h1.copy()
+        assert h1.meta_data == copy.meta_data
 
 
 class TestEquivalence(object):

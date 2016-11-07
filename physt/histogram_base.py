@@ -94,7 +94,10 @@ class HistogramBase(object):
         self.keep_missed = kwargs.pop("keep_missed", True)
         # Note: missed are dealt differently in 1D/ND cases
 
-        # Meta data
+        if not "axis_names" in kwargs:
+            kwargs["axis_names"] = ["axis{0}".format(i) for i in range(self.ndim)]
+
+        # Meta data        
         self._meta_data = kwargs.copy()
 
     @property
@@ -473,6 +476,28 @@ class HistogramBase(object):
                 if not np.allclose(self.bins[i], other.bins[i]):
                     return False
             return True
+
+    def copy(self, include_frequencies=True):
+        if include_frequencies:
+            frequencies = np.copy(self.frequencies)
+            missed = self._missed.copy()
+            errors2 = np.copy(self.errors2)
+            stats = self._stats or None
+        else:
+            frequencies = np.zeros_like(self._frequencies)
+            errors2 = np.zeros_like(self._errors2)
+            missed = np.zeros_like(self._missed)
+            stats = None
+        a_copy = self.__class__.__new__(self.__class__)
+        a_copy._binnings=[binning.copy() for binning in self._binnings]
+        a_copy._dtype = self.dtype
+        a_copy._frequencies = frequencies
+        a_copy._errors2 = errors2
+        a_copy._meta_data = self._meta_data.copy()
+        a_copy.keep_missed = self.keep_missed
+        a_copy._missed = missed
+        a_copy._stats = stats
+        return a_copy
 
     def fill(self, value, weight, **kwargs):
         raise NotImplementedError("You have to define the `fill` method in Histogram class.")

@@ -35,8 +35,6 @@ class HistogramND(HistogramBase):
         # Bins + checks
         if len(binnings) != dimension:
             raise RuntimeError("bins must be a sequence of {0} schemas".format(dimension))
-        if not "axis_names" in kwargs:
-            kwargs["axis_names"] = ["axis{0}".format(i) for i in range(dimension)]
         missed = kwargs.pop("missed", 0)
 
         HistogramBase.__init__(self, binnings, frequencies, **kwargs)
@@ -193,33 +191,6 @@ class HistogramND(HistogramBase):
         self._frequencies += frequencies
         self._errors2 += errors2
         self._missed[0] += missed
-
-    def copy(self, include_frequencies=True):
-        """Create a copy of histogram.
-
-        Parameters
-        ----------
-        include_frequencies: bool
-            Whether to copy only bins and meta-data (False) or also frequencies & errors (True)
-
-        Returns
-        -------
-        HistogramND
-        """
-        # TODO: Unify with Histogram1D in HistogramBase
-        if include_frequencies:
-            frequencies = np.copy(self.frequencies)
-            missed = self.missed
-            errors2 = np.copy(self.errors2)
-        else:
-            frequencies = None
-            missed = 0
-            errors2 = None
-        return self.__class__(dimension=self.ndim,
-                              binnings=[binning.copy() for binning in self._binnings],
-                              frequencies=frequencies, errors2=errors2, dtype=self.dtype,
-                              name=self.name, axis_names=self.axis_names[:],
-                              keep_missed=self.keep_missed, missed=missed)
 
     def _get_projection_axes(self, *axes):
         axes = list(axes)

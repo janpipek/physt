@@ -55,7 +55,7 @@ class Histogram1D(HistogramBase):
             kwargs.pop("inner_missed", 0)
         ]
         if "axis_name" in kwargs:
-            kwargs["axis_names"] = [kwargs.get("axis_name")]
+            kwargs["axis_names"] = [kwargs.pop("axis_name")]
         
         HistogramBase.__init__(self, [binning], frequencies, errors2, **kwargs)
         
@@ -429,36 +429,6 @@ class Histogram1D(HistogramBase):
             self.overflow += overflow
         for key in self._stats:
             self._stats[key] += stats.get(key, 0.0)
-
-    def copy(self, include_frequencies=True):
-        """A deep copy of the histogram.
-
-        Parameters
-        ----------
-        include_frequencies: Optional[bool]
-            If True (default), frequencies are copied. Otherwise, an empty histogram template is created.
-
-        Returns
-        -------
-        Histogram1D
-        """
-        print("COPY")
-
-        if include_frequencies:
-            frequencies = np.copy(self.frequencies)
-            underflow = self.underflow
-            overflow = self.overflow
-            inner_missed = self.inner_missed
-            errors2 = np.copy(self.errors2)
-        else:
-            frequencies = None
-            underflow = 0
-            overflow = 0
-            inner_missed = 0
-            errors2 = None
-        return self.__class__(self._binning.copy(), frequencies, dtype=self.dtype, underflow=underflow, overflow=overflow, inner_missed=inner_missed,
-                              name=self.name, axis_name=self.axis_name, keep_missed=self.keep_missed, stats=self._stats,
-                              errors2=errors2)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
