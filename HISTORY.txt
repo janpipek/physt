@@ -1,3 +1,9 @@
+0.3.20 (8th November 2016)
+--------------------------
+- Changed: refactored the meta data & copy() method
+- Added: Output to JSON (experimental)
+- Fixed: several bugs
+
 0.3.19 (3th October 2016)
 -------------------------
 - Added: support zorder for most matplotlib plotting functions

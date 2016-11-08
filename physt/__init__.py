@@ -11,7 +11,7 @@ See https://github.com/janpipek/physt
 from __future__ import absolute_import
 from . import binnings
 
-__version__ = str('0.3.19')
+__version__ = str('0.3.20')
 
 
 def histogram(data, bins=None, *args, **kwargs):
