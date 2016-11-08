@@ -57,7 +57,7 @@ def _get_backend(name=None):
     return name, backends[name]
 
 
-def plot(histogram, histtype=None, backend=None, **kwargs):
+def plot(histogram, kind=None, backend=None, **kwargs):
     """Universal plotting function.
 
     All keyword arguments are passed to the plotting methods.
@@ -65,20 +65,21 @@ def plot(histogram, histtype=None, backend=None, **kwargs):
     Parameters
     ----------
     histogram: physt.HistogramBase
-    histtype: Optional[str]
+    kind: Optional[str]
+        Type of the plot (like "scatter", "line", ...), similar to pandas
     backend: Optional[str]
     """
     backend_name, backend = _get_backend(backend)
-    if histtype is None:
-        histtypes = [t for t in backend.types if histogram.ndim in backend.dims[t]]
-        if not histtypes:
+    if kind is None:
+        kinds = [t for t in backend.types if histogram.ndim in backend.dims[t]]
+        if not kinds:
             raise RuntimeError("No histogram type is supported for {0}".format(histogram.__class__.__name__))
-        histtype = histtypes[0]
-    if histtype in backend.types:
-        method = getattr(backend, histtype)
+        kind = kinds[0]
+    if kind in backend.types:
+        method = getattr(backend, kind)
         return method(histogram, **kwargs)
     else:
-        raise RuntimeError("Histogram type error: {0} missing in backend {1}".format(histtype, backend_name))
+        raise RuntimeError("Histogram type error: {0} missing in backend {1}".format(kind, backend_name))
 
 
 class PlottingProxy(object):
@@ -105,14 +106,14 @@ class PlottingProxy(object):
     def __init__(self, h):
         self.h = h
 
-    def __call__(self, histtype=None, **kwargs):
+    def __call__(self, kind=None, **kwargs):
         """Use the plotter as callable.
 
         Parameters
         ----------
         histtype: Optional[str]
         """
-        return plot(self.h, histtype, **kwargs)
+        return plot(self.h, kind=kind, **kwargs)
 
     def __getattr__(self, name):
         """Use the plotter as a proxy object with separate plotting methods."""
