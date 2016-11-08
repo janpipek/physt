@@ -15,7 +15,7 @@ physt.bin_utils module
 physt.binning module
 --------------------
 
-.. automodule:: physt.binning
+.. automodule:: physt.binnings
     :members:
     :undoc-members:
     :show-inheritance:

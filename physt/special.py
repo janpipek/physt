@@ -87,6 +87,7 @@ class TransformedHistogramMixin(object):
 
     def projection(self, *axes, **kwargs):
         axes, _ = self._get_projection_axes(*axes)
+        axes = tuple(sorted(axes))
         if axes in self._projection_class_map:
             klass = self._projection_class_map[axes]
             return HistogramND.projection(self, *axes, type=klass, **kwargs)
@@ -176,12 +177,25 @@ class DirectionalHistogram(TransformedHistogramMixin, HistogramND):
         sizes2 = self.get_bin_widths(1)
         return reduce(np.multiply, np.ix_(sizes1, sizes2))
 
-    def __init__(self, binnings, frequencies=None, **kwargs):
+    def __init__(self, binnings, frequencies=None, radius=1, **kwargs):
         if not "axis_names" in kwargs:
             kwargs["axis_names"] = ("theta", "phi")
         if "dim" in kwargs:
             kwargs.pop("dim")
         super(DirectionalHistogram, self).__init__(2, binnings=binnings, frequencies=frequencies, **kwargs)
+        self.radius = radius
+
+    @property
+    def radius(self):
+        """Radius of the surface.
+
+        Useful for calculating densities.
+        """
+        return self._meta_data.get("radius", 1)
+
+    @radius.setter
+    def radius(self, value):
+        self._meta_data["radius"] = value
 
 
 class SphericalHistogram(TransformedHistogramMixin, HistogramND):
@@ -242,8 +256,19 @@ class CylinderSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         if "dim" in kwargs:
             kwargs.pop("dim")
         super(CylinderSurfaceHistogram, self).__init__(2, binnings=binnings, frequencies=frequencies, **kwargs)
-
         self.radius = radius
+
+    @property
+    def radius(self):
+        """Radius of the cylindrical surface.
+
+        Useful for calculating densities.
+        """
+        return self._meta_data.get("radius", 1)
+
+    @radius.setter
+    def radius(self, value):
+        self._meta_data["radius"] = value
 
     _projection_class_map = {
         (0,) : AzimuthalHistogram
