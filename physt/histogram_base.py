@@ -478,6 +478,13 @@ class HistogramBase(object):
             return True
 
     def copy(self, include_frequencies=True):
+        """A copy of the histogram.
+
+        Parameters
+        ----------
+        include_frequencies : Optional[bool]
+            If false, all frequencies are set to zero.
+        """
         if include_frequencies:
             frequencies = np.copy(self.frequencies)
             missed = self._missed.copy()
@@ -500,6 +507,17 @@ class HistogramBase(object):
         return a_copy
 
     def fill(self, value, weight, **kwargs):
+        """Add a value.
+
+        Abstract method - to be implemented in daughter classes.s
+
+        Parameters
+        ----------
+        value:
+            Value to be added. Can be scalar or array depending on the histogram type.
+        weight: Optional
+            Weight of the value
+        """
         raise NotImplementedError("You have to define the `fill` method in Histogram class.")
 
     def fill_n(self, values, weights=None, **kwargs):
