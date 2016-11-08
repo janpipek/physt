@@ -1,7 +1,20 @@
 Welcome to Physt's documentation!
 =================================
 
-Contents:
+Tutorials
+---------
+
+.. toctree::
+   :maxdepth: 2
+
+   Tutorial
+   Plotting
+   2D Histograms
+   Binning
+   Special histograms
+
+API
+---
 
 .. toctree::
    :maxdepth: 2

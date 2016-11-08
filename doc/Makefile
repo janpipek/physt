@@ -48,8 +48,14 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 	@echo "  coverage   to run coverage check of the documentation (if enabled)"
 
+autodoc:
+	sphinx-apidoc -o . ../physt
+
 clean:
 	rm -rf $(BUILDDIR)/*
+
+notebooks: *ipynb
+	jupyter nbconvert --to rst *ipynb
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
