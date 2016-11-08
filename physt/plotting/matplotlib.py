@@ -142,9 +142,8 @@ def scatter(h1, errors=False, **kwargs):
 
     if errors:
         err_data = get_err_data(h1, cumulative=cumulative, density=density)
-        ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.pop("fmt", "o"), ecolor=kwargs.pop("ecolor", "black"), **kwargs)
-    else:
-        ax.scatter(h1.bin_centers, data, **kwargs)
+        ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.pop("fmt", "o"), ecolor=kwargs.pop("ecolor", "black"), ms=0)
+    ax.scatter(h1.bin_centers, data, **kwargs)
 
     _add_labels(h1, ax)
 
