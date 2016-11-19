@@ -7,6 +7,7 @@ helper functions. User is expected to use only the former ones.
 Plot functions for 1D histograms
 - bar
 - scatter
+- fill
 - line
 
 Plot functions for 2D histograms
@@ -40,11 +41,12 @@ import numpy as np
 from .common import get_data, get_err_data
 
 
-types = ("bar", "scatter", "line", "map", "bar3d", "image", "polar_map", "globe_map", "cylinder_map", "surface_map")
+types = ("bar", "scatter", "line", "fill", "map", "bar3d", "image", "polar_map", "globe_map", "cylinder_map", "surface_map")
 
 dims = {
     "bar": [1],
     "scatter": [1],
+    "fill": [1],
     "line": [1],
     "map": [2],
     "bar3d": [2],
@@ -190,6 +192,37 @@ def line(h1, errors=False, **kwargs):
         _add_stats_box(h1, ax)
     if show_values:
         _add_values(ax, h1, data)
+    return ax
+    
+    
+def fill(h1, **kwargs):
+    """Fill plot of 1D histogram.
+
+    Parameters
+    ----------
+    h1 : Histogram1D
+
+    Returns
+    -------
+    plt.Axes
+    """
+    fig, ax = _get_axes(kwargs)
+
+    stats_box = kwargs.pop("stats_box", False)
+    # show_values = kwargs.pop("show_values", False)
+    density = kwargs.pop("density", False)
+    cumulative = kwargs.pop("cumulative", False)
+
+    data = get_data(h1, cumulative=cumulative, density=density)
+    _apply_xy_lims(ax, h1, data, kwargs)
+    _add_ticks(ax, h1, kwargs)
+
+    ax.fill_between(h1.bin_centers, 0, data, **kwargs)
+
+    if stats_box:
+        _add_stats_box(h1, ax)
+    # if show_values:
+    #     _add_values(ax, h1, data)
     return ax
 
 
