@@ -2,25 +2,26 @@
 from __future__ import absolute_import
 
 import numpy as np
-from .bin_utils import (
-    make_bin_array, is_consecutive, to_numpy_bins, is_rising, is_bin_subset, to_numpy_bins_with_mask)
+from .bin_utils import (make_bin_array, is_consecutive, to_numpy_bins,
+                        is_rising, is_bin_subset, to_numpy_bins_with_mask)
 
 
 # TODO: Locking and edit operations (like numpy read-only)
 
 
 class BinningBase(object):
-    """Abstract base class for binning.
+    """Abstract base class for binning schemas.
 
     Inheriting
     ----------
-    - define at least one of the following properties: bins, numpy_bins (cached intercomputation exists)
-    - if you modify the bins, be sure to put _bins and _numpy_bins into proper state (in some cases, None is sufficient)
+    - define at least one of the following properties: bins, numpy_bins (cached conversion exists)
+    - if you modify bins, put _bins and _numpy_bins into proper state (None may be sufficient)
     - checking of proper bins should be done in __init__
     - if you want to support adaptive histogram, override _force_bin_existence
+    - implement _update_dict to contain the binning representation
     """
-    def __init__(self, bins=None, numpy_bins=None, includes_right_edge=False, integrity_check=True, adaptive=False):
-        # TODO: Incorporate integrity_check parameter
+    def __init__(self, bins=None, numpy_bins=None, includes_right_edge=False, adaptive=False):
+        # TODO: Incorporate integrity_check?
         self._consecutive = None
         if bins is not None:
             if numpy_bins is not None:
@@ -48,6 +49,10 @@ class BinningBase(object):
     # TODO: adding allowed?
 
     def to_dict(self):
+        """Dictionary representation of the binning schema.
+        
+        This serves as template method, please implement _update_dict
+        """
         from collections import OrderedDict
         result = OrderedDict()
         result["binning-type"] = type(self).__name__
@@ -55,10 +60,12 @@ class BinningBase(object):
         return result
 
     def _update_dict(self, a_dict):
-        raise NotImplementedError("Dictionary representation of {0} binning type is not implemented.")
+        raise NotImplementedError("Dictionary representation of {0} is not implemented."
+                                  .format(type(self).__name__))
 
     @property
     def includes_right_edge(self):
+        # TODO: Document and explain
         return self._includes_right_edge
 
     def is_regular(self, rtol=1.e-5, atol=1.e-8):
@@ -151,6 +158,10 @@ class BinningBase(object):
             return self._adapt(other)
 
     def set_adaptive(self, value=True):
+        """Set/unset the adaptive property of the binning.
+        
+        This is available only for some of the binning types.
+        """
         if value and not self.adaptive_allowed:
             raise RuntimeError("Cannot change binning to adaptive.")
         self._adaptive = value
@@ -160,22 +171,54 @@ class BinningBase(object):
 
     @property
     def bins(self):
+        """Bins in the wider format (as edge pairs)
+        
+        Returns
+        -------
+        bins: np.ndarray
+            shape=(bin_count, 2)
+        """
         if self._bins is None:
             self._bins = make_bin_array(self.numpy_bins)
         return self._bins
 
     @property
     def bin_count(self):
+        """The total number of bins.
+        
+        Returns
+        -------
+        int
+        """
         return self.bins.shape[0]
 
     @property
     def numpy_bins(self):
+        """Bins in the numpy format
+
+        This might not be available for inconsecutive binnings.
+
+        Returns
+        -------
+        edges: np.ndarray
+            shape=(bin_count+1,)
+        """
         if self._numpy_bins is None:
             self._numpy_bins = to_numpy_bins(self.bins)
         return self._numpy_bins
 
     @property
     def numpy_bins_with_mask(self):
+        """Bins in the numpy format, including the gaps in inconsecutive binnings.
+        
+        Returns
+        -------
+        edges, mask: np.ndarray
+
+        See Also
+        --------
+        bin_utils.to_numpy_bins_with_mask
+        """
         bwm = to_numpy_bins_with_mask(self.bins)
         if not self.includes_right_edge:
             bwm[0].append(np.inf)
@@ -183,6 +226,7 @@ class BinningBase(object):
 
     @property
     def first_edge(self):
+        """The left edge of the first bin."""
         if self._numpy_bins is None:
             return self._numpy_bins[0]
         else:
@@ -190,6 +234,7 @@ class BinningBase(object):
 
     @property
     def last_edge(self):
+        """The right edge of the last bin."""
         if self._numpy_bins is None:
             return self._numpy_bins[-1]
         else:

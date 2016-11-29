@@ -1,5 +1,4 @@
-"""
-Plotting for physt histograms.
+"""Plotting for physt histograms.
 
 Available backends:
 - matplotlib
@@ -73,13 +72,15 @@ def plot(histogram, kind=None, backend=None, **kwargs):
     if kind is None:
         kinds = [t for t in backend.types if histogram.ndim in backend.dims[t]]
         if not kinds:
-            raise RuntimeError("No histogram type is supported for {0}".format(histogram.__class__.__name__))
+            raise RuntimeError("No histogram type is supported for {0}"
+                               .format(histogram.__class__.__name__))
         kind = kinds[0]
     if kind in backend.types:
         method = getattr(backend, kind)
         return method(histogram, **kwargs)
     else:
-        raise RuntimeError("Histogram type error: {0} missing in backend {1}".format(kind, backend_name))
+        raise RuntimeError("Histogram type error: {0} missing in backend {1}"
+                           .format(kind, backend_name))
 
 
 class PlottingProxy(object):
@@ -104,7 +105,7 @@ class PlottingProxy(object):
     """
 
     def __init__(self, h):
-        self.h = h
+        self.histogram = h
 
     def __call__(self, kind=None, **kwargs):
         """Use the plotter as callable.
@@ -113,14 +114,14 @@ class PlottingProxy(object):
         ----------
         histtype: Optional[str]
         """
-        return plot(self.h, kind=kind, **kwargs)
+        return plot(self.histogram, kind=kind, **kwargs)
 
     def __getattr__(self, name):
         """Use the plotter as a proxy object with separate plotting methods."""
-        def f(**kwargs):
-            return plot(self.h, name, **kwargs)
-        return f
+        def plot_function(**kwargs):
+            return plot(self.histogram, name, **kwargs)
+        return plot_function
 
     def __dir__(self):
         _, backend = _get_backend()
-        return tuple((t for t in backend.types if self.h.ndim in backend.dims[t]))
+        return tuple((t for t in backend.types if self.histogram.ndim in backend.dims[t]))

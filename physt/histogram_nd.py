@@ -1,8 +1,9 @@
+"""Multi-dimensional histograms."""
 from __future__ import absolute_import
-from . import bin_utils
-from .histogram_base import HistogramBase
+
 import numpy as np
-from .binnings import as_binning
+
+from .histogram_base import HistogramBase
 
 
 class HistogramND(HistogramBase):
@@ -74,7 +75,7 @@ class HistogramND(HistogramBase):
 
     # Missing: cumulative_frequencies - does it make sense?
 
-    def get_bin_widths(self, axis = None):  # -> Base
+    def get_bin_widths(self, axis=None):  # -> Base
         if axis is not None:
             return self.get_bin_right_edges(axis) - self.get_bin_left_edges(axis)
         else:
@@ -184,7 +185,7 @@ class HistogramND(HistogramBase):
             self._coerce_dtype(weights.dtype)
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
-                map = self._binning.force_bin_existence(values[:,i])
+                map = self._binning.force_bin_existence(values[:, i])
                 self._reshape_data(binning.bin_count, map, i)
         frequencies, errors2, missed = calculate_frequencies(values, self.ndim,
                                                              self._binnings, weights=weights)
@@ -194,18 +195,18 @@ class HistogramND(HistogramBase):
 
     def _get_projection_axes(self, *axes):
         axes = list(axes)
-        for i, ax in enumerate(axes):
-            if isinstance(ax, str):
-                if not ax in self.axis_names:
-                    raise RuntimeError("Invalid axis name for projection: " + ax)
-                axes[i] = self.axis_names.index(ax)
+        for i, axis in enumerate(axes):
+            if isinstance(axis, str):
+                if not axis in self.axis_names:
+                    raise RuntimeError("Invalid axis name for projection: " + axis)
+                axes[i] = self.axis_names.index(axis)
         if not axes:
             raise RuntimeError("No axis selected for projection")
         if len(axes) != len(set(axes)):
             raise RuntimeError("Duplicate axes in projection")
         invert = list(range(self.ndim))
-        for ax in axes:
-            invert.remove(ax)
+        for axis in axes:
+            invert.remove(axis)
         axes = tuple(axes)
         invert = tuple(invert)
         return (axes, invert)
@@ -237,15 +238,15 @@ class HistogramND(HistogramBase):
             from .histogram1d import Histogram1D
             klass = kwargs.get("type", Histogram1D)
             return klass(binning=bins[0], frequencies=frequencies, errors2=errors2,
-                               axis_name=axis_names[0], name=name)
+                         axis_name=axis_names[0], name=name)
         elif len(axes) == 2:
             klass = kwargs.get("type", Histogram2D)
             return klass(binnings=bins, frequencies=frequencies, errors2=errors2,
-                               axis_names=axis_names, name=name)
+                         axis_names=axis_names, name=name)
         else:
             klass = kwargs.get("type", HistogramND)
-            return klass(dimension=len(axes), binnings=bins, frequencies=frequencies, errors2=errors2,
-                               axis_names=axis_names, name=name)
+            return klass(dimension=len(axes), binnings=bins, frequencies=frequencies,
+                         errors2=errors2, axis_names=axis_names, name=name)
 
     def __eq__(self, other):
         """Equality comparison
@@ -287,12 +288,12 @@ class HistogramND(HistogramBase):
     #     return NotImplementedError
 
     def __repr__(self):
-        s = "{0}(bins={1}, total={2}".format(
+        result = "{0}(bins={1}, total={2}".format(
             self.__class__.__name__, self.shape, self.total)
         if self.missed:
-            s += ", missed={0}".format(self.missed)
-        s += ")"
-        return s
+            result += ", missed={0}".format(self.missed)
+        result += ")"
+        return result
 
 
 class Histogram2D(HistogramND):
@@ -303,7 +304,8 @@ class Histogram2D(HistogramND):
 
     def __init__(self, binnings, frequencies=None, **kwargs):
         kwargs.pop("dimension", None)
-        super(Histogram2D, self).__init__(dimension=2, binnings=binnings, frequencies=frequencies, **kwargs)
+        super(Histogram2D, self).__init__(dimension=2, binnings=binnings,
+                                          frequencies=frequencies, **kwargs)
 
     @property
     def T(self):

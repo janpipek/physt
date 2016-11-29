@@ -3,10 +3,9 @@ Functions that are shared by several (all) plotting backends.
 
 """
 from __future__ import absolute_import
-import numpy as np
 
 
-def get_data(h, density=False, cumulative=False, flatten=False):
+def get_data(histogram, density=False, cumulative=False, flatten=False):
     """Get histogram data based on plotting parameters.
 
     Parameters
@@ -26,21 +25,21 @@ def get_data(h, density=False, cumulative=False, flatten=False):
     """
     if density:
         if cumulative:
-            data = (h / h.total).cumulative_frequencies
+            data = (histogram / histogram.total).cumulative_frequencies
         else:
-            data = h.densities
+            data = histogram.densities
     else:
         if cumulative:
-            data = h.cumulative_frequencies
+            data = histogram.cumulative_frequencies
         else:
-            data = h.frequencies
+            data = histogram.frequencies
 
     if flatten:
         data = data.flatten()
     return data
 
 
-def get_err_data(h, density=False, cumulative=False, flatten=False):
+def get_err_data(histogram, density=False, cumulative=False, flatten=False):
     """Get histogram error data based on plotting parameters.
 
     Parameters
@@ -60,9 +59,9 @@ def get_err_data(h, density=False, cumulative=False, flatten=False):
     if cumulative:
         raise RuntimeError("Error bars not supported for cumulative plots.")
     if density:
-        data = h.errors / h.bin_sizes
+        data = histogram.errors / histogram.bin_sizes
     else:
-        data = h.errors
+        data = histogram.errors
     if flatten:
         data = data.flatten()
     return data

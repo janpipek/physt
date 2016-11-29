@@ -1,3 +1,4 @@
+"""Methods for investigation and manipulation of bin arrays."""
 from __future__ import absolute_import
 import numpy as np
 
@@ -27,7 +28,7 @@ def make_bin_array(bins):
     if bins.ndim == 1:
         # if bins.shape[0] == 0:
         #     raise RuntimeError("Needs at least one bin")
-        return np.hstack((bins[:-1,np.newaxis], bins[1:,np.newaxis]))
+        return np.hstack((bins[:-1, np.newaxis], bins[1:, np.newaxis]))
     elif bins.ndim == 2:
         if bins.shape[1] != 2:
             raise RuntimeError("Binning schema with ndim==2 must have 2 columns")
@@ -125,9 +126,9 @@ def is_rising(bins):
     """
     # TODO: Optimize for numpy bins
     bins = make_bin_array(bins)
-    if np.any(bins[:,0] >= bins[:,1]):
+    if np.any(bins[:, 0] >= bins[:, 1]):
         return False
-    if np.any(bins[1:,0] < bins[:-1,1]):
+    if np.any(bins[1:, 0] < bins[:-1, 1]):
         return False
     return True
 

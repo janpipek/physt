@@ -1,3 +1,4 @@
+"""HistogramBase - base for all histogram classes."""
 from __future__ import absolute_import
 import numpy as np
 from .binnings import as_binning
@@ -11,6 +12,8 @@ class HistogramBase(object):
     The most important daughter classes are:
     - Histogram1D
     - HistogramND
+
+    There are also special histogram types that are modifications of these classes.
 
     The methods you should override:
     - fill
@@ -37,6 +40,12 @@ class HistogramBase(object):
     _missed : array_like
         Various storage for missed values in different histogram types
         (1 value for multi-dimensional, 3 values for one-dimensional)
+
+    See Also
+    --------
+    histogram1d
+    histogram_nd
+    special
 
     """
 
@@ -72,7 +81,8 @@ class HistogramBase(object):
                 elif np.issubdtype(frequencies.dtype, np.float):
                     frequencies = frequencies.astype(np.float64)
                 else:
-                    raise RuntimeError("Frequencies of type {0} not understood".format(frequencies.dtype))
+                    raise RuntimeError("Frequencies of type {0} not understood"
+                                       .format(frequencies.dtype))
             dtype = frequencies.dtype
             if frequencies.shape != self.shape:
                 raise RuntimeError("Values must have same dimension as bins.")
@@ -94,33 +104,50 @@ class HistogramBase(object):
         self.keep_missed = kwargs.pop("keep_missed", True)
         # Note: missed are dealt differently in 1D/ND cases
 
-        if not "axis_names" in kwargs:
+        if "axis_names" not in kwargs:
             kwargs["axis_names"] = ["axis{0}".format(i) for i in range(self.ndim)]
 
-        # Meta data        
+        # Meta data
         self._meta_data = kwargs.copy()
 
     @property
     def meta_data(self):
+        """A dictionary of non-numerical information about the histogram.
+        
+        It contains several pre-defined ones, but you can add any other.
+        These are preserved when saving and also in operations.
+
+        Returns
+        -------
+        dict
+        """
         return self._meta_data
 
     @property
     def name(self):
         """Name of the histogram (stored in meta-data)."""
         return self._meta_data.get("name", None)
-        
+
+    @name.setter
+    def name(self, value):
+        """Name of the histogram.
+
+        In plotting, this will be used as label.
+        """
+        self._meta_data["name"] = value
+
     @property
     def title(self):
         """Title of the histogram to be displayed when plotted (stored in meta-data)."""
         return self._meta_data.get("title", self.name)
-        
+
     @title.setter
     def title(self, value):
-        self._meta_data["title"] = str(value)
+        """Title of the histogram.
 
-    @name.setter
-    def name(self, value):
-        self._meta_data["name"] = value
+        In plotting, this will be used as plot title.
+        """
+        self._meta_data["title"] = str(value)
 
     @property
     def axis_names(self):
@@ -574,7 +601,7 @@ class HistogramBase(object):
         from collections import OrderedDict
         result = OrderedDict()
         result["histogram-type"] = type(self).__name__
-        result["binnings"] = [ binning.to_dict() for binning in self._binnings ]
+        result["binnings"] = [binning.to_dict() for binning in self._binnings]
         result["frequencies"] = self.frequencies.tolist()
         result["dtype"] = str(self.dtype)
         result["errors2"] = self.errors2.tolist()
@@ -613,9 +640,9 @@ class HistogramBase(object):
         return save_json(self, path)
 
     def __repr__(self):
-        s = "{0}(bins={1}, total={2}, dtype={3})".format(
+        result = "{0}(bins={1}, total={2}, dtype={3})".format(
             self.__class__.__name__, self.shape, self.total, self.dtype)
-        return s
+        return result
 
     def __add__(self, other):
         new = self.copy()
