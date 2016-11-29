@@ -1,11 +1,12 @@
-from __future__ import absolute_import
 """Support for Geant4 histograms saved in CSV format."""
+from __future__ import absolute_import
+import codecs
+
+import numpy as np
 
 from ..histogram1d import Histogram1D
 from ..histogram_nd import Histogram2D
 from ..binnings import fixed_width_binning
-import codecs
-import numpy as np
 
 
 def load_csv(path):
@@ -55,16 +56,16 @@ def _create_h1(data, meta):
     min_ = float(min_)
     max_ = float(max_)
     binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_))
-    h = Histogram1D(binning, name=_get(meta, "title"))
-    h._frequencies = data[1:-1,1]
-    h._errors2 = data[1:-1,2]
-    h.underflow = data[0,1]
-    h.overflow = data[-1,1]
-    h._stats = {
-        "sum" : data[1:-1,3].sum(),
-        "sum2" : data[1:-1,4].sum()
+    hist = Histogram1D(binning, name=_get(meta, "title"))
+    hist._frequencies = data[1:-1, 1]
+    hist._errors2 = data[1:-1, 2]
+    hist.underflow = data[0, 1]
+    hist.overflow = data[-1, 1]
+    hist._stats = {
+        "sum" : data[1:-1, 3].sum(),
+        "sum2" : data[1:-1, 4].sum()
     }
-    return h
+    return hist
 
 
 def _create_h2(data, meta):
@@ -78,13 +79,13 @@ def _create_h2(data, meta):
         binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_))
         binnings.append(binning)
 
-    h = Histogram2D(binnings, name=_get(meta, "title"))
+    hist = Histogram2D(binnings, name=_get(meta, "title"))
 
     # TODO: Are the shapes in correct order?
-    frequencies = data[:,1].reshape([b + 2 for b in h.shape])
-    h._frequencies = frequencies[1:-1,1:-1]
+    frequencies = data[:, 1].reshape([b + 2 for b in hist.shape])
+    hist._frequencies = frequencies[1:-1, 1:-1]
 
-    errors2 = data[:,2].reshape([b + 2 for b in h.shape])
-    h._errors = errors2[1:-1,1:-1]
+    errors2 = data[:, 2].reshape([b + 2 for b in hist.shape])
+    hist._errors = errors2[1:-1, 1:-1]
 
-    return h
+    return hist

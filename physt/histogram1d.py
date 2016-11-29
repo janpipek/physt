@@ -1,8 +1,7 @@
 from __future__ import absolute_import
 import numpy as np
-from . import bin_utils, binnings
+from . import bin_utils
 from .histogram_base import HistogramBase
-from .binnings import as_binning
 
 # TODO: Fix I/O with binning
 
