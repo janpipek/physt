@@ -16,14 +16,13 @@ by adding `TransformedHistogramMixin` among the custom histogram
 class superclasses.
 """
 from __future__ import absolute_import
+from functools import reduce
 
-from .histogram_base import HistogramBase
+import numpy as np
+
 from .histogram_nd import HistogramND
 from .histogram1d import Histogram1D
 from . import binnings, histogram_nd
-import numpy as np
-import math
-from functools import reduce
 
 
 class TransformedHistogramMixin(object):
@@ -41,7 +40,7 @@ class TransformedHistogramMixin(object):
     """
 
     @classmethod
-    def transform(self, value):
+    def transform(cls, value):
         """Convert cartesian (general) coordinates into internal ones.
 
         Parameters
@@ -86,6 +85,12 @@ class TransformedHistogramMixin(object):
     _projection_class_map = {}
 
     def projection(self, *axes, **kwargs):
+        """Projection to lower-dimensional histogram.
+        
+        The inheriting class should implement the _projection_class_map
+        class attribute to suggest class for the projection. If the 
+        arguments don't match any of the map keys, HistogramND is used.        
+        """
         axes, _ = self._get_projection_axes(*axes)
         axes = tuple(sorted(axes))
         if axes in self._projection_class_map:
@@ -178,7 +183,7 @@ class DirectionalHistogram(TransformedHistogramMixin, HistogramND):
         return reduce(np.multiply, np.ix_(sizes1, sizes2))
 
     def __init__(self, binnings, frequencies=None, radius=1, **kwargs):
-        if not "axis_names" in kwargs:
+        if "axis_names" not in kwargs:
             kwargs["axis_names"] = ("theta", "phi")
         if "dim" in kwargs:
             kwargs.pop("dim")
@@ -208,7 +213,7 @@ class SphericalHistogram(TransformedHistogramMixin, HistogramND):
     """
 
     def __init__(self, binnings, frequencies=None, **kwargs):
-        if not "axis_names" in kwargs:
+        if "axis_names" not in kwargs:
             kwargs["axis_names"] = ("r", "theta", "phi")
         kwargs.pop("dim", False)
         super(SphericalHistogram, self).__init__(3, binnings=binnings, frequencies=frequencies, **kwargs)
@@ -219,9 +224,9 @@ class SphericalHistogram(TransformedHistogramMixin, HistogramND):
         result = np.empty_like(value)
         x, y, z = value.T
         xy = np.hypot(x, y)
-        result[...,0] = np.hypot(xy, z)
-        result[...,1] = np.arctan2(xy, z) % (2 * np.pi)
-        result[...,2] = np.arctan2(y, x) % (2 * np.pi)
+        result[..., 0] = np.hypot(xy, z)
+        result[..., 1] = np.arctan2(xy, z) % (2 * np.pi)
+        result[..., 2] = np.arctan2(y, x) % (2 * np.pi)
         return result
 
     @property
@@ -255,7 +260,8 @@ class CylinderSurfaceHistogram(TransformedHistogramMixin, HistogramND):
             kwargs["axis_names"] = ("phi", "z")
         if "dim" in kwargs:
             kwargs.pop("dim")
-        super(CylinderSurfaceHistogram, self).__init__(2, binnings=binnings, frequencies=frequencies, **kwargs)
+        super(CylinderSurfaceHistogram, self).__init__(2, binnings=binnings,
+                                                       frequencies=frequencies, **kwargs)
         self.radius = radius
 
     @property
@@ -288,16 +294,16 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
             kwargs["axis_names"] = ("rho", "phi", "z")
         kwargs.pop("dim", False)
         super(CylindricalHistogram, self).__init__(3, binnings=binnings,
-              frequencies=frequencies, **kwargs)
+                                                   frequencies=frequencies, **kwargs)
 
     @classmethod
-    def transform(self, value):
+    def transform(cls, value):
         value = np.asarray(value, dtype=np.float64)
         result = np.empty_like(value)
         x, y, z = value.T
-        result[...,0] = np.hypot(x, y)                     # tho
-        result[...,1] = np.arctan2(y, x) % (2 * np.pi)     # phi
-        result[...,2] = z
+        result[..., 0] = np.hypot(x, y)                     # tho
+        result[..., 1] = np.arctan2(y, x) % (2 * np.pi)     # phi
+        result[..., 2] = z
         return result
 
     @property
@@ -332,7 +338,8 @@ def _prepare_data(data, transformed, klass,  *args, **kwargs):
     return data
 
 
-def polar_histogram(xdata, ydata, radial_bins="numpy", phi_bins=16, transformed=False, *args, **kwargs):
+def polar_histogram(xdata, ydata, radial_bins="numpy", phi_bins=16,
+                    transformed=False, *args, **kwargs):
     """Facade construction function for the PolarHistogram.
 
     Parameters
@@ -354,11 +361,12 @@ def polar_histogram(xdata, ydata, radial_bins="numpy", phi_bins=16, transformed=
         phi_range = list(phi_range) + [phi_bins + 1]
         phi_bins = np.linspace(*phi_range)
 
-    bin_schemas = binnings.calculate_bins_nd(data, [radial_bins, phi_bins], *args, check_nan=not dropna, **kwargs)
+    bin_schemas = binnings.calculate_bins_nd(data, [radial_bins, phi_bins], *args,
+                                             check_nan=not dropna, **kwargs)
     weights = kwargs.pop("weights", None)
     frequencies, errors2, missed = histogram_nd.calculate_frequencies(data, ndim=2,
-                                                                  binnings=bin_schemas,
-                                                                  weights=weights)
+                                                                      binnings=bin_schemas,
+                                                                      weights=weights)
     return PolarHistogram(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, missed=missed)
 
 
@@ -420,4 +428,5 @@ def cylindrical_histogram(data=None, rho_bins="numpy", phi_bins=16, z_bins="nump
     frequencies, errors2, missed = histogram_nd.calculate_frequencies(data, ndim=3,
                                                                   binnings=bin_schemas,
                                                                   weights=weights)
-    return CylindricalHistogram(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, missed=missed)
+    return CylindricalHistogram(binnings=bin_schemas, frequencies=frequencies,
+                                errors2=errors2, missed=missed)

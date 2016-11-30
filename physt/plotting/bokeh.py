@@ -4,10 +4,10 @@ Bokeh backend for plotting in physt.
 This is very basic.
 """
 from __future__ import absolute_import
-from bokeh.plotting import figure, output_file, show
-from bokeh.charts import Bar, Scatter
+from bokeh.plotting import figure
+from bokeh.charts import Scatter
 from bokeh.charts import show as bokeh_show
-from bokeh.models import HoverTool, Range1d
+from bokeh.models import HoverTool
 from bokeh.models.sources import ColumnDataSource
 import numpy as np
 

@@ -2,7 +2,8 @@
 physt
 =====
 
-P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram, but designed for humans(TM) on steroids(TM).
+P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram,
+but designed for humans(TM) on steroids(TM).
 
 (C) Jan Pipek, 2016, MIT licence
 See https://github.com/janpipek/physt
@@ -11,7 +12,7 @@ See https://github.com/janpipek/physt
 from __future__ import absolute_import
 from . import binnings
 
-__version__ = str('0.3.20')
+__version__ = str('0.3.21')
 
 
 def histogram(data, bins=None, *args, **kwargs):
@@ -41,7 +42,8 @@ def histogram(data, bins=None, *args, **kwargs):
     weights: array_like, optional
         (as numpy.histogram)
     keep_missed: Optional[bool]
-        store statistics about how many values were lower than limits and how many higher than limits (default: True)
+        store statistics about how many values were lower than limits
+        and how many higher than limits (default: True)
     dropna: bool
         whether to clear data from nan's before histogramming
     name: str
@@ -49,7 +51,8 @@ def histogram(data, bins=None, *args, **kwargs):
     axis_name: str
         name of the variable on x axis
     adaptive: bool
-        whether we want the bins to be modifiable (useful for continuous filling of a priori unknown data)
+        whether we want the bins to be modifiable
+        (useful for continuous filling of a priori unknown data)
     dtype: type
         customize underlying data type: default int64 (without weight) or float (with weights)
 
@@ -98,10 +101,8 @@ def histogram(data, bins=None, *args, **kwargs):
 
         # Get frequencies
         if array is not None:
-            frequencies, errors2, underflow, overflow, stats = calculate_frequencies(array,
-                                                                                     binning=binning,
-                                                                                     weights=weights,
-                                                                                     dtype=dtype)
+            (frequencies, errors2, underflow, overflow, stats) =\
+                calculate_frequencies(array, binning=binning, weights=weights, dtype=dtype)
         else:
             frequencies = None
             errors2 = None
@@ -115,9 +116,9 @@ def histogram(data, bins=None, *args, **kwargs):
             overflow = 0
         if hasattr(data, "name") and not axis_name:
             axis_name = data.name
-        return Histogram1D(binning=binning, frequencies=frequencies, errors2=errors2, overflow=overflow,
-                            underflow=underflow, stats=stats, dtype=dtype,
-                            keep_missed=keep_missed, name=name, axis_name=axis_name)
+        return Histogram1D(binning=binning, frequencies=frequencies, errors2=errors2,
+                           overflow=overflow, underflow=underflow, stats=stats, dtype=dtype,
+                           keep_missed=keep_missed, name=name, axis_name=axis_name)
 
 
 def histogram2d(data1, data2, bins=10, *args, **kwargs):
@@ -139,7 +140,7 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
     import numpy as np
 
     # guess axis names
-    if not "axis_names" in kwargs:
+    if "axis_names" not in kwargs:
         if hasattr(data1, "name") and hasattr(data2, "name"):
             kwargs["axis_names"] = [data1.name, data2.name]
     if data1 is not None and data2 is not None:
@@ -172,7 +173,8 @@ def histogramdd(data, bins=10, *args, **kwargs):
     adaptive:
         whether the bins should be updated when new non-fitting value are filled
     dtype: Optional[type]
-        Underlying type for the histogram. If weights are specified, default is float. Otherwise int64
+        Underlying type for the histogram.
+        If weights are specified, default is float. Otherwise int64
 
     Returns
     -------
