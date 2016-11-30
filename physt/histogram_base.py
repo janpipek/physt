@@ -517,6 +517,10 @@ class HistogramBase(object):
             Value to be added. Can be scalar or array depending on the histogram type.
         weight: Optional
             Weight of the value
+
+        Note
+        ----
+        May change the dtype if weight is set
         """
         raise NotImplementedError("You have to define the `fill` method in Histogram class.")
 
@@ -535,6 +539,8 @@ class HistogramBase(object):
         Note
         ----
         This method should be overloaded with a more efficient one.
+
+        May change the dtype if weight is set.
         """
         if weights is not None:
             if weights.shape != values.shape[0]:
