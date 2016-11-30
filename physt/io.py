@@ -1,3 +1,4 @@
+"""Input and output for histograms."""
 from collections import OrderedDict
 from . import __version__
 import json

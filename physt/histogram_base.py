@@ -138,7 +138,12 @@ class HistogramBase(object):
 
     @property
     def title(self):
-        """Title of the histogram to be displayed when plotted (stored in meta-data)."""
+        """Title of the histogram to be displayed when plotted (stored in meta-data).
+        
+        Returns
+        -------
+        str
+        """
         return self._meta_data.get("title", self.name)
 
     @title.setter
@@ -151,8 +156,13 @@ class HistogramBase(object):
 
     @property
     def axis_names(self):
-        """Names of axes (stored in meta-data)."""
-        return self._meta_data.get("axis_names", ["unknown"] * self.ndim)
+        """Names of axes (stored in meta-data).
+
+        Returns
+        -------
+        tuple[str]
+        """
+        return tuple(self._meta_data.get("axis_names", ["unknown"] * self.ndim))
 
     @axis_names.setter
     def axis_names(self, value):
@@ -505,12 +515,16 @@ class HistogramBase(object):
             return True
 
     def copy(self, include_frequencies=True):
-        """A copy of the histogram.
+        """Copy the histogram.
 
         Parameters
         ----------
         include_frequencies : Optional[bool]
             If false, all frequencies are set to zero.
+
+        Returns
+        -------
+        copy : HistogramBase
         """
         if include_frequencies:
             frequencies = np.copy(self.frequencies)

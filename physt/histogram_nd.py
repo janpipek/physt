@@ -55,7 +55,7 @@ class HistogramND(HistogramBase):
 
         Returns
         -------
-        Iterable[np.ndarray]
+        list[np.ndarray]
             Two sets of array bins.
         """
         return [binning.bins for binning in self._binnings]
@@ -66,7 +66,7 @@ class HistogramND(HistogramBase):
 
         Returns
         -------
-        Iterable[np.ndarray]
+        list[np.ndarray]
         """
         return [binning.numpy_bins for binning in self._binnings]
 

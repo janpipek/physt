@@ -102,7 +102,8 @@ def histogram(data, bins=None, *args, **kwargs):
         # Get frequencies
         if array is not None:
             (frequencies, errors2, underflow, overflow, stats) =\
-                calculate_frequencies(array, binning=binning, weights=weights, dtype=dtype)
+                calculate_frequencies(array, binning=binning,
+                                      weights=weights, dtype=dtype)
         else:
             frequencies = None
             errors2 = None
@@ -116,8 +117,9 @@ def histogram(data, bins=None, *args, **kwargs):
             overflow = 0
         if hasattr(data, "name") and not axis_name:
             axis_name = data.name
-        return Histogram1D(binning=binning, frequencies=frequencies, errors2=errors2,
-                           overflow=overflow, underflow=underflow, stats=stats, dtype=dtype,
+        return Histogram1D(binning=binning, frequencies=frequencies,
+                           errors2=errors2, overflow=overflow,
+                           underflow=underflow, stats=stats, dtype=dtype,
                            keep_missed=keep_missed, name=name, axis_name=axis_name)
 
 
@@ -146,7 +148,8 @@ def histogram2d(data1, data2, bins=10, *args, **kwargs):
     if data1 is not None and data2 is not None:
         data1 = np.asarray(data1)
         data2 = np.asarray(data2)
-        data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
+        data = np.concatenate([data1[:, np.newaxis],
+                               data2[:, np.newaxis]], axis=1)
     else:
         data = None
     return histogramdd(data, bins, *args, dim=2, **kwargs)
@@ -235,7 +238,8 @@ def histogramdd(data, bins=10, *args, **kwargs):
     if axis_names:
         kwargs["axis_names"] = axis_names
     if dim == 2:
-        return histogram_nd.Histogram2D(binnings=bin_schemas, frequencies=frequencies, errors2=errors2, **kwargs)
+        return histogram_nd.Histogram2D(binnings=bin_schemas, frequencies=frequencies,
+                                        errors2=errors2, **kwargs)
     else:
         return histogram_nd.HistogramND(dimension=dim, binnings=bin_schemas,
                                         frequencies=frequencies, errors2=errors2, **kwargs)
@@ -247,6 +251,18 @@ h2 = histogram2d
 
 
 def h3(data, *args, **kwargs):
+    """Facade function to create 3D histograms.
+
+    Parameters
+    ----------
+    data : array_like or list[array_like] or tuple[array_like]
+        Can be a single array (with three columns) or three different arrays
+        (for each component)
+
+    Returns
+    -------
+    physt.histogram_nd.HistogramND
+    """
     import numpy as np
 
     if data is not None and isinstance(data, (list, tuple)) and not np.isscalar(data[0]):

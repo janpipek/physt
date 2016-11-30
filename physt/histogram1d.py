@@ -1,3 +1,4 @@
+"""One-dimensional histograms."""
 from __future__ import absolute_import
 import numpy as np
 from . import bin_utils
