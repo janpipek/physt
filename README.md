@@ -64,13 +64,13 @@ h.projection("theta", "phi").plot.globe_map(density=True, figsize=(7, 7), cmap="
 
 See more in docstring's and notebooks:
 
-- Basic tutorial: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Tutorial.ipynb>
-- Binning: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Binning.ipynb>
-- Bokeh plots: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Bokeh%20examples.ipynb>
-- 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/2D%20Histograms.ipynb>
-- Special histograms (polar, spherical, cylindrical - *beta*): <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Special%20histograms.ipynb>
-- Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Adaptive%20histogram.ipynb>
-- Use dask for large (not "big") data: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/Dask.ipynb>
+- Basic tutorial: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/tutorial.ipynb>
+- Binning: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/binning.ipynb>
+- Bokeh plots: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/bokeh_examples.ipynb>
+- 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/2d_histograms.ipynb>
+- Special histograms (polar, spherical, cylindrical - *beta*): <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/special_histograms.ipynb>
+- Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/adaptive_histogram.ipynb>
+- Use dask for large (not "big") data: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/dask.ipynb>
 
 ## Installation
 
