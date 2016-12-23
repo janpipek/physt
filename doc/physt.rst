@@ -1,16 +1,8 @@
 physt package
 =============
 
-Subpackages
------------
-
-.. toctree::
-
-    physt.compat
-    physt.plotting
-
-Submodules
-----------
+Modules
+-------
 
 physt.bin_utils module
 ----------------------

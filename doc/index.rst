@@ -11,13 +11,14 @@ Tutorials
    plotting
    2d_histograms
    binning
+   adaptive_histogram
    special_histograms
 
 API
 ---
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    modules
 
