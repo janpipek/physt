@@ -7,11 +7,11 @@ Tutorials
 .. toctree::
    :maxdepth: 2
 
-   Tutorial
-   Plotting
-   2D Histograms
-   Binning
-   Special histograms
+   tutorial
+   plotting
+   2d_histograms
+   binning
+   special_histograms
 
 API
 ---
