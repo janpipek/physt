@@ -7,7 +7,7 @@ from .binnings import as_binning
 class HistogramBase(object):
     """Histogram base class.
 
-    Behaviour shared between all histogram classes.
+    Behaviour shared by all histogram classes.
 
     The most important daughter classes are:
     - Histogram1D
@@ -22,7 +22,7 @@ class HistogramBase(object):
     - _update_dict (optional)
 
     Underlying data type is int64 / float  or an explicitly specified
-    other type (_dtype).
+    other type (dtype).
 
     Attributes
     ----------
@@ -134,7 +134,7 @@ class HistogramBase(object):
 
         In plotting, this will be used as label.
         """
-        self._meta_data["name"] = value
+        self._meta_data["name"] = str(value)
 
     @property
     def title(self):
@@ -166,7 +166,7 @@ class HistogramBase(object):
 
     @axis_names.setter
     def axis_names(self, value):
-        self._meta_data["axis_names"] = value
+        self._meta_data["axis_names"] = tuple(str(name) for name in value)
 
     @property
     def shape(self):
@@ -175,7 +175,7 @@ class HistogramBase(object):
         Returns
         -------
         tuple[int]
-            One-element tuple
+            One-element tuple with the number of bins along each axis.
         """
         return tuple(bins.bin_count for bins in self._binnings)
 
@@ -257,7 +257,7 @@ class HistogramBase(object):
 
     @property
     def frequencies(self):
-        """Frequencies (values) of the histogram.
+        """Frequencies (values, contents) of the histogram bins.
 
         Returns
         -------

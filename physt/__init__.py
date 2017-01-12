@@ -201,7 +201,7 @@ def histogramdd(data, bins=10, *args, **kwargs):
     if not "axis_names" in kwargs:
         if hasattr(data, "columns"):
             try:
-                kwargs["axis_names"] = list(data.columns)
+                kwargs["axis_names"] = tuple(data.columns)
             except:
                 pass # Perhaps columns has different meaning here.
 

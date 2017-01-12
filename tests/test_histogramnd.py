@@ -42,7 +42,7 @@ class TestProjections(object):
         assert h3.ndim == 3
         assert isinstance(h3, HistogramND)
         assert h3.total == h.total
-        assert h3.axis_names == ["2", "3", "4"]
+        assert h3.axis_names == ("2", "3", "4")
         assert h3.frequencies.shape == (5, 6, 7)
         assert h3.shape == (5, 6, 7)
 
@@ -52,7 +52,7 @@ class TestProjections(object):
         h2 = h.projection(1, 3)
         assert isinstance(h2, Histogram2D)
         assert h2.total == h.total
-        assert h2.axis_names == ["2", "4"]
+        assert h2.axis_names == ("2", "4")
         assert h2.shape == h2.frequencies.shape
         assert h2.shape == (5, 7)
 
@@ -62,7 +62,7 @@ class TestProjections(object):
         h2 = h.projection(1, 2)
         assert isinstance(h2, Histogram2D)
         assert h2.total == h.total
-        assert h2.axis_names == ["2", "3"]
+        assert h2.axis_names == ("2", "3")
         assert h2.shape == h2.frequencies.shape
         assert h2.shape == (5, 6)
 
@@ -84,7 +84,7 @@ class TestProjections(object):
         assert h3.ndim == 3
         assert isinstance(h3, HistogramND)
         assert h3.total == h.total
-        assert h3.axis_names == ["2", "3", "4"]
+        assert h3.axis_names == ("2", "3", "4")
         assert h3.frequencies.shape == (5, 6, 7)
         assert h3.shape == (5, 6, 7)
 

@@ -60,7 +60,7 @@ class TestHistogram2D(object):
         assert h2.frequencies.sum() == 1000
         assert h2.shape == (8, 4)
         assert h2.name == "Some histogram"
-        assert h2.axis_names == ["x", "y"]
+        assert h2.axis_names == ("x", "y")
 
     def test_dropna(self):
         vals2 = np.array(vals)
