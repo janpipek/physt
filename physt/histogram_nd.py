@@ -160,7 +160,7 @@ class HistogramND(HistogramBase):
                 return ixbin
 
     def fill(self, value, weight=1, **kwargs):
-        self._coerce_dtype(float)
+        self._coerce_dtype(type(weight))
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
                 #print("adaptive, forcing", value[i])
@@ -329,9 +329,9 @@ def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
     Parameters
     ----------
     data : array_like
-        Array of dimensionality=ndim
+        2D array with ndim columns and row for each entry.
     ndim : int
-        Dimensionality od the data
+        Dimensionality od the data.
     binnings:
         Binnings to apply in all axes.
     weights : Optional[array_like]
@@ -345,7 +345,34 @@ def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
     errors2 : array_like
     missing : scalar[dtype]
     """
-    data = np.asarray(data)
+
+    # TODO: Remove ndim
+    # TODO: What if data is None
+
+    # Prepare numpy array of data
+    if data is not None:
+        data = np.asarray(data)
+        if data.ndim != 2:
+            raise RuntimeError("histogram_nd.calculate_frequencies requires 2D input data.")
+            # TODO: If somewhere, here we would check ndim
+
+    # Guess correct dtype and apply to weights
+    if weights is None:
+        if data is not None:
+            weights = np.ones(data.shape[0], dtype=dtype or np.int64)
+    else:
+        weights = np.asarray(weights)
+        if data is None:
+            raise RuntimeError("Weights specified but data not.")
+        else:
+            if data.shape[0] != weights.shape[0]:
+                raise RuntimeError("Different number of entries in data and weights.")
+        if dtype:
+            dtype = np.dtype(dtype)
+            if dtype.kind in "iu" and weights.dtype.kind == "f":
+                raise RuntimeError("Integer histogram requested but float weights entered.")
+        else:
+            dtype = weights.dtype
 
     edges_and_mask = [binning.numpy_bins_with_mask for binning in binnings]
     edges = [em[0] for em in edges_and_mask]
@@ -356,29 +383,15 @@ def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
 
     ixgrid = np.ix_(*masks) # Indexer to select parts we want
 
-    if weights is not None:
-        import numbers
-        if issubclass(dtype, numbers.Integral):
-            raise RuntimeError("Histograms with weights cannot have integral dtype")
-        weights = np.asarray(weights, dtype=dtype)
-        if weights.shape != (data.shape[0],):
-            raise RuntimeError("Invalid weights shape.")
-        total_weight = weights.sum()
-    else:
-        total_weight = data.shape[0]
-
     # TODO: Right edges are not taken into account because they fall into inf bin
 
     if data.shape[0]:
         frequencies, _ = np.histogramdd(data, edges, weights=weights)
         frequencies = frequencies.astype(dtype)      # Automatically copy
         frequencies = frequencies[ixgrid]
-        missing = total_weight - frequencies.sum()
-        if weights is not None:
-            err_freq, _ = np.histogramdd(data, edges, weights=weights ** 2)
-            errors2 = err_freq[ixgrid].astype(dtype) # Automatically copy
-        else:
-            errors2 = frequencies.copy()
+        missing = weights.sum() - frequencies.sum()
+        err_freq, _ = np.histogramdd(data, edges, weights=weights ** 2)
+        errors2 = err_freq[ixgrid].astype(dtype) # Automatically copy
     else:
         frequencies = None
         missing = 0

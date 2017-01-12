@@ -549,8 +549,12 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
 
     Note
     ----
-    Checks that the bins are in a correct order (not necessarily consecutive)
+    Checks that the bins are in a correct order (not necessarily consecutive).
+    Does not check for numerical overflows in bins.
     """
+
+    # TODO: Is it possible to merge with histogram_nd.calculate_frequencies?
+    # TODO: What if data is None
 
     # Statistics
     sum = 0.0
@@ -564,20 +568,27 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
         if not bin_utils.is_rising(bins):
             raise RuntimeError("Bins must be rising.")
 
-    if dtype is None:
-        dtype = np.int64 if weights is None else np.float
-
-    # Create 1D arrays to work on
+    # Prepare 1D numpy array of data
     data = np.asarray(data).flatten()
-    if weights is not None:
-        import numbers
-        if issubclass(dtype, numbers.Integral):
-            raise RuntimeError("Histograms with weights cannot have integral dtype")
-        weights = np.asarray(weights, dtype=np.float64).flatten()
-        if weights.shape != data.shape:
-            raise RuntimeError("Weight must have the same shape as data")
+
+    # Prepare 1D numpy array of weights
+    if weights is None:
+        weights = np.ones(data.shape, dtype=dtype or np.int64)
     else:
-        weights = np.ones(data.shape, dtype=np.float64)
+        weights = np.asarray(weights)
+    weights = weights.flatten()
+
+    # Check compatibility of weights
+    if weights.shape != data.shape:
+        raise RuntimeError("Weights must have the same shape as data.")
+
+    # Ensure proper dtype for the bin contents
+    if dtype is None:
+        dtype = weights.dtype
+    else:
+        dtype = np.dtype(dtype)
+        if dtype.kind in "iu" and weights.dtype.kind == "f":
+            raise RuntimeError("Integer histogram requested but float weights entered.")
 
     # Data sorting
     if not already_sorted:

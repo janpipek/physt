@@ -191,9 +191,8 @@ class HistogramBase(object):
         """
         return len(self._binnings)
 
-    @property
-    def dtype(self):
-        """Data type of the histogram.
+    def _get_dtype(self):
+        """Data type of the bin contents.
 
         Returns
         -------
@@ -201,9 +200,8 @@ class HistogramBase(object):
         """
         return self._dtype
 
-    @dtype.setter
-    def dtype(self, value):
-        """Change data type of the histogram.
+    def set_dtype(self, value, check=True):
+        """Change data type of the bin contents.
 
         Allowed conversions:
         - from integral to float types
@@ -213,35 +211,51 @@ class HistogramBase(object):
         Parameters
         ----------
         value: np.dtype or something convertible to it.
+        check: bool
+            If True (default), all values are checked against the limits
         """
+
+        # TODO: Refactor out?
+        # TODO? Deal with unsigned types
         value = np.dtype(value)
-        if value.kind not in "iuf":
-            raise RuntimeError("Unsupported dtype. Only integer/floating-point types are supported.")
-        ok = False
-        if np.issubdtype(value, np.integer):
-            if np.issubdtype(self.dtype, np.integer):
-                ok = True
-            elif np.array_equal(self._frequencies, self._errors2):
-                ok = True
-        elif np.issubdtype(value, np.float):
-            ok = True
-        if ok:
-            self._dtype = value
-            self._frequencies = self._frequencies.astype(value)
-            self._errors2 = self._errors2.astype(value)
-            self._missed = self._missed.astype(value)
-            # TODO: Overflows and underflows and stuff...
+
+        if value == self.dtype:
+            return    # No change
+
+        if value.kind in "iu":
+            type_info = np.iinfo(value)
+        elif value.kind == "f":
+            type_info = np.finfo(value)
         else:
-            raise RuntimeError("Cannot change histogram dtype.")
+            raise RuntimeError("Unsupported dtype. Only integer/floating-point types are supported.")
+
+        if np.can_cast(self.dtype, value):
+            pass    # Ok
+        elif check:
+            if np.issubdtype(value, np.integer):
+                if self.dtype.kind == "f":
+                    for array in (self._frequencies, self._errors2):
+                        if np.any(array % 1.0):
+                            raise RuntimeError("Data contain non-integer values.")
+            for array in (self._frequencies, self._errors2):
+                if np.any((array > type_info.max) | (array < type_info.min)):
+                    raise RuntimeError("Data contain values outside the specified range.")
+
+        self._dtype = value
+        self._frequencies = self._frequencies.astype(value)
+        self._errors2 = self._errors2.astype(value)
+        self._missed = self._missed.astype(value)
+
+    dtype = property(_get_dtype, set_dtype)
 
     def _coerce_dtype(self, other_dtype):
-        """Possibly change the type to allow correct operations with other operand.
+        """Possibly change the bin content type to allow correct operations with other operand.
 
         Parameters
         ----------
         other_dtype : np.dtype or type
         """
-        new_dtype = np.find_common_type([self.dtype, other_dtype], [])
+        new_dtype = np.find_common_type([self.dtype, np.dtype(other_dtype)], [])
         if new_dtype != self.dtype:
             self.dtype = new_dtype
 

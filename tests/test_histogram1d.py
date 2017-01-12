@@ -366,7 +366,8 @@ class TestDtype(object):
         example = h1(values, weights=[1, 2, 2.1, 3.2])
         with pytest.raises(RuntimeError):
             example.dtype = np.int16
-        example._errors2 = example.frequencies.copy()
+
+        example = h1(values, weights=[1, 2, 2, 3])
         example.dtype = np.int16
         assert example.dtype == np.int16
 
