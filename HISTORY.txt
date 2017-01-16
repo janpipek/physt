@@ -1,3 +1,9 @@
+0.3.22 (16th January 2017)
+--------------------------
+- Added: JSON output/input (not much tested, but already reads files)
+- Added: physt.example namespace for simple ready-made histograms.
+- Fixed: various bugs
+
 0.3.21 (19th November 2016)
 ---------------------------
 - Added: fill plot type
