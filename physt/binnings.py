@@ -383,15 +383,15 @@ class FixedWidthBinning(BinningBase):
     """Binning schema with predefined bin width."""
     adaptive_allowed = True
 
-    def __init__(self, bin_width, bin_count=0, times_min=None, min=None, includes_right_edge=False, adaptive=False,
-                 shift=None, align=True):
+    def __init__(self, bin_width, bin_count=0, bin_times_min=None, min=None, includes_right_edge=False, adaptive=False,
+                 bin_shift=None, align=True):
         super(FixedWidthBinning, self).__init__(adaptive=adaptive, includes_right_edge=includes_right_edge)
         # TODO: Check edge cases for min/shift/align
         if bin_width <= 0:
             raise RuntimeError("Bin width must be > 0.")
         if bin_count < 0:
             raise RuntimeError("Bin count must be >= 0.")
-        if (times_min is not None or shift is not None) and (min is not None):
+        if (bin_times_min is not None or bin_shift is not None) and (min is not None):
             raise RuntimeError("Cannot specify both min and (times_min or shift)")
         self._bin_width = float(bin_width)
         self._align = align
@@ -400,8 +400,8 @@ class FixedWidthBinning(BinningBase):
             self._times_min = int(np.floor(min / self.bin_width))
             self._shift = min - self._times_min * self.bin_width
         else:
-            self._times_min = times_min
-            self._shift = shift or 0.0
+            self._times_min = bin_times_min
+            self._shift = bin_shift or 0.0
         self._bins = None
         self._numpy_bins = None
 
@@ -486,8 +486,8 @@ class FixedWidthBinning(BinningBase):
             bin_width=self._bin_width,
             bin_count=self._bin_count,
             align=self._align,  # Not necessary
-            times_min=self._times_min,
-            shift=self._shift,
+            bin_times_min=self._times_min,
+            bin_shift=self._shift,
             includes_right_edge=self.includes_right_edge,
             adaptive=self._adaptive)
 
@@ -713,7 +713,7 @@ def integer_binning(data=None, **kwargs):
     """
     if "range" in kwargs:
         kwargs["range"] = tuple(r - 0.5 for r in kwargs["range"])
-    return fixed_width_binning(data=data, bin_width=1, align=True, shift=0.5, **kwargs)
+    return fixed_width_binning(data=data, bin_width=1, align=True, bin_shift=0.5, **kwargs)
 
 
 def fixed_width_binning(data=None, bin_width=1, range=None, includes_right_edge=False, **kwargs):
