@@ -13,15 +13,21 @@ class TestIO(object):
         values = [4, 0, 3, 7.2]
         example = Histogram1D(bins, values, overflow=1, underflow=2)
         output = io.save_json(example)
-        print(output)
-        assert False
+        #print(output)
+        #assert False
 
     def test_json_write_2d(self):
         from physt import h2
         values = np.random.rand(500, 2)
         h = h2(values[:,0], values[:,1], 3)
-        print(h.to_json())
-        assert False
+        #print(h.to_json())
+        #assert False
+
+    def test_io_equality(self):
+        import physt.example
+        h = physt.example.normal_h2()
+        h2 = io.parse_json(h.to_json())
+        assert h == h2
 
 
 if __name__ == "__main__":
