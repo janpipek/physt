@@ -52,6 +52,7 @@ def to_numpy_bins(bins):
     edges: np.ndarray
         all edges
     """
+    bins = np.asarray(bins)
     if bins.ndim == 1:     # Already in the proper format
         return bins
     if not is_consecutive(bins):
@@ -142,6 +143,7 @@ def is_consecutive(bins, rtol=1.e-5, atol=1.e-8):
     -------
     bool
     """
+    bins = np.asarray(bins)
     if bins.ndim == 1:
         return True
     else:
