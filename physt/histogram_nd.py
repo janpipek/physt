@@ -358,8 +358,10 @@ def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
 
     # Guess correct dtype and apply to weights
     if weights is None:
+        if not dtype:
+            dtype = np.int64
         if data is not None:
-            weights = np.ones(data.shape[0], dtype=dtype or np.int64)
+            weights = np.ones(data.shape[0], dtype=dtype)
     else:
         weights = np.asarray(weights)
         if data is None:
@@ -377,9 +379,6 @@ def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
     edges_and_mask = [binning.numpy_bins_with_mask for binning in binnings]
     edges = [em[0] for em in edges_and_mask]
     masks = [em[1] for em in edges_and_mask]
-
-    if dtype is None:
-        dtype = np.int64 if weights is None else np.float
 
     ixgrid = np.ix_(*masks) # Indexer to select parts we want
 
