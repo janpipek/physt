@@ -7,7 +7,7 @@ from .histogram_base import HistogramBase
 from .util import find_subclass
 
 
-def save_json(histogram, path=None):
+def save_json(histogram, path=None, **kwargs):
     """Save histogram to JSON format.
 
     Parameters
@@ -24,10 +24,10 @@ def save_json(histogram, path=None):
     """
     # TODO: Implement multiple histograms in one file?
     data = histogram.to_dict()
-    data["physt-version"] = __version__
-    data["physt-compatible"] = "0.3.20"
+    data["physt_version"] = __version__
+    data["physt_compatible"] = "0.3.20"
 
-    text = json.dumps(data)
+    text = json.dumps(data, **kwargs)
     if path:
         with open(path, "w", encoding="utf-8") as f:
             f.write(text)
@@ -59,7 +59,7 @@ def parse_json(text):
         UTF-8 encoded JSON
     """
     data = json.loads(text, encoding="utf-8")
-    histogram_type = data["histogram-type"]
+    histogram_type = data["histogram_type"]
     klass = find_subclass(HistogramBase, histogram_type)
     return klass.from_dict(data)
 

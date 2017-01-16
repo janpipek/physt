@@ -634,14 +634,14 @@ class HistogramBase(object):
         """
         from collections import OrderedDict
         result = OrderedDict()
-        result["histogram-type"] = type(self).__name__
+        result["histogram_type"] = type(self).__name__
         result["binnings"] = [binning.to_dict() for binning in self._binnings]
         result["frequencies"] = self.frequencies.tolist()
         result["dtype"] = str(self.dtype)
         result["errors2"] = self.errors2.tolist()
-        result["meta-data"] = self._meta_data
+        result["meta_data"] = self._meta_data
         result["missed"] = self._missed.tolist()
-        result["missed-keep"] = self.keep_missed
+        result["missed_keep"] = self.keep_missed
         self._update_dict(result)
         return result
 
@@ -652,12 +652,31 @@ class HistogramBase(object):
         
         Parameters
         ----------
-        a_dict : OrderedDict
+        a_dict : dict
             Dictionary exported by the default implementation of to_dict
         """
         pass
 
-    def to_json(self, path=None):
+    @classmethod
+    def from_dict(cls, a_dict):
+        """Create an instance from a dictionary.
+
+        Parameters
+        ----------
+        a_dict : dict
+
+        """
+        from .binnings import BinningBase
+        from .util import all_subclasses
+        binnings = [BinningBase.from_dict(binning_data) for binning_data in a_dict["binnings"]]
+        dtype = np.dtype(a_dict["dtype"])
+        meta_data = a_dict["meta_data"]      # TODO: Some safety checking???
+        frequencies = a_dict.get("frequencies")
+        errors2 = a_dict.get("errors2")
+        missed = a_dict.get("missed")
+        return cls(binnings=binnings, meta_data=meta_data, dtype=dtype, missed=missed, frequencies=frequencies, errors2=errors2)
+
+    def to_json(self, path=None, **kwargs):
         """Convert to JSON representation.
 
         Parameters
@@ -671,7 +690,7 @@ class HistogramBase(object):
             The JSON representation.
         """
         from .io import save_json
-        return save_json(self, path)
+        return save_json(self, path, **kwargs)
 
     def __repr__(self):
         result = "{0}(bins={1}, total={2}, dtype={3})".format(

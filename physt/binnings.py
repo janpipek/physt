@@ -4,6 +4,7 @@ from __future__ import absolute_import
 import numpy as np
 from .bin_utils import (make_bin_array, is_consecutive, to_numpy_bins,
                         is_rising, is_bin_subset, to_numpy_bins_with_mask)
+from .util import find_subclass
 
 
 # TODO: Locking and edit operations (like numpy read-only)
@@ -44,6 +45,12 @@ class BinningBase(object):
             raise RuntimeError("Adaptivity does not work together with right-edge inclusion.")
         self._adaptive = adaptive
 
+    @staticmethod
+    def from_dict(a_dict):
+        binning_type = a_dict.pop("binning_type", StaticBinning)
+        klass = find_subclass(BinningBase, binning_type)
+        return klass(**a_dict)
+
     adaptive_allowed = False
     inconsecutive_allowed = False
     # TODO: adding allowed?
@@ -55,7 +62,7 @@ class BinningBase(object):
         """
         from collections import OrderedDict
         result = OrderedDict()
-        result["binning-type"] = type(self).__name__
+        result["binning_type"] = type(self).__name__
         self._update_dict(result)
         return result
 
@@ -369,7 +376,7 @@ class NumpyBinning(BinningBase):
         return NumpyBinning(numpy_bins=self.numpy_bins, includes_right_edge=self.includes_right_edge)
 
     def _update_dict(self, a_dict):
-        a_dict["numpy-bins"] = self.numpy_bins.tolist()
+        a_dict["numpy_bins"] = self.numpy_bins.tolist()
 
 
 class FixedWidthBinning(BinningBase):
@@ -552,10 +559,11 @@ class FixedWidthBinning(BinningBase):
             return self
 
     def _update_dict(self, a_dict):
-        a_dict["bin-count"] = self.bin_count
-        a_dict["bin-width"] = self.bin_width
-        a_dict["bin-shift"] = self._shift
-        a_dict["bin-times-min"] = self._times_min
+        # TODO: Fix to be instantiable from JSON
+        a_dict["bin_count"] = self.bin_count
+        a_dict["bin_width"] = self.bin_width
+        a_dict["bin_shift"] = self._shift
+        a_dict["bin_times_min"] = self._times_min
 
 class ExponentialBinning(BinningBase):
     """Binning schema with exponentially distributed bins."""
@@ -585,9 +593,9 @@ class ExponentialBinning(BinningBase):
         return ExponentialBinning(self._log_min, self._log_width, self._bin_count, self.includes_right_edge)
 
     def _update_dict(self, a_dict):
-        a_dict["log-min"] = self._log_min
-        a_dict["log-width"] = self._log_width
-        a_dict["bin-count"] = self._bin_count
+        a_dict["log_min"] = self._log_min
+        a_dict["log_width"] = self._log_width
+        a_dict["bin_count"] = self._bin_count
 
 
 def numpy_binning(data, bins=10, range=None, *args, **kwargs):
