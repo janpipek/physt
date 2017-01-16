@@ -472,6 +472,12 @@ class Histogram1D(HistogramBase):
             columns=["left", "right", "frequency", "error"])
         return df
 
+    @classmethod
+    def _from_dict_kwargs(cls, a_dict):
+        kwargs = HistogramBase._from_dict_kwargs.__func__(cls, a_dict)
+        kwargs["binning"] = kwargs.pop("binnings")[0]
+        return kwargs
+
     def to_xarray(self):
         """Convert to xarray.Dataset
 

@@ -658,23 +658,50 @@ class HistogramBase(object):
         pass
 
     @classmethod
+    def _from_dict_kwargs(cls, a_dict):
+        """Modify __init__ arguments from an external dictionary.
+
+        Template method for from dict.
+        Override if necessary (like it's done in Histogram1D).
+
+        Parameters
+        ----------
+        a_dict : dict 
+
+        Returns
+        -------
+        dict 
+        """
+        from .binnings import BinningBase
+        from .util import all_subclasses
+        kwargs = {
+            "binnings" : [BinningBase.from_dict(binning_data) for binning_data in a_dict["binnings"]],
+            "dtype": np.dtype(a_dict["dtype"]),
+            "frequencies": a_dict.get("frequencies"),
+            "errors2": a_dict.get("errors2"),
+            "missed": a_dict.get("missed")
+        }
+        kwargs.update(a_dict.get("meta_data", {}))
+        return kwargs
+
+
+    @classmethod
     def from_dict(cls, a_dict):
         """Create an instance from a dictionary.
+
+        If customization is necessary, override the _from_dict_kwargs
+        template method, not this one.
 
         Parameters
         ----------
         a_dict : dict
 
+        Returns
+        -------
+        HistogramBase 
         """
-        from .binnings import BinningBase
-        from .util import all_subclasses
-        binnings = [BinningBase.from_dict(binning_data) for binning_data in a_dict["binnings"]]
-        dtype = np.dtype(a_dict["dtype"])
-        meta_data = a_dict["meta_data"]      # TODO: Some safety checking???
-        frequencies = a_dict.get("frequencies")
-        errors2 = a_dict.get("errors2")
-        missed = a_dict.get("missed")
-        return cls(binnings=binnings, meta_data=meta_data, dtype=dtype, missed=missed, frequencies=frequencies, errors2=errors2)
+        kwargs = cls._from_dict_kwargs(a_dict)
+        return cls(**kwargs)
 
     def to_json(self, path=None, **kwargs):
         """Convert to JSON representation.

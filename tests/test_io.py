@@ -23,11 +23,14 @@ class TestIO(object):
         #print(h.to_json())
         #assert False
 
-    def test_io_equality(self):
-        import physt.example
-        h = physt.example.normal_h2()
-        h2 = io.parse_json(h.to_json())
-        assert h == h2
+    def test_io_equality_on_examples(self):
+        from physt.example import ALL_EXAMPLES
+
+        for example in ALL_EXAMPLES:
+            h = example()
+            json = h.to_json()
+            read = io.parse_json(json)
+            assert h == read
 
 
 if __name__ == "__main__":
