@@ -125,7 +125,12 @@ class HistogramBase(object):
 
     @property
     def name(self):
-        """Name of the histogram (stored in meta-data)."""
+        """Name of the histogram (stored in meta-data).
+
+        Returns
+        -------
+        str
+        """
         return self._meta_data.get("name", None)
 
     @name.setter

@@ -154,7 +154,7 @@ class PolarHistogram(TransformedHistogramMixin, HistogramND):
         return sizes
 
     @classmethod
-    def transform(self, value):
+    def transform(cls, value):
         value = np.asarray(value, dtype=np.float64)
         assert value.shape[-1] == 2
         result = np.empty_like(value)
@@ -219,7 +219,7 @@ class SphericalHistogram(TransformedHistogramMixin, HistogramND):
         super(SphericalHistogram, self).__init__(3, binnings=binnings, frequencies=frequencies, **kwargs)
 
     @classmethod
-    def transform(self, value):
+    def transform(cls, value):
         value = np.asarray(value, dtype=np.float64)
         result = np.empty_like(value)
         x, y, z = value.T
@@ -269,12 +269,16 @@ class CylinderSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         """Radius of the cylindrical surface.
 
         Useful for calculating densities.
+
+        Returns
+        -------
+        float
         """
         return self._meta_data.get("radius", 1)
 
     @radius.setter
     def radius(self, value):
-        self._meta_data["radius"] = value
+        self._meta_data["radius"] = float(value)
 
     _projection_class_map = {
         (0,) : AzimuthalHistogram
@@ -327,6 +331,10 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
 
 def _prepare_data(data, transformed, klass,  *args, **kwargs):
     """Transform data for binning.
+
+    Returns
+    -------
+    np.ndarray
     """
     # TODO: Maybe include in the class itself?
     data = np.asarray(data)
