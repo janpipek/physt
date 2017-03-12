@@ -39,7 +39,7 @@ class HistogramND(HistogramBase):
         missed = kwargs.pop("missed", 0)
 
         HistogramBase.__init__(self, binnings, frequencies, **kwargs)
-        
+
         if len(self.axis_names) != self.ndim:
             raise RuntimeError("The length of axis names must be equal to histogram dimension.")
 
@@ -272,28 +272,6 @@ class HistogramND(HistogramBase):
         if not other.axis_names == self.axis_names:
             return False
         return True
-
-    # def to_xarray(self):
-    #     raise NotImplementedError()
-
-    # @classmethod
-    # def from_xarray(cls, arr):
-    #     raise  NotImplementedError()
-
-    # def to_json(self, path=None):
-    #     raise NotImplementedError()
-
-    # @classmethod
-    # def from_json(cls, text=None, path=None):
-    #     return NotImplementedError
-
-    def __repr__(self):
-        result = "{0}(bins={1}, total={2}".format(
-            self.__class__.__name__, self.shape, self.total)
-        if self.missed:
-            result += ", missed={0}".format(self.missed)
-        result += ")"
-        return result
 
 
 class Histogram2D(HistogramND):

@@ -18,7 +18,7 @@ class Histogram1D(HistogramBase):
     Attributes
     ----------
     _stats : dict
-        
+
 
     These are the basic attributes that can be used in the constructor (see there)
     Other attributes are dynamic.
@@ -48,7 +48,7 @@ class Histogram1D(HistogramBase):
             Dictionary of various statistics ("sum", "sum2")
         """
         self._stats = kwargs.pop("stats", None)
-        
+
         missed = [
             kwargs.pop("underflow", 0),
             kwargs.pop("overflow", 0),
@@ -56,9 +56,9 @@ class Histogram1D(HistogramBase):
         ]
         if "axis_name" in kwargs:
             kwargs["axis_names"] = [kwargs.pop("axis_name")]
-        
+
         HistogramBase.__init__(self, [binning], frequencies, errors2, **kwargs)
-        
+
         if self.keep_missed:
             self._missed = np.array(missed, dtype=self.dtype)
         else:
