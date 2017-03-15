@@ -500,6 +500,7 @@ class Histogram1D(HistogramBase):
             "inner_missed": self.inner_missed,
             "keep_missed": self.keep_missed
         }
+        attrs.update(self._meta_data)
         # TODO: Add stats
         return xr.Dataset(data_vars, coords, attrs)
 
@@ -513,7 +514,7 @@ class Histogram1D(HistogramBase):
             The data in xarray representation
         """
         kwargs = {'frequencies': arr["frequencies"],
-                  'bins': arr["bins"],
+                  'binning': arr["bins"],
                   'errors2': arr["errors2"],
                   'overflow': arr.attrs["overflow"],
                   'underflow': arr.attrs["underflow"],
