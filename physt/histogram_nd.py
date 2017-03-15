@@ -185,7 +185,7 @@ class HistogramND(HistogramBase):
             self._coerce_dtype(weights.dtype)
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
-                map = self._binning.force_bin_existence(values[:, i])
+                map = binning.force_bin_existence(values[:, i])   # TODO: Add to some test
                 self._reshape_data(binning.bin_count, map, i)
         frequencies, errors2, missed = calculate_frequencies(values, self.ndim,
                                                              self._binnings, weights=weights)

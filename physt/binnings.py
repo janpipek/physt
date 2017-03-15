@@ -565,6 +565,7 @@ class FixedWidthBinning(BinningBase):
         a_dict["bin_shift"] = self._shift
         a_dict["bin_times_min"] = self._times_min
 
+
 class ExponentialBinning(BinningBase):
     """Binning schema with exponentially distributed bins."""
     adaptive_allowed = False
@@ -779,7 +780,7 @@ def calculate_bins(array, _=None, *args, **kwargs):
     ----------
     array: arraylike
         Data from which the bins should be decided (sometimes used, sometimes not)
-    _: int or str or Callable or arraylike or Iterable
+    _: int or str or Callable or arraylike or Iterable or BinningBase
         To-be-guessed parameter that specifies what kind of binning should be done
     check_nan: bool
         Check for the presence of nan's in array? Default: True
@@ -801,6 +802,8 @@ def calculate_bins(array, _=None, *args, **kwargs):
     if _ is None:
         bin_count = 10 # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
         binning = numpy_binning(array, bin_count, *args, **kwargs)
+    elif isinstance(_, BinningBase):
+        binning = _
     elif isinstance(_, int):
         binning =  numpy_binning(array, _, *args, **kwargs)
     elif isinstance(_, str):
@@ -841,7 +844,7 @@ def calculate_bins_nd(array, bins=None, *args, **kwargs):
     # Prepare bins
     if isinstance(bins, (list, tuple)):
         if len(bins) != dim:
-            raise RuntimeError("List of bins not understood.")
+            raise RuntimeError("List of bins not understood, expected {0} items, got {1}.".format(dim, len(bins)))
     else:
         bins = [bins] * dim
 
