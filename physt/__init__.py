@@ -266,6 +266,8 @@ def h3(data, *args, **kwargs):
     import numpy as np
 
     if data is not None and isinstance(data, (list, tuple)) and not np.isscalar(data[0]):
+        if "axis_names" not in kwargs:
+            kwargs["axis_names"] = [(column.name if hasattr(column, "name") else None) for column in data]
         data = np.concatenate([item[:, np.newaxis] for item in data], axis=1)
     else:
         data = np.asarray(data)
