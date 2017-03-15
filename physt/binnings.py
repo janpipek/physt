@@ -20,6 +20,9 @@ class BinningBase(object):
     - checking of proper bins should be done in __init__
     - if you want to support adaptive histogram, override _force_bin_existence
     - implement _update_dict to contain the binning representation
+    - the constructor (and facade methods) must accept any kwargs (and ignores those that are not used).
+
+    TODO: Check the last point (does it make sense?)
     """
     def __init__(self, bins=None, numpy_bins=None, includes_right_edge=False, adaptive=False):
         # TODO: Incorporate integrity_check?
@@ -384,7 +387,7 @@ class FixedWidthBinning(BinningBase):
     adaptive_allowed = True
 
     def __init__(self, bin_width, bin_count=0, bin_times_min=None, min=None, includes_right_edge=False, adaptive=False,
-                 bin_shift=None, align=True):
+                 bin_shift=None, align=True, **kwargs):
         super(FixedWidthBinning, self).__init__(adaptive=adaptive, includes_right_edge=includes_right_edge)
         # TODO: Check edge cases for min/shift/align
         if bin_width <= 0:
@@ -572,7 +575,7 @@ class ExponentialBinning(BinningBase):
 
     # TODO: Implement adaptivity
 
-    def __init__(self, log_min, log_width, bin_count, includes_right_edge=True, adaptive=False):
+    def __init__(self, log_min, log_width, bin_count, includes_right_edge=True, adaptive=False, **kwargs):
         super(ExponentialBinning, self).__init__(includes_right_edge=includes_right_edge, adaptive=adaptive)
         self._log_min = log_min
         self._log_width = log_width
