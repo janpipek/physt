@@ -29,6 +29,12 @@ try:
 except:
     pass
 
+try:
+    from . import folium as folium_backend
+    backends["folium"] = folium_backend
+except:
+    pass
+
 
 if backends:
     default_backend = list(backends.keys())[0]
