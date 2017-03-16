@@ -1,3 +1,8 @@
+0.3.23 (16th March 2017)
+------------------------
+- Added: geo_map plot type (based on folium)
+- Fixed: various bugs
+
 0.3.22 (16th January 2017)
 --------------------------
 - Added: JSON output/input (not much tested, but already reads files)

@@ -71,7 +71,8 @@ See more in docstring's and notebooks:
 - 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/2d_histograms.ipynb>
 - Special histograms (polar, spherical, cylindrical - *beta*): <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/special_histograms.ipynb>
 - Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/adaptive_histogram.ipynb>
-- Use dask for large (not "big") data: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/dask.ipynb>
+- Use dask for large (not "big") data - *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/dask.ipynb>
+- Geographical bins . *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/geospatial.ipynb>
 
 ## Installation
 
@@ -103,7 +104,7 @@ Using conda (not always up-to-date):
 * Add new values (fill, fill_n)
 * Cumulative values, densities
 * Simple statistics for original data (mean, std, sem)
-* Simple plotting (matplotlib, bokeh)
+* Simple plotting (matplotlib, bokeh, folium)
 * Algorithms for optimized binning
   - human-friendly
   - mathematical
@@ -128,12 +129,13 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
-- Python 3.5 targeted, 2.7 passes unit tests
+- Python 3.5+ targeted, 2.7 passes unit tests (hopefully)
 - numpy
 - (optional) matplotlib - simple output
 - (optional) bokeh - simple output
 - (optional) xarray - I/O
 - (optional) astropy - additional binning algorithms
+- (optional) folium - map plotting
 - (testing) py.test, pandas
 - (docs) sphinx, sphinx_rtd_theme, ipython
 
