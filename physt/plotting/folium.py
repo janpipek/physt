@@ -7,7 +7,7 @@ from __future__ import absolute_import
 
 import folium
 
-types = ("geo_map")
+types = ("geo_map",)
 
 dims = {
     "geo_map" : [2],
