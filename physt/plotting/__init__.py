@@ -3,6 +3,7 @@
 Available backends:
 - matplotlib
 - bokeh
+- folium
 """
 
 from __future__ import absolute_import
@@ -37,9 +38,22 @@ except:
 
 
 if backends:
-    default_backend = list(backends.keys())[0]
+    _default_backend = list(backends.keys())[0]
 else:
-    default_backend = None
+    _default_backend = None
+
+
+def set_default_backend(name):
+    """Choose a default backend.
+    
+    Parameters
+    ----------
+    name: str
+    """
+    global _default_backend
+    if not name in backends:
+        raise RuntimeError("Backend {0} is not supported".format(name))
+    _default_backend = name
 
 
 def _get_backend(name=None):
@@ -55,7 +69,7 @@ def _get_backend(name=None):
     if not backends:
         raise RuntimeError("No plotting backend available. Please, install matplotlib (preferred) or bokeh (limited).")
     if not name:
-        name = default_backend
+        name = _default_backend
     backend = backends.get(name)
     if not backend:
         raise RuntimeError("Backend {0} does not exist. Use one of the following: {1}".format(name, ", ".join(backends.keys())))
