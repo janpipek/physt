@@ -160,8 +160,8 @@ class TestArithmetics(object):
 
 class TestDtype(object):
     def test_simple(self):
-        from physt import example
-        assert example.normal_h2().dtype == np.dtype(np.int64)
+        from physt import examples
+        assert examples.normal_h2().dtype == np.dtype(np.int64)
 
 
 class TestMerging(object):

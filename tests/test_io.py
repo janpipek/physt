@@ -24,7 +24,7 @@ class TestIO(object):
         #assert False
 
     def test_io_equality_on_examples(self):
-        from physt.example import ALL_EXAMPLES
+        from physt.examples import ALL_EXAMPLES
 
         for example in ALL_EXAMPLES:
             h = example()
