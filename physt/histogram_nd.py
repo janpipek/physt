@@ -300,6 +300,27 @@ class Histogram2D(HistogramND):
         a_copy._errors2 = a_copy._errors2.T
         return a_copy
 
+    def partial_normalize(self, axis=0, inplace=False):
+        """Normalize in rows or columns.
+
+        Returns
+        -------
+
+        """
+        if not inplace:
+            copy = self.copy()
+            copy.partial_normalize(axis, inplace=True)
+            return copy
+        else:
+            if axis == 0:
+                self._coerce_dtype(float)
+                self._frequencies /= self._frequencies.sum(axis=0)
+                # TODO: finalize dividing all
+            else:
+                self._coerce_dtype(float)
+                self._frequencies /= self._frequencies.sum(axis=1)[:,np.newaxis]
+                # TODO: finalize dividing all
+
 
 def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
     """"Get frequencies and bin errors from the data (n-dimensional variant).
