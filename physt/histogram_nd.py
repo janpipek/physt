@@ -303,23 +303,32 @@ class Histogram2D(HistogramND):
     def partial_normalize(self, axis=0, inplace=False):
         """Normalize in rows or columns.
 
+        Parameters
+        ----------
+        axis: int or str
+            Along which axis to sum (numpy-sense)
+        inplace: bool
+            Update the object itself
+
         Returns
         -------
-
+        hist : Histogram2D
         """
+        axis = self._get_axis(axis)
         if not inplace:
             copy = self.copy()
             copy.partial_normalize(axis, inplace=True)
             return copy
         else:
+            self._coerce_dtype(float)
             if axis == 0:
-                self._coerce_dtype(float)
-                self._frequencies /= self._frequencies.sum(axis=0)
-                # TODO: finalize dividing all
+                divisor = self._frequencies.sum(axis=0)
             else:
-                self._coerce_dtype(float)
-                self._frequencies /= self._frequencies.sum(axis=1)[:,np.newaxis]
-                # TODO: finalize dividing all
+                divisor = self._frequencies.sum(axis=1)[:,np.newaxis]
+            divisor[divisor == 0] = 1             # Prevent division errors
+            self._frequencies /= divisor
+            self._errors2 /= (divisor * divisor)  # Has its limitations
+            return self
 
 
 def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
