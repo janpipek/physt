@@ -41,6 +41,12 @@ class HistogramBase(object):
         Various storage for missed values in different histogram types
         (1 value for multi-dimensional, 3 values for one-dimensional)
 
+    Invariants
+    ----------
+    - Frequencies in the histogram should always be non-negative.
+    Many operations rely on that, but it is not always enforced.
+    (TODO: Fix this?)
+
     See Also
     --------
     histogram1d
@@ -51,18 +57,18 @@ class HistogramBase(object):
 
     def __init__(self, binnings, frequencies=None, errors2=None, **kwargs):
         """Constructor
-        
+
         All keyword arguments not listed below become items in the _meta_data
         dictionary.
-        
+
         Parameters
         ----------
         binnings : Iterable[BinningBase or array_like]
         frequencies : Optional[array_like]
         errors2 : Optional[array_like]
         dtype : np.dtype
-        keep_missed : bool      
-        
+        keep_missed : bool
+
         """
         self._binnings = [as_binning(binning) for binning in binnings]
 
@@ -113,7 +119,7 @@ class HistogramBase(object):
     @property
     def meta_data(self):
         """A dictionary of non-numerical information about the histogram.
-        
+
         It contains several pre-defined ones, but you can add any other.
         These are preserved when saving and also in operations.
 
@@ -144,7 +150,7 @@ class HistogramBase(object):
     @property
     def title(self):
         """Title of the histogram to be displayed when plotted (stored in meta-data).
-        
+
         Returns
         -------
         str
@@ -167,11 +173,34 @@ class HistogramBase(object):
         -------
         tuple[str]
         """
-        return tuple(self._meta_data.get("axis_names", ["unknown"] * self.ndim))
+        return tuple(self._meta_data.get("axis_names", ["axis{0}".format(i) for i in range(self.ndim)]))
 
     @axis_names.setter
     def axis_names(self, value):
         self._meta_data["axis_names"] = tuple(str(name) for name in value)
+
+    def _get_axis(self, name_or_index):
+        """Get index of an axis and check its existence
+
+        Parameters
+        ----------
+        name_or_index : str or int
+
+        Returns
+        -------
+        int
+            zero-based axis index
+        """
+        if isinstance(name_or_index, int):
+            if name_or_index < 0 or name_or_index >= self.ndim:
+                raise RuntimeError("No such axis, must be from 0 to {0}".format(self.ndim-1))
+            return name_or_index
+        elif isinstance(name_or_index, str):
+            if not name_or_index in self.axis_names:
+                raise RuntimeError("No axis with such name: {0}, available: {1}".format(name_or_index, ", ".join(self.axis_names)))
+            return self.axis_names.index(name_or_index)
+        else:
+            raise RuntimeError("Argument of type {0} not understood, int or str expected.".format(type(name_or_index)))
 
     @property
     def shape(self):
@@ -652,9 +681,9 @@ class HistogramBase(object):
 
     def _update_dict(self, a_dict):
         """Update the dictionary for export.
-        
+
         Override if you want to customize the process.
-        
+
         Parameters
         ----------
         a_dict : dict
@@ -671,11 +700,11 @@ class HistogramBase(object):
 
         Parameters
         ----------
-        a_dict : dict 
+        a_dict : dict
 
         Returns
         -------
-        dict 
+        dict
         """
         from .binnings import BinningBase
         from .util import all_subclasses
@@ -703,7 +732,7 @@ class HistogramBase(object):
 
         Returns
         -------
-        HistogramBase 
+        HistogramBase
         """
         kwargs = cls._from_dict_kwargs(a_dict)
         return cls(**kwargs)
