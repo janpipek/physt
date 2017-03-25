@@ -425,7 +425,7 @@ class HistogramBase(object):
         self._reshape_data(new_binning.bin_count, bin_map, axis)
         self._binnings[axis] = new_binning
 
-    def merge_bins(self, amount=None, min_frequency=None, axis=None, inplace=True):
+    def merge_bins(self, amount=None, min_frequency=None, axis=None, inplace=False):
         """Reduce the number of bins and add their content:
 
         Parameters
@@ -447,11 +447,11 @@ class HistogramBase(object):
         """
         if not inplace:
             histogram = self.copy()
-            histogram.merge_bins(amount, min_frequency=min_frequency, axis=axis)
+            histogram.merge_bins(amount, min_frequency=min_frequency, axis=axis, inplace=True)
             return histogram
         elif axis is None:
             for i in range(self.ndim):
-                self.merge_bins(amount=amount, min_frequency=min_frequency, axis=i)
+                self.merge_bins(amount=amount, min_frequency=min_frequency, axis=i, inplace=True)
         else:
             if amount is not None:
                 if not amount == int(amount):
@@ -616,7 +616,8 @@ class HistogramBase(object):
     def fill_n(self, values, weights=None, **kwargs):
         """Add more values at once.
 
-        This (default) implementation uses a simple loop to add values using `fill` method
+        This (default) implementation uses a simple loop to add values using `fill` method.
+        Actually, it is not used in neither Histogram1D, nor HistogramND.
 
         Parameters
         ----------
