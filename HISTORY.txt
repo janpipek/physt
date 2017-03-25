@@ -1,3 +1,12 @@
+0.3.25 (25th March 2017)
+------------------------
+- Added: more items in physt.examples
+- Changed: merge_bins not inplace by default
+- Changed: unified (hopefully) treatment of value_format in matplotlib plotting
+- Fixed: various bugs
+
+0.3.24 skipped to match dates ;-)
+
 0.3.23 (16th March 2017)
 ------------------------
 - Added: geo_map plot type (based on folium)

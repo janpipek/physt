@@ -1,4 +1,19 @@
 #!/usr/bin/env python
+"""
+physt
+=====
+
+P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram, but designed for humans(TM) on steroids(TM).
+
+The goal is to unify different concepts of histograms as occurring in numpy, pandas, matplotlib, ROOT, etc.
+and to create one representation that is easily manipulated with from the data point of view and at the same
+time provides nice integration into IPython notebook and various plotting options.
+
+In short, whatever you want to do with histograms, physt aims to be on your side.
+
+P.S. I am looking for anyone interested in using / developing physt. You can contribute by reporting errors, implementing missing features and suggest new one.
+"""
+
 from setuptools import setup, find_packages
 import itertools
 from physt import __version__
@@ -10,7 +25,7 @@ options = dict(
     # package_data={'': ['LICENSE', 'MANIFEST.in', 'README.md', 'HISTORY.txt']},
     license='MIT',
     description='P(i/y)thon h(i/y)stograms.',
-    long_description=open('README.md').read(),
+    long_description=__doc__.strip(),
     author='Jan Pipek',
     author_email='jan.pipek@gmail.com',
     url='https://github.com/janpipek/physt',
