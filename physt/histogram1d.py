@@ -262,7 +262,7 @@ class Histogram1D(HistogramBase):
 
         Returns
         -------
-        numpy.ndarrad
+        numpy.ndarray
         """
         return self.bins[...,0]
 
@@ -480,8 +480,6 @@ class Histogram1D(HistogramBase):
 
     def to_xarray(self):
         """Convert to xarray.Dataset
-
-        This is an identity conversion.
 
         Returns
         -------

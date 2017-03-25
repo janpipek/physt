@@ -100,5 +100,6 @@ class TestProjections(object):
         with pytest.raises(RuntimeError):
             h.projection()
 
+
 if __name__ == "__main__":
     pytest.main(__file__)

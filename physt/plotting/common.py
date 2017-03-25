@@ -14,9 +14,9 @@ def get_data(histogram, density=False, cumulative=False, flatten=False):
     density : bool
         Whether to divide bin contents by bin size
     cumulative : bool
-        Where to return cumulative sums instead of individual
+        Whether to return cumulative sums instead of individual
     flatten : bool
-        Where to flatten multidimensional bins
+        Whether to flatten multidimensional bins
 
     Returns
     -------
@@ -48,9 +48,9 @@ def get_err_data(histogram, density=False, cumulative=False, flatten=False):
     density : bool
         Whether to divide bin contents by bin size
     cumulative : bool
-        Where to return cumulative sums instead of individual
+        Whether to return cumulative sums instead of individual
     flatten : bool
-        Where to flatten multidimensional bins
+        Whether to flatten multidimensional bins
 
     Returns
     -------

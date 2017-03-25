@@ -37,3 +37,6 @@ class TestNumpyBins(object):
         assert np.isnan(hist.underflow)
         assert np.isnan(hist.overflow)
 
+
+if __name__ == "__main__":
+    pytest.main(__file__)

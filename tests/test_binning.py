@@ -159,7 +159,7 @@ class TestExponentialBins(object):
         assert np.allclose(the_binning.numpy_bins, [0.1, 1.0, 10.0])
 
         the_binning = binnings.exponential_binning(data, 2, range=(1.0, 100.0))
-        assert np.allclose(the_binning.numpy_bins, [1.0, 10.0, 100.0])        
+        assert np.allclose(the_binning.numpy_bins, [1.0, 10.0, 100.0])
 
 
 class TestQuantileBins(object):
@@ -200,3 +200,7 @@ class TestQuantileBins(object):
 #     def test_implicit_numpy_calls(self):
 #         # TODO: Write this
 #         pass
+
+
+if __name__ == "__main__":
+    pytest.main(__file__)

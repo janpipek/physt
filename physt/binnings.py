@@ -22,6 +22,13 @@ class BinningBase(object):
     - implement _update_dict to contain the binning representation
     - the constructor (and facade methods) must accept any kwargs (and ignores those that are not used).
 
+    Attributes
+    ----------
+    adaptive_allowed : bool
+        Whether is possible to update the bins dynamically
+    inconsecutive_allowed : bool
+        Whether it is possible to have bins with gaps
+
     TODO: Check the last point (does it make sense?)
     """
     def __init__(self, bins=None, numpy_bins=None, includes_right_edge=False, adaptive=False):
@@ -60,7 +67,7 @@ class BinningBase(object):
 
     def to_dict(self):
         """Dictionary representation of the binning schema.
-        
+
         This serves as template method, please implement _update_dict
         """
         from collections import OrderedDict
@@ -123,7 +130,9 @@ class BinningBase(object):
         return self._adaptive
 
     def force_bin_existence(self, values):
-        """Change schema so that there is a bin for value
+        """Change schema so that there is a bin for value.
+
+        It is necessary to implement the _force_bin_existence template method.
 
         Parameters
         ----------
@@ -169,7 +178,7 @@ class BinningBase(object):
 
     def set_adaptive(self, value=True):
         """Set/unset the adaptive property of the binning.
-        
+
         This is available only for some of the binning types.
         """
         if value and not self.adaptive_allowed:
@@ -182,7 +191,7 @@ class BinningBase(object):
     @property
     def bins(self):
         """Bins in the wider format (as edge pairs)
-        
+
         Returns
         -------
         bins: np.ndarray
@@ -195,7 +204,7 @@ class BinningBase(object):
     @property
     def bin_count(self):
         """The total number of bins.
-        
+
         Returns
         -------
         int
@@ -220,7 +229,7 @@ class BinningBase(object):
     @property
     def numpy_bins_with_mask(self):
         """Bins in the numpy format, including the gaps in inconsecutive binnings.
-        
+
         Returns
         -------
         edges, mask: np.ndarray
@@ -236,7 +245,12 @@ class BinningBase(object):
 
     @property
     def first_edge(self):
-        """The left edge of the first bin."""
+        """The left edge of the first bin.
+
+        Returns
+        -------
+        float
+        """
         if self._numpy_bins is None:
             return self._numpy_bins[0]
         else:
@@ -244,7 +258,12 @@ class BinningBase(object):
 
     @property
     def last_edge(self):
-        """The right edge of the last bin."""
+        """The right edge of the last bin.
+
+        Returns
+        -------
+        float
+        """
         if self._numpy_bins is None:
             return self._numpy_bins[-1]
         else:
@@ -266,7 +285,7 @@ class BinningBase(object):
         return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
 
     def as_fixed_width(self, copy=True):
-        """Convert binning to recipe with fixed width.
+        """Convert binning to recipe with fixed width (if possible.)
 
         Parameters
         ----------
@@ -285,7 +304,8 @@ class BinningBase(object):
             raise RuntimeError("Cannot create fixed-width binning from differing bin widths.")
 
     def copy(self):
-        """
+        """An identical, independent copy.
+
         Returns
         -------
         BinningBase
@@ -797,11 +817,12 @@ def calculate_bins(array, _=None, *args, **kwargs):
         A two-dimensional array with pairs of bin edges (not necessarily consecutive).
 
     """
-    if kwargs.pop("check_nan", True):
-        if np.any(np.isnan(array)):
-            raise RuntimeError("Cannot calculate bins in presence of NaN's.")
-    if kwargs.get("range", None):   # TODO: re-consider the usage of this parameter
-        array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
+    if array is not None:
+        if kwargs.pop("check_nan", True):
+            if np.any(np.isnan(array)):
+                raise RuntimeError("Cannot calculate bins in presence of NaN's.")
+        if kwargs.get("range", None):   # TODO: re-consider the usage of this parameter
+            array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
         bin_count = 10 # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
         binning = numpy_binning(array, bin_count, *args, **kwargs)
@@ -1014,10 +1035,11 @@ def ideal_bin_count(data, method="default"):
         Data to work on. Most methods don't use this.
     method: str
         Name of the method to apply, available values:
-          - default
+          - default (~sturges)
           - sqrt
           - sturges
           - doane
+          - rice
         See https://en.wikipedia.org/wiki/Histogram for the description
 
     Returns
