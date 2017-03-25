@@ -1,4 +1,4 @@
-# physt ![Physt logo](https://rawgithub.com//janpipek/physt/master/doc/physt-logo64.png)
+# physt ![Physt logo](doc/physt-logo64.png)
 
 P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram, but designed for humans(TM) on steroids(TM).
 
