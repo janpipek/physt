@@ -1,4 +1,4 @@
-# physt
+# physt <img src="doc/physt-logo.svg" style="height:2em; margin-left:0.3em;"/>
 
 P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram, but designed for humans(TM) on steroids(TM).
 
@@ -48,7 +48,7 @@ iris_hist.plot(show_zero=False, cmap=cm.gray_r, show_values=True);
 import numpy as np
 from physt import special
 
-# Generate some sample data 
+# Generate some sample data
 data = np.empty((n, 3))
 data[:,0] = np.random.normal(0, 1, n)
 data[:,1] = np.random.normal(0, 1.3, n)
