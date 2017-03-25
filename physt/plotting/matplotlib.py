@@ -66,6 +66,8 @@ def bar(h1, errors=False, **kwargs):
     h1: Histogram1D
     errors: bool
         Whether to draw error bars.
+    value_format:
+        A function converting or str
 
     Returns
     -------
@@ -75,6 +77,7 @@ def bar(h1, errors=False, **kwargs):
 
     stats_box = kwargs.pop("stats_box", False)
     show_values = kwargs.pop("show_values", False)
+    value_format = kwargs.pop("value_format", None)
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
     label = kwargs.pop("label", h1.name)
@@ -103,7 +106,7 @@ def bar(h1, errors=False, **kwargs):
     _add_labels(h1, ax)
 
     if show_values:
-        _add_values(ax, h1, data)
+        _add_values(ax, h1, data, value_format=value_format)
     if stats_box:
         _add_stats_box(h1, ax)
 
@@ -129,6 +132,7 @@ def scatter(h1, errors=False, **kwargs):
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
+    value_format = kwargs.pop("value_format", None)
 
     data = get_data(h1, cumulative=cumulative, density=density)
     # transformed = transform_data(data, kwargs)
@@ -152,7 +156,7 @@ def scatter(h1, errors=False, **kwargs):
     _add_labels(h1, ax)
 
     if show_values:
-        _add_values(ax, h1, data)
+        _add_values(ax, h1, data, value_format=value_format)
     if stats_box:
         _add_stats_box(h1, ax)
     return ax
@@ -177,6 +181,7 @@ def line(h1, errors=False, **kwargs):
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
+    value_format = kwargs.pop("value_format", None)
 
     data = get_data(h1, cumulative=cumulative, density=density)
     _apply_xy_lims(ax, h1, data, kwargs)
@@ -194,7 +199,7 @@ def line(h1, errors=False, **kwargs):
     if stats_box:
         _add_stats_box(h1, ax)
     if show_values:
-        _add_values(ax, h1, data)
+        _add_values(ax, h1, data, value_format=value_format)
     return ax
 
 
@@ -279,7 +284,10 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
             y = lambda x, y: y
         transformed = True
 
-    format_value = kwargs.pop("format_value", lambda x: x)
+    value_format = kwargs.pop("value_format", lambda x: str(x))
+    if isinstance(value_format, str):
+        format_str = "{0:" + value_format + "}"
+        value_format = lambda x: format_str.format(x)
 
     rect_args = {}
     if "zorder" in kwargs:
@@ -344,7 +352,7 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
             ax.add_patch(rect)
 
             if show_values:
-                text = format_value(data[i])
+                text = value_format(data[i])
                 yiq_y = np.dot(bin_color[:3], [0.299, 0.587, 0.114])
 
                 text_color = kwargs.get("text_color", None)
@@ -757,6 +765,7 @@ def _get_cmap(kwargs):
                     sns = sys.modules["seaborn"]
                 else:
                     import seaborn.apionly as sns
+                # TODO: What is this???
                 cmap = sns.color_palette(as_cmap=True)
             except ImportError:
                 raise exc
@@ -834,7 +843,7 @@ def _add_labels(h, ax):
     ax.get_figure().tight_layout()
 
 
-def _add_values(ax, h1, data):
+def _add_values(ax, h1, data, value_format=lambda x: x):
     """Show values next to each bin in a 1D plot.
 
     Parameters
@@ -846,8 +855,13 @@ def _add_values(ax, h1, data):
 
     # TODO: Add some formatting
     """
+    if value_format is None:
+        value_format = ""
+    if isinstance(value_format, str):
+        format_str = "{0:" + value_format + "}"
+        value_format = lambda x: format_str.format(x)
     for x, y in zip(h1.bin_centers, data):
-        ax.text(x, y, str(y), ha='center', va='bottom', clip_on=True)
+        ax.text(x, y, str(value_format(x)), ha='center', va='bottom', clip_on=True)
 
 
 def _add_colorbar(ax, cmap, cmap_data, norm):
