@@ -176,12 +176,36 @@ class HistogramND(HistogramBase):
             self._errors2[ixbin] += weight ** 2
         return ixbin
 
-    def fill_n(self, values, weights=None, dropna=True):
+    def fill_n(self, values, weights=None, dropna=True, columns=False):
+        """Add more values at once.
+
+        Parameters
+        ----------
+        values: array_like
+            Values to add. Can be array of shape (count, ndim) or
+            array of shape (ndim, count) [use columns=True] or something
+            convertible to it
+        weights: array_like
+            Weights for values (optional)
+        dropna: bool
+            Whether to remove NaN values. If False and such value is met,
+            exception is thrown.
+        columns: bool
+            Signal that the data are transposed (in columns, instead of rows).
+            This allows to pass list of arrays in values.
+        """
         values = np.asarray(values)
+        if values.ndim != 2:
+            raise RuntimeError("Expecting 2D array of values.")
+        if columns:
+            values = values.T
+        if values.shape[1] != self.ndim:
+            raise RuntimeError("Expecting array with {0} columns".format(self.ndim))
         if dropna:
             values = values[~np.isnan(values).any(axis=1)]
         if weights:
             weights = np.asarray(weights)
+            # TODO: Check for weights size?
             self._coerce_dtype(weights.dtype)
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
