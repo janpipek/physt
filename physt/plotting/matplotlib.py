@@ -68,6 +68,8 @@ def bar(h1, errors=False, **kwargs):
         Whether to draw error bars.
     value_format:
         A function converting or str
+    show_stats: bool
+        If True, display a small box with statistical info
 
     Returns
     -------
@@ -75,7 +77,7 @@ def bar(h1, errors=False, **kwargs):
     """
     fig, ax = _get_axes(kwargs)
 
-    stats_box = kwargs.pop("stats_box", False)
+    show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
     value_format = kwargs.pop("value_format", None)
     density = kwargs.pop("density", False)
@@ -107,7 +109,7 @@ def bar(h1, errors=False, **kwargs):
 
     if show_values:
         _add_values(ax, h1, data, value_format=value_format)
-    if stats_box:
+    if show_stats:
         _add_stats_box(h1, ax)
 
     return ax
@@ -861,7 +863,7 @@ def _add_values(ax, h1, data, value_format=lambda x: x):
         format_str = "{0:" + value_format + "}"
         value_format = lambda x: format_str.format(x)
     for x, y in zip(h1.bin_centers, data):
-        ax.text(x, y, str(value_format(x)), ha='center', va='bottom', clip_on=True)
+        ax.text(x, y, str(value_format(y)), ha='center', va='bottom', clip_on=True)
 
 
 def _add_colorbar(ax, cmap, cmap_data, norm):
