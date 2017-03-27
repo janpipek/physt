@@ -294,6 +294,7 @@ class Histogram1D(HistogramBase):
         -------
         float
         """
+        # TODO: Perh
         return self.bin_right_edges[-1]
 
     @property
@@ -574,49 +575,66 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
             raise RuntimeError("Bins must be rising.")
 
     # Prepare 1D numpy array of data
-    data = np.asarray(data).flatten()
+    data = np.asarray(data)
+    if data.ndim > 1:
+        data = data.flatten()
 
     # Prepare 1D numpy array of weights
-    if weights is None:
-        weights = np.ones(data.shape, dtype=dtype or np.int64)
-    else:
+    if weights is not None:
         weights = np.asarray(weights)
-    weights = weights.flatten()
+        if weights.ndim > 1:
+            weights = weights.flatten()
 
-    # Check compatibility of weights
-    if weights.shape != data.shape:
-        raise RuntimeError("Weights must have the same shape as data.")
+        # Check compatibility of weights
+        if weights.shape != data.shape:
+            raise RuntimeError("Weights must have the same shape as data.")
 
-    # Ensure proper dtype for the bin contents
+        # Ensure proper dtype for the bin contents
+        if dtype is None:
+            dtype = weights.dtype
+
     if dtype is None:
-        dtype = weights.dtype
-    else:
-        dtype = np.dtype(dtype)
-        if dtype.kind in "iu" and weights.dtype.kind == "f":
-            raise RuntimeError("Integer histogram requested but float weights entered.")
+        dtype = int
+    dtype = np.dtype(dtype)
+    if dtype.kind in "iu" and weights is not None and weights.dtype.kind == "f":
+        raise RuntimeError("Integer histogram requested but float weights entered.")
 
     # Data sorting
     if not already_sorted:
         args = np.argsort(data)
         data = data[args]
-        weights = weights[args]
+        if weights is not None:
+            weights = weights[args]
 
     # Fill frequencies and errors
     frequencies = np.zeros(bins.shape[0], dtype=dtype)
     errors2 = np.zeros(bins.shape[0], dtype=dtype)
     for xbin, bin in enumerate(bins):
         start = np.searchsorted(data, bin[0], side="left")
+        stop = np.searchsorted(data, bin[1], side="left")
+
         if xbin == 0:
-            underflow = weights[0:start].sum()
+            if weights is not None:
+                underflow = weights[0:start].sum()
+            else:
+                underflow = start
         if xbin == len(bins) - 1:
-            stop = np.searchsorted(data, bin[1], side="right")
-            overflow = weights[stop:].sum()
+            stop = np.searchsorted(data, bin[1], side="right")   # TODO: Understand and explain
+            if weights is not None:
+                overflow = weights[stop:].sum()
+            else:
+                overflow = data.shape[0] - stop
+
+        if weights is not None:
+            frequencies[xbin] = weights[start:stop].sum()
+            errors2[xbin] = (weights[start:stop] ** 2).sum()
+            sum += (data[start:stop] * weights[start:stop]).sum()
+            sum2 += ((data[start:stop]) ** 2 * weights[start:stop]).sum()
         else:
-            stop = np.searchsorted(data, bin[1], side="left")
-        frequencies[xbin] = weights[start:stop].sum()
-        errors2[xbin] = (weights[start:stop] ** 2).sum()
-        sum += (data[start:stop] * weights[start:stop]).sum()
-        sum2 += ((data[start:stop]) ** 2 * weights[start:stop]).sum()
+            frequencies[xbin] = stop - start
+            errors2[xbin] = stop - start
+            sum += data[start:stop].sum()
+            sum2 += (data[start:stop] ** 2).sum()
 
     # Underflow and overflow don't make sense for unconsecutive binning.
     if not bin_utils.is_consecutive(bins):
