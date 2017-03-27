@@ -87,7 +87,7 @@ def histogram(data, bins=None, *args, **kwargs):
 
         # Convert to array
         if data is not None:
-            array = np.asarray(data).flatten()
+            array = np.asarray(data) #.flatten()
             if dropna:
                 array = array[~np.isnan(array)]
         else:

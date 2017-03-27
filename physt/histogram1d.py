@@ -601,10 +601,11 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
 
     # Data sorting
     if not already_sorted:
-        args = np.argsort(data)
-        data = data[args]
+        args = np.argsort(data)     # Memory: another copy
+        data = data[args]           # Memory: another copy
         if weights is not None:
             weights = weights[args]
+        del args
 
     # Fill frequencies and errors
     frequencies = np.zeros(bins.shape[0], dtype=dtype)
