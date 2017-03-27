@@ -1,3 +1,8 @@
+0.3.26 (27th March 2017)
+------------------------
+- Optimization: Reduced memory overhead of h1 by 60 %.
+- Fixed: small bugs
+
 0.3.25 (25th March 2017)
 ------------------------
 - Added: more items in physt.examples
