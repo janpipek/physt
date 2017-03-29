@@ -78,13 +78,6 @@ def load_dataset(name):
     -------
     dataset : pandas.DataFrame
     """
-    try:
-        import seaborn.apionly as sns
-        if name in sns.get_dataset_names():
-            return sns.load_dataset(name)
-    except ImportError:
-        pass
-
     # Our custom datesets:
     if name == "munros":
         try:
@@ -94,6 +87,13 @@ def load_dataset(name):
         import os
         path = os.path.join(os.path.dirname(__file__), "munros.csv")
         return pd.read_csv(path)
+
+    try:
+        import seaborn.apionly as sns
+        if name in sns.get_dataset_names():
+            return sns.load_dataset(name)
+    except ImportError:
+        pass
 
     # Fall through
     raise RuntimeError("Dataset {0} not available.".format(name))

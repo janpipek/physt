@@ -24,13 +24,12 @@ class TestIO(object):
         #assert False
 
     def test_io_equality_on_examples(self):
-        from physt.examples import ALL_EXAMPLES
-
-        for example in ALL_EXAMPLES:
-            h = example()
-            json = h.to_json()
-            read = io.parse_json(json)
-            assert h == read
+        from physt.examples import munros
+        # for example in ALL_EXAMPLES:
+        h = munros()
+        json = h.to_json()
+        read = io.parse_json(json)
+        assert h == read
 
 
 if __name__ == "__main__":
