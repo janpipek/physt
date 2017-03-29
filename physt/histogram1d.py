@@ -143,6 +143,9 @@ class Histogram1D(HistogramBase):
         # TODO: If not consecutive, does not make sense
         return self._binning.numpy_bins
 
+    def numpy_like(self):
+        return self.frequencies, self.numpy_bins
+
     @property
     def cumulative_frequencies(self):
         """Cumulative frequencies.

@@ -354,6 +354,9 @@ class Histogram2D(HistogramND):
             self._errors2 /= (divisor * divisor)  # Has its limitations
             return self
 
+    def numpy_like(self):
+        return self.frequencies, self.numpy_bins[0], self.numpy_bins[1]
+
 
 def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
     """"Get frequencies and bin errors from the data (n-dimensional variant).
