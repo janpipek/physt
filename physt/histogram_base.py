@@ -405,7 +405,7 @@ class HistogramBase(object):
         for binning in self._binnings:
             binning.set_adaptive(value)
 
-    def change_binning(self, new_binning, bin_map, axis=0):
+    def _change_binning(self, new_binning, bin_map, axis=0):
         """Set new binnning and update the bin contents according to a map.
 
         Fills frequencies and errors with 0.
@@ -477,7 +477,7 @@ class HistogramBase(object):
             else:
                 raise NotImplementedError("Not yet implemented.")
             new_binning = self._binnings[axis].apply_bin_map(bin_map)
-            self.change_binning(new_binning, bin_map, axis=axis)
+            self._change_binning(new_binning, bin_map, axis=axis)
 
     def _reshape_data(self, new_size, bin_map, axis=0):
         """Reshape data to match new binning schema.
@@ -797,8 +797,8 @@ class HistogramBase(object):
                     new_bins = self._binnings[i].copy()
 
                     map1, map2 = new_bins.adapt(other._binnings[i])
-                    self.change_binning(new_bins, map1, axis=i)
-                    other.change_binning(new_bins, map2, axis=i)
+                    self._change_binning(new_bins, map1, axis=i)
+                    other._change_binning(new_bins, map2, axis=i)
                 self._frequencies += other.frequencies
                 self._errors2 += other.errors2
 
