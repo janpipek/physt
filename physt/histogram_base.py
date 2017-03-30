@@ -717,6 +717,8 @@ class HistogramBase(object):
             "missed": a_dict.get("missed")
         }
         kwargs.update(a_dict.get("meta_data", {}))
+        if len(kwargs["binnings"]) > 2:
+            kwargs["dimension"] = len(kwargs["binnings"])
         return kwargs
 
 
@@ -818,6 +820,8 @@ class HistogramBase(object):
         return new
 
     def __isub__(self, other):
+        import warnings
+        warnings.warn("Subtracting histograms is considered to be a bad idea.")
         return self.__iadd__(other * (-1))
 
     def __mul__(self, other):

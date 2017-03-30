@@ -60,6 +60,6 @@ def parse_json(text):
     """
     data = json.loads(text, encoding="utf-8")
     histogram_type = data["histogram_type"]
+    # TODO: Check version
     klass = find_subclass(HistogramBase, histogram_type)
     return klass.from_dict(data)
-
