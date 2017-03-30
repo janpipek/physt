@@ -70,8 +70,13 @@ class HistogramND(HistogramBase):
         """
         return [binning.numpy_bins for binning in self._binnings]
 
-    def __getitem__(self, item):
-        raise NotImplementedError()
+    # def __getitem__(self, item):
+    #     import warnings
+    #     warnings.warn("Implementation of HistogramND.__getitem__ is temporary and using it is hazardous.")
+    #     if isinstance(item, int):
+    #         if self.ndim == 3:
+    #             return Histogram2D(binnings=[binning.copy() for binning in ])
+    #     # raise NotImplementedError()
 
     # Missing: cumulative_frequencies - does it make sense?
 
@@ -235,6 +240,24 @@ class HistogramND(HistogramBase):
         invert = tuple(invert)
         return (axes, invert)
 
+    def _reduce_dimension(self, axes, frequencies, errors2, **kwargs):
+        name = kwargs.pop("name", self.name)
+        axis_names = [name for i, name in enumerate(self.axis_names) if i in axes]
+        bins = [bins for i, bins in enumerate(self._binnings) if i in axes]
+        if len(axes) == 1:
+            from .histogram1d import Histogram1D
+            klass = kwargs.get("type", Histogram1D)
+            return klass(binning=bins[0], frequencies=frequencies, errors2=errors2,
+                         axis_name=axis_names[0], name=name)
+        elif len(axes) == 2:
+            klass = kwargs.get("type", Histogram2D)
+            return klass(binnings=bins, frequencies=frequencies, errors2=errors2,
+                         axis_names=axis_names, name=name)
+        else:
+            klass = kwargs.get("type", HistogramND)
+            return klass(dimension=len(axes), binnings=bins, frequencies=frequencies,
+                         errors2=errors2, axis_names=axis_names, name=name)
+
     def projection(self, *axes, **kwargs):
         """Reduce dimensionality by summing along axis/axes.
 
@@ -252,25 +275,39 @@ class HistogramND(HistogramBase):
         -------
         HistogramND or Histogram2D or Histogram1D (or others in special cases)
         """
+        # TODO: rename to project in 0.4
         axes, invert = self._get_projection_axes(*axes)
         frequencies = self.frequencies.sum(axis=invert)
         errors2 = self.errors2.sum(axis=invert)
-        name = kwargs.pop("name", self.name)
-        axis_names = [name for i, name in enumerate(self.axis_names) if i in axes]
-        bins = [bins for i, bins in enumerate(self._binnings) if i in axes]
-        if len(axes) == 1:
-            from .histogram1d import Histogram1D
-            klass = kwargs.get("type", Histogram1D)
-            return klass(binning=bins[0], frequencies=frequencies, errors2=errors2,
-                         axis_name=axis_names[0], name=name)
-        elif len(axes) == 2:
-            klass = kwargs.get("type", Histogram2D)
-            return klass(binnings=bins, frequencies=frequencies, errors2=errors2,
-                         axis_names=axis_names, name=name)
-        else:
-            klass = kwargs.get("type", HistogramND)
-            return klass(dimension=len(axes), binnings=bins, frequencies=frequencies,
-                         errors2=errors2, axis_names=axis_names, name=name)
+        return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
+
+    def select(self, axis, index, **kwargs):
+        """Reduce dimensionality by taking a slice.
+
+        Parameters
+        ----------
+        axis: int or str
+            Axis, in which we select.
+        index: int
+            Number of the slice
+        name: Optional[str]
+            Name for the projected histogram (default: same)
+        type: Optional[type]
+            If set, predefined class for the projection
+
+        Returns
+        -------
+        HistogramND or Histogram2D or Histogram1D (or others in special cases)
+        """
+        # TODO: test
+        invert, axes = self._get_projection_axes(axis)
+        if not isinstance(index, int):
+            raise RuntimeError("Only integer indices supported in select()")
+        array_index = [slice(None, None, None) for i in range(self.ndim)]
+        array_index[invert[0]] = index
+        frequencies = self._frequencies[array_index].copy()
+        errors2 = self._errors2[array_index].copy()
+        return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
 
     def __eq__(self, other):
         """Equality comparison
