@@ -1,3 +1,8 @@
+0.3.27 (30th March 2017)
+------------------------
+- Added: HistogramND.select to slice histograms
+- Fixed: various bugs
+
 0.3.26 (27th March 2017)
 ------------------------
 - Optimization: Reduced memory overhead of h1 by 60 %.
