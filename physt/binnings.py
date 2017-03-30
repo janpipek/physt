@@ -72,6 +72,7 @@ class BinningBase(object):
         """
         from collections import OrderedDict
         result = OrderedDict()
+        result["adaptive"] = self._adaptive
         result["binning_type"] = type(self).__name__
         self._update_dict(result)
         return result
@@ -730,6 +731,8 @@ def integer_binning(data=None, **kwargs):
     ----------
     range: Optional[Tuple[int]]
         min (included) and max integer (excluded) bin
+    bin_width: Optional[int]
+        group "bin_width" integers into one bin (not recommended)
 
     Returns
     -------
@@ -737,7 +740,7 @@ def integer_binning(data=None, **kwargs):
     """
     if "range" in kwargs:
         kwargs["range"] = tuple(r - 0.5 for r in kwargs["range"])
-    return fixed_width_binning(data=data, bin_width=1, align=True, bin_shift=0.5, **kwargs)
+    return fixed_width_binning(data=data, bin_width=kwargs.pop("bin_width", 1), align=True, bin_shift=0.5, **kwargs)
 
 
 def fixed_width_binning(data=None, bin_width=1, range=None, includes_right_edge=False, **kwargs):
