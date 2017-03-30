@@ -1,7 +1,7 @@
 """A set of examples used for demonstrating the physt capabilities / in tests."""
 
 import numpy as np
-from ..import h1, h2
+from ..import h1, h2, h3
 
 
 def normal_h1(size=10000):
@@ -17,7 +17,7 @@ def normal_h1(size=10000):
     h : physt.histogram1d.Histogram1D
     """
     data = np.random.normal(0, 1, (size,))
-    return h1(data, name="normal")
+    return h1(data, name="normal", axis_name="x")
 
 
 def normal_h2(size=10000):
@@ -34,9 +34,26 @@ def normal_h2(size=10000):
     """
     data1 = np.random.normal(0, 1, (size,))
     data2 = np.random.normal(0, 1, (size,))
-    return h2(data1, data2, name="normal")
+    return h2(data1, data2, name="normal", axis_names=tuple("xy"))
 
-ALL_EXAMPLES = [normal_h1, normal_h2]
+def normal_h3(size=10000):
+    """A simple 3D histogram with normal distribution.
+
+    Parameters
+    ----------
+    size : int
+        Number of points
+
+    Returns
+    -------
+    h : physt.histogram_nd.Histogram2D
+    """
+    data1 = np.random.normal(0, 1, (size,))
+    data2 = np.random.normal(0, 1, (size,))
+    data3 = np.random.normal(0, 1, (size,))
+    return h3([data1, data2, data3], name="normal", axis_names=tuple("xyz"))
+
+ALL_EXAMPLES = [normal_h1, normal_h2, normal_h3]
 
 
 try:
