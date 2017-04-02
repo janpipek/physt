@@ -764,6 +764,7 @@ class HistogramBase(object):
     def __add__(self, other):
         new = self.copy()
         new += other
+        new._meta_data = self._merge_meta_data(self, other)
         return new
 
     def __radd__(self, other):
@@ -817,6 +818,7 @@ class HistogramBase(object):
     def __sub__(self, other):
         new = self.copy()
         new -= other
+        new._meta_data = self._merge_meta_data(self, other)
         return new
 
     def __isub__(self, other):
@@ -861,6 +863,18 @@ class HistogramBase(object):
             self._stats["sum"] /= other
             self._stats["sum2"] /= other ** 2
         return self
+
+    @classmethod
+    def _merge_meta_data(cls, first, second):
+        """Merge meta data of two histograms leaving only the equal values.
+
+        (Used in addition and subtraction)
+        """
+        keys = set(first._meta_data.keys())
+        keys = keys.union(set(second._meta_data.keys()))
+        return { key :
+                (first._meta_data[key] if first._meta_data[key] == second._meta_data[key] else None)
+                for key in keys }
 
     def __array__(self):
         """Convert to numpy array.

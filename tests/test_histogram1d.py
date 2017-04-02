@@ -74,7 +74,7 @@ class TestCopy(object):
         errors2 = [1, 0, 4, 2.6]
         h1 = Histogram1D(bins, values, errors2)
         assert h1.copy() == h1
-        
+
     def test_copy_meta(self):
         bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
         values = [4, 0, 3, 7.2]
@@ -210,6 +210,19 @@ class TestArithmetic(object):
         sum = example + other
         assert np.allclose(sum.bins, example.bins)
         assert np.allclose(sum.frequencies, [5, 1, 3, 8.2])
+
+    def test_adding_with_meta_data(self):
+        e1 = example.copy()
+        e2 = example.copy()
+        e3 = example.copy()
+        e4 = example.copy()
+        e1.name = "a"
+        e2.name = "b"
+        e3.name = "a"
+        e4.name = None
+        assert (e1 + e2).name == None
+        assert (e1 + e3).name == "a"
+        assert (e1 + e4).name == None
 
     def test_subtract_wrong_histograms(self):
         with pytest.raises(RuntimeError):
@@ -401,4 +414,3 @@ class TestDtype(object):
 
 if __name__ == "__main__":
     pytest.main(__file__)
-
