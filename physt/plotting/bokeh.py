@@ -74,20 +74,26 @@ def map(h2, show=True, **kwargs):
     density = kwargs.pop("density", False)
     data = get_data(h2, density=density)
     
+    Y, X = np.meshgrid(h2.get_bin_centers(0), h2.get_bin_centers(1))
+    dY, dX = np.meshgrid(h2.get_bin_widths(0), h2.get_bin_widths(1))
+    
     source = ColumnDataSource({
-        "color": data.T.flatten()
+        "color": data.T.flatten(),
+        "x": X.flatten(),
+        "y": Y.flatten(),
+        "width": dX.flatten(),
+        "height": dY.flatten()
     })
     
-    X, Y = np.meshgrid(h2.get_bin_left_edges(0), h2.get_bin_left_edges(1))
-    dX, dY = np.meshgrid(h2.get_bin_widths(0), h2.get_bin_widths(1))
+    
     #colors = ["#75968f", "#550b1d"]
     from bokeh.palettes import Greys256
     mapper = LinearColorMapper(palette=Greys256, low=data.max(), high=data.min())
     
     p = kwargs.get("figure", figure())
-    # TODO: Use ColumnDataSource fields
-    p.rect(x=Y.flatten(), y=X.flatten(), source=source,
-           width=dX.flatten(), height=dY.flatten(),
+    p.rect(source=source,
+           x="x", y="y", 
+           width="width", height="height",
            fill_color={"field" : "color", "transform" : mapper},
            line_color="white")
     
