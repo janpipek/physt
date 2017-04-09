@@ -29,6 +29,7 @@ options = dict(
     author='Jan Pipek',
     author_email='jan.pipek@gmail.com',
     url='https://github.com/janpipek/physt',
+    package_data={"physt" : ["examples/*.csv"]},
     install_requires = ['numpy'],
     extras_require = {
         'all' : ['dask', 'matplotlib', 'bokeh', 'folium']

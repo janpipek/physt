@@ -86,6 +86,7 @@ def load_dataset(name):
     """Load example dataset.
 
     If seaborn is present, its datasets can be loaded.
+    Physt also includes some datasets in CSV format.
 
     Parameters
     ----------
@@ -96,14 +97,17 @@ def load_dataset(name):
     dataset : pandas.DataFrame
     """
     # Our custom datesets:
-    if name == "munros":
+    try:
         try:
             import pandas as pd
         except ImportError:
             raise RuntimeError("Pandas not installed.")
-        import os
-        path = os.path.join(os.path.dirname(__file__), "munros.csv")
-        return pd.read_csv(path)
+        import pkgutil
+        import io
+        binary_data = pkgutil.get_data('physt', 'examples/{0}.csv'.format(name))
+        return pd.read_csv(io.BytesIO(binary_data))
+    except FileNotFoundError:
+        pass
 
     try:
         import seaborn.apionly as sns
