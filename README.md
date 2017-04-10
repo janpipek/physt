@@ -80,7 +80,7 @@ Using pip:
 
 `pip install physt`
 
-Using conda (not always up-to-date):
+Using conda (very old):
 
 `conda install -c janpipek physt`
 

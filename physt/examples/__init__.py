@@ -4,20 +4,24 @@ import numpy as np
 from ..import h1, h2, h3
 
 
-def normal_h1(size=10000):
+def normal_h1(size=10000, mean=0, sigma=1):
     """A simple 1D histogram with normal distribution.
 
     Parameters
     ----------
     size : int
         Number of points
+    mean : float
+        Mean of the distribution
+    sigma : float
+        Sigma of the distribution
 
     Returns
     -------
     h : physt.histogram1d.Histogram1D
     """
-    data = np.random.normal(0, 1, (size,))
-    return h1(data, name="normal", axis_name="x")
+    data = np.random.normal(mean, sigma, (size,))
+    return h1(data, name="normal", axis_name="x", title="1D normal distribution")
 
 
 def normal_h2(size=10000):
@@ -34,7 +38,7 @@ def normal_h2(size=10000):
     """
     data1 = np.random.normal(0, 1, (size,))
     data2 = np.random.normal(0, 1, (size,))
-    return h2(data1, data2, name="normal", axis_names=tuple("xy"))
+    return h2(data1, data2, name="normal", axis_names=tuple("xy"), title="2D normal distribution")
 
 def normal_h3(size=10000):
     """A simple 3D histogram with normal distribution.
@@ -51,7 +55,7 @@ def normal_h3(size=10000):
     data1 = np.random.normal(0, 1, (size,))
     data2 = np.random.normal(0, 1, (size,))
     data3 = np.random.normal(0, 1, (size,))
-    return h3([data1, data2, data3], name="normal", axis_names=tuple("xyz"))
+    return h3([data1, data2, data3], name="normal", axis_names=tuple("xyz"), title="3D normal distribution")
 
 ALL_EXAMPLES = [normal_h1, normal_h2, normal_h3]
 
@@ -73,7 +77,7 @@ try:
             Histogram in latitude and longitude.
         """
         data = load_dataset("munros")
-        return h2(data["lat"], data["long"], "fixed_width", edge_length / 60, name="munros")
+        return h2(data["lat"], data["long"], "fixed_width", edge_length / 60, name="munros", title="Munros of Scotland")
 
     ALL_EXAMPLES.append(munros)
 
@@ -111,8 +115,11 @@ def load_dataset(name):
 
     try:
         import seaborn.apionly as sns
-        if name in sns.get_dataset_names():
-            return sns.load_dataset(name)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            if name in sns.get_dataset_names():
+                    return sns.load_dataset(name)
     except ImportError:
         pass
 
