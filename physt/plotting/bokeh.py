@@ -11,10 +11,11 @@ import numpy as np
 
 from .common import get_data
 
-types = ("bar", "scatter", "map")
+types = ("bar", "scatter", "map", "line")
 
 dims = {
     "scatter" : [1],
+    "line": [1],
     "bar" : [1],
     "map" : [2]
 }
@@ -37,8 +38,11 @@ def _create_figure(histogram, **kwargs):
 named_palettes = ["grey", "gray", "viridis", "magma", "inferno"]
 
 
-def scatter(h1, show=True, **kwargs):
-    """Scatter plot."""
+def _line_scatter(h1, kind, show=True, **kwargs):
+    """Line or scatter plot.
+    
+    The common functionality (the plots differ only in method called).
+    """
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
     size = kwargs.pop("size", 8)
@@ -51,10 +55,23 @@ def scatter(h1, show=True, **kwargs):
         "x" : h1.bin_centers,
         "y" : data
     }
-    p.scatter(plot_data['x'], plot_data['y'], size=size)
+    if kind == "line":
+        p.line(plot_data['x'], plot_data['y'])
+    elif kind == "scatter":
+        p.scatter(plot_data['x'], plot_data['y'], size=size)
     if show:
         bokeh_show(p)
     return p
+
+
+def line(h1, show=True, **kwargs):
+    """Line plot."""
+    return _line_scatter(h1=h1, kind="line", show=show, **kwargs)
+    
+    
+def scatter(h1, show=True, **kwargs):
+    """Scatter plot."""
+    return _line_scatter(h1=h1, kind="scatter", show=show, **kwargs)
 
 
 def bar(h1, show=True, **kwargs):
