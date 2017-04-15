@@ -1,8 +1,8 @@
+from __future__ import division
 import sys
 import os
 sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 from physt.histogram1d import Histogram1D
-from physt.binnings import StaticBinning
 from physt import h1
 import numpy as np
 import pytest

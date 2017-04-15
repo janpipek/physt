@@ -1,5 +1,5 @@
 """Different binning algorithms/schemas for the histograms."""
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import numpy as np
 from .bin_utils import (make_bin_array, is_consecutive, to_numpy_bins,
@@ -611,7 +611,7 @@ class ExponentialBinning(BinningBase):
             return np.ndarray((0,), dtype=float)
         if self._numpy_bins is None:
             log_bins = self._log_min + np.arange(self._bin_count + 1) * self._log_width
-            self._numpy_bins = 10 ** log_bins
+            self._numpy_bins = 10.0 ** log_bins
         return self._numpy_bins
 
     def copy(self):
@@ -687,8 +687,8 @@ def human_binning(data=None, bins=None, range=None, **kwargs):
     bw = (max_ - min_) / bins
 
     power = np.floor(np.log10(bw)).astype(int)
-    best_index = np.argmin(np.abs(np.log(subscales * (10 ** power) / bw)))
-    bin_width = (10 ** power) * subscales[best_index]
+    best_index = np.argmin(np.abs(np.log(subscales * (10.0 ** power) / bw)))
+    bin_width = (10.0 ** power) * subscales[best_index]
     return fixed_width_binning(bin_width=bin_width, data=data, range=range, **kwargs)
 
 
