@@ -103,7 +103,7 @@ def bar(h1, errors=False, **kwargs):
         if "ecolor" not in kwargs:
             kwargs["ecolor"] = "black"
 
-    ax.bar(h1.bin_left_edges, data, h1.bin_widths,
+    ax.bar(h1.bin_left_edges, data, h1.bin_widths, align="edge",
            label=label, color=colors, **kwargs)
     _add_labels(h1, ax)
 
@@ -492,6 +492,7 @@ def polar_map(hist, show_zero=True, **kwargs):
     for i in range(len(rpos)):
         if data[i] > 0 or show_zero:
             bin_color = colors[i]
+            # TODO: align = "edge"
             bars = ax.bar(phipos[i], dr[i], width=dphi[i], bottom=rpos[i], color=bin_color,
                           edgecolor=kwargs.get("grid_color", cmap(0.5)), lw=kwargs.get("lw", 0.5),
                           alpha=alphas[i], **bar_args)
@@ -501,7 +502,7 @@ def polar_map(hist, show_zero=True, **kwargs):
 
 
 def globe_map(hist, show_zero=True, **kwargs):
-    """
+    """Heat map plotted on the surface of a sphere.
 
     Parameters
     ----------
@@ -553,6 +554,17 @@ def globe_map(hist, show_zero=True, **kwargs):
 
 
 def cylinder_map(hist, show_zero=True, **kwargs):
+    """Heat map plotted on the surface of a cylinde.
+
+    Parameters
+    ----------
+    hist : Histogram2D | physt.special.CylinderSurfaceHistogram
+    show_zero : bool
+
+    Returns
+    -------
+
+    """    
     fig, ax = _get_axes(kwargs=kwargs, use_3d=True)
 
     data = get_data(hist, cumulative=False, flatten=False,
@@ -684,6 +696,7 @@ def pair_bars(first, second, **kwargs):
     -------
     plt.Axes
     """
+    # TODO: enable vertical as well as horizontal
     _, ax = _get_axes(kwargs)
     color1 = kwargs.pop("color1", "red")
     color2 = kwargs.pop("color2", "blue")
