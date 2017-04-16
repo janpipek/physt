@@ -115,6 +115,9 @@ try:
     backends["folium"] = folium_backend
 except:
     pass
+    
+from . import ascii as ascii_backend
+backends["ascii"] = ascii_backend
 
 if backends:
     _default_backend = list(backends.keys())[0]
