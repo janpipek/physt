@@ -130,7 +130,7 @@ def scatter(h1, errors=False, **kwargs):
     """
     fig, ax = _get_axes(kwargs)
 
-    stats_box = kwargs.pop("stats_box", False)
+    show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
@@ -159,7 +159,7 @@ def scatter(h1, errors=False, **kwargs):
 
     if show_values:
         _add_values(ax, h1, data, value_format=value_format)
-    if stats_box:
+    if show_stats:
         _add_stats_box(h1, ax)
     return ax
 
@@ -179,7 +179,7 @@ def line(h1, errors=False, **kwargs):
     """
     fig, ax = _get_axes(kwargs)
 
-    stats_box = kwargs.pop("stats_box", False)
+    show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
@@ -198,7 +198,7 @@ def line(h1, errors=False, **kwargs):
 
     _add_labels(h1, ax)
 
-    if stats_box:
+    if show_stats:
         _add_stats_box(h1, ax)
     if show_values:
         _add_values(ax, h1, data, value_format=value_format)
@@ -218,7 +218,7 @@ def fill(h1, **kwargs):
     """
     _, ax = _get_axes(kwargs)
 
-    stats_box = kwargs.pop("stats_box", False)
+    show_stats = kwargs.pop("show_stats", False)
     # show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
@@ -229,7 +229,7 @@ def fill(h1, **kwargs):
 
     ax.fill_between(h1.bin_centers, 0, data, **kwargs)
 
-    if stats_box:
+    if show_stats:
         _add_stats_box(h1, ax)
     # if show_values:
     #     _add_values(ax, h1, data)
