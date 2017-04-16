@@ -77,50 +77,54 @@ def histogram(data, bins=None, *args, **kwargs):
         return histogram(data[1], bins, *args, name=data[0], **kwargs)
     elif type(data).__name__ == "DataFrame":
         raise RuntimeError("Cannot create histogram from a pandas DataFrame. Use Series.")
+
+    # Collect arguments (not to send them to binning algorithms)
+    dropna = kwargs.pop("dropna", False)
+    weights = kwargs.pop("weights", None)
+    keep_missed = kwargs.pop("keep_missed", True)
+    name = kwargs.pop("name", None)
+    axis_name = kwargs.pop("axis_name", None)
+
+    # Convert to array
+    if data is not None:
+        array = np.asarray(data) #.flatten()
+        if dropna:
+            array = array[~np.isnan(array)]
     else:
-        # Collect arguments (not to send them to binning algorithms)
-        dropna = kwargs.pop("dropna", False)
-        weights = kwargs.pop("weights", None)
-        keep_missed = kwargs.pop("keep_missed", True)
-        name = kwargs.pop("name", None)
-        axis_name = kwargs.pop("axis_name", None)
+        array = None
 
-        # Convert to array
-        if data is not None:
-            array = np.asarray(data) #.flatten()
-            if dropna:
-                array = array[~np.isnan(array)]
-        else:
-            array = None
+    # Get binning
+    binning = calculate_bins(array, bins, *args,
+                             check_nan=not dropna and array is not None,
+                             adaptive=adaptive, **kwargs)
+    # bins = binning.bins
 
-        # Get binning
-        binning = calculate_bins(array, bins, *args,
-                                 check_nan=not dropna and array is not None,
-                                 adaptive=adaptive, **kwargs)
-        # bins = binning.bins
+    # Get frequencies
+    if array is not None:
+        (frequencies, errors2, underflow, overflow, stats) =\
+            calculate_frequencies(array, binning=binning,
+                                  weights=weights, dtype=dtype)
+    else:
+        frequencies = None
+        errors2 = None
+        underflow = 0
+        overflow = 0
+        stats = {"sum": 0.0, "sum2": 0.0}
 
-        # Get frequencies
-        if array is not None:
-            (frequencies, errors2, underflow, overflow, stats) =\
-                calculate_frequencies(array, binning=binning,
-                                      weights=weights, dtype=dtype)
-        else:
-            frequencies = None
-            errors2 = None
-            underflow = 0
-            overflow = 0
-            stats = {"sum": 0.0, "sum2": 0.0}
-
-        # Construct the object
-        if not keep_missed:
-            underflow = 0
-            overflow = 0
-        if hasattr(data, "name") and not axis_name:
+    # Construct the object
+    if not keep_missed:
+        underflow = 0
+        overflow = 0
+    if not axis_name:
+        if hasattr(data, "name"):
             axis_name = data.name
-        return Histogram1D(binning=binning, frequencies=frequencies,
-                           errors2=errors2, overflow=overflow,
-                           underflow=underflow, stats=stats, dtype=dtype,
-                           keep_missed=keep_missed, name=name, axis_name=axis_name)
+        elif hasattr(data, "fields") and len(data.fields) == 1 and isinstance(data.fields[0], str):
+            # Case of dask fields (examples)
+            axis_name = data.fields[0]
+    return Histogram1D(binning=binning, frequencies=frequencies,
+                       errors2=errors2, overflow=overflow,
+                       underflow=underflow, stats=stats, dtype=dtype,
+                       keep_missed=keep_missed, name=name, axis_name=axis_name)
 
 
 def histogram2d(data1, data2, bins=10, *args, **kwargs):
