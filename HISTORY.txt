@@ -1,6 +1,7 @@
 0.3.28.1 (15th April 2017)
 --------------------------
 - Fixed: Python 2.7 behaviour (some or most?)
+- Added: bokeh line plot type
 
 0.3.28 (10th April 2017)
 ------------------------
@@ -131,7 +132,7 @@
 0.3.3 (29th June 2016)
 ----------------------
 - Fix: Many bugs
-- Changed: Binnings eworked to classes
+- Changed: Binnings reworked to classes
 - Updated: Adaptive histogram
 - Added: Adaptive histogram multi-dimensional
 - Added: Basic support for dask (alpha)

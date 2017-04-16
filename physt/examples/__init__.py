@@ -40,6 +40,7 @@ def normal_h2(size=10000):
     data2 = np.random.normal(0, 1, (size,))
     return h2(data1, data2, name="normal", axis_names=tuple("xy"), title="2D normal distribution")
 
+
 def normal_h3(size=10000):
     """A simple 3D histogram with normal distribution.
 
@@ -56,8 +57,23 @@ def normal_h3(size=10000):
     data2 = np.random.normal(0, 1, (size,))
     data3 = np.random.normal(0, 1, (size,))
     return h3([data1, data2, data3], name="normal", axis_names=tuple("xyz"), title="3D normal distribution")
+    
+    
+def fist():
+    """A simple histogram in the shape of a fist.
+    
+    Returns
+    -------
+    h : physt.histogram1d.Histogram1D
+    """
+    import numpy as np
+    from ..histogram1d import Histogram1D
+    widths = [0, 1.2, 0.2, 1, 0.1, 1, 0.1, 0.9, 0.1, 0.8]
+    edges = np.cumsum(widths)
+    heights = np.asarray([4, 1, 7.5, 6, 7.6, 6, 7.5, 6, 7.2]) + 5
+    return Histogram1D(edges, heights, axis_name="Is this a fist?", title="Physt \"logo\"")
 
-ALL_EXAMPLES = [normal_h1, normal_h2, normal_h3]
+ALL_EXAMPLES = [normal_h1, normal_h2, normal_h3, fist]
 
 
 try:
@@ -85,7 +101,6 @@ except ImportError:
     pass
 
 
-
 def load_dataset(name):
     """Load example dataset.
 
@@ -100,7 +115,7 @@ def load_dataset(name):
     -------
     dataset : pandas.DataFrame
     """
-    # Our custom datesets:
+    # Our custom datasets:
     try:
         try:
             import pandas as pd
@@ -113,6 +128,7 @@ def load_dataset(name):
     except FileNotFoundError:
         pass
 
+    # Seaborn datasets?
     try:
         import seaborn.apionly as sns
         import warnings
