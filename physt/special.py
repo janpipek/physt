@@ -15,7 +15,7 @@ And of course, it is possible to re-use the general transforming functionality
 by adding `TransformedHistogramMixin` among the custom histogram
 class superclasses.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 from functools import reduce
 
 import numpy as np
