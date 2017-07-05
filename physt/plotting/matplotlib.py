@@ -105,7 +105,7 @@ def bar(h1, errors=False, **kwargs):
 
     ax.bar(h1.bin_left_edges, data, h1.bin_widths, align="edge",
            label=label, color=colors, **kwargs)
-    _add_labels(h1, ax)
+    _add_labels(h1, ax, title=kwargs.pop("title", None))
 
     if show_values:
         _add_values(ax, h1, data, value_format=value_format)
@@ -155,7 +155,7 @@ def scatter(h1, errors=False, **kwargs):
                     ecolor=kwargs.pop("ecolor", "black"), ms=0)
     ax.scatter(h1.bin_centers, data, **kwargs)
 
-    _add_labels(h1, ax)
+    _add_labels(h1, ax, title=kwargs.pop("title", None))
 
     if show_values:
         _add_values(ax, h1, data, value_format=value_format)
@@ -196,7 +196,7 @@ def line(h1, errors=False, **kwargs):
     else:
         ax.plot(h1.bin_centers, data, **kwargs)
 
-    _add_labels(h1, ax)
+    _add_labels(h1, ax, title=kwargs.pop("title", None))
 
     if show_stats:
         _add_stats_box(h1, ax)
@@ -370,7 +370,7 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
 
     if show_colorbar:
         _add_colorbar(ax, cmap, cmap_data, norm)
-    _add_labels(h2, ax)
+    _add_labels(h2, ax, title=kwargs.pop("title", None))
     return ax
 
 
@@ -404,7 +404,7 @@ def bar3d(h2, **kwargs):
     ax.bar3d(xpos, ypos, zpos, dx, dy, data, color=colors, **kwargs)
     ax.set_zlabel("density" if density else "frequency")
 
-    _add_labels(h2, ax)
+    _add_labels(h2, ax, title=kwargs.pop("title", None))
     return ax
 
 
@@ -453,7 +453,7 @@ def image(h2, show_colorbar=True, **kwargs):
 
     if show_colorbar:
         _add_colorbar(ax, cmap, cmap_data, norm)
-    _add_labels(h2, ax)
+    _add_labels(h2, ax, title=kwargs.pop("title", None))
 
     return ax
 
@@ -837,16 +837,18 @@ def _get_alpha_data(data, kwargs):
     return alpha
 
 
-def _add_labels(h, ax):
+def _add_labels(h, ax, title=None):
     """Add axis and plot labels.
 
     Parameters
     ----------
     ax : plt.Axes
     h : Histogram1D or Histogram2D
+    title: Optional[str]
     """
-    if h.title:
-        ax.set_title(h.title)
+    title = title or h.title
+    if title:
+        ax.set_title(title)
     if hasattr(h, "axis_name"):
         if h.axis_name:
             ax.set_xlabel(h.axis_name)
