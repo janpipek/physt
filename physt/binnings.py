@@ -901,8 +901,8 @@ def calculate_bins_nd(array, bins=None, *args, **kwargs):
 
     bins = [
         calculate_bins(array[:, i], bins[i],
-                       *(arg[i] for arg in args),
-                       **{k : kwarg[i] for k, kwarg in kwargs.items()})
+                       *(arg[i] for arg in args if arg[i] is not None),
+                       **{k : kwarg[i] for k, kwarg in kwargs.items() if kwarg[i] is not None})
         for i in range(dim)
         ]
     return bins
