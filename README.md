@@ -142,3 +142,9 @@ Rationale (for both): physt is dumb, but precise.
 ## Contribution
 
 I am looking for anyone interested in using / developing physt. You can contribute by reporting errors, implementing missing features and suggest new one.
+
+## Alternatives and inspirations
+
+* <https://github.com/HDembinski/histogram>
+* <https://github.com/theodoregoetz/histogram>
+* <https://github.com/ibab/matplotlib-hep>
