@@ -659,14 +659,14 @@ def numpy_binning(data, bins=10, range=None, *args, **kwargs):
     return NumpyBinning(bins)
 
 
-def human_binning(data=None, bins=None, range=None, **kwargs):
+def human_binning(data=None, bin_count=None, range=None, **kwargs):
     """Construct fixed-width ninning schema with bins automatically optimized to human-friendly widths.
 
     Typical widths are: 1.0, 25,0, 0.02, 500, 2.5e-7, ...
 
     Parameters
     ----------
-    bins: Optional[int]
+    bin_count: Optional[int]
         Number of bins
     range: Optional[tuple]
         (min, max)
@@ -680,11 +680,11 @@ def human_binning(data=None, bins=None, range=None, **kwargs):
     # TODO: remove colliding kwargs
     if data is None and range is None:
         raise RuntimeError("Cannot guess optimum bin width without data.")
-    if bins is None:
-        bins = ideal_bin_count(data)
+    if bin_count is None:
+        bin_count = ideal_bin_count(data)
     min_ = range[0] if range else data.min()
     max_ = range[1] if range else data.max()
-    bw = (max_ - min_) / bins
+    bw = (max_ - min_) / bin_count
 
     power = np.floor(np.log10(bw)).astype(int)
     best_index = np.argmin(np.abs(np.log(subscales * (10.0 ** power) / bw)))
@@ -770,12 +770,12 @@ def fixed_width_binning(data=None, bin_width=1, range=None, includes_right_edge=
     return result
 
 
-def exponential_binning(data=None, bins=None, range=None, **kwargs):
+def exponential_binning(data=None, bin_count=None, range=None, **kwargs):
     """Construct exponential binning schema.
 
     Parameters
     ----------
-    bins: Optional[int]
+    bin_count: Optional[int]
         Number of bins
     range: Optional[tuple]
         (min, max)
@@ -788,15 +788,15 @@ def exponential_binning(data=None, bins=None, range=None, **kwargs):
     --------
     numpy.logspace - note that our range semantics is different
     """
-    if bins is None:
-        bins = ideal_bin_count(data)
+    if bin_count is None:
+        bin_count = ideal_bin_count(data)
 
     if range:
         range = (np.log10(range[0]), np.log10(range[1]))
     else:
         range = (np.log10(data.min()), np.log10(data.max()))
-    log_width = (range[1] - range[0]) / bins
-    return ExponentialBinning(log_min=range[0], log_width=log_width, bin_count=bins, **kwargs)
+    log_width = (range[1] - range[0]) / bin_count
+    return ExponentialBinning(log_min=range[0], log_width=log_width, bin_count=bin_count, **kwargs)
 
 
 def calculate_bins(array, _=None, *args, **kwargs):
