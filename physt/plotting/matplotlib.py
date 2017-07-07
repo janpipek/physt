@@ -103,9 +103,10 @@ def bar(h1, errors=False, **kwargs):
         if "ecolor" not in kwargs:
             kwargs["ecolor"] = "black"
 
+    _add_labels(ax, h1, kwargs)
     ax.bar(h1.bin_left_edges, data, h1.bin_widths, align="edge",
            label=label, color=colors, **kwargs)
-    _add_labels(h1, ax, title=kwargs.pop("title", None))
+
 
     if show_values:
         _add_values(ax, h1, data, value_format=value_format)
@@ -148,14 +149,13 @@ def scatter(h1, errors=False, **kwargs):
 
     _apply_xy_lims(ax, h1, data, kwargs)
     _add_ticks(ax, h1, kwargs)
+    _add_labels(ax, h1, kwargs)
 
     if errors:
         err_data = get_err_data(h1, cumulative=cumulative, density=density)
         ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.pop("fmt", "o"),
                     ecolor=kwargs.pop("ecolor", "black"), ms=0)
     ax.scatter(h1.bin_centers, data, **kwargs)
-
-    _add_labels(h1, ax, title=kwargs.pop("title", None))
 
     if show_values:
         _add_values(ax, h1, data, value_format=value_format)
@@ -188,6 +188,7 @@ def line(h1, errors=False, **kwargs):
     data = get_data(h1, cumulative=cumulative, density=density)
     _apply_xy_lims(ax, h1, data, kwargs)
     _add_ticks(ax, h1, kwargs)
+    _add_labels(ax, h1, kwargs)
 
     if errors:
         err_data = get_err_data(h1, cumulative=cumulative, density=density)
@@ -195,8 +196,6 @@ def line(h1, errors=False, **kwargs):
             "fmt", "-"), ecolor=kwargs.pop("ecolor", "black"), **kwargs)
     else:
         ax.plot(h1.bin_centers, data, **kwargs)
-
-    _add_labels(h1, ax, title=kwargs.pop("title", None))
 
     if show_stats:
         _add_stats_box(h1, ax)
@@ -308,6 +307,8 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
     text_x, text_y = (arr.flatten() for arr in h2.get_bin_centers())
 
     _apply_xy_lims(ax, h2, data=data, kwargs=kwargs)
+    _add_labels(ax, h2, kwargs)
+
     ax.autoscale_view()
 
     alphas = _get_alpha_data(cmap_data, kwargs)
@@ -370,7 +371,7 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
 
     if show_colorbar:
         _add_colorbar(ax, cmap, cmap_data, norm)
-    _add_labels(h2, ax, title=kwargs.pop("title", None))
+
     return ax
 
 
@@ -401,10 +402,10 @@ def bar3d(h2, **kwargs):
     zpos = np.zeros_like(ypos)
     dx, dy = (arr.flatten() for arr in h2.get_bin_widths())
 
+    _add_labels(ax, h2, kwargs)
     ax.bar3d(xpos, ypos, zpos, dx, dy, data, color=colors, **kwargs)
     ax.set_zlabel("density" if density else "frequency")
 
-    _add_labels(h2, ax, title=kwargs.pop("title", None))
     return ax
 
 
@@ -446,6 +447,7 @@ def image(h2, show_colorbar=True, **kwargs):
 
     _apply_xy_lims(ax, h2, data=data, kwargs=kwargs)
 
+    _add_labels(ax, h2, kwargs)
     ax.imshow(data.T[::-1, :], cmap=cmap, norm=norm,
               extent=(h2.bins[0][0, 0], h2.bins[0][-1, 1],
                       h2.bins[1][0, 0], h2.bins[1][-1, 1]),
@@ -453,7 +455,6 @@ def image(h2, show_colorbar=True, **kwargs):
 
     if show_colorbar:
         _add_colorbar(ax, cmap, cmap_data, norm)
-    _add_labels(h2, ax, title=kwargs.pop("title", None))
 
     return ax
 
@@ -682,7 +683,7 @@ def surface_map(hist, show_zero=True, x=(lambda x, y: x), y=(lambda x, y: y), z=
     return ax
 
 
-def pair_bars(first, second, **kwargs):
+def pair_bars(first, second, orientation="vertical", kind="bar", **kwargs):
     """Draw two different histograms mirrored in one figure.
 
     Parameters
@@ -837,26 +838,25 @@ def _get_alpha_data(data, kwargs):
     return alpha
 
 
-def _add_labels(h, ax, title=None):
+def _add_labels(ax, h, kwargs):
     """Add axis and plot labels.
 
     Parameters
     ----------
     ax : plt.Axes
     h : Histogram1D or Histogram2D
-    title: Optional[str]
+    kwargs: dict
     """
-    title = title or h.title
+    title = kwargs.pop("title", h.title)
+    xlabel = kwargs.pop("xlabel", h.axis_names[0])
+    ylabel = kwargs.pop("ylabel", h.axis_names[1] if len(h.axis_names) == 2 else None)
+
     if title:
         ax.set_title(title)
-    if hasattr(h, "axis_name"):
-        if h.axis_name:
-            ax.set_xlabel(h.axis_name)
-    else:
-        if h.axis_names[0]:
-            ax.set_xlabel(h.axis_names[0])
-        if h.axis_names[1]:
-            ax.set_ylabel(h.axis_names[1])
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    if ylabel:
+        ax.set_ylabel(ylabel)
     ax.get_figure().tight_layout()
 
 
