@@ -191,13 +191,16 @@ class HistogramBase(object):
         int
             zero-based axis index
         """
+        # TODO: Add unit test
         if isinstance(name_or_index, int):
             if name_or_index < 0 or name_or_index >= self.ndim:
                 raise RuntimeError("No such axis, must be from 0 to {0}".format(self.ndim-1))
             return name_or_index
         elif isinstance(name_or_index, str):
             if not name_or_index in self.axis_names:
-                raise RuntimeError("No axis with such name: {0}, available: {1}".format(name_or_index, ", ".join(self.axis_names)))
+                named_axes = [name for name in self.axis_names if name]
+                raise RuntimeError("No axis with such name: {0}, available names: {1}. In most places, you can also use numbers."
+                                   .format(name_or_index, ", ".join(named_axes)))
             return self.axis_names.index(name_or_index)
         else:
             raise RuntimeError("Argument of type {0} not understood, int or str expected.".format(type(name_or_index)))
