@@ -760,7 +760,7 @@ def _get_cmap(kwargs):
 
     Parameters
     ----------
-    cmap : str or colors.Colormap
+    cmap : str or colors.Colormap or list of colors
         A map or an instance of cmap. This can also be a seaborn palette
         (if seaborn is installed).
 
@@ -768,7 +768,11 @@ def _get_cmap(kwargs):
     -------
     colors.Colormap
     """
+    from matplotlib.colors import ListedColormap
+
     cmap = kwargs.pop("cmap", "Greys")
+    if isinstance(cmap, list):
+        return ListedColormap(cmap)
     if isinstance(cmap, str):
         try:
             cmap = plt.get_cmap(cmap)
@@ -782,7 +786,8 @@ def _get_cmap(kwargs):
                 else:
                     import seaborn.apionly as sns
                 # TODO: What is this???
-                cmap = sns.color_palette(as_cmap=True)
+                sns_palette = sns.color_palette(cmap, n_colors=256)
+                cmap = ListedColormap(sns_palette, name=cmap)
             except ImportError:
                 raise exc
     return cmap
