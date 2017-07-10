@@ -112,13 +112,15 @@ class HistogramND(HistogramBase):
         if axis is not None:
             return self.bins[axis][:, 0]
         else:
-            return np.meshgrid(*[self.get_bin_left_edges(i) for i in range(self.ndim)], indexing='ij')
+            edges = [self.get_bin_left_edges(i) for i in range(self.ndim)]
+            return np.meshgrid(*edges, indexing='ij')
 
     def get_bin_right_edges(self, axis=None):
         if axis is not None:
             return self.bins[axis][:, 1]
         else:
-            return np.meshgrid(*[self.get_bin_right_edges(i) for i in range(self.ndim)], indexing='ij')
+            edges = [self.get_bin_right_edges(i) for i in range(self.ndim)]
+            return np.meshgrid(*edges, indexing='ij')
 
     def get_bin_centers(self, axis=None):
         if axis is not None:
@@ -168,11 +170,8 @@ class HistogramND(HistogramBase):
         self._coerce_dtype(type(weight))
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
-                #print("adaptive, forcing", value[i])
                 bin_map = binning.force_bin_existence(value[i])
-                #print("map", bin_map)
                 self._reshape_data(binning.bin_count, bin_map, i)
-        #
         ixbin = self.find_bin(value, **kwargs)
         if ixbin is None and self.keep_missed:
             self._missed += weight
@@ -226,7 +225,7 @@ class HistogramND(HistogramBase):
         axes = list(axes)
         for i, axis in enumerate(axes):
             if isinstance(axis, str):
-                if not axis in self.axis_names:
+                if axis not in self.axis_names:
                     raise RuntimeError("Invalid axis name for projection: " + axis)
                 axes[i] = self.axis_names.index(axis)
         if not axes:
@@ -385,7 +384,7 @@ class Histogram2D(HistogramND):
             if axis == 0:
                 divisor = self._frequencies.sum(axis=0)
             else:
-                divisor = self._frequencies.sum(axis=1)[:,np.newaxis]
+                divisor = self._frequencies.sum(axis=1)[:, np.newaxis]
             divisor[divisor == 0] = 1             # Prevent division errors
             self._frequencies /= divisor
             self._errors2 /= (divisor * divisor)  # Has its limitations
@@ -407,9 +406,11 @@ def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
     binnings:
         Binnings to apply in all axes.
     weights : Optional[array_like]
-        1D array of weights to assign to values - if present, must have same lenght as the number of rows.
+        1D array of weights to assign to values.
+        (If present, must have same length as the number of rows.)
     dtype : Optional[type]
-        Underlying type for the histogram. If weights are specified, default is float. Otherwise int64
+        Underlying type for the histogram.
+        (If weights are specified, default is float. Otherwise int64.)
 
     Returns
     -------
@@ -452,7 +453,7 @@ def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
     edges = [em[0] for em in edges_and_mask]
     masks = [em[1] for em in edges_and_mask]
 
-    ixgrid = np.ix_(*masks) # Indexer to select parts we want
+    ixgrid = np.ix_(*masks)  # Indexer to select parts we want
 
     # TODO: Right edges are not taken into account because they fall into inf bin
 
@@ -462,7 +463,7 @@ def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
         frequencies = frequencies[ixgrid]
         missing = weights.sum() - frequencies.sum()
         err_freq, _ = np.histogramdd(data, edges, weights=weights ** 2)
-        errors2 = err_freq[ixgrid].astype(dtype) # Automatically copy
+        errors2 = err_freq[ixgrid].astype(dtype)  # Automatically copy
     else:
         frequencies = None
         missing = 0

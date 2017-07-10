@@ -50,6 +50,7 @@ def load_json(path=None):
         text = f.read()
         return parse_json(text)
 
+
 def parse_json(text):
     """Create histogram from a JSON string.
 

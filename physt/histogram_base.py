@@ -173,7 +173,8 @@ class HistogramBase(object):
         -------
         tuple[str]
         """
-        return tuple(self._meta_data.get("axis_names", ["axis{0}".format(i) for i in range(self.ndim)]))
+        default = ["axis{0}".format(i) for i in range(self.ndim)]
+        return tuple(self._meta_data.get("axis_names", default))
 
     @axis_names.setter
     def axis_names(self, value):
@@ -197,7 +198,7 @@ class HistogramBase(object):
                 raise RuntimeError("No such axis, must be from 0 to {0}".format(self.ndim-1))
             return name_or_index
         elif isinstance(name_or_index, str):
-            if not name_or_index in self.axis_names:
+            if name_or_index not in self.axis_names:
                 named_axes = [name for name in self.axis_names if name]
                 raise RuntimeError("No axis with such name: {0}, available names: {1}. In most places, you can also use numbers."
                                    .format(name_or_index, ", ".join(named_axes)))
@@ -339,6 +340,7 @@ class HistogramBase(object):
         See also
         --------
         densities
+        HistogramND.partial_normalize
 
         """
         if inplace:
@@ -511,7 +513,8 @@ class HistogramBase(object):
             self._frequencies = new_frequencies
             self._errors2 = new_errors2
 
-    def _apply_bin_map(self, old_frequencies, new_frequencies, old_errors2, new_errors2, bin_map, axis=0):
+    def _apply_bin_map(self, old_frequencies, new_frequencies, old_errors2,
+                       new_errors2, bin_map, axis=0):
         """Fill new data arrays using a map.
 
         Parameters
@@ -588,7 +591,7 @@ class HistogramBase(object):
             missed = np.zeros_like(self._missed)
             stats = None
         a_copy = self.__class__.__new__(self.__class__)
-        a_copy._binnings=[binning.copy() for binning in self._binnings]
+        a_copy._binnings = [binning.copy() for binning in self._binnings]
         a_copy._dtype = self.dtype
         a_copy._frequencies = frequencies
         a_copy._errors2 = errors2
@@ -711,9 +714,8 @@ class HistogramBase(object):
         dict
         """
         from .binnings import BinningBase
-        from .util import all_subclasses
         kwargs = {
-            "binnings" : [BinningBase.from_dict(binning_data) for binning_data in a_dict["binnings"]],
+            "binnings": [BinningBase.from_dict(binning_data) for binning_data in a_dict["binnings"]],
             "dtype": np.dtype(a_dict["dtype"]),
             "frequencies": a_dict.get("frequencies"),
             "errors2": a_dict.get("errors2"),
@@ -723,7 +725,6 @@ class HistogramBase(object):
         if len(kwargs["binnings"]) > 2:
             kwargs["dimension"] = len(kwargs["binnings"])
         return kwargs
-
 
     @classmethod
     def from_dict(cls, a_dict):
@@ -809,7 +810,7 @@ class HistogramBase(object):
                 self._errors2 += other.errors2
 
             except:
-                raise # RuntimeError("Cannot find common binning for added histograms.")
+                raise  # RuntimeError("Cannot find common binning for added histograms.")
         else:
             raise RuntimeError("Incompatible binning")
 
@@ -875,9 +876,9 @@ class HistogramBase(object):
         """
         keys = set(first._meta_data.keys())
         keys = keys.union(set(second._meta_data.keys()))
-        return { key :
+        return {key:
                 (first._meta_data[key] if first._meta_data[key] == second._meta_data[key] else None)
-                for key in keys }
+                for key in keys}
 
     def __array__(self):
         """Convert to numpy array.

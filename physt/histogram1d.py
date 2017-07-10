@@ -88,7 +88,7 @@ class Histogram1D(HistogramBase):
         """
         underflow = np.nan
         overflow = np.nan
-        keep_missed=False
+        keep_missed = False
         if isinstance(i, int):
             return self.bins[i], self.frequencies[i]
         elif isinstance(i, np.ndarray):
@@ -96,7 +96,7 @@ class Histogram1D(HistogramBase):
                 if i.shape != (self.bin_count,):
                     raise IndexError("Cannot index with masked array of a wrong dimension")
         elif isinstance(i, slice):
-            keep_missed=self.keep_missed
+            keep_missed = self.keep_missed
             # TODO: Fix this
             if i.step:
                 raise IndexError("Cannot change the order of bins")
@@ -108,8 +108,10 @@ class Histogram1D(HistogramBase):
                 if i.stop:
                     overflow += self.frequencies[i.stop:].sum()
         # Masked arrays or item list or ...
-        return self.__class__(self._binning.as_static(copy=False)[i], self.frequencies[i], self.errors2[i], overflow=overflow, keep_missed=keep_missed,
-                              underflow=underflow, name=self.name, axis_name=self.axis_name, dtype=self.dtype)
+        return self.__class__(self._binning.as_static(copy=False)[i], self.frequencies[i],
+                              self.errors2[i], overflow=overflow, keep_missed=keep_missed,
+                              underflow=underflow, dtype=self.dtype,
+                              name=self.name, axis_name=self.axis_name)
 
     @property
     def _binning(self):
@@ -267,7 +269,7 @@ class Histogram1D(HistogramBase):
         -------
         numpy.ndarray
         """
-        return self.bins[...,0]
+        return self.bins[..., 0]
 
     @property
     def bin_right_edges(self):
@@ -277,7 +279,7 @@ class Histogram1D(HistogramBase):
         -------
         numpy.ndarray
         """
-        return self.bins[...,1]
+        return self.bins[..., 1]
 
     @property
     def min_edge(self):
@@ -347,7 +349,8 @@ class Histogram1D(HistogramBase):
         Returns
         -------
         int
-            index of bin to which value belongs (-1=underflow, N=overflow, None=not found - inconsecutive)
+            index of bin to which value belongs
+            (-1=underflow, N=overflow, None=not found - inconsecutive)
         """
         ixbin = np.searchsorted(self.bin_left_edges, value, side="right")
         if ixbin == 0:
@@ -423,8 +426,9 @@ class Histogram1D(HistogramBase):
         if weights:
             weights = np.asarray(weights)
             self._coerce_dtype(weights.dtype)
-        frequencies, errors2, underflow, overflow, stats = calculate_frequencies(values, self._binning, dtype=self.dtype,
-                                                                                  weights=weights, validate_bins=False)
+        (frequencies, errors2, underflow, overflow, stats) = \
+            calculate_frequencies(values, self._binning, dtype=self.dtype,
+                                  weights=weights, validate_bins=False)
         self._frequencies += frequencies
         self._errors2 += errors2
         # TODO: check that adaptive does not produce under-/over-flows?
@@ -495,7 +499,7 @@ class Histogram1D(HistogramBase):
             "errors2": xr.DataArray(self.errors2, dims="bin"),
             "bins": xr.DataArray(self.bins, dims=("bin", "x01"))
         }
-        coords = { }
+        coords = {}
         attrs = {
             "underflow": self.underflow,
             "overflow": self.overflow,
@@ -525,7 +529,8 @@ class Histogram1D(HistogramBase):
         return cls(**kwargs)
 
 
-def calculate_frequencies(data, binning, weights=None, validate_bins=True, already_sorted=False, dtype=None):
+def calculate_frequencies(data, binning, weights=None, validate_bins=True,
+                          already_sorted=False, dtype=None):
     """Get frequencies and bin errors from the data.
 
     Parameters
@@ -541,7 +546,8 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
     already_sorted : bool, optional
         If True, the data being entered are already sorted, no need to sort them once more.
     dtype: Optional[type]
-        Underlying type for the histogram. If weights are specified, default is float. Otherwise long
+        Underlying type for the histogram.
+        (If weights are specified, default is float. Otherwise long.)
 
     Returns
     -------
@@ -570,7 +576,7 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
     sum2 = 0.0
 
     # Ensure correct binning
-    bins = binning.bins # bin_utils.make_bin_array(bins)
+    bins = binning.bins  # bin_utils.make_bin_array(bins)
     if validate_bins:
         if bins.shape[0] == 0:
             raise RuntimeError("Cannot have histogram with 0 bins.")
@@ -645,6 +651,6 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True, alrea
         underflow = np.nan
         overflow = np.nan
 
-    stats = { "sum": sum, "sum2" : sum2}
+    stats = {"sum": sum, "sum2": sum2}
 
     return frequencies, errors2, underflow, overflow, stats
