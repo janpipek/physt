@@ -49,6 +49,7 @@ dims = {}
 
 default_dpi = 72
 default_figsize = matplotlib.rcParams["figure.figsize"]
+default_cmap = "Greys" # matplotlib.rcParams['image.cmap']
 
 
 def register(*dim, use_3d=False, use_polar=False):
@@ -785,7 +786,7 @@ def _get_cmap(kwargs):
     """
     from matplotlib.colors import ListedColormap
 
-    cmap = kwargs.pop("cmap", "Greys")
+    cmap = kwargs.pop("cmap", default_cmap)
     if isinstance(cmap, list):
         return ListedColormap(cmap)
     if isinstance(cmap, str):
