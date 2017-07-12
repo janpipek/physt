@@ -28,6 +28,7 @@ parameters.
 # TODO: Write notes about the zorder argument
 
 from __future__ import absolute_import
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
@@ -36,29 +37,53 @@ import matplotlib.path as path
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
+from functools import wraps
 
 from .common import get_data, get_err_data
 
 
-types = ("bar", "scatter", "line", "fill", "map", "bar3d", "image",
-         "polar_map", "globe_map", "cylinder_map", "surface_map")
-
-dims = {
-    "bar": [1],
-    "scatter": [1],
-    "fill": [1],
-    "line": [1],
-    "map": [2],
-    "bar3d": [2],
-    "image": [2],
-    "polar_map": [2],
-    "globe_map": [2],
-    "cylinder_map": [2],
-    "surface_map": [2]
-}
+# To be filled by register function
+types = []
+dims = {}
 
 
-def bar(h1, errors=False, **kwargs):
+default_dpi = 72
+default_figsize = matplotlib.rcParams["figure.figsize"]
+
+
+def register(*dim, use_3d=False, use_polar=False):
+    """Decorator to wrap common plotting functionality.
+
+    Parameters
+    ----------
+    dim : list(int)
+        Dimensionality of histogram for which it is applicable
+    use_3d : bool
+        If True, the figure will be 3D.
+    use_polar : bool
+        If True, the figure will be in polar coordinates.
+    """
+    # TODO: Add some kind of class parameter
+
+    def decorate(function):
+        types.append(function.__name__)
+        dims[function.__name__] = dim
+
+        @wraps(function)
+        def f(*args, write_to=None, dpi=None, **kwargs):
+            fig, ax = _get_axes(kwargs, use_3d=use_3d, use_polar=use_polar)
+            function(*args, ax=ax, **kwargs)
+            if write_to:
+                fig = ax.figure
+                fig.tight_layout()
+                fig.savefig(write_to, dpi=dpi or default_dpi)
+            return ax
+        return f
+    return decorate
+
+
+@register(1)
+def bar(h1, ax, errors=False, **kwargs):
     """Bar plot of 1D histograms.
 
     Parameters
@@ -75,8 +100,6 @@ def bar(h1, errors=False, **kwargs):
     -------
     plt.Axes
     """
-    fig, ax = _get_axes(kwargs)
-
     show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
     value_format = kwargs.pop("value_format", None)
@@ -107,7 +130,6 @@ def bar(h1, errors=False, **kwargs):
     ax.bar(h1.bin_left_edges, data, h1.bin_widths, align="edge",
            label=label, color=colors, **kwargs)
 
-
     if show_values:
         _add_values(ax, h1, data, value_format=value_format)
     if show_stats:
@@ -116,7 +138,8 @@ def bar(h1, errors=False, **kwargs):
     return ax
 
 
-def scatter(h1, errors=False, **kwargs):
+@register(1)
+def scatter(h1, ax, errors=False, **kwargs):
     """Scatter plot of 1D histogram.
 
     Parameters
@@ -129,8 +152,6 @@ def scatter(h1, errors=False, **kwargs):
     -------
     plt.Axes
     """
-    fig, ax = _get_axes(kwargs)
-
     show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
@@ -164,7 +185,8 @@ def scatter(h1, errors=False, **kwargs):
     return ax
 
 
-def line(h1, errors=False, **kwargs):
+@register(1)
+def line(h1, ax, errors=False, **kwargs):
     """Line plot of 1D histogram.
 
     Parameters
@@ -177,8 +199,6 @@ def line(h1, errors=False, **kwargs):
     -------
     plt.Axes
     """
-    fig, ax = _get_axes(kwargs)
-
     show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
@@ -204,7 +224,8 @@ def line(h1, errors=False, **kwargs):
     return ax
 
 
-def fill(h1, **kwargs):
+@register(1)
+def fill(h1, ax, **kwargs):
     """Fill plot of 1D histogram.
 
     Parameters
@@ -215,8 +236,6 @@ def fill(h1, **kwargs):
     -------
     plt.Axes
     """
-    _, ax = _get_axes(kwargs)
-
     show_stats = kwargs.pop("show_stats", False)
     # show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
@@ -235,7 +254,8 @@ def fill(h1, **kwargs):
     return ax
 
 
-def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=None, **kwargs):
+@register(2)
+def map(h2, ax, show_zero=True, show_values=False, show_colorbar=True, x=None, y=None, **kwargs):
     """Coloured-rectangle plot of 2D histogram.
 
     Parameters
@@ -274,8 +294,6 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
     does not work well automatically. Please, make sure to attend to it yourself.
     The densities in transformed maps are calculated from original bins.
     """
-    _, ax = _get_axes(kwargs)
-
     # Detect transformation
     transformed = False
     if x is not None or y is not None:
@@ -344,11 +362,13 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
                          path.Path.LINETO,
                          path.Path.LINETO,
                          path.Path.CLOSEPOLY,
-                        ]
+                         ]
 
                 rect_path = path.Path(verts, codes)
-                rect = patches.PathPatch(rect_path, facecolor=bin_color, edgecolor=kwargs.get("grid_color", cmap(0.5)),
-                                         lw=kwargs.get("lw", 0.5), alpha=alpha, **rect_args)
+                rect = patches.PathPatch(rect_path, facecolor=bin_color,
+                                         edgecolor=kwargs.get("grid_color", cmap(0.5)),
+                                         lw=kwargs.get("lw", 0.5), alpha=alpha,
+                                         **rect_args)
 
                 tx = x(text_x[i], text_y[i])
                 ty = y(text_x[i], text_y[i])
@@ -375,7 +395,8 @@ def map(h2, show_zero=True, show_values=False, show_colorbar=True, x=None, y=Non
     return ax
 
 
-def bar3d(h2, **kwargs):
+@register(2, use_3d=True)
+def bar3d(h2, ax, **kwargs):
     """Plot of 2D histograms as 3D boxes.
 
     Parameters
@@ -386,7 +407,6 @@ def bar3d(h2, **kwargs):
     -------
     plt.Axes
     """
-    fig, ax = _get_axes(kwargs, use_3d=True)
     density = kwargs.pop("density", False)
     data = get_data(h2, cumulative=False, flatten=True, density=density)
     # transformed = transform_data(data, kwargs)
@@ -409,7 +429,8 @@ def bar3d(h2, **kwargs):
     return ax
 
 
-def image(h2, show_colorbar=True, **kwargs):
+@register(2)
+def image(h2, ax, show_colorbar=True, **kwargs):
     """Plot of 2D histograms based on pixmaps.
 
     Similar to map, but it:
@@ -427,9 +448,6 @@ def image(h2, show_colorbar=True, **kwargs):
     -------
     plt.Axes
     """
-    # TODO: Check regular bins.
-
-    fig, ax = _get_axes(kwargs)
     cmap = _get_cmap(kwargs)   # h2 as well?
     data = get_data(h2, cumulative=False, density=kwargs.pop("density", False))
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -459,7 +477,8 @@ def image(h2, show_colorbar=True, **kwargs):
     return ax
 
 
-def polar_map(hist, show_zero=True, **kwargs):
+@register(2, use_polar=True)
+def polar_map(hist, ax, show_zero=True, **kwargs):
     """Polar map of polar histograms.
 
     Similar to map, but supports less parameters.
@@ -468,8 +487,6 @@ def polar_map(hist, show_zero=True, **kwargs):
     -------
     plt.Axes
     """
-    fig, ax = _get_axes(kwargs, use_polar=True)
-
     data = get_data(hist, cumulative=False, flatten=True,
                     density=kwargs.pop("density", False))
     # transformed = transform_data(data, kwargs)
@@ -502,7 +519,8 @@ def polar_map(hist, show_zero=True, **kwargs):
     return ax
 
 
-def globe_map(hist, show_zero=True, **kwargs):
+@register(2, use_3d=True)
+def globe_map(hist, ax, show_zero=True, **kwargs):
     """Heat map plotted on the surface of a sphere.
 
     Parameters
@@ -514,8 +532,6 @@ def globe_map(hist, show_zero=True, **kwargs):
     -------
 
     """
-    fig, ax = _get_axes(kwargs=kwargs, use_3d=True)
-
     data = get_data(hist, cumulative=False, flatten=False,
                     density=kwargs.pop("density", False))
 
@@ -554,7 +570,8 @@ def globe_map(hist, show_zero=True, **kwargs):
     return ax
 
 
-def cylinder_map(hist, show_zero=True, **kwargs):
+@register(2, use_3d=True)
+def cylinder_map(hist, ax, show_zero=True, **kwargs):
     """Heat map plotted on the surface of a cylinde.
 
     Parameters
@@ -565,9 +582,7 @@ def cylinder_map(hist, show_zero=True, **kwargs):
     Returns
     -------
 
-    """    
-    fig, ax = _get_axes(kwargs=kwargs, use_3d=True)
-
+    """
     data = get_data(hist, cumulative=False, flatten=False,
                     density=kwargs.pop("density", False))
 
@@ -610,7 +625,9 @@ def cylinder_map(hist, show_zero=True, **kwargs):
     return ax
 
 
-def surface_map(hist, show_zero=True, x=(lambda x, y: x), y=(lambda x, y: y), z=(lambda x, y: 0), **kwargs):
+@register(2, use_3d=True)
+def surface_map(hist, ax, show_zero=True, x=(lambda x, y: x),
+                y=(lambda x, y: y), z=(lambda x, y: 0), **kwargs):
     """Coloured-rectangle plot of 2D histogram, placed on an arbitrary surface.
 
     Each bin is mapped to a rectangle in 3D space using the x,y,z functions.
@@ -635,8 +652,6 @@ def surface_map(hist, show_zero=True, x=(lambda x, y: x), y=(lambda x, y: y), z=
     --------
     map, cylinder_map, globe_map
     """
-    fig, ax = _get_axes(kwargs=kwargs, use_3d=True)
-
     data = get_data(hist, cumulative=False, flatten=False,
                     density=kwargs.pop("density", False))
 
@@ -740,7 +755,7 @@ def _get_axes(kwargs, use_3d=False, use_polar=False):
     fig : plt.Figure
     ax : plt.Axes | Axes3D
     """
-    figsize = kwargs.pop("figsize", None)
+    figsize = kwargs.pop("figsize", default_figsize)
     if "ax" in kwargs:
         ax = kwargs.pop("ax")
         fig = ax.get_figure()
