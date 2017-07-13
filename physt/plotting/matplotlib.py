@@ -49,10 +49,10 @@ dims = {}
 
 default_dpi = 72
 default_figsize = matplotlib.rcParams["figure.figsize"]
-default_cmap = "Greys" # matplotlib.rcParams['image.cmap']
+default_cmap = "Greys"  # matplotlib.rcParams['image.cmap']
 
 
-def register(*dim, use_3d=False, use_polar=False):
+def register(*dim, **kwargs):
     """Decorator to wrap common plotting functionality.
 
     Parameters
@@ -64,6 +64,12 @@ def register(*dim, use_3d=False, use_polar=False):
     use_polar : bool
         If True, the figure will be in polar coordinates.
     """
+    use_3d = kwargs.get("use_3d", False)
+    use_polar = kwargs.get("use_polar", False)
+    
+    if use_3d and use_polar:
+        raise RuntimeError("Cannot have polar and 3d coordinates simultaneously.")
+    
     # TODO: Add some kind of class parameter
 
     def decorate(function):
@@ -71,9 +77,9 @@ def register(*dim, use_3d=False, use_polar=False):
         dims[function.__name__] = dim
 
         @wraps(function)
-        def f(*args, write_to=None, dpi=None, **kwargs):
+        def f(hist, write_to=None, dpi=None, **kwargs):
             fig, ax = _get_axes(kwargs, use_3d=use_3d, use_polar=use_polar)
-            function(*args, ax=ax, **kwargs)
+            function(hist, ax=ax, **kwargs)
             if write_to:
                 fig = ax.figure
                 fig.tight_layout()
@@ -116,7 +122,7 @@ def bar(h1, ax, errors=False, **kwargs):
         _, cmap_data = _get_cmap_data(data, kwargs)
         colors = cmap(cmap_data)
     else:
-        colors = kwargs.pop("color", "blue")
+        colors = kwargs.pop("color", None)
 
     _apply_xy_lims(ax, h1, data, kwargs)
     _add_ticks(ax, h1, kwargs)
