@@ -1,3 +1,9 @@
+0.3.30 (13th July 2017)
+-----------------------
+- Added: default parameters in matplotlib backend
+- Changed: refactoring of matplotlib backend (DRY)
+- Fixed: several bugs
+
 0.3.29 (7th July 2017)
 ----------------------
 - Added: "fist example"
