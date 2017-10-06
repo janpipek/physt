@@ -70,7 +70,7 @@ class Histogram1D(HistogramBase):
 
     @axis_name.setter
     def axis_name(self, value):
-        self.axis_names[0] = value
+        self.axis_names = (value,)
 
     def __getitem__(self, i):
         """Select sub-histogram or get one bin.
