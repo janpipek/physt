@@ -704,7 +704,6 @@ def surface_map(hist, ax, show_zero=True, x=(lambda x, y: x),
 
     return ax
 
-
 def pair_bars(first, second, orientation="vertical", kind="bar", **kwargs):
     """Draw two different histograms mirrored in one figure.
 
@@ -800,14 +799,8 @@ def _get_cmap(kwargs):
             cmap = plt.get_cmap(cmap)
         except BaseException as exc:
             try:
-                # Trick to use seaborn palettes without clearing the seaborn
-                # style
-                import sys
-                if "seaborn" in sys.modules.keys():
-                    sns = sys.modules["seaborn"]
-                else:
-                    import seaborn.apionly as sns
-                # TODO: What is this???
+                # Try to use seaborn palette
+                import seaborn as sns
                 sns_palette = sns.color_palette(cmap, n_colors=256)
                 cmap = ListedColormap(sns_palette, name=cmap)
             except ImportError:

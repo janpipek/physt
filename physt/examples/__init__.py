@@ -130,7 +130,7 @@ def load_dataset(name):
 
     # Seaborn datasets?
     try:
-        import seaborn.apionly as sns
+        import seaborn as sns
         import warnings
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -143,7 +143,7 @@ def load_dataset(name):
     raise RuntimeError("Dataset {0} not available.".format(name))
 
 try:
-    import seaborn.apionly as sns
+    import seaborn as sns
 
     def iris_h1(x="sepal_length"):
         """One-dimensional histogram of classical iris data.
