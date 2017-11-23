@@ -330,12 +330,19 @@ class HistogramBase(object):
         """
         return self._frequencies / self.bin_sizes
 
-    def normalize(self, inplace=False):
+    def normalize(self, inplace=False, percent=False):
         """Normalize the histogram, so that the total weight is equal to 1.
+
+        Parameters
+        ----------
+        inplace: bool
+            If True, updates itself. If False (default), returns copy
+        percent: bool
+            If True, normalizes to percent instead of 1. Default: False
 
         Returns
         -------
-        HistogramBase
+        HistogramBase : either modified copy or self
 
         See also
         --------
@@ -344,10 +351,10 @@ class HistogramBase(object):
 
         """
         if inplace:
-            self /= self.total
+            self /= self.total * (100 if percent else 1)
             return self
         else:
-            return self / self.total
+            return self / self.total * (100 if percent else 1)
 
     @property
     def errors2(self):
