@@ -601,7 +601,7 @@ class HistogramBase(object):
         a_copy._stats = stats
         return a_copy
 
-    def fill(self, value, weight, **kwargs):
+    def fill(self, value, weight=1, **kwargs):
         """Add a value.
 
         Abstract method - to be implemented in daughter classes.s
@@ -867,6 +867,13 @@ class HistogramBase(object):
             self._stats["sum"] /= other
             self._stats["sum2"] /= other ** 2
         return self
+
+    def __lshift__(self, value):
+        """Convenience alias for fill.
+
+        Because of the limit to argument count, weight is not supported.
+        """
+        self.fill(value)
 
     @classmethod
     def _merge_meta_data(cls, first, second):
