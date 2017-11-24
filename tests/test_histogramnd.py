@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from physt.histogram_nd import Histogram2D, HistogramND
 from physt.histogram1d import Histogram1D
+from physt import h2, h3
 
 
 class TestHistogramND(object):
@@ -99,6 +100,16 @@ class TestProjections(object):
             h.projection("1", "2", "3", "4", "5")
         with pytest.raises(RuntimeError):
             h.projection()
+
+
+class TestH2(object):
+    def test_create_empty_h2(self):
+        h2(None, None, "integer", adaptive=True)
+
+
+class TestH3(object):
+    def test_create_empty_h3(self):
+        h3(None, "integer", adaptive=True)
 
 
 if __name__ == "__main__":

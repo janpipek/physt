@@ -182,6 +182,8 @@ def histogramdd(data, bins=10, *args, **kwargs):
     dtype: Optional[type]
         Underlying type for the histogram.
         If weights are specified, default is float. Otherwise int64
+    dim: int
+        Dimension - necessary if you are creating an empty adaptive histogram
 
     Returns
     -------
@@ -273,11 +275,13 @@ def h3(data, *args, **kwargs):
         if "axis_names" not in kwargs:
             kwargs["axis_names"] = [(column.name if hasattr(column, "name") else None) for column in data]
         data = np.concatenate([item[:, np.newaxis] for item in data], axis=1)
-    else:
+    elif data is not None:
         data = np.asarray(data)
-    n, dim = data.shape
-    if dim != 3:
-        raise RuntimeError("Array must have shape (n, 3)")
+        n, dim = data.shape
+        if dim != 3:
+            raise RuntimeError("Array must have shape (n, 3)")
+    else:
+        kwargs["dim"] = 3    
     return histogramdd(data, *args, **kwargs)
 
 from .special import polar_histogram
