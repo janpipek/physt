@@ -1,10 +1,12 @@
 import sys
 import os
+import pytest
+import numpy as np
+
 sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
+import physt
 from physt import bin_utils, io
 from physt.histogram1d import Histogram1D
-import numpy as np
-import pytest
 
 
 class TestIO(object):
@@ -27,6 +29,13 @@ class TestIO(object):
         from physt.examples import munros
         # for example in ALL_EXAMPLES:
         h = munros()
+        json = h.to_json()
+        read = io.parse_json(json)
+        assert h == read
+
+    def test_simple(self):
+        h = physt.h2(None, None, "integer", adaptive=True)
+        h << (0, 1)
         json = h.to_json()
         read = io.parse_json(json)
         assert h == read

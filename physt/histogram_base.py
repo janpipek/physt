@@ -685,7 +685,7 @@ class HistogramBase(object):
         result["histogram_type"] = type(self).__name__
         result["binnings"] = [binning.to_dict() for binning in self._binnings]
         result["frequencies"] = self.frequencies.tolist()
-        result["dtype"] = str(self.dtype)
+        result["dtype"] = str(np.dtype(self.dtype))
         result["errors2"] = self.errors2.tolist()
         result["meta_data"] = self._meta_data
         result["missed"] = self._missed.tolist()
