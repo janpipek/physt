@@ -10,3 +10,13 @@ See https://github.com/janpipek/physt
 """
 
 __version__ = '0.4.0'
+
+
+def h1(*args, **kwargs):
+    raise NotImplementedError()
+
+def h2(*args, **kwargs):
+    raise NotImplementedError()
+
+def h3(*args, **kwargs):
+    raise NotImplementedError()
