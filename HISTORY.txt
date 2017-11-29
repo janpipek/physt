@@ -1,3 +1,9 @@
+0.3.31 (29th November 2017)
+---------------------------
+- Added: slicing ND histograms with [] - works for ints and slices (alpha)
+- Added: physt.helpers.db to create histograms from cursors (preview)
+- Added: h() facade function; histogram, histogram2d and histogramdd will become obsolete
+
 0.3.30 (13th July 2017)
 -----------------------
 - Added: default parameters in matplotlib backend
