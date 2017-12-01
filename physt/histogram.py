@@ -1,3 +1,5 @@
+
+
 class Histogram:
     """
 
@@ -5,6 +7,8 @@ class Histogram:
     ----------
     - values
     - bins
+    - metadata
+    
     """
     def __init__(self):
         self.dtype = int
@@ -12,3 +16,5 @@ class Histogram:
     @property
     def bins(self):
         pass
+
+    def normalize(self, inplace=False):
