@@ -116,15 +116,19 @@ class MultiSchema:
         return len(self._schemas)
 
     @property
-    def schemas(self:)
+    def schemas(self):
         return self._schemas
 
-    def fit(*data):
+    def fit(self, *data):
         # TODO: reshape data
         for i, schema in enumerate(self.schemas):
             schema.fit(data[i])
 
-    def apply(*data, weights) -> np.ndarray:
+    def fit_and_apply(self, *data, weights=None) -> np.ndarray:
+        self.fit(*data)
+        return self.apply(*data, weights)
+
+    def apply(self, *data, weights=None) -> np.ndarray:
         # TODO: reshape data
         edges = [schema.edges for schema in self.schemas]
         masks = [schema.mask for schema in self.schemas]
