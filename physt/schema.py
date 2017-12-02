@@ -29,7 +29,6 @@ class Schema:
 
     @property
     def edges(self):
-        if hasattr(self, "_edges")
         return self._edges
 
     @property
@@ -137,6 +136,8 @@ class MultiSchema:
         changed = False
         for i, mask in enumerate(masks):
             if mask:
+                # TODO: Apply the subselection
+                pass
 
         if changed:
             values = values.copy()
