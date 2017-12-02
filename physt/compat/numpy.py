@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 
 from physt.histogram import Histogram
-from physt.schema import NumpySchema, StaticSchema, Schema
+from physt.schema import NumpySchema, StaticSchema, Schema, MultiSchema
 
 __all__ = ["histogram", "histogram2d", "histogramdd"]
 
@@ -38,15 +38,19 @@ def histogram(a, bins=10, range=None, normed=False, weights=None, density=None) 
     schema = make_numpy_schema(bins, range)
     values = schema.fit_and_apply(a, weights=weights)
     histogram = Histogram(schema, values)
-    
     return histogram
 
-def histogram2d(x, y, bins=10, range=None, normed=False, weights=None) -> Histogram:
-    if isinstance(bins, np.ndarray):
-        pass
-        
-    elif isinstance(bins, (list, tuple)):
-        pass 
+def histogram2d(x, y, bins=10, range=None, normed=False, weights=None) -> Histogram: 
+    from builtins import range as builtin_range  
+    if isinstance(bins, (list, tuple)):
+        schemas = (make_numpy_schema(item, range=range) for item in bins)
+    else:
+        schemas = (make_numpy_schema(bins, range=range) for i in builtin_range(2))
+    
+    schema = MultiSchema(*schemas)
+    values = schema.fit_and_apply(x, y, weights=weights)
+    histogram = Histogram(schema, values)
+    return histogram
 
 def histogramdd(sample, bins=10, range=None, normed=False, weights=None) -> Histogram:
     pass
@@ -70,7 +74,7 @@ def make_numpy_schema(bins, range=None, allow_string:bool=True) -> Schema:
         if allow_string:
             return NumpySchema(bins, range=range)
         else:
-            raise ValueError()
+            raise ValueError("String not allowed as bin parameter")
     else:
         # TODO: Check properly
         bins = np.asarray(bins)

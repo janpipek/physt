@@ -31,6 +31,20 @@ class Histogram:
     def values(self) -> np.ndarray:
         return self._values
 
+    def __array__(self) -> np.ndarray:
+        """Convert to numpy array.
+
+        Returns
+        -------
+        np.ndarray
+            The array of frequencies
+
+        See also
+        --------
+        frequencies
+        """
+        return self.values
+
     def copy(self, shallow:bool=False) -> 'Histogram':
         """"Create an identical copy of the histogram.
         

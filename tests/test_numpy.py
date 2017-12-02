@@ -6,7 +6,7 @@ import physt
 from physt.compat.numpy import BIN_COUNT_ALGORITHMS
 from physt.compat.numpy import histogram as _histogram
 from physt.compat.numpy import histogram2d as _histogram2d
-from physt.compat.numpy import histogramdd as _histogram2d
+from physt.compat.numpy import histogramdd as _histogramnd
 
 X = np.random.normal(0, 1, 100)
 Y = np.random.normal(0, 1, 100)
@@ -45,12 +45,14 @@ class TestHistogramEqualness:
 
 class TestHistogram2dEqualness:
     def _test_with_args(self, x, y, *args, **kwargs):
-        values, edges = np.histogram2d(x, y, *args, **kwargs)
+        values, edges_x, edges_y = np.histogram2d(x, y, *args, **kwargs)
         histogram = _histogram2d(x, y, *args, **kwargs)
 
         assert np.array_equal(values, histogram.values)
-        assert np.array_equal(edges, histogram.schema.edges)
-        assert np.array_equal(None, histogram.schema.mask)
+        assert np.array_equal(edges_x, histogram.schema[0].edges)
+        assert np.array_equal(edges_y, histogram.schema[1].edges)
+        assert np.array_equal(None, histogram.schema[0].mask)
+        assert np.array_equal(None, histogram.schema[1].mask)
 
     def test_no_args(self):
         self._test_with_args(X, Y)

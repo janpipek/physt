@@ -118,6 +118,9 @@ class MultiSchema:
     def schemas(self):
         return self._schemas
 
+    def __getitem__(self, item):
+        return self._schemas[item]
+
     def fit(self, *data):
         # TODO: reshape data
         for i, schema in enumerate(self.schemas):
@@ -125,13 +128,16 @@ class MultiSchema:
 
     def fit_and_apply(self, *data, weights=None) -> np.ndarray:
         self.fit(*data)
-        return self.apply(*data, weights)
+        return self.apply(*data, weights=weights)
 
     def apply(self, *data, weights=None) -> np.ndarray:
         # TODO: reshape data
         edges = [schema.edges for schema in self.schemas]
         masks = [schema.mask for schema in self.schemas]
-        values, _ = np.histogramdd(data, bins=edges, weights=weights)
+        if self.ndim == 2:
+            values, _, _ = np.histogram2d(*data, bins=edges)
+        else:
+            values, _ = np.histogramdd(data, bins=edges, weights=weights)
 
         changed = False
         for i, mask in enumerate(masks):
