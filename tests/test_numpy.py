@@ -6,10 +6,12 @@ import physt
 from physt.compat.numpy import BIN_COUNT_ALGORITHMS
 from physt.compat.numpy import histogram as _histogram
 from physt.compat.numpy import histogram2d as _histogram2d
-from physt.compat.numpy import histogramdd as _histogramnd
+from physt.compat.numpy import histogramdd as _histogramdd
 
 X = np.random.normal(0, 1, 100)
 Y = np.random.normal(0, 1, 100)
+Z = np.random.normal(0, 1, 100)
+
 
 class TestHistogramEqualness:
     def _test_with_args(self, array, *args, **kwargs):
@@ -57,9 +59,29 @@ class TestHistogram2dEqualness:
     def test_no_args(self):
         self._test_with_args(X, Y)
 
+    def test_with_bin_number(self):
+        self._test_with_args(X, Y, bins=47)
+
+    def test_with_bin_numbers(self):
+        self._test_with_args(X, Y, bins=[47, 13])
+
+    def test_with_ranges(self):
+        self._test_with_args(X, Y, range=((0, 1), (0.5, 1.5)))
+
 
 class TestHistogram3dEqualness:
-    pass
+    def _test_with_args(self, x, y, z, *args, **kwargs):
+        sample = np.asarray([x, y, z]).T
+        values, edges = np.histogramdd(sample, *args, **kwargs)
+        histogram = _histogramdd(sample, *args, **kwargs)
+
+        assert np.array_equal(values, histogram.values)
+        for i in range(3):
+            assert np.array_equal(edges[i], histogram.schema[i].edges)
+            assert None == histogram.schema[i].mask
+
+    def test_no_args(self):
+        self._test_with_args(X, Y, Z)
 
 
 if __name__ == "__main__":

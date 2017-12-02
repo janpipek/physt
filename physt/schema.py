@@ -25,7 +25,20 @@ class Schema:
         if hasattr(self, "_bins") and self._bins is not None:
             return self._bins
         else:
-            return 
+            return
+
+    @property
+    def ndim(self):
+        return 1
+
+    @property
+    def shape(self):
+        if hasattr(self, "_bins") and self._bins is not None:
+            return (self._bins.shape[0],)
+        elif hasattr(self, "_edges") and self._edges is not None:
+            return len(self._edges) - 1,
+        else:
+            return 0
 
     @property
     def edges(self):
@@ -107,12 +120,23 @@ class IntegerSchema(Schema):
 
 
 class MultiSchema:
-    def __init__(self, *schemas):
-        self._schemas = schemas
+    def __init__(self, schemas):
+        self._schemas = tuple(schemas)
 
     @property
     def ndim(self):
         return len(self._schemas)
+
+    @property
+    def shape(self):
+        result = ()
+        for schema in self._schemas:
+            result += schema.shape
+        return result
+
+    @property
+    def edges(self):
+        return [schema.edges for schema in self.schemas]
 
     @property
     def schemas(self):
@@ -121,23 +145,19 @@ class MultiSchema:
     def __getitem__(self, item):
         return self._schemas[item]
 
-    def fit(self, *data):
-        # TODO: reshape data
+    def fit(self, data):
+        # TODO: data size check
         for i, schema in enumerate(self.schemas):
-            schema.fit(data[i])
+            schema.fit(data[:,i])
 
-    def fit_and_apply(self, *data, weights=None) -> np.ndarray:
-        self.fit(*data)
-        return self.apply(*data, weights=weights)
+    def fit_and_apply(self, data, weights=None) -> np.ndarray:
+        self.fit(data)
+        return self.apply(data, weights=weights)
 
-    def apply(self, *data, weights=None) -> np.ndarray:
-        # TODO: reshape data
+    def apply(self, data, weights=None) -> np.ndarray:
         edges = [schema.edges for schema in self.schemas]
         masks = [schema.mask for schema in self.schemas]
-        if self.ndim == 2:
-            values, _, _ = np.histogram2d(*data, bins=edges)
-        else:
-            values, _ = np.histogramdd(data, bins=edges, weights=weights)
+        values, _ = np.histogramdd(data, bins=edges, weights=weights)
 
         changed = False
         for i, mask in enumerate(masks):

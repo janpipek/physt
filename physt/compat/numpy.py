@@ -40,21 +40,34 @@ def histogram(a, bins=10, range=None, normed=False, weights=None, density=None) 
     histogram = Histogram(schema, values)
     return histogram
 
-def histogram2d(x, y, bins=10, range=None, normed=False, weights=None) -> Histogram: 
-    from builtins import range as builtin_range  
+
+def histogram2d(x, y, bins=10, range=None, normed=False, weights=None) -> Histogram:
+    sample = np.asarray([x, y]).T
+    return histogramdd(sample, bins, range=range, normed=normed, weights=weights)
+
+
+def histogramdd(sample, bins=10, range=None, normed=False, weights=None) -> Histogram:
+    if normed:
+        raise ValueError("The `normed` argument is known to be buggy in numpy and is not supported.")
+    from builtins import range as builtin_range
+    sample = np.asarray(sample)
+    ndim = sample.shape[1]
+    if ndim > 10:
+        raise ValueError("Histograms with dimension > 10 are not supported, {0} requsted.".format(ndim))
+    if not range:
+        range = [None] * ndim
     if isinstance(bins, (list, tuple)):
-        schemas = (make_numpy_schema(item, range=range) for item in bins)
+        if len(bins) != ndim:
+            raise ValueError("List of bin arrays must contain {0} items, {1} found.".format(ndim, len(bins)))
+        schemas = (make_numpy_schema(item, range=range[i], allow_string=False) for i, item in enumerate(bins))
     else:
-        schemas = (make_numpy_schema(bins, range=range) for i in builtin_range(2))
-    
-    schema = MultiSchema(*schemas)
-    values = schema.fit_and_apply(x, y, weights=weights)
+        schemas = (make_numpy_schema(bins, range=range[i], allow_string=False) for i in builtin_range(ndim))
+
+    schema = MultiSchema(schemas)
+    values = schema.fit_and_apply(sample, weights=weights)
     histogram = Histogram(schema, values)
     return histogram
 
-def histogramdd(sample, bins=10, range=None, normed=False, weights=None) -> Histogram:
-    pass
-    
 
 def make_numpy_schema(bins, range=None, allow_string:bool=True) -> Schema:
     """Create schema compatible with numpy function parameters.

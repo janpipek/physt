@@ -31,6 +31,15 @@ class Histogram:
     def values(self) -> np.ndarray:
         return self._values
 
+    @property
+    def total(self) -> int:
+        return self.values.sum()
+
+    def __repr__(self) -> str:
+        return("{0}[{1}](shape={2}, total={3})".format(
+            self.__class__.__name__, self._schema.ndim, self._schema.shape, self.total
+        ))
+
     def __array__(self) -> np.ndarray:
         """Convert to numpy array.
 
@@ -56,7 +65,7 @@ class Histogram:
         new_schema = self._schema.copy()
         new_values = self._values if shallow else self._values.copy()
 
-        return self.__class__(schema=schema, values=values)
+        return self.__class__(schema=new_schema, values=new_values)
 
     def normalize(self, inplace=False) -> 'Histogram':
         if not inplace:
@@ -64,7 +73,7 @@ class Histogram:
             return copy.normalize(inplace=False)
         else:
             # TODO: Make sure to convert to float
-            self.values = self.values / self.values.sum()
+            self._values /= self.total
             return self
     
     @property
