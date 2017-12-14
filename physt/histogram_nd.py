@@ -70,6 +70,58 @@ class HistogramND(HistogramBase):
         """
         return [binning.numpy_bins for binning in self._binnings]
 
+    def select(self, axis, index, force_copy=False):
+        """Select in an axis.
+
+        Parameters
+        ----------
+        axis: int or str
+            Axis, in which we select.
+        index: int or slice
+            Index of bin (as in numpy)
+        name: Optional[str]
+            Name for the projected histogram (default: same)
+        type: Optional[type]
+            If set, predefined class for the projection
+
+        Returns
+        -------
+        HistogramND or Histogram2D or Histogram1D (or others in special cases)
+        """
+        if index == slice(None) and not force_copy:
+            return self
+
+        axis_id = self._get_axis(axis)
+        array_index = [slice(None, None, None) for i in range(self.ndim)]
+        array_index[axis_id] = index
+
+        frequencies = self._frequencies[array_index].copy()
+        errors2 = self._errors2[array_index].copy()
+
+        if isinstance(index, int):
+            return self._reduce_dimension([ax for ax in range(self.ndim) if ax != axis_id], frequencies, errors2)
+        elif isinstance(index, slice):
+            copy = self.copy()
+            copy._frequencies = frequencies
+            copy._errors2 = errors2
+            copy._binnings[axis_id] = self._binnings[axis_id][index]
+            return copy
+        else:
+            raise ValueError("Invalid index.")
+
+    def __getitem__(self, index):
+        if isinstance(index, (int, slice)):
+            return self.select(0, index)
+        elif isinstance(index, tuple):
+            current = self
+            for i, subindex in enumerate(index):              
+                current = current.select(i + current.ndim - self.ndim, subindex, force_copy=False)
+            if current is self:
+                current = current.copy()
+            return current
+        else:
+            raise ValueError("Invalid index.")
+
     # def __getitem__(self, item):
     #     import warnings
     #     warnings.warn("Implementation of HistogramND.__getitem__ is temporary and using it is hazardous.")
@@ -265,9 +317,9 @@ class HistogramND(HistogramBase):
         axes: Iterable[int or str]
             List of axes for the new histogram. Could be either
             numbers or names. Must contain at least one axis.
-        name: Optional[str]
+        name: Optional[str] # TODO: Check
             Name for the projected histogram (default: same)
-        type: Optional[type]
+        type: Optional[type] # TODO: Check
             If set, predefined class for the projection
 
         Returns
@@ -278,34 +330,6 @@ class HistogramND(HistogramBase):
         axes, invert = self._get_projection_axes(*axes)
         frequencies = self.frequencies.sum(axis=invert)
         errors2 = self.errors2.sum(axis=invert)
-        return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
-
-    def select(self, axis, index, **kwargs):
-        """Reduce dimensionality by taking a slice.
-
-        Parameters
-        ----------
-        axis: int or str
-            Axis, in which we select.
-        index: int
-            Number of the slice
-        name: Optional[str]
-            Name for the projected histogram (default: same)
-        type: Optional[type]
-            If set, predefined class for the projection
-
-        Returns
-        -------
-        HistogramND or Histogram2D or Histogram1D (or others in special cases)
-        """
-        # TODO: test
-        invert, axes = self._get_projection_axes(axis)
-        if not isinstance(index, int):
-            raise RuntimeError("Only integer indices supported in select()")
-        array_index = [slice(None, None, None) for i in range(self.ndim)]
-        array_index[invert[0]] = index
-        frequencies = self._frequencies[array_index].copy()
-        errors2 = self._errors2[array_index].copy()
         return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
 
     def __eq__(self, other):
