@@ -92,7 +92,7 @@ class Histogram1D(HistogramBase):
 
         Returns
         -------
-        Histogram1D or float
+        Histogram1D or tuple
             Depending on the parameters, a sub-histogram or content of one bin are returned.
         """
         underflow = np.nan
