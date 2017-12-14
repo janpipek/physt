@@ -78,11 +78,9 @@ class HistogramND(HistogramBase):
         axis: int or str
             Axis, in which we select.
         index: int or slice
-            Index of bin (as in numpy)
-        name: Optional[str]
-            Name for the projected histogram (default: same)
-        type: Optional[type]
-            If set, predefined class for the projection
+            Index of bin (as in numpy).
+        force_copy: bool
+            If True, identity slice force a copy to be made.
 
         Returns
         -------
@@ -101,6 +99,8 @@ class HistogramND(HistogramBase):
         if isinstance(index, int):
             return self._reduce_dimension([ax for ax in range(self.ndim) if ax != axis_id], frequencies, errors2)
         elif isinstance(index, slice):
+            if index.step < 0:
+                raise IndexError("Cannot change the order of bins")
             copy = self.copy()
             copy._frequencies = frequencies
             copy._errors2 = errors2
@@ -110,9 +110,29 @@ class HistogramND(HistogramBase):
             raise ValueError("Invalid index.")
 
     def __getitem__(self, index):
+        """Select subset of histogram.
+        
+        Parameters
+        ----------
+        index: int or slice or iterable
+            One or more indices to select in subsequent axes.
+
+        Returns
+        -------
+        HistogramBase or tuple
+            Depending on the parameters, a sub-histogram or content of one bin are returned.
+
+        Indexing shares semantics with Numpy arrays, however
+
+        Always returns a new object.
+        """
+        # TODO: Enable views
         if isinstance(index, (int, slice)):
             return self.select(0, index)
         elif isinstance(index, tuple):
+            if len(index) > self.ndim:
+                raise IndexError("Too many indices ({0}) to select from {1}D histogram".
+                                 format(len(index), self.ndim))
             current = self
             for i, subindex in enumerate(index):              
                 current = current.select(i + current.ndim - self.ndim, subindex, force_copy=False)
@@ -121,14 +141,6 @@ class HistogramND(HistogramBase):
             return current
         else:
             raise ValueError("Invalid index.")
-
-    # def __getitem__(self, item):
-    #     import warnings
-    #     warnings.warn("Implementation of HistogramND.__getitem__ is temporary and using it is hazardous.")
-    #     if isinstance(item, int):
-    #         if self.ndim == 3:
-    #             return Histogram2D(binnings=[binning.copy() for binning in ])
-    #     # raise NotImplementedError()
 
     # Missing: cumulative_frequencies - does it make sense?
 
