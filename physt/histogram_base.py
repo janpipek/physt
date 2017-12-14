@@ -351,7 +351,7 @@ class HistogramBase(object):
 
         """
         if inplace:
-            self /= self.total * (100 if percent else 1)
+            self /= self.total * (.01 if percent else 1)
             return self
         else:
             return self / self.total * (100 if percent else 1)
