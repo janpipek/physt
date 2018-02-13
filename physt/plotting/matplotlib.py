@@ -939,7 +939,7 @@ def _add_stats_box(h1, ax):
             verticalalignment='top', horizontalalignment='left')
 
 
-def _apply_xy_lims(ax, h1, data, kwargs):
+def _apply_xy_lims(ax, h, data, kwargs):
     """Apply axis limits and scales from kwargs.
 
     Parameters
@@ -957,12 +957,14 @@ def _apply_xy_lims(ax, h1, data, kwargs):
             "auto" (default) - the axis will fit first and last bin edges
             "keep" - let matlotlib figure this out
             tuple - standard parameter for set_xlim
-        ylim : { "keep", "auto" } or float
+        ylim : { "keep", "auto" } or tuple(float)
             "auto" (default)
                 - the axis will fit first and last bin edges (2D)
                 - the axis will exceed a bit the maximum value (1D)
             "keep" - let matlotlib figure this out
             tuple - standard parameter for set_ylim
+        invert_y : Optional[bool]
+            If True, higher values go down
 
     See Also
     --------
@@ -972,28 +974,34 @@ def _apply_xy_lims(ax, h1, data, kwargs):
     yscale = kwargs.pop("yscale", None)
     ylim = kwargs.pop("ylim", "auto")
     xlim = kwargs.pop("xlim", "auto")
+    invert_y = kwargs.pop("invert_y", False)
 
     if ylim is not "keep":
         if isinstance(ylim, tuple):
             pass
         elif ylim:
             ylim = ax.get_ylim()
-            if h1.ndim == 1:
+            if h.ndim == 1:
                 if data.size > 0 and data.max() > 0:
                     ylim = (0, max(ylim[1], data.max() +
                                    (data.max() - ylim[0]) * 0.1))
                 if yscale == "log":
                     ylim = (abs(data[data > 0].min()) * 0.9, ylim[1] * 1.1)
-            elif h1.ndim == 2:
-                if h1.shape[1] >= 2:
-                    ylim = (h1.get_bin_left_edges(1)[0],
-                            h1.get_bin_right_edges(1)[-1])
+            elif h.ndim == 2:
+                if h.shape[1] >= 2:
+                    ylim = (h.get_bin_left_edges(1)[0],
+                            h.get_bin_right_edges(1)[-1])
                     if yscale == "log":
                         if ylim[0] <= 0:
                             raise RuntimeError(
                                 "Cannot use logarithmic scale for non-positive bins.")
             else:
-                raise RuntimeError("Invalid dimension: {0}".format(h1.ndim))
+                raise RuntimeError("Invalid dimension: {0}".format(h.ndim))
+
+            if invert_y:
+                ylim = ylim[::-1]
+                # ax.xaxis.tick_top()
+                # ax.xaxis.set_label_position('top')
         ax.set_ylim(ylim)
 
     if xlim is not "keep":
@@ -1001,15 +1009,15 @@ def _apply_xy_lims(ax, h1, data, kwargs):
             pass
         elif xlim:
             xlim = ax.get_xlim()
-            if h1.shape[0] >= 2:
-                if h1.ndim == 1:
-                    xlim = (h1.bin_left_edges[0], h1.bin_right_edges[-1])
-                elif h1.ndim == 2:
-                    xlim = (h1.get_bin_left_edges(0)[
-                            0], h1.get_bin_right_edges(0)[-1])
+            if h.shape[0] >= 2:
+                if h.ndim == 1:
+                    xlim = (h.bin_left_edges[0], h.bin_right_edges[-1])
+                elif h.ndim == 2:
+                    xlim = (h.get_bin_left_edges(0)[
+                            0], h.get_bin_right_edges(0)[-1])
                 else:
                     raise RuntimeError(
-                        "Invalid dimension: {0}".format(h1.ndim))
+                        "Invalid dimension: {0}".format(h.ndim))
                 if xscale == "log":
                     if xlim[0] <= 0:
                         raise RuntimeError(
