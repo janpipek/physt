@@ -271,7 +271,7 @@ class HistogramND(HistogramBase):
             raise RuntimeError("Expecting array with {0} columns".format(self.ndim))
         if dropna:
             values = values[~np.isnan(values).any(axis=1)]
-        if weights:
+        if weights is not None:
             weights = np.asarray(weights)
             # TODO: Check for weights size?
             self._coerce_dtype(weights.dtype)
