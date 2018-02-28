@@ -14,6 +14,42 @@ DEFAULT_WIDTH = 400
 DEFAULT_HEIGHT = 200
 DEFAULT_PADDING = 5
 
+PALETTES = [
+    "Viridis",
+    "Magma",
+    "Inferno",
+    "Plasma",
+    "Blues",
+    "Greens",
+    "Greys",
+    "Purples",
+    "Reds",
+    "Oranges",
+    "BlueOrange",
+    "BrownBlueGreen",
+    "PurpleGreen",
+    "PinkYellowGreen",
+    "PurpleOrange",
+    "RedBlue",
+    "RedGrey",
+    "RedYellowBlue",
+    "RedYellowGreen",
+    "BlueGreen",
+    "BluePurple",
+    "GreenBlue",
+    "OrangeRed",
+    "PurpleBlueGreen",
+    "PurpleBlue",
+    "PurpleRed",
+    "RedPurple",
+    "YellowGreenBlue",
+    "YellowGreen",
+    "YellowOrangeBrown",
+    "YellowOrangeRed"
+]
+DEFAULT_PALETTE = PALETTES[0]
+
+
 try:
     from IPython import get_ipython
 
@@ -41,8 +77,8 @@ dims = {
 
 def enable_inline_view(f):
     @wraps(f)
-    def wrapper(hist, write_to=None, display="auto", *args, **kwargs):
-        vega_data = f(hist, *args, **kwargs)
+    def wrapper(hist, write_to=None, display="auto", **kwargs):
+        vega_data = f(hist, **kwargs)
 
         if display is True and not VEGA_IPYTHON_PLUGIN_ENABLED:
             raise RuntimeError("Cannot display vega plot: {0}".format(VEGA_ERROR))
@@ -182,8 +218,104 @@ def line(h1, **kwargs):
 
 
 @enable_inline_view
-def map(h2, **kwargs):
+def map(h2, show_zero=True, show_values=False, **kwargs):
+    """
+
+    Parameters
+    ----------
+    h2 : physt.histogram_nd.Histogram2D
+        Dimensionality of histogram for which it is applicable
+    """
     vega = _create_figure(kwargs)
+    cmap = kwargs.pop("cmap", DEFAULT_PALETTE)
+
+    values = get_data(h2, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
+
+    _add_title(h2, vega, kwargs)
+    _create_scales(h2, vega, kwargs)
+    _create_axes(h2, vega, kwargs)
+
+    vega["scales"].append(
+        {
+            "name": "color",
+            "type": "sequential",
+            "range": {"scheme": cmap},
+            "domain": {"data": "table", "field": "c"},
+            "zero": False, "nice": False
+        }
+    )
+
+    x = h2.get_bin_centers(0)
+    y = h2.get_bin_centers(1)
+    x1 = h2.get_bin_left_edges(0)
+    x2 = h2.get_bin_right_edges(0)
+    y1 = h2.get_bin_left_edges(1)
+    y2 = h2.get_bin_right_edges(1)
+
+    data = []
+    for i in range(h2.shape[0]):
+        for j in range(h2.shape[1]):
+            if not show_zero and values[i][j] == 0:
+                continue
+            data.append({
+                "x": x[i],
+                "x1": x1[i],
+                "x2": x2[i],
+                "y": y[j],
+                "y1": y1[j],
+                "y2": y2[j],
+                "c": values[i][j],
+            })
+
+    vega["data"] = [{
+        "name": "table",
+        "values": data
+    }]
+
+    vega["marks"] = [
+        {
+            "type": "rect",
+            "from": {"data": "table"},
+            "encode": {
+                "enter": {
+                    "x": {"scale": "xscale", "field": "x1"},
+                    "x2": {"scale": "xscale", "field": "x2"},
+                    "y": {"scale": "yscale", "field": "y1"},
+                    "y2": {"scale": "yscale", "field": "y2"},
+                    "fill": {"scale": "color", "field": "c"},
+                    "stroke": {"value": 0},
+                    # "strokeWidth": {"value": 0},
+                    # "fillColor": {"value": "#ffff00"}
+                },
+                # "update": {
+                #     "fillOpacity": {"value": 0.6}
+                # },
+                # "hover": {
+                #     "fillOpacity": {"value": 0.5}
+                # }
+            }
+        }
+    ]
+
+    if show_values:
+        vega["marks"].append(
+            {
+                "type": "text",
+                "from": {"data": "table"},
+                "encode": {
+                    "enter": {
+                        "align": {"value": "center"},
+                        "baseline": {"value": "middle"},
+                        "fontSize": {"value": 13},
+                        "fontWeight": {"value": "bold"},
+                        "text": {"field": "c"},
+                        "x": {"scale": "xscale", "field": "x"},
+                        "y": {"scale": "yscale", "field": "y"},
+                    }
+                }
+            }
+        )
+
     return vega
 
 
@@ -194,7 +326,7 @@ def _scatter_or_line(h1, kwargs):
     ----------
     h1 : physt.histogram1d.Histogram1D
         Dimensionality of histogram for which it is applicable
-    vega : dict
+    kwargs : dict
     """
     vega = _create_figure(kwargs)
     data = get_data(h1, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
@@ -235,6 +367,7 @@ def _create_scales(hist, vega, kwargs):
             "type": "linear",
             "range": "width",
             "nice": True,
+            "zero": None,
             "domain": {"data": "table", "field": "x"}
         },
         {
@@ -242,7 +375,7 @@ def _create_scales(hist, vega, kwargs):
             "type": "linear",
             "range": "height",
             "nice": True,
-            "zero": True,
+            "zero": True if hist.ndim == 1 else None,
             "domain": {"data": "table", "field": "y"}
         }
     ]
