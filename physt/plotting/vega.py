@@ -52,6 +52,7 @@ PALETTES = [
 DEFAULT_PALETTE = PALETTES[0]
 
 
+# Hack to find whether we can display inline images in IPython notebook
 try:
     from IPython import get_ipython
 
@@ -67,8 +68,8 @@ try:
 except:
     VEGA_ERROR = "IPython not installed."
 
+# Declare supported plot types.
 types = ("bar", "scatter", "line", "map", "map_with_slider")
-
 dims = {
     "bar": [1],
     "scatter": [1],
@@ -79,6 +80,19 @@ dims = {
 
 
 def enable_inline_view(f):
+    """Decorator to enable in-line viewing in Python and saving to external file.
+
+    It adds several parameters to each decorated plotted function:
+
+    Parameters
+    ----------
+    write_to: str (optional)
+        Path to write vega JSON to.
+    display: "auto" | True | False
+        Whether to try in-line display in IPython
+    indent: int
+        Indentation of JSON
+    """
     @wraps(f)
     def wrapper(hist, write_to=None, display="auto", indent=2, **kwargs):
 
@@ -105,7 +119,7 @@ def enable_inline_view(f):
 
 @enable_inline_view
 def bar(h1, **kwargs):
-    """
+    """Bar plot of 1D histogram.
 
     Parameters
     ----------
@@ -160,6 +174,15 @@ def bar(h1, **kwargs):
 
 @enable_inline_view
 def scatter(h1, **kwargs):
+    """Scatter plot of 1D histogram values.
+
+    Points are horizontally placed in bin centers.
+
+    Parameters
+    ----------
+    h1 : physt.histogram1d.Histogram1D
+        Dimensionality of histogram for which it is applicable
+    """
     vega = _scatter_or_line(h1, kwargs)
     vega["marks"] = [
         {
@@ -183,13 +206,14 @@ def scatter(h1, **kwargs):
             }
         }
     ]
-
     return vega
 
 
 @enable_inline_view
 def line(h1, **kwargs):
-    """
+    """Line plot of 1D histogram values.
+
+    Points are horizontally placed in bin centers.
 
     Parameters
     ----------
@@ -223,12 +247,14 @@ def line(h1, **kwargs):
 
 @enable_inline_view
 def map(h2, show_zero=True, show_values=False, **kwargs):
-    """
+    """Heat-map of two-dimensional histogram.
 
     Parameters
     ----------
     h2 : physt.histogram_nd.Histogram2D
         Dimensionality of histogram for which it is applicable
+    show_zero : bool
+    show_values : bool
     """
     vega = _create_figure(kwargs)
     cmap = kwargs.pop("cmap", DEFAULT_PALETTE)
@@ -325,12 +351,14 @@ def map(h2, show_zero=True, show_values=False, **kwargs):
 
 @enable_inline_view
 def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
-    """
+    """Heatmap showing slice in first two dimensions, third dimension represented as a slider.
 
     Parameters
     ----------
     h3 : physt.histogram_nd.HistogramND
         A three-dimensional diagram to plot.
+    show_zero : bool
+    show_values : bool
     """
     vega = _create_figure(kwargs)
     cmap = kwargs.pop("cmap", DEFAULT_PALETTE)
@@ -470,6 +498,7 @@ def _scatter_or_line(h1, kwargs):
 
 
 def _create_figure(kwargs):
+    """Create basic dictionary object with figure properties."""
     return {
         "$schema": "https://vega.github.io/schema/vega/v3.json",
         "width": kwargs.pop("width", DEFAULT_WIDTH),
@@ -479,13 +508,19 @@ def _create_figure(kwargs):
 
 
 def _create_scales(hist, vega, kwargs):
-    """
+    """Find proper scales for axes.
 
     Parameters
     ----------
+    hist: physt.histogram_base.HistogramBase
     vega : dict
     kwargs : dict
     """
+    if hist.ndim == 1:
+        bins0 = hist.bins
+    else:
+        bins0 = hist.bins[0]
+
     vega["scales"] = [
         {
             "name": "xscale",
@@ -493,7 +528,8 @@ def _create_scales(hist, vega, kwargs):
             "range": "width",
             "nice": True,
             "zero": None,
-            "domain": {"data": "table", "field": "x"}
+            "domain": [bins0[0, 0], bins0[-1, 1]],
+            # "domain": {"data": "table", "field": "x"}
         },
         {
             "name": "yscale",
@@ -505,9 +541,8 @@ def _create_scales(hist, vega, kwargs):
         }
     ]
 
-    if hist.ndim == 3:
-        bins0, bins1 = hist.bins[0], hist.bins[1]
-        vega["scales"][0]["domain"] = [bins0[0, 0], bins0[-1, 1]]
+    if hist.ndim >= 2:
+        bins1 = hist.bins[1]
         vega["scales"][1]["domain"] = [bins1[0, 0], bins1[-1, 1]]
 
 
