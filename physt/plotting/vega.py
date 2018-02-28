@@ -29,12 +29,13 @@ try:
 except:
     VEGA_ERROR = "IPython not installed."
 
-types = ("bar", "scatter", "line")
+types = ("bar", "scatter", "line", "map")
 
 dims = {
     "bar": [1],
     "scatter": [1],
     "line": [1],
+    "map": [2]
 }
 
 
@@ -72,8 +73,9 @@ def bar(h1, **kwargs):
         Dimensionality of histogram for which it is applicable
     """
     vega = _create_figure(kwargs)
-    _create_scales(vega, kwargs)
-    _create_axes(vega, h1, kwargs)
+    _add_title(h1, vega, kwargs)
+    _create_scales(h1, vega, kwargs)
+    _create_axes(h1, vega, kwargs)
 
     data = get_data(h1, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
     lefts = h1.bin_left_edges.tolist()
@@ -179,6 +181,12 @@ def line(h1, **kwargs):
     return vega
 
 
+@enable_inline_view
+def map(h2, **kwargs):
+    vega = _create_figure(kwargs)
+    return vega
+
+
 def _scatter_or_line(h1, kwargs):
     """
 
@@ -197,8 +205,9 @@ def _scatter_or_line(h1, kwargs):
         "values": [{"x": centers[i], "y": data[i]} for i in range(h1.bin_count)]
     }]
 
-    _create_scales(vega, kwargs)
-    _create_axes(vega, h1, kwargs)
+    _add_title(h1, vega, kwargs)
+    _create_scales(h1, vega, kwargs)
+    _create_axes(h1, vega, kwargs)
 
     return vega
 
@@ -212,7 +221,7 @@ def _create_figure(kwargs):
     }
 
 
-def _create_scales(vega, kwargs):
+def _create_scales(hist, vega, kwargs):
     """
 
     Parameters
@@ -239,7 +248,7 @@ def _create_scales(vega, kwargs):
     ]
 
 
-def _create_axes(vega, hist, kwargs):
+def _create_axes(hist, vega, kwargs):
     """
 
     Parameters
@@ -269,4 +278,6 @@ def _add_title(hist, vega, kwargs):
     """
     title = kwargs.pop("title", hist.title)
     if title:
-        vega[""] = {}
+        vega["title"] = {
+            "text": title
+        }
