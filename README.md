@@ -7,6 +7,8 @@ and to create one representation that is easily manipulated with from the data p
 nice integration into IPython notebook and various plotting options. In short, whatever you want to do with histograms,
 **physt** aims to be on your side.
 
+*Note: bokeh plotting backend has been discontinued.*
+
 [![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/physt.svg)](https://gitter.im/physt/physt) [![PyPI version](https://badge.fury.io/py/physt.svg)](https://badge.fury.io/py/physt)
 [![ReadTheDocs](https://readthedocs.org/projects/physt/badge/?version=latest)](http://physt.readthedocs.io/en/latest/)
 <!-- [![Anaconda-Server Badge](https://anaconda.org/janpipek/physt/badges/version.svg)](https://anaconda.org/janpipek/physt) -->
@@ -68,7 +70,6 @@ See more in docstring's and notebooks:
 
 - Basic tutorial: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/tutorial.ipynb>
 - Binning: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/binning.ipynb>
-- Bokeh plots: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/bokeh_examples.ipynb>
 - 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/2d_histograms.ipynb>
 - Special histograms (polar, spherical, cylindrical - *beta*): <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/special_histograms.ipynb>
 - Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/adaptive_histogram.ipynb>
@@ -105,7 +106,7 @@ Using conda (very old):
 * Add new values (fill, fill_n)
 * Cumulative values, densities
 * Simple statistics for original data (mean, std, sem)
-* Simple plotting (matplotlib, bokeh, folium)
+* Simple plotting (matplotlib, folium)
 * Algorithms for optimized binning
   - human-friendly
   - mathematical
@@ -133,7 +134,6 @@ Rationale (for both): physt is dumb, but precise.
 - Python 3.5+ targeted, 2.7 passes unit tests (hopefully)
 - numpy
 - (optional) matplotlib - simple output
-- (optional) bokeh - simple output
 - (optional) xarray - I/O
 - (optional) astropy - additional binning algorithms
 - (optional) folium - map plotting

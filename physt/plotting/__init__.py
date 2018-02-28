@@ -2,7 +2,6 @@
 
 Available backends:
 - matplotlib
-- bokeh
 - folium
 """
 
@@ -15,18 +14,12 @@ backends = OrderedDict()
 # Use variant without exception catching if you want to debug import of backends.
 # from . import matplotlib as mpl_backend
 # backends["matplotlib"] = mpl_backend
-# from . import bokeh as bokeh_backend
-# backends["bokeh"] = bokeh_backend
+# from . import folium as folium_backend
+# backends["folium"] = folium_backend
 
 try:
     from . import matplotlib as mpl_backend
     backends["matplotlib"] = mpl_backend
-except:
-    pass
-
-try:
-    from . import bokeh as bokeh_backend
-    backends["bokeh"] = bokeh_backend
 except:
     pass
 
@@ -51,6 +44,8 @@ def set_default_backend(name):
     name: str
     """
     global _default_backend
+    if name == "bokeh":
+        raise RuntimeError("Support for bokeh has been discontinued. At some point, we may return to support holoviews.")
     if not name in backends:
         raise RuntimeError("Backend {0} is not supported".format(name))
     _default_backend = name
@@ -70,6 +65,8 @@ def _get_backend(name=None):
         raise RuntimeError("No plotting backend available. Please, install matplotlib (preferred) or bokeh (limited).")
     if not name:
         name = _default_backend
+    if name == "bokeh":
+        raise RuntimeError("Support for bokeh has been discontinued. At some point, we may return to support holoviews.")
     backend = backends.get(name)
     if not backend:
         raise RuntimeError("Backend {0} does not exist. Use one of the following: {1}".format(name, ", ".join(backends.keys())))

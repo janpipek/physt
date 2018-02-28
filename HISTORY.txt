@@ -1,3 +1,7 @@
+0.3.32 (28th February 2018)
+---------------------------
+- Removed: bokeh plotting backend (as it is outdated)
+
 0.3.31 (14th December 2017)
 ---------------------------
 - Added: slicing ND histograms with [] - works for ints and slices (alpha)

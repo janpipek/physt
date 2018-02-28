@@ -32,7 +32,7 @@ options = dict(
     package_data={"physt" : ["examples/*.csv"]},
     install_requires = ['numpy'],
     extras_require = {
-        'all' : ['dask', 'matplotlib', 'bokeh', 'folium']
+        'all' : ['dask', 'matplotlib', 'folium']
     },
     entry_points = {
         'console_scripts' : [
