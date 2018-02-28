@@ -2,6 +2,7 @@
 
 Available backends:
 - matplotlib
+- vega
 - bokeh
 - folium
 """

@@ -1,3 +1,5 @@
+"""Vega backend for plotting in physt.
+"""
 from __future__ import absolute_import
 
 import codecs
@@ -65,19 +67,21 @@ try:
 except:
     VEGA_ERROR = "IPython not installed."
 
-types = ("bar", "scatter", "line", "map")
+types = ("bar", "scatter", "line", "map", "map_with_slider")
 
 dims = {
     "bar": [1],
     "scatter": [1],
     "line": [1],
-    "map": [2]
+    "map": [2],
+    "map_with_slider": [3],
 }
 
 
 def enable_inline_view(f):
     @wraps(f)
-    def wrapper(hist, write_to=None, display="auto", **kwargs):
+    def wrapper(hist, write_to=None, display="auto", indent=2, **kwargs):
+
         vega_data = f(hist, **kwargs)
 
         if display is True and not VEGA_IPYTHON_PLUGIN_ENABLED:
@@ -88,7 +92,7 @@ def enable_inline_view(f):
 
         if write_to is not None:
             with codecs.open(write_to, "w", encoding="utf-8") as out:
-                json.dump(vega_data, out)
+                json.dump(vega_data, out, indent=indent)
 
         if VEGA_IPYTHON_PLUGIN_ENABLED and display:
             from vega3 import Vega
@@ -319,6 +323,127 @@ def map(h2, show_zero=True, show_values=False, **kwargs):
     return vega
 
 
+@enable_inline_view
+def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
+    """
+
+    Parameters
+    ----------
+    h3 : physt.histogram_nd.HistogramND
+        A three-dimensional diagram to plot.
+    """
+    vega = _create_figure(kwargs)
+    cmap = kwargs.pop("cmap", DEFAULT_PALETTE)
+
+    values_arr = get_data(h3, kwargs.pop("density", None), kwargs.pop("cumulative", None))
+    values = values_arr.tolist()
+
+    _add_title(h3, vega, kwargs)
+    _create_scales(h3, vega, kwargs)
+    _create_axes(h3, vega, kwargs)
+
+    vega["scales"].append(
+        {
+            "name": "color",
+            "type": "sequential",
+            "domain": [float(values_arr.min()), float(values_arr.max())],
+            "range": {"scheme": cmap},
+            "zero": False,
+            "nice": False
+        }
+    )
+
+    x = h3.get_bin_centers(0)
+    y = h3.get_bin_centers(1)
+    x1 = h3.get_bin_left_edges(0)
+    x2 = h3.get_bin_right_edges(0)
+    y1 = h3.get_bin_left_edges(1)
+    y2 = h3.get_bin_right_edges(1)
+
+    data = []
+    for i in range(h3.shape[0]):
+        for j in range(h3.shape[1]):
+            for k in range(h3.shape[2]):
+                if not show_zero and values[i][j][k] == 0:
+                    continue
+                data.append({
+                    "x": x[i],
+                    "x1": x1[i],
+                    "x2": x2[i],
+                    "y": y[j],
+                    "y1": y1[j],
+                    "y2": y2[j],
+                    "k": k,
+                    "c": values[i][j][k],
+                })
+
+    vega["signals"] = [
+        { "name": h3.axis_names[2], "value": h3.shape[2] // 2,
+          "bind": {"input": "range", "min": 0, "max": h3.shape[2] - 1, "step": 1} }
+    ]
+
+    vega["legends"] = [
+        {"fill": "color", "type": "gradient"}
+    ]
+
+    vega["data"] = [{
+        "name": "table",
+        "values": data,
+        "transform": [
+             {
+                 "type": "filter",
+                 "expr": "z == datum.k",
+             }
+        ]
+    }]
+
+    vega["marks"] = [
+        {
+            "type": "rect",
+            "from": {"data": "table"},
+            "encode": {
+                "enter": {
+                    "x": {"scale": "xscale", "field": "x1"},
+                    "x2": {"scale": "xscale", "field": "x2"},
+                    "y": {"scale": "yscale", "field": "y1"},
+                    "y2": {"scale": "yscale", "field": "y2"},
+                    "fill": {"scale": "color", "field": "c"},
+                    "stroke": {"value": 0},
+                    # "strokeWidth": {"value": 0},
+                    # "fillColor": {"value": "#ffff00"}
+                },
+                # "update": {
+                #     "fillOpacity": {"value": 0.6}
+                # },
+                # "hover": {
+                #     "fillOpacity": {"value": 0.5}
+                # }
+            }
+        }
+    ]
+
+    if show_values:
+        vega["marks"].append(
+            {
+                "type": "text",
+                "from": {"data": "table"},
+                "encode": {
+                    "enter": {
+                        "align": {"value": "center"},
+                        "baseline": {"value": "middle"},
+                        "fontSize": {"value": 13},
+                        "fontWeight": {"value": "bold"},
+                        "text": {"field": "c"},
+                        "x": {"scale": "xscale", "field": "x"},
+                        "y": {"scale": "yscale", "field": "y"},
+                    }
+                }
+            }
+        )
+
+    return vega
+
+
 def _scatter_or_line(h1, kwargs):
     """
 
@@ -379,6 +504,11 @@ def _create_scales(hist, vega, kwargs):
             "domain": {"data": "table", "field": "y"}
         }
     ]
+
+    if hist.ndim == 3:
+        bins0, bins1 = hist.bins[0], hist.bins[1]
+        vega["scales"][0]["domain"] = [bins0[0, 0], bins0[-1, 1]]
+        vega["scales"][1]["domain"] = [bins1[0, 0], bins1[-1, 1]]
 
 
 def _create_axes(hist, vega, kwargs):
