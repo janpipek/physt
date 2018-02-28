@@ -36,6 +36,12 @@ try:
 except:
     pass
 
+try:
+    from . import vega as vega_backend
+    backends["vega"] = vega_backend
+except:
+    pass
+
 
 if backends:
     _default_backend = list(backends.keys())[0]
