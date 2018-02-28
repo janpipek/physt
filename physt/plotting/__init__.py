@@ -2,6 +2,7 @@
 
 Available backends:
 - matplotlib
+- vega
 - folium
 """
 
@@ -16,6 +17,8 @@ backends = OrderedDict()
 # backends["matplotlib"] = mpl_backend
 # from . import folium as folium_backend
 # backends["folium"] = folium_backend
+# from . import vega as vega_backend
+# backends["vega"] = vega_backend
 
 try:
     from . import matplotlib as mpl_backend
@@ -26,6 +29,12 @@ except:
 try:
     from . import folium as folium_backend
     backends["folium"] = folium_backend
+except:
+    pass
+
+try:
+    from . import vega as vega_backend
+    backends["vega"] = vega_backend
 except:
     pass
 

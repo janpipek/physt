@@ -1,6 +1,7 @@
 0.3.32 (28th February 2018)
 ---------------------------
 - Removed: bokeh plotting backend (as it is outdated)
+- Added: vega plotting backend (as alpha but with cool features already)
 
 0.3.31 (14th December 2017)
 ---------------------------

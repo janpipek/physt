@@ -7,7 +7,7 @@ and to create one representation that is easily manipulated with from the data p
 nice integration into IPython notebook and various plotting options. In short, whatever you want to do with histograms,
 **physt** aims to be on your side.
 
-*Note: bokeh plotting backend has been discontinued.*
+*Note: bokeh plotting backend has been discontinued (due to external library being redesigned.)*
 
 [![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/physt.svg)](https://gitter.im/physt/physt) [![PyPI version](https://badge.fury.io/py/physt.svg)](https://badge.fury.io/py/physt)
 [![ReadTheDocs](https://readthedocs.org/projects/physt/badge/?version=latest)](http://physt.readthedocs.io/en/latest/)
@@ -40,7 +40,7 @@ import seaborn as sns
 
 iris = sns.load_dataset('iris')
 iris_hist = h2(iris["sepal_length"], iris["sepal_width"], "human", (12, 7), name="Iris")
-iris_hist.plot(show_zero=False, cmap=cm.gray_r, show_values=True);
+iris_hist.plot(show_zero=False, cmap="gray_r", show_values=True);
 ```
 
 ![Iris 2D plot](doc/iris-2d.png)
@@ -52,10 +52,10 @@ import numpy as np
 from physt import special
 
 # Generate some sample data
-data = np.empty((n, 3))
-data[:,0] = np.random.normal(0, 1, n)
-data[:,1] = np.random.normal(0, 1.3, n)
-data[:,2] = np.random.normal(1, .6, n)
+data = np.empty((1000, 3))
+data[:,0] = np.random.normal(0, 1, 1000)
+data[:,1] = np.random.normal(0, 1.3, 1000)
+data[:,2] = np.random.normal(1, .6, 1000)
 
 # Get histogram data (in spherical coordinates)
 h = special.spherical_histogram(data)                 
@@ -75,6 +75,7 @@ See more in docstring's and notebooks:
 - Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/adaptive_histogram.ipynb>
 - Use dask for large (not "big") data - *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/dask.ipynb>
 - Geographical bins . *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/geospatial.ipynb>
+- Plotting with vega backend: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/vega-examples.ipynb>
 
 ## Installation
 
@@ -106,7 +107,10 @@ Using conda (very old):
 * Add new values (fill, fill_n)
 * Cumulative values, densities
 * Simple statistics for original data (mean, std, sem)
-* Simple plotting (matplotlib, folium)
+* Plotting with several backends
+  - matplotlib (static plots with many options)
+  - vega (interactive plots, beta)
+  - folium (experimental for geo-data)
 * Algorithms for optimized binning
   - human-friendly
   - mathematical
@@ -121,7 +125,7 @@ Using conda (very old):
   - merging bins
 * Statistics (based on original data)?
 * Stacked histograms (with names)
-* More plotting backends
+* Potentially holoviews plotting backend (instead of the discontinued bokeh one)
 
 ### Not planned
 * Kernel density estimates - use your favourite statistics package (like `seaborn`)
@@ -137,6 +141,7 @@ Rationale (for both): physt is dumb, but precise.
 - (optional) xarray - I/O
 - (optional) astropy - additional binning algorithms
 - (optional) folium - map plotting
+- (optional) vega3 - for vega in-line in IPython notebook (note that to generate vega JSON, this is not necessary)
 - (testing) py.test, pandas
 - (docs) sphinx, sphinx_rtd_theme, ipython
 

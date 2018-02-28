@@ -170,6 +170,7 @@ try:
         iris = load_dataset("iris")
         return h2(iris[x], iris[y], "human", 20, name="iris")
 
+
     ALL_EXAMPLES += [iris_h1, iris_h2]
 
 except ImportError:
