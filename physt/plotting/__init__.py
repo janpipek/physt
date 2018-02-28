@@ -27,17 +27,16 @@ except:
     pass
 
 try:
-    from . import folium as folium_backend
-    backends["folium"] = folium_backend
-except:
-    pass
-
-try:
     from . import vega as vega_backend
     backends["vega"] = vega_backend
 except:
     pass
 
+try:
+    from . import folium as folium_backend
+    backends["folium"] = folium_backend
+except:
+    pass
 
 if backends:
     _default_backend = list(backends.keys())[0]
@@ -56,7 +55,7 @@ def set_default_backend(name):
     if name == "bokeh":
         raise RuntimeError("Support for bokeh has been discontinued. At some point, we may return to support holoviews.")
     if not name in backends:
-        raise RuntimeError("Backend {0} is not supported".format(name))
+        raise RuntimeError("Backend {0} is not supported and cannot be set as default.".format(name))
     _default_backend = name
 
 
