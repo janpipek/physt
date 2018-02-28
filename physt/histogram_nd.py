@@ -321,6 +321,25 @@ class HistogramND(HistogramBase):
             return klass(dimension=len(axes), binnings=bins, frequencies=frequencies,
                          errors2=errors2, axis_names=axis_names, name=name)
 
+    def accumulate(self, axis):
+        """Calculate cumulative frequencies along a certain axis.
+
+        Parameters
+        ----------
+        axis: int or str
+
+        Returns
+        -------
+        new_hist : HistogramND or Histogram2D
+            Histogram of the same type & size
+        """
+        # TODO: Merge with Histogram1D.cumulative_frequencies
+        # TODO: Deal with errors and totals etc.
+        new_one = self.copy()
+        axis_id, _ = self._get_projection_axes(axis)
+        new_one._frequencies = np.cumsum(new_one.frequencies, axis_id[0])
+        return new_one
+
     def projection(self, *axes, **kwargs):
         """Reduce dimensionality by summing along axis/axes.
 
