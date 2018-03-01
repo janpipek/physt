@@ -88,13 +88,15 @@ def enable_inline_view(f):
     ----------
     write_to: str (optional)
         Path to write vega JSON to.
+    write_format: "auto" | "json" | "html"
+        Whether to create a JSON data file or a full-fledged HTML page.
     display: "auto" | True | False
         Whether to try in-line display in IPython
     indent: int
         Indentation of JSON
     """
     @wraps(f)
-    def wrapper(hist, write_to=None, display="auto", indent=2, **kwargs):
+    def wrapper(hist, write_to=None, write_format="auto", display="auto", indent=2, **kwargs):
 
         vega_data = f(hist, **kwargs)
 
@@ -104,9 +106,16 @@ def enable_inline_view(f):
         if display == "auto":
             display = write_to is None
 
-        if write_to is not None:
+        if write_to:
+            spec = json.dumps(vega_data, indent=indent)
+            if write_format == "html" or write_format is "auto" and write_to.endswith(".html"):
+                output = HTML_TEMPLATE.replace("{{ title }}", hist.title).replace("{{ spec }}", spec)
+            elif write_format == "json" or write_format is "auto" and write_to.endswith(".json"):
+                output = spec
+            else:
+                raise RuntimeError("Format not understood.")
             with codecs.open(write_to, "w", encoding="utf-8") as out:
-                json.dump(vega_data, out, indent=indent)
+                out.write(output)
 
         if VEGA_IPYTHON_PLUGIN_ENABLED and display:
             from vega3 import Vega
@@ -406,7 +415,7 @@ def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
                 })
 
     vega["signals"] = [
-        { "name": h3.axis_names[2], "value": h3.shape[2] // 2,
+        { "name": "k", "value": h3.shape[2] // 2,
           "bind": {"input": "range", "min": 0, "max": h3.shape[2] - 1, "step": 1} }
     ]
 
@@ -420,7 +429,7 @@ def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
         "transform": [
              {
                  "type": "filter",
-                 "expr": "z == datum.k",
+                 "expr": "k == datum.k",
              }
         ]
     }]
@@ -579,3 +588,29 @@ def _add_title(hist, vega, kwargs):
         vega["title"] = {
             "text": title
         }
+
+HTML_TEMPLATE = """
+<html>
+<head>
+    <title>{{ title }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/vega@3.1.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@2.1.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@3.0.0"></script></head>
+<script>
+    function render(spec) {
+            view = new vega.View(vega.parse(spec))
+                .renderer('canvas')  // set renderer (canvas or svg)
+                .initialize('#it') // initialize view within parent DOM container
+                .hover()             // enable hover encode set processing
+                .run();
+        }
+</script>
+<body>
+</body>
+    <div id="it"></div>
+    <script>
+        var spec = {{ spec }};
+        render(spec);
+    </script>
+</html>
+"""
