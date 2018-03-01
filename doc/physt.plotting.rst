@@ -4,10 +4,10 @@ physt.plotting package
 Submodules
 ----------
 
-physt.plotting.bokeh module
----------------------------
+physt.plotting.vega module
+--------------------------
 
-.. automodule:: physt.plotting.bokeh
+.. automodule:: physt.plotting.vega
     :members:
     :undoc-members:
     :show-inheritance:
