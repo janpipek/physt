@@ -115,7 +115,6 @@ def bar(h1, ax, errors=False, **kwargs):
     label = kwargs.pop("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density)
-    # transformed = transform_data(data, kwargs)
 
     if "cmap" in kwargs:
         cmap = _get_cmap(kwargs)
@@ -166,7 +165,6 @@ def scatter(h1, ax, errors=False, **kwargs):
     value_format = kwargs.pop("value_format", None)
 
     data = get_data(h1, cumulative=cumulative, density=density)
-    # transformed = transform_data(data, kwargs)
 
     if "cmap" in kwargs:
         cmap = _get_cmap(kwargs)
@@ -321,7 +319,6 @@ def map(h2, ax, show_zero=True, show_values=False, show_colorbar=True, x=None, y
 
     data = get_data(h2, cumulative=False, flatten=True,
                     density=kwargs.pop("density", False))
-    # transformed = transform_data(data, kwargs)
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -416,7 +413,6 @@ def bar3d(h2, ax, **kwargs):
     """
     density = kwargs.pop("density", False)
     data = get_data(h2, cumulative=False, flatten=True, density=density)
-    # transformed = transform_data(data, kwargs)
 
     if "cmap" in kwargs:
         cmap = _get_cmap(kwargs)
@@ -496,7 +492,6 @@ def polar_map(hist, ax, show_zero=True, **kwargs):
     """
     data = get_data(hist, cumulative=False, flatten=True,
                     density=kwargs.pop("density", False))
-    # transformed = transform_data(data, kwargs)
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
