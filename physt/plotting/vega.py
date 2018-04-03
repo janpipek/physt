@@ -1,5 +1,9 @@
 """Vega backend for plotting in physt.
+
+Implementation note: Values passed to JSON cannot be of type np.int64 (solution: explicit cast to float)
 """
+# TODO: Custom JSON serializer better than conversion?
+
 from __future__ import absolute_import
 
 import codecs
@@ -141,8 +145,8 @@ def bar(h1, **kwargs):
     _create_axes(h1, vega, kwargs)
 
     data = get_data(h1, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
-    lefts = h1.bin_left_edges.tolist()
-    rights = h1.bin_right_edges.tolist()
+    lefts = h1.bin_left_edges.astype(float).tolist()
+    rights = h1.bin_right_edges.astype(float).tolist()
 
     vega["data"] = [{
         "name": "table",
@@ -297,13 +301,13 @@ def map(h2, show_zero=True, show_values=False, **kwargs):
             if not show_zero and values[i][j] == 0:
                 continue
             data.append({
-                "x": x[i],
-                "x1": x1[i],
-                "x2": x2[i],
-                "y": y[j],
-                "y1": y1[j],
-                "y2": y2[j],
-                "c": values[i][j],
+                "x": float(x[i]),
+                "x1": float(x1[i]),
+                "x2": float(x2[i]),
+                "y": float(y[j]),
+                "y1": float(y1[j]),
+                "y2": float(y2[j]),
+                "c": float(values[i][j]),
             })
 
     vega["data"] = [{
@@ -404,14 +408,14 @@ def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
                 if not show_zero and values[i][j][k] == 0:
                     continue
                 data.append({
-                    "x": x[i],
-                    "x1": x1[i],
-                    "x2": x2[i],
-                    "y": y[j],
-                    "y1": y1[j],
-                    "y2": y2[j],
+                    "x": float(x[i]),
+                    "x1": float(x1[i]),
+                    "x2": float(x2[i]),
+                    "y": float(y[j]),
+                    "y1": float(y1[j]),
+                    "y2": float(y2[j]),
                     "k": k,
-                    "c": values[i][j][k],
+                    "c": float(values[i][j][k]),
                 })
 
     vega["signals"] = [
@@ -531,9 +535,9 @@ def _create_scales(hist, vega, kwargs):
     kwargs : dict
     """
     if hist.ndim == 1:
-        bins0 = hist.bins
+        bins0 = hist.bins.astype(float)
     else:
-        bins0 = hist.bins[0]
+        bins0 = hist.bins[0].astype(float)
 
     vega["scales"] = [
         {
