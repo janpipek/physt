@@ -1009,7 +1009,7 @@ def _apply_xy_lims(ax, h, data, kwargs):
             pass
         elif xlim:
             xlim = ax.get_xlim()
-            if h.shape[0] >= 2:
+            if h.shape[0] >= 1:
                 if h.ndim == 1:
                     xlim = (h.bin_left_edges[0], h.bin_right_edges[-1])
                 elif h.ndim == 2:
