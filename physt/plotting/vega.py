@@ -415,9 +415,13 @@ def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
                 })
 
     vega["signals"] = [
-        { "name": "k", "value": h3.shape[2] // 2,
-          "bind": {"input": "range", "min": 0, "max": h3.shape[2] - 1,
-                   "step": 1, "name": h3.axis_names[2] or "axis2"} }
+        {
+            "name": "k", "value": h3.shape[2] // 2,
+            "bind": {
+                "input": "range", "min": 0, "max": h3.shape[2] - 1,
+                "step": 1, "name": (h3.axis_names[2] or "axis2") + " [slice]"
+            }
+        }
     ]
 
     vega["legends"] = [
