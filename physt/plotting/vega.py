@@ -416,7 +416,8 @@ def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
 
     vega["signals"] = [
         { "name": "k", "value": h3.shape[2] // 2,
-          "bind": {"input": "range", "min": 0, "max": h3.shape[2] - 1, "step": 1} }
+          "bind": {"input": "range", "min": 0, "max": h3.shape[2] - 1,
+                   "step": 1, "name": h3.axis_names[2] or "axis2"} }
     ]
 
     vega["legends"] = [
@@ -566,7 +567,7 @@ def _create_axes(hist, vega, kwargs):
     kwargs : dict
     """
     xlabel = kwargs.pop("xlabel", hist.axis_names[0])
-    ylabel = kwargs.pop("ylabel", hist.axis_names[1] if len(hist.axis_names) == 2 else None)
+    ylabel = kwargs.pop("ylabel", hist.axis_names[1] if len(hist.axis_names) >= 2 else None)
     vega["axes"] = [
         {"orient": "bottom", "scale": "xscale", "title": xlabel},
         {"orient": "left", "scale": "yscale", "title": ylabel}
