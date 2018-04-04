@@ -882,14 +882,10 @@ def _add_values(ax, h1, data, value_format=lambda x: x):
     h1 : physt.histogram1d.Histogram1D
     data : array_like
         The values to be displayed
-
-    # TODO: Add some formatting
     """
-    if value_format is None:
-        value_format = ""
-    if isinstance(value_format, str):
-        format_str = "{0:" + value_format + "}"
-        value_format = lambda x: format_str.format(x)
+    from .common import get_value_format
+    value_format = get_value_format(value_format)
+
     for x, y in zip(h1.bin_centers, data):
         ax.text(x, y, str(value_format(y)), ha='center', va='bottom', clip_on=True)
 
