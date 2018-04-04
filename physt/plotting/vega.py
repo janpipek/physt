@@ -1,5 +1,8 @@
 """Vega backend for plotting in physt.
 
+The JSON can be produced without any external dependency, the ability
+to show plots in-line in matplotlib requires 'vega3' library.
+
 Implementation note: Values passed to JSON cannot be of type np.int64 (solution: explicit cast to float)
 """
 # TODO: Custom JSON serializer better than conversion?
@@ -10,7 +13,7 @@ import codecs
 import json
 from functools import wraps
 
-from .common import get_data
+from .common import get_data, get_value_format
 
 VEGA_IPYTHON_PLUGIN_ENABLED = False
 VEGA_ERROR = None
@@ -91,7 +94,7 @@ def enable_inline_view(f):
     Parameters
     ----------
     write_to: str (optional)
-        Path to write vega JSON to.
+        Path to write vega JSON/HTML to.
     write_format: "auto" | "json" | "html"
         Whether to create a JSON data file or a full-fledged HTML page.
     display: "auto" | True | False
@@ -270,23 +273,16 @@ def map(h2, show_zero=True, show_values=False, **kwargs):
     show_values : bool
     """
     vega = _create_figure(kwargs)
-    cmap = kwargs.pop("cmap", DEFAULT_PALETTE)
 
-    values = get_data(h2, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
+    values_arr = get_data(h2, kwargs.pop("density", None), kwargs.pop("cumulative", None))
+    values = values_arr.tolist()
+    value_format = get_value_format(kwargs.pop("value_format", None))
 
     _add_title(h2, vega, kwargs)
     _create_scales(h2, vega, kwargs)
     _create_axes(h2, vega, kwargs)
-
-    vega["scales"].append(
-        {
-            "name": "color",
-            "type": "sequential",
-            "range": {"scheme": cmap},
-            "domain": {"data": "table", "field": "c"},
-            "zero": False, "nice": False
-        }
-    )
+    _create_cmap_scale(values_arr, vega, kwargs)
+    _create_colorbar(vega, kwargs)
 
     x = h2.get_bin_centers(0)
     y = h2.get_bin_centers(1)
@@ -300,15 +296,18 @@ def map(h2, show_zero=True, show_values=False, **kwargs):
         for j in range(h2.shape[1]):
             if not show_zero and values[i][j] == 0:
                 continue
-            data.append({
+            item = {
                 "x": float(x[i]),
                 "x1": float(x1[i]),
                 "x2": float(x2[i]),
                 "y": float(y[j]),
                 "y1": float(y1[j]),
                 "y2": float(y2[j]),
-                "c": float(values[i][j]),
-            })
+                "c": float(values[i][j])
+            }
+            if show_values:
+                item["label"] = value_format(values[i][j])
+            data.append(item)
 
     vega["data"] = [{
         "name": "table",
@@ -351,7 +350,7 @@ def map(h2, show_zero=True, show_values=False, **kwargs):
                         "baseline": {"value": "middle"},
                         "fontSize": {"value": 13},
                         "fontWeight": {"value": "bold"},
-                        "text": {"field": "c"},
+                        "text": {"field": "label"},
                         "x": {"scale": "xscale", "field": "x"},
                         "y": {"scale": "yscale", "field": "y"},
                     }
@@ -374,25 +373,16 @@ def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
     show_values : bool
     """
     vega = _create_figure(kwargs)
-    cmap = kwargs.pop("cmap", DEFAULT_PALETTE)
 
     values_arr = get_data(h3, kwargs.pop("density", None), kwargs.pop("cumulative", None))
     values = values_arr.tolist()
+    value_format = get_value_format(kwargs.pop("value_format", None))
 
     _add_title(h3, vega, kwargs)
     _create_scales(h3, vega, kwargs)
     _create_axes(h3, vega, kwargs)
-
-    vega["scales"].append(
-        {
-            "name": "color",
-            "type": "sequential",
-            "domain": [float(values_arr.min()), float(values_arr.max())],
-            "range": {"scheme": cmap},
-            "zero": False,
-            "nice": False
-        }
-    )
+    _create_cmap_scale(values_arr, vega, kwargs)
+    _create_colorbar(vega, kwargs)
 
     x = h3.get_bin_centers(0)
     y = h3.get_bin_centers(1)
@@ -407,7 +397,7 @@ def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
             for k in range(h3.shape[2]):
                 if not show_zero and values[i][j][k] == 0:
                     continue
-                data.append({
+                item = {
                     "x": float(x[i]),
                     "x1": float(x1[i]),
                     "x2": float(x2[i]),
@@ -416,7 +406,10 @@ def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
                     "y2": float(y2[j]),
                     "k": k,
                     "c": float(values[i][j][k]),
-                })
+                }
+                if show_values:
+                    item["label"] = value_format(values[i][j][k])
+                data.append(item)
 
     vega["signals"] = [
         {
@@ -426,10 +419,6 @@ def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
                 "step": 1, "name": (h3.axis_names[2] or "axis2") + " [slice]"
             }
         }
-    ]
-
-    vega["legends"] = [
-        {"fill": "color", "type": "gradient"}
     ]
 
     vega["data"] = [{
@@ -479,7 +468,7 @@ def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
                         "baseline": {"value": "middle"},
                         "fontSize": {"value": 13},
                         "fontWeight": {"value": "bold"},
-                        "text": {"field": "c"},
+                        "text": {"field": "label"},
                         "x": {"scale": "xscale", "field": "x"},
                         "y": {"scale": "yscale", "field": "y"},
                     }
@@ -525,6 +514,13 @@ def _create_figure(kwargs):
     }
 
 
+def _create_colorbar(vega, kwargs):
+    if kwargs.pop("show_colorbar", True):
+        vega["legends"] = [
+            {"fill": "color", "type": "gradient"}
+        ]
+
+
 def _create_scales(hist, vega, kwargs):
     """Find proper scales for axes.
 
@@ -538,6 +534,9 @@ def _create_scales(hist, vega, kwargs):
         bins0 = hist.bins.astype(float)
     else:
         bins0 = hist.bins[0].astype(float)
+
+    # TODO: Apply xlim & ylim parameters
+    # TODO: Apply xscale & yscale parameters
 
     vega["scales"] = [
         {
@@ -560,8 +559,27 @@ def _create_scales(hist, vega, kwargs):
     ]
 
     if hist.ndim >= 2:
-        bins1 = hist.bins[1]
+        bins1 = hist.bins[1].astype(float)
         vega["scales"][1]["domain"] = [bins1[0, 0], bins1[-1, 1]]
+
+
+def _create_cmap_scale(values_arr, vega, kwargs):
+    cmap = kwargs.pop("cmap", DEFAULT_PALETTE)
+    cmap_min = float(kwargs.pop("cmap_min", values_arr.min()))
+    cmap_max = float(kwargs.pop("cmap_max", values_arr.max()))
+
+    # TODO: Apply cmap_normalize parameter
+
+    vega["scales"].append(
+        {
+            "name": "color",
+            "type": "sequential",
+            "domain": [cmap_min, cmap_max],
+            "range": {"scheme": cmap},
+            "zero": False,
+            "nice": False
+        }
+    )
 
 
 def _create_axes(hist, vega, kwargs):
@@ -583,7 +601,7 @@ def _create_axes(hist, vega, kwargs):
 
 
 def _add_title(hist, vega, kwargs):
-    """
+    """Display plot title if available.
 
     Parameters
     ----------
