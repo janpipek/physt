@@ -1,9 +1,75 @@
 """Plotting for physt histograms.
 
-Available backends:
+Available backends
+------------------
 - matplotlib
 - vega
-- folium
+- folium (just for the geoghraphical histograms)
+
+Calling the plotting functions
+
+Common parameters
+-----------------
+There are several backends (and user-defined may be added) and several
+plotting functions for each - we try to keep a consistent set of
+parameters to which all implementations should try to stick (with exceptions).
+
+All histograms
+~~~~~~~~~~~~~~
+write_to : str (optional)
+    Path to file where the output will be stored
+title : str (optional)
+    String to be displayed as plot title (defaults to h.title)
+xlabel : str (optional)
+    String to be displayed as x-axis label (defaults to corr. axis name)
+ylabel : str (optional)
+    String to be displayed as y-axis label (defaults to corr. axis name)
+xscale : str (optional)
+    If "log", x axis will be scaled logarithmically
+yscale : str (optional)
+    If "log", y axis will be scaled logarithmically
+xlim:
+
+ylim :
+
+invert_y : bool
+    If True, the y axis points downwards
+ticks : {"center", "edge"}, optional
+    If set, each bin will have a tick (either central or edge)
+alpha : float (optional)
+    The alpha of the whole plot (default: 1)
+cmap : str or list 
+    Name of the palette or list of colors or something that the
+    respective backend can interpret as colourmap.
+cmap_normalize : {"log"}, optional
+
+cmap_min : 
+    
+cmap_max :
+
+show_values : bool
+    If True, show values next to (or inside) the bins
+value_format : str or Callable
+    How bin values (if to be displayed) are rendered.
+zorder : 
+text_color : 
+text_alpha : 
+
+1D histograms
+~~~~~~~~~~~~~
+cumulative : bool
+    If True, show CDF instead of bin heights
+density : bool
+    If True, does not show bin contents but contents divided by width
+errors : bool
+    Whether to show error bars (if available)
+
+2D heatmaps
+~~~~~~~~~~~
+show_zero : bool
+    Whether to show bins that have no content
+grid_color : 
+show_colorbar : 
 """
 
 from __future__ import absolute_import
