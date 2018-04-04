@@ -1,3 +1,8 @@
+0.3.33 (4th April 2018)
+-----------------------
+- Enhanced: vega plotting backend accepting more parameters (closer to matplotlib)
+- Fixed: several minor bugs
+
 0.3.32 (28th February 2018)
 ---------------------------
 - Removed: bokeh plotting backend (as it is outdated)
