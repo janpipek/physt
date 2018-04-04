@@ -34,6 +34,13 @@ class TestHistogramND(object):
         h = physt.histogram2d(data, data, range=(0, 0.5))
         assert h.total_size == 0.25
 
+    def test_bin_sizes(self):
+        data1 = np.random.rand(100)
+        data2 = np.random.rand(100)
+        data3 = np.random.rand(100)
+        data = np.array([data1, data2, data3]).T
+        h = physt.histogramdd(data, [10, 11, 12])
+        assert h.bin_sizes.shape == (10, 11, 12)
 
 class TestProjections(object):
     def test_4_to_3(self):

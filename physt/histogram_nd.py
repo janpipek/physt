@@ -155,7 +155,7 @@ class HistogramND(HistogramBase):
         # TODO: Some kind of caching?
         sizes = self.get_bin_widths(0)
         for i in range(1, self.ndim):
-            sizes = np.outer(sizes, self.get_bin_widths(i))
+            sizes = np.multiply.outer(sizes, self.get_bin_widths(i))
         return sizes
 
     @property
