@@ -65,3 +65,23 @@ def get_err_data(histogram, density=False, cumulative=False, flatten=False):
     if flatten:
         data = data.flatten()
     return data
+
+
+def get_value_format(value_format=str):
+    """Create a formatting function from a generic value_format argument.
+    
+    Parameters
+    ----------
+    value_format : str or Callable
+
+    Returns
+    -------
+    Callable
+    """
+    if value_format is None:
+        value_format = ""
+    if isinstance(value_format, str):
+        format_str = "{0:" + value_format + "}"
+        value_format = lambda x: format_str.format(x)
+    
+    return value_format

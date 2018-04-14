@@ -12,7 +12,7 @@ See https://github.com/janpipek/physt
 from __future__ import absolute_import
 from . import binnings
 
-__version__ = str('0.3.30')
+__version__ = str('0.3.33')
 
 
 def histogram(data, bins=None, *args, **kwargs):
@@ -182,6 +182,8 @@ def histogramdd(data, bins=10, *args, **kwargs):
     dtype: Optional[type]
         Underlying type for the histogram.
         If weights are specified, default is float. Otherwise int64
+    dim: int
+        Dimension - necessary if you are creating an empty adaptive histogram
 
     Returns
     -------
@@ -252,6 +254,7 @@ def histogramdd(data, bins=10, *args, **kwargs):
 # Aliases
 h1 = histogram
 h2 = histogram2d
+h = histogramdd
 
 
 def h3(data, *args, **kwargs):
@@ -273,11 +276,13 @@ def h3(data, *args, **kwargs):
         if "axis_names" not in kwargs:
             kwargs["axis_names"] = [(column.name if hasattr(column, "name") else None) for column in data]
         data = np.concatenate([item[:, np.newaxis] for item in data], axis=1)
-    else:
+    elif data is not None:
         data = np.asarray(data)
-    n, dim = data.shape
-    if dim != 3:
-        raise RuntimeError("Array must have shape (n, 3)")
+        n, dim = data.shape
+        if dim != 3:
+            raise RuntimeError("Array must have shape (n, 3)")
+    else:
+        kwargs["dim"] = 3    
     return histogramdd(data, *args, **kwargs)
 
 from .special import polar_histogram

@@ -330,12 +330,19 @@ class HistogramBase(object):
         """
         return self._frequencies / self.bin_sizes
 
-    def normalize(self, inplace=False):
+    def normalize(self, inplace=False, percent=False):
         """Normalize the histogram, so that the total weight is equal to 1.
+
+        Parameters
+        ----------
+        inplace: bool
+            If True, updates itself. If False (default), returns copy
+        percent: bool
+            If True, normalizes to percent instead of 1. Default: False
 
         Returns
         -------
-        HistogramBase
+        HistogramBase : either modified copy or self
 
         See also
         --------
@@ -344,10 +351,10 @@ class HistogramBase(object):
 
         """
         if inplace:
-            self /= self.total
+            self /= self.total * (.01 if percent else 1)
             return self
         else:
-            return self / self.total
+            return self / self.total * (100 if percent else 1)
 
     @property
     def errors2(self):
@@ -601,7 +608,7 @@ class HistogramBase(object):
         a_copy._stats = stats
         return a_copy
 
-    def fill(self, value, weight, **kwargs):
+    def fill(self, value, weight=1, **kwargs):
         """Add a value.
 
         Abstract method - to be implemented in daughter classes.s
@@ -678,7 +685,7 @@ class HistogramBase(object):
         result["histogram_type"] = type(self).__name__
         result["binnings"] = [binning.to_dict() for binning in self._binnings]
         result["frequencies"] = self.frequencies.tolist()
-        result["dtype"] = str(self.dtype)
+        result["dtype"] = str(np.dtype(self.dtype))
         result["errors2"] = self.errors2.tolist()
         result["meta_data"] = self._meta_data
         result["missed"] = self._missed.tolist()
@@ -867,6 +874,13 @@ class HistogramBase(object):
             self._stats["sum"] /= other
             self._stats["sum2"] /= other ** 2
         return self
+
+    def __lshift__(self, value):
+        """Convenience alias for fill.
+
+        Because of the limit to argument count, weight is not supported.
+        """
+        self.fill(value)
 
     @classmethod
     def _merge_meta_data(cls, first, second):

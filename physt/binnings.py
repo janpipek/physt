@@ -55,6 +55,14 @@ class BinningBase(object):
             raise RuntimeError("Adaptivity does not work together with right-edge inclusion.")
         self._adaptive = adaptive
 
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            new_binning = self.as_static()
+            new_binning._bins = new_binning.bins[index]
+            return new_binning
+        else:
+            return self.bins[index]
+
     @staticmethod
     def from_dict(a_dict):
         binning_type = a_dict.pop("binning_type", StaticBinning)

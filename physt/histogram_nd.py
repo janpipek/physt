@@ -70,13 +70,77 @@ class HistogramND(HistogramBase):
         """
         return [binning.numpy_bins for binning in self._binnings]
 
-    # def __getitem__(self, item):
-    #     import warnings
-    #     warnings.warn("Implementation of HistogramND.__getitem__ is temporary and using it is hazardous.")
-    #     if isinstance(item, int):
-    #         if self.ndim == 3:
-    #             return Histogram2D(binnings=[binning.copy() for binning in ])
-    #     # raise NotImplementedError()
+    def select(self, axis, index, force_copy=False):
+        """Select in an axis.
+
+        Parameters
+        ----------
+        axis: int or str
+            Axis, in which we select.
+        index: int or slice
+            Index of bin (as in numpy).
+        force_copy: bool
+            If True, identity slice force a copy to be made.
+
+        Returns
+        -------
+        HistogramND or Histogram2D or Histogram1D (or others in special cases)
+        """
+        if index == slice(None) and not force_copy:
+            return self
+
+        axis_id = self._get_axis(axis)
+        array_index = [slice(None, None, None) for i in range(self.ndim)]
+        array_index[axis_id] = index
+
+        frequencies = self._frequencies[array_index].copy()
+        errors2 = self._errors2[array_index].copy()
+
+        if isinstance(index, int):
+            return self._reduce_dimension([ax for ax in range(self.ndim) if ax != axis_id], frequencies, errors2)
+        elif isinstance(index, slice):
+            if index.step < 0:
+                raise IndexError("Cannot change the order of bins")
+            copy = self.copy()
+            copy._frequencies = frequencies
+            copy._errors2 = errors2
+            copy._binnings[axis_id] = self._binnings[axis_id][index]
+            return copy
+        else:
+            raise ValueError("Invalid index.")
+
+    def __getitem__(self, index):
+        """Select subset of histogram.
+        
+        Parameters
+        ----------
+        index: int or slice or iterable
+            One or more indices to select in subsequent axes.
+
+        Returns
+        -------
+        HistogramBase or tuple
+            Depending on the parameters, a sub-histogram or content of one bin are returned.
+
+        Indexing shares semantics with Numpy arrays, however
+
+        Always returns a new object.
+        """
+        # TODO: Enable views
+        if isinstance(index, (int, slice)):
+            return self.select(0, index)
+        elif isinstance(index, tuple):
+            if len(index) > self.ndim:
+                raise IndexError("Too many indices ({0}) to select from {1}D histogram".
+                                 format(len(index), self.ndim))
+            current = self
+            for i, subindex in enumerate(index):              
+                current = current.select(i + current.ndim - self.ndim, subindex, force_copy=False)
+            if current is self:
+                current = current.copy()
+            return current
+        else:
+            raise ValueError("Invalid index.")
 
     # Missing: cumulative_frequencies - does it make sense?
 
@@ -91,7 +155,7 @@ class HistogramND(HistogramBase):
         # TODO: Some kind of caching?
         sizes = self.get_bin_widths(0)
         for i in range(1, self.ndim):
-            sizes = np.outer(sizes, self.get_bin_widths(i))
+            sizes = np.multiply.outer(sizes, self.get_bin_widths(i))
         return sizes
 
     @property
@@ -215,7 +279,7 @@ class HistogramND(HistogramBase):
             raise RuntimeError("Expecting array with {0} columns".format(self.ndim))
         if dropna:
             values = values[~np.isnan(values).any(axis=1)]
-        if weights:
+        if weights is not None:
             weights = np.asarray(weights)
             # TODO: Check for weights size?
             self._coerce_dtype(weights.dtype)
@@ -265,6 +329,25 @@ class HistogramND(HistogramBase):
             return klass(dimension=len(axes), binnings=bins, frequencies=frequencies,
                          errors2=errors2, axis_names=axis_names, name=name)
 
+    def accumulate(self, axis):
+        """Calculate cumulative frequencies along a certain axis.
+
+        Parameters
+        ----------
+        axis: int or str
+
+        Returns
+        -------
+        new_hist : HistogramND or Histogram2D
+            Histogram of the same type & size
+        """
+        # TODO: Merge with Histogram1D.cumulative_frequencies
+        # TODO: Deal with errors and totals etc.
+        new_one = self.copy()
+        axis_id, _ = self._get_projection_axes(axis)
+        new_one._frequencies = np.cumsum(new_one.frequencies, axis_id[0])
+        return new_one
+
     def projection(self, *axes, **kwargs):
         """Reduce dimensionality by summing along axis/axes.
 
@@ -273,9 +356,9 @@ class HistogramND(HistogramBase):
         axes: Iterable[int or str]
             List of axes for the new histogram. Could be either
             numbers or names. Must contain at least one axis.
-        name: Optional[str]
+        name: Optional[str] # TODO: Check
             Name for the projected histogram (default: same)
-        type: Optional[type]
+        type: Optional[type] # TODO: Check
             If set, predefined class for the projection
 
         Returns
@@ -286,34 +369,6 @@ class HistogramND(HistogramBase):
         axes, invert = self._get_projection_axes(*axes)
         frequencies = self.frequencies.sum(axis=invert)
         errors2 = self.errors2.sum(axis=invert)
-        return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
-
-    def select(self, axis, index, **kwargs):
-        """Reduce dimensionality by taking a slice.
-
-        Parameters
-        ----------
-        axis: int or str
-            Axis, in which we select.
-        index: int
-            Number of the slice
-        name: Optional[str]
-            Name for the projected histogram (default: same)
-        type: Optional[type]
-            If set, predefined class for the projection
-
-        Returns
-        -------
-        HistogramND or Histogram2D or Histogram1D (or others in special cases)
-        """
-        # TODO: test
-        invert, axes = self._get_projection_axes(axis)
-        if not isinstance(index, int):
-            raise RuntimeError("Only integer indices supported in select()")
-        array_index = [slice(None, None, None) for i in range(self.ndim)]
-        array_index[invert[0]] = index
-        frequencies = self._frequencies[array_index].copy()
-        errors2 = self._errors2[array_index].copy()
         return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
 
     def __eq__(self, other):

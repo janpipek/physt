@@ -72,6 +72,15 @@ class Histogram1D(HistogramBase):
     def axis_name(self, value):
         self.axis_names = (value,)
 
+    def select(self, axis, index, force_copy=False):
+        """Alias for [] to be compatible with HistogramND."""
+        if axis == 0:
+            if index == slice(None) and not force_copy:
+                return self
+            return self[index]
+        else:
+            raise ValueError("In Histogram1D.select(), axis must be 0.")
+
     def __getitem__(self, i):
         """Select sub-histogram or get one bin.
 
@@ -83,7 +92,7 @@ class Histogram1D(HistogramBase):
 
         Returns
         -------
-        Histogram1D or float
+        Histogram1D or tuple
             Depending on the parameters, a sub-histogram or content of one bin are returned.
         """
         underflow = np.nan

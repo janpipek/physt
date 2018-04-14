@@ -13,6 +13,7 @@ Tutorials
    binning
    adaptive_histogram
    special_histograms
+   vega-examples
 
 API
 ---

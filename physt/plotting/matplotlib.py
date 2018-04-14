@@ -115,7 +115,6 @@ def bar(h1, ax, errors=False, **kwargs):
     label = kwargs.pop("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density)
-    # transformed = transform_data(data, kwargs)
 
     if "cmap" in kwargs:
         cmap = _get_cmap(kwargs)
@@ -166,7 +165,6 @@ def scatter(h1, ax, errors=False, **kwargs):
     value_format = kwargs.pop("value_format", None)
 
     data = get_data(h1, cumulative=cumulative, density=density)
-    # transformed = transform_data(data, kwargs)
 
     if "cmap" in kwargs:
         cmap = _get_cmap(kwargs)
@@ -321,7 +319,6 @@ def map(h2, ax, show_zero=True, show_values=False, show_colorbar=True, x=None, y
 
     data = get_data(h2, cumulative=False, flatten=True,
                     density=kwargs.pop("density", False))
-    # transformed = transform_data(data, kwargs)
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -416,7 +413,6 @@ def bar3d(h2, ax, **kwargs):
     """
     density = kwargs.pop("density", False)
     data = get_data(h2, cumulative=False, flatten=True, density=density)
-    # transformed = transform_data(data, kwargs)
 
     if "cmap" in kwargs:
         cmap = _get_cmap(kwargs)
@@ -496,7 +492,6 @@ def polar_map(hist, ax, show_zero=True, **kwargs):
     """
     data = get_data(hist, cumulative=False, flatten=True,
                     density=kwargs.pop("density", False))
-    # transformed = transform_data(data, kwargs)
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -567,13 +562,11 @@ def globe_map(hist, ax, show_zero=True, **kwargs):
     ax.set_ylabel("y")
     ax.set_zlabel("z")
 
-    ax.plot_surface([], [], [], color="b")
+    if matplotlib.__version__ < "2":
+        ax.plot_surface([], [], [], color="b")
     ax.set_xlim(-1.1, 1.1)
     ax.set_ylim(-1.1, 1.1)
     ax.set_zlim(-1.1, 1.1)
-
-    # ax.plot_surface(x, y, z, rstride=hist.shape[0], color="b")
-
     return ax
 
 
@@ -622,12 +615,11 @@ def cylinder_map(hist, ax, show_zero=True, **kwargs):
     ax.set_ylabel("y")
     ax.set_zlabel("z")
 
-    ax.plot_surface([], [], [], color="b")
+    if matplotlib.__version__ < "2":
+        ax.plot_surface([], [], [], color="b")
     ax.set_xlim(-r * 1.1, r * 1.1)
     ax.set_ylim(-r * 1.1, r * 1.1)
     ax.set_zlim(zs.min(), zs.max())
-
-    # ax.plot_surface(x, y, z, rstride=hist.shape[0], color="b")
 
     return ax
 
@@ -695,7 +687,8 @@ def surface_map(hist, ax, show_zero=True, x=(lambda x, y: x),
     ax.set_ylabel("y")
     ax.set_zlabel("z")
 
-    ax.plot_surface([], [], [], color="b")   # Dummy plot
+    if matplotlib.__version__ < "2":
+        ax.plot_surface([], [], [], color="b")   # Dummy plot
     ax.set_xlim(xs.min(), xs.max())
     ax.set_ylim(ys.min(), ys.max())
     ax.set_zlim(zs.min(), zs.max())
@@ -889,14 +882,10 @@ def _add_values(ax, h1, data, value_format=lambda x: x):
     h1 : physt.histogram1d.Histogram1D
     data : array_like
         The values to be displayed
-
-    # TODO: Add some formatting
     """
-    if value_format is None:
-        value_format = ""
-    if isinstance(value_format, str):
-        format_str = "{0:" + value_format + "}"
-        value_format = lambda x: format_str.format(x)
+    from .common import get_value_format
+    value_format = get_value_format(value_format)
+
     for x, y in zip(h1.bin_centers, data):
         ax.text(x, y, str(value_format(y)), ha='center', va='bottom', clip_on=True)
 
@@ -939,7 +928,7 @@ def _add_stats_box(h1, ax):
             verticalalignment='top', horizontalalignment='left')
 
 
-def _apply_xy_lims(ax, h1, data, kwargs):
+def _apply_xy_lims(ax, h, data, kwargs):
     """Apply axis limits and scales from kwargs.
 
     Parameters
@@ -957,12 +946,14 @@ def _apply_xy_lims(ax, h1, data, kwargs):
             "auto" (default) - the axis will fit first and last bin edges
             "keep" - let matlotlib figure this out
             tuple - standard parameter for set_xlim
-        ylim : { "keep", "auto" } or float
+        ylim : { "keep", "auto" } or tuple(float)
             "auto" (default)
                 - the axis will fit first and last bin edges (2D)
                 - the axis will exceed a bit the maximum value (1D)
             "keep" - let matlotlib figure this out
             tuple - standard parameter for set_ylim
+        invert_y : Optional[bool]
+            If True, higher values go down
 
     See Also
     --------
@@ -972,28 +963,34 @@ def _apply_xy_lims(ax, h1, data, kwargs):
     yscale = kwargs.pop("yscale", None)
     ylim = kwargs.pop("ylim", "auto")
     xlim = kwargs.pop("xlim", "auto")
+    invert_y = kwargs.pop("invert_y", False)
 
     if ylim is not "keep":
         if isinstance(ylim, tuple):
             pass
         elif ylim:
             ylim = ax.get_ylim()
-            if h1.ndim == 1:
+            if h.ndim == 1:
                 if data.size > 0 and data.max() > 0:
                     ylim = (0, max(ylim[1], data.max() +
                                    (data.max() - ylim[0]) * 0.1))
                 if yscale == "log":
                     ylim = (abs(data[data > 0].min()) * 0.9, ylim[1] * 1.1)
-            elif h1.ndim == 2:
-                if h1.shape[1] >= 2:
-                    ylim = (h1.get_bin_left_edges(1)[0],
-                            h1.get_bin_right_edges(1)[-1])
+            elif h.ndim == 2:
+                if h.shape[1] >= 2:
+                    ylim = (h.get_bin_left_edges(1)[0],
+                            h.get_bin_right_edges(1)[-1])
                     if yscale == "log":
                         if ylim[0] <= 0:
                             raise RuntimeError(
                                 "Cannot use logarithmic scale for non-positive bins.")
             else:
-                raise RuntimeError("Invalid dimension: {0}".format(h1.ndim))
+                raise RuntimeError("Invalid dimension: {0}".format(h.ndim))
+
+            if invert_y:
+                ylim = ylim[::-1]
+                # ax.xaxis.tick_top()
+                # ax.xaxis.set_label_position('top')
         ax.set_ylim(ylim)
 
     if xlim is not "keep":
@@ -1001,15 +998,15 @@ def _apply_xy_lims(ax, h1, data, kwargs):
             pass
         elif xlim:
             xlim = ax.get_xlim()
-            if h1.shape[0] >= 2:
-                if h1.ndim == 1:
-                    xlim = (h1.bin_left_edges[0], h1.bin_right_edges[-1])
-                elif h1.ndim == 2:
-                    xlim = (h1.get_bin_left_edges(0)[
-                            0], h1.get_bin_right_edges(0)[-1])
+            if h.shape[0] >= 1:
+                if h.ndim == 1:
+                    xlim = (h.bin_left_edges[0], h.bin_right_edges[-1])
+                elif h.ndim == 2:
+                    xlim = (h.get_bin_left_edges(0)[
+                            0], h.get_bin_right_edges(0)[-1])
                 else:
                     raise RuntimeError(
-                        "Invalid dimension: {0}".format(h1.ndim))
+                        "Invalid dimension: {0}".format(h.ndim))
                 if xscale == "log":
                     if xlim[0] <= 0:
                         raise RuntimeError(

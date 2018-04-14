@@ -14,8 +14,8 @@ In short, whatever you want to do with histograms, physt aims to be on your side
 P.S. I am looking for anyone interested in using / developing physt. You can contribute by reporting errors, implementing missing features and suggest new one.
 """
 
-from setuptools import setup, find_packages
 import itertools
+from setuptools import setup, find_packages
 from physt import __version__
 
 options = dict(
@@ -32,7 +32,7 @@ options = dict(
     package_data={"physt" : ["examples/*.csv"]},
     install_requires = ['numpy'],
     extras_require = {
-        'all' : ['dask', 'matplotlib', 'bokeh', 'folium']
+        'all' : ['dask', 'matplotlib', 'folium', 'vega3']
     },
     entry_points = {
         'console_scripts' : [

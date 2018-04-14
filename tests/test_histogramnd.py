@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from physt.histogram_nd import Histogram2D, HistogramND
 from physt.histogram1d import Histogram1D
+from physt import h2, h3
 
 
 class TestHistogramND(object):
@@ -33,6 +34,13 @@ class TestHistogramND(object):
         h = physt.histogram2d(data, data, range=(0, 0.5))
         assert h.total_size == 0.25
 
+    def test_bin_sizes(self):
+        data1 = np.random.rand(100)
+        data2 = np.random.rand(100)
+        data3 = np.random.rand(100)
+        data = np.array([data1, data2, data3]).T
+        h = physt.histogramdd(data, [10, 11, 12])
+        assert h.bin_sizes.shape == (10, 11, 12)
 
 class TestProjections(object):
     def test_4_to_3(self):
@@ -99,6 +107,16 @@ class TestProjections(object):
             h.projection("1", "2", "3", "4", "5")
         with pytest.raises(RuntimeError):
             h.projection()
+
+
+class TestH2(object):
+    def test_create_empty_h2(self):
+        h2(None, None, "integer", adaptive=True)
+
+
+class TestH3(object):
+    def test_create_empty_h3(self):
+        h3(None, "integer", adaptive=True)
 
 
 if __name__ == "__main__":

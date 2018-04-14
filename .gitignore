@@ -61,10 +61,11 @@ target/
 #Ipython Notebook
 .ipynb_checkpoints
 
-#PyCharm
+# Editors
 /.idea
 /.project
-
 /.vscode
+/physt.iml
 
+# Profiling
 tests/profile/mprofile*
