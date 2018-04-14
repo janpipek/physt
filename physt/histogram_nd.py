@@ -108,16 +108,24 @@ class HistogramND(HistogramBase):
         """
         return np.sum(self.bin_sizes)
 
+    def get_bin_edges(self, axis=None):
+        # TODO: test for non-numpy ones
+        if axis is not None:
+            return self.numpy_bins[self._get_axis(axis)]
+        else:
+            edges = [self.get_bin_edges(i) for i in range(self.ndim)]
+            return np.meshgrid(*edges, indexing='ij')
+
     def get_bin_left_edges(self, axis=None):
         if axis is not None:
-            return self.bins[axis][:, 0]
+            return self.bins[self._get_axis(axis)][:, 0]
         else:
             edges = [self.get_bin_left_edges(i) for i in range(self.ndim)]
             return np.meshgrid(*edges, indexing='ij')
 
     def get_bin_right_edges(self, axis=None):
         if axis is not None:
-            return self.bins[axis][:, 1]
+            return self.bins[self._get_axis(axis)][:, 1]
         else:
             edges = [self.get_bin_right_edges(i) for i in range(self.ndim)]
             return np.meshgrid(*edges, indexing='ij')
