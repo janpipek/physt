@@ -79,7 +79,7 @@ def histogram(data, bins=None, *args, **kwargs):
         raise RuntimeError("Cannot create histogram from a pandas DataFrame. Use Series.")
 
     # Collect arguments (not to send them to binning algorithms)
-    dropna = kwargs.pop("dropna", False)
+    dropna = kwargs.pop("dropna", True)
     weights = kwargs.pop("weights", None)
     keep_missed = kwargs.pop("keep_missed", True)
     name = kwargs.pop("name", None)
@@ -198,7 +198,7 @@ def histogramdd(data, bins=10, *args, **kwargs):
     from .binnings import calculate_bins_nd
 
     adaptive = kwargs.pop("adaptive", False)
-    dropna = kwargs.pop("dropna", False)
+    dropna = kwargs.pop("dropna", True)
     name = kwargs.pop("name", None)
     dim = kwargs.pop("dim", None)
     axis_names = kwargs.pop("axis_names", None)
