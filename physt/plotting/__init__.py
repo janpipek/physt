@@ -4,7 +4,7 @@ Available backends
 ------------------
 - matplotlib
 - vega
-- folium (just for the geoghraphical histograms)
+- folium (just for the geographical histograms)
 
 Calling the plotting functions
 
@@ -51,7 +51,8 @@ show_values : bool
     If True, show values next to (or inside) the bins
 value_format : str or Callable
     How bin values (if to be displayed) are rendered.
-zorder : 
+zorder : int (optional)
+
 text_color : 
 text_alpha : 
 
