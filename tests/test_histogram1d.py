@@ -150,6 +150,10 @@ class TestIndexing(object):
         assert np.isclose(selected.underflow, 6)
         assert np.isclose(selected.overflow, 8.2)
 
+    def test_slice_with_upper_bound(self):
+        selected = example[:3]
+        assert np.array_equal(selected.frequencies, [4, 0, 3])
+
     def test_masked(self):
         mask =  np.array([True, True, True, True], dtype=bool)
         assert np.array_equal(example[mask].bins, example.bins)

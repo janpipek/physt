@@ -99,7 +99,7 @@ class HistogramND(HistogramBase):
         if isinstance(index, int):
             return self._reduce_dimension([ax for ax in range(self.ndim) if ax != axis_id], frequencies, errors2)
         elif isinstance(index, slice):
-            if index.step < 0:
+            if index.step is not None and index.step < 0:
                 raise IndexError("Cannot change the order of bins")
             copy = self.copy()
             copy._frequencies = frequencies

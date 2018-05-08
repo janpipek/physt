@@ -42,6 +42,7 @@ class TestHistogramND(object):
         h = physt.histogramdd(data, [10, 11, 12])
         assert h.bin_sizes.shape == (10, 11, 12)
 
+
 class TestProjections(object):
     def test_4_to_3(self):
         data = np.random.rand(100, 4)
@@ -108,6 +109,21 @@ class TestProjections(object):
         with pytest.raises(RuntimeError):
             h.projection()
 
+
+class TestSlicing:
+    def test_slicing_with_upper_bound_only(self):
+        data1 = np.random.rand(100)
+        data2 = np.random.rand(100)
+        h = physt.histogram2d(data1, data2, (4, 5), axis_names=["1", "2"])
+        assert h[:2].shape == (2, 5)
+
+    def test_shapes(self):
+        data1 = np.random.rand(100)
+        data2 = np.random.rand(100)
+        h = physt.histogram2d(data1, data2, (4, 5), axis_names=["1", "2"])
+        assert h[2].shape == (5,)
+        assert h[:,2].shape == (4,)
+        # TODO: Add more combinations
 
 class TestH2(object):
     def test_create_empty_h2(self):
