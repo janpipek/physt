@@ -111,6 +111,7 @@ Using conda (very old):
   - matplotlib (static plots with many options)
   - vega (interactive plots, beta)
   - folium (experimental for geo-data)
+  - plotly (very basic)
 * Algorithms for optimized binning
   - human-friendly
   - mathematical
