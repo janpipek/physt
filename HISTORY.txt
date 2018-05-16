@@ -2,10 +2,10 @@
 ----------------------
 - Added: plotly plotting backend (basics)
 
-0.3.34 (4th May 2018)
+0.3.34 (8th May 2018)
 ---------------------
-- Fixed: several minor bugs
-- Changed: dropna=True by default in histogram and histogramdd
+Fixed: several minor bugs
+Changed: dropna=True by default
 
 0.3.33 (4th April 2018)
 -----------------------

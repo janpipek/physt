@@ -62,9 +62,9 @@ target/
 .ipynb_checkpoints
 
 # Editors
-/.idea
+.idea
 /.project
-/.vscode
+.vscode
 /physt.iml
 
 # Profiling
