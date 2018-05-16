@@ -5,6 +5,7 @@ Available backends
 - matplotlib
 - vega
 - folium (just for the geoghraphical histograms)
+- pyplot (simple wrapper around matplotlib for 1D histograms)
 
 Calling the plotting functions
 
@@ -85,6 +86,8 @@ backends = OrderedDict()
 # backends["folium"] = folium_backend
 # from . import vega as vega_backend
 # backends["vega"] = vega_backend
+# from . import plotly as plotly_backend
+# backends["plotly"] = plotly_backend
 
 try:
     from . import matplotlib as mpl_backend
@@ -95,6 +98,12 @@ except:
 try:
     from . import vega as vega_backend
     backends["vega"] = vega_backend
+except:
+    pass
+
+try:
+    from . import plotly as plotly_backend
+    backends["plotly"] = plotly_backend
 except:
     pass
 
