@@ -70,8 +70,8 @@ class TestHistogram2D(object):
         vals2 = np.array(vals)
         vals2[0, 1] = np.nan
         with pytest.raises(RuntimeError):
-            hist = physt.h2(vals2[:,0], vals2[:,1])
-        hist = physt.h2(vals2[:, 0], vals2[:, 1], dropna=True)
+            hist = physt.h2(vals2[:,0], vals2[:,1], dropna=False)
+        hist = physt.h2(vals2[:, 0], vals2[:, 1])
         assert hist.frequencies.sum() == 6
 
 
