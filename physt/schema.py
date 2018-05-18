@@ -1,5 +1,6 @@
 """Bin schemas for physt."""
 
+import math
 from collections import OrderedDict
 from typing import Tuple, Union
 
@@ -142,8 +143,8 @@ class FixedWidthSchema(Schema):
         data_min, data_max = data.min(), data.max()
         if self._bin_shift is None:
             self._bin_shift = 0.0
-        self._bin_times_min = int(data_min - self._bin_shift / self._bin_width)
-        bin_times_max = int((data_max - self._bin_shift / self._bin_width) + 1)
+        self._bin_times_min = math.floor((data_min - self._bin_shift) / self._bin_width)
+        bin_times_max = math.floor((data_max - self._bin_shift) / self._bin_width) + 1
         self._bin_count = bin_times_max - self._bin_times_min
 
     @property
