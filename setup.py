@@ -16,20 +16,23 @@ P.S. I am looking for anyone interested in using / developing physt. You can con
 
 import itertools
 from setuptools import setup, find_packages
-from physt import __version__
+# from physt.version import __version__
+
+VERSION = "0.0.4"
 
 options = dict(
-    name='physt',
-    version=__version__,
+    name="physt",
+    version=VERSION,
     packages=find_packages(),
-    license='MIT',
-    description='P(i/y)thon h(i/y)stograms.',
+    license="MIT",
+    description="P(i/y)thon h(i/y)stograms.",
     long_description=__doc__.strip(),
-    author='Jan Pipek',
-    author_email='jan.pipek@gmail.com',
-    url='https://github.com/janpipek/physt',
+    author="Jan Pipek",
+    author_email="jan.pipek@gmail.com",
+    url="https://github.com/janpipek/physt",
     package_data={"physt" : ["examples/*.csv"]},
-    install_requires = ['numpy'],
+    install_requires = ["numpy"],
+    python_requires = "~=3.5",
     extras_require = {
         # 'all' : ['dask', 'matplotlib', 'bokeh', 'folium']
     },

@@ -2,7 +2,6 @@ import pytest
 
 import numpy as np
 
-import physt
 from physt.compat.numpy import BIN_COUNT_ALGORITHMS
 from physt.compat.numpy import histogram as _histogram
 from physt.compat.numpy import histogram2d as _histogram2d
@@ -47,8 +46,8 @@ class TestHistogramEqualness:
 
 class TestHistogram2dEqualness:
     def _test_with_args(self, x, y, *args, **kwargs):
-        values, edges_x, edges_y = np.histogram2d(x, y, *args, **kwargs)
         histogram = _histogram2d(x, y, *args, **kwargs)
+        values, edges_x, edges_y = np.histogram2d(x, y, *args, **kwargs)
 
         assert np.array_equal(values, histogram.values)
         assert np.array_equal(edges_x, histogram.schema[0].edges)
@@ -72,8 +71,8 @@ class TestHistogram2dEqualness:
 class TestHistogram3dEqualness:
     def _test_with_args(self, x, y, z, *args, **kwargs):
         sample = np.asarray([x, y, z]).T
-        values, edges = np.histogramdd(sample, *args, **kwargs)
         histogram = _histogramdd(sample, *args, **kwargs)
+        values, edges = np.histogramdd(sample, *args, **kwargs)
 
         assert np.array_equal(values, histogram.values)
         for i in range(3):
@@ -83,6 +82,21 @@ class TestHistogram3dEqualness:
     def test_no_args(self):
         self._test_with_args(X, Y, Z)
 
+    def test_with_bin_number(self):
+        self._test_with_args(X, Y, Z, bins=47)
+
+    def test_with_bin_combined(self):
+        self._test_with_args(X, Y, Z, bins=[[4, 8, 9], 12, [4, 8, 9]])
+        self._test_with_args(X, Y, Z, bins=[47, 12, [4, 8, 9]])
+
+    def test_with_invalid_args(self):
+        sample = np.asarray([X, Y, Z]).T
+        with pytest.raises(ValueError):
+            _histogramdd(sample, "sturges")
+
+    def test_with_ranges(self):
+        self._test_with_args(X, Y, Z, range=((0, 1), (0.5, 1.5), (7, 8)))
+
 
 if __name__ == "__main__":
-    pytest.main(__file__)
+    pytest.main()

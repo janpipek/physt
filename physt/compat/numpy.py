@@ -1,4 +1,4 @@
-"""Functions to mimick histogram behaviour, only returning Histogram objects."""
+"""Functions to mimic histogram behaviour, only returning Histogram objects."""
 
 import warnings
 
@@ -82,10 +82,10 @@ def make_numpy_schema(bins, range=None, allow_string:bool=True) -> Schema:
     numpy.histogram
     """
     if isinstance(bins, int):
-        return NumpySchema(bins, range=range)
+        return NumpySchema(bins=bins, range=range)
     if isinstance(bins, str):
         if allow_string:
-            return NumpySchema(bins, range=range)
+            return NumpySchema(bins=bins, range=range)
         else:
             raise ValueError("String not allowed as bin parameter")
     else:
