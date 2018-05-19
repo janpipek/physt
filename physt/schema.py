@@ -1,7 +1,7 @@
 """Bin schemas for physt."""
 
 import math
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 from typing import Tuple, Union
 
 import numpy as np
@@ -152,6 +152,13 @@ class FixedWidthSchema(Schema):
         indices = np.arange(self._bin_count + 1)
         return self._bin_width * (self._bin_times_min + indices) + self._bin_shift
 
+    def copy(self) -> "FixedWidthSchema":
+        return FixedWidthSchema(
+            bin_width=self._bin_width,
+            bin_count=self._bin_count,
+            bin_times_min=self._bin_times_min,
+            bin_shift=self._bin_shift,
+        )
 
 @Schema.register("integer")
 class IntegerSchema(FixedWidthSchema):
@@ -192,11 +199,13 @@ class HumanSchema(FixedWidthSchema):
         FixedWidthSchema.fit(self, data)
 
 
-
-
 class MultiSchema:
     def __init__(self, schemas):
         self._schemas = tuple(schemas)
+
+    def copy(self) -> "MultiSchema":
+        copied_schemas = (schema.copy() for schema in self._schemas)
+        return MultiSchema(copied_schemas)
 
     @property
     def ndim(self):
@@ -204,14 +213,15 @@ class MultiSchema:
 
     @property
     def shape(self):
-        result = ()
-        for schema in self._schemas:
-            result += schema.shape
-        return result
+        return tuple(schema.shape for schema in self._schemas)
 
     @property
     def edges(self):
-        return [schema.edges for schema in self.schemas]
+        return tuple(schema.edges for schema in self.schemas)
+
+    @property
+    def bins(self):
+        return tuple(schema.bins for Schema in self._schemas)
 
     @property
     def schemas(self):
@@ -259,3 +269,14 @@ def build_schema(kind: Union[str, type, Schema], **kwargs) -> Schema:
         return constructor(**kwargs)
     else:
         raise ValueError("Cannot interpret {0} as schema".format(kind))
+
+
+def build_multi_schema(kind:Union[Iterable, str, type, Schema], ndim:int, **kwargs) -> MultiSchema:
+    if isinstance(kind, (Schema, str, type)):
+        schemas = [kind] * ndim
+        return build_multi_schema(schemas, ndim, **kwargs)
+    elif isinstance(kind, Iterable):
+        schemas = [build_schema(k, **kwargs) for k in kind]
+        return MultiSchema(schemas=schemas) 
+    else:
+        raise ValueError("Cannot interpret {0} as schema or multischema".format(kind))

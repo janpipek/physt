@@ -70,7 +70,7 @@ class Histogram:
     def normalize(self, inplace=False) -> 'Histogram':
         if not inplace:
             copy = self.copy(shallow=True)
-            return copy.normalize(inplace=False)
+            return copy.normalize(inplace=True)
         else:
             # TODO: Make sure to convert to float
             self._values /= self.total
