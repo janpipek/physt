@@ -1,4 +1,4 @@
-import pytest
+import unittest
 
 import numpy as np
 
@@ -12,7 +12,7 @@ Y = np.random.normal(0, 1, 100)
 Z = np.random.normal(0, 1, 100)
 
 
-class TestHistogramEqualness:
+class TestHistogramEqualness(unittest.TestCase):
     def _test_with_args(self, array, *args, **kwargs):
         values, edges = np.histogram(array, *args, **kwargs)
         histogram = _histogram(array, *args, **kwargs)
@@ -44,7 +44,7 @@ class TestHistogramEqualness:
         self._test_with_args(X, weights=weights)
 
 
-class TestHistogram2dEqualness:
+class TestHistogram2dEqualness(unittest.TestCase):
     def _test_with_args(self, x, y, *args, **kwargs):
         histogram = _histogram2d(x, y, *args, **kwargs)
         values, edges_x, edges_y = np.histogram2d(x, y, *args, **kwargs)
@@ -68,7 +68,7 @@ class TestHistogram2dEqualness:
         self._test_with_args(X, Y, range=((0, 1), (0.5, 1.5)))
 
 
-class TestHistogram3dEqualness:
+class TestHistogram3dEqualness(unittest.TestCase):
     def _test_with_args(self, x, y, z, *args, **kwargs):
         sample = np.asarray([x, y, z]).T
         histogram = _histogramdd(sample, *args, **kwargs)
@@ -91,7 +91,7 @@ class TestHistogram3dEqualness:
 
     def test_with_invalid_args(self):
         sample = np.asarray([X, Y, Z]).T
-        with pytest.raises(ValueError):
+        with self.assertRaises(ValueError):
             _histogramdd(sample, "sturges")
 
     def test_with_ranges(self):
@@ -99,4 +99,4 @@ class TestHistogram3dEqualness:
 
 
 if __name__ == "__main__":
-    pytest.main()
+    unittest.main()
