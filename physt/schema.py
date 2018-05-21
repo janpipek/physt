@@ -112,10 +112,6 @@ class NumpySchema(Schema):
         return None
 
     @property
-    def edges(self):
-        return self._edges
-
-    @property
     def bins(self):
         return np.asarray([self._edges[:-1], self._edges[1:]])
 
