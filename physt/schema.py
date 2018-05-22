@@ -1,10 +1,14 @@
 """Bin schemas for physt."""
 
 import math
-from collections import OrderedDict
-from typing import Tuple, Union
+from collections import OrderedDict, Iterable
+from typing import Tuple, Union, Optional
 
 import numpy as np
+
+
+class UnknownSchemaError(RuntimeError):
+    pass
 
 
 class Schema:
@@ -28,10 +32,13 @@ class Schema:
         raise NotImplementedError()
 
     @staticmethod
-    def register(name):
+    def register(name: str):
+        """Parametric decorator to make the schema name available in the facade constructors."""
+
         def _decorator(klass: type) -> type:
             Schema.registered_schemas[name] = klass
             return klass
+
         return _decorator
 
     @property
@@ -53,7 +60,10 @@ class Schema:
 
     @property
     def shape(self):
-        return self.bins.shape[0]
+        if self.bins:
+            return self.bins.shape[0]
+        else:
+            return None
 
     @property
     def mask(self):
@@ -66,7 +76,8 @@ class Schema:
     def fit(self, data):
         raise NotImplementedError()
 
-    def fit_and_apply(self, data, weights=None, dropna: bool=True) -> np.ndarray:
+    def fit_and_apply(self, data, weights=None,
+                      dropna: bool = True) -> np.ndarray:
         # TODO: Handle data to make them 1D array ?
         data = np.asarray(data)
         if dropna:
@@ -85,7 +96,8 @@ class StaticSchema(Schema):
     def __init__(self, *, bins=None, edges=None, mask=None):
         if bins is not None:
             if edges is not None:
-                raise ValueError("Cannot specify both bins and edges at the same time.")
+                raise ValueError(
+                    "Cannot specify both bins and edges at the same time.")
             self._bins = bins.copy()
         elif edges is not None:
             self._edges = edges.copy()
@@ -97,13 +109,15 @@ class StaticSchema(Schema):
         pass
 
     def copy(self) -> 'StaticSchema':
-        return self.__class__(bins=self._bins, edges=self._edges, mask=self._mask)
+        return self.__class__(
+            bins=self._bins, edges=self._edges, mask=self._mask)
 
 
 @Schema.register("numpy")
 class NumpySchema(Schema):
     """Binning schema mimicking the behaviour of numpy.histogram"""
-    def __init__(self, *, bins: Union[str,int]=10, range=None):
+
+    def __init__(self, *, bins: Union[str, int] = 10, range=None):
         self.bin_arg = bins
         self.range = range
 
@@ -116,20 +130,27 @@ class NumpySchema(Schema):
         return np.asarray([self._edges[:-1], self._edges[1:]])
 
     def fit(self, data):
-        _, self._edges = np.histogram(data, bins=self.bin_arg, range=self.range)
+        _, self._edges = np.histogram(
+            data, bins=self.bin_arg, range=self.range)
 
-    def fit_and_apply(self, data, weights=None, dropna: bool=True) -> np.ndarray:
+    def fit_and_apply(self, data, weights=None,
+                      dropna: bool = True) -> np.ndarray:
         data = np.asarray(data)
         if dropna:
             data = data[~np.isnan(data)]
-        numpy_result, self._edges = np.histogram(data, bins=self.bin_arg, weights=weights,
-                                                 range=self.range)
+        numpy_result, self._edges = np.histogram(
+            data, bins=self.bin_arg, weights=weights, range=self.range)
         return numpy_result
 
 
 @Schema.register("fixed_width")
 class FixedWidthSchema(Schema):
-    def __init__(self, *, bin_width, bin_count=None, bin_times_min=None, bin_shift=None):
+    def __init__(self,
+                 *,
+                 bin_width,
+                 bin_count=None,
+                 bin_times_min=None,
+                 bin_shift=None):
         self._bin_width = bin_width
         self._bin_count = bin_count
         self._bin_times_min = bin_times_min
@@ -139,14 +160,21 @@ class FixedWidthSchema(Schema):
         data_min, data_max = data.min(), data.max()
         if self._bin_shift is None:
             self._bin_shift = 0.0
-        self._bin_times_min = math.floor((data_min - self._bin_shift) / self._bin_width)
-        bin_times_max = math.floor((data_max - self._bin_shift) / self._bin_width) + 1
+        self._bin_times_min = math.floor(
+            (data_min - self._bin_shift) / self._bin_width)
+        bin_times_max = math.floor(
+            (data_max - self._bin_shift) / self._bin_width) + 1
         self._bin_count = bin_times_max - self._bin_times_min
 
     @property
     def edges(self):
         indices = np.arange(self._bin_count + 1)
-        return self._bin_width * (self._bin_times_min + indices) + self._bin_shift
+        return self._bin_width * (
+            self._bin_times_min + indices) + self._bin_shift
+
+    @property
+    def shape(self):
+        return (self._bin_count) if self._bin_count else None
 
 
 @Schema.register("integer")
@@ -182,15 +210,17 @@ class HumanSchema(FixedWidthSchema):
         bw = (max_ - min_) / bin_count
 
         power = np.floor(np.log10(bw)).astype(int)
-        best_index = np.argmin(np.abs(np.log(subscales * (10.0 ** power) / bw)))
-        
-        self._bin_width = (10.0 ** power) * subscales[best_index]
+        best_index = np.argmin(np.abs(np.log(subscales * (10.0**power) / bw)))
+
+        self._bin_width = (10.0**power) * subscales[best_index]
         FixedWidthSchema.fit(self, data)
 
 
-
-
 class MultiSchema:
+    """Multi-dimensional collection of binning schemas.
+
+    Note: this class can be inherited from in order to capture inter-dimensional relationships.
+    """
     def __init__(self, schemas):
         self._schemas = tuple(schemas)
 
@@ -219,7 +249,7 @@ class MultiSchema:
     def fit(self, data):
         # TODO: data size check
         for i, schema in enumerate(self.schemas):
-            schema.fit(data[:,i])
+            schema.fit(data[:, i])
 
     def fit_and_apply(self, data, weights=None) -> np.ndarray:
         self.fit(data)
@@ -241,17 +271,32 @@ class MultiSchema:
         return values
 
 
-def build_schema(kind: Union[str, type, Schema], **kwargs) -> Schema:
-    """Helper method to 
+def build_schema(kind: Union[str, type, Schema] = None,
+                 bins: Optional[Union[str, int, Iterable]] = None,
+                 **kwargs) -> Schema:
+    """Helper method to create binning schema from various argument sets.
     """
+    if bins:
+        if kind is None:
+            # Automatically deduce static or numpy schema
+            if isinstance(bins, Iterable):
+                kind = StaticSchema
+            else:
+                kind = NumpySchema
+
+        # In any case, bins need to be passed if they exist
+        kwargs["bins"] = bins
+
     if isinstance(kind, Schema):
         return kind
     elif isinstance(kind, type):
         return type(**kwargs)
     elif isinstance(kind, str):
         if kind not in Schema.registered_schemas:
-            raise ValueError("Unknown schema name, available are: {0}".format(", ").join(Schema.registered_schemas.keys()))
-        constructor = StaticSchema.registered_schemas[kind]
+            raise UnknownSchemaError(
+                "Unknown schema name, available are: {0}".format(", ").join(
+                    Schema.registered_schemas.keys()))
+        constructor = Schema.registered_schemas[kind]
         return constructor(**kwargs)
     else:
         raise ValueError("Cannot interpret {0} as schema".format(kind))

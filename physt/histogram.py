@@ -33,6 +33,8 @@ class Histogram:
 
     @property
     def total(self) -> int:
+        if self.values is None:
+            return None 
         return self.values.sum()
 
     def __repr__(self) -> str:
@@ -68,6 +70,8 @@ class Histogram:
         return self.__class__(schema=new_schema, values=new_values)
 
     def normalize(self, inplace=False) -> 'Histogram':
+        if not self.values:
+            raise RuntimeError("Cannot normalize histogram without values.")
         if not inplace:
             copy = self.copy(shallow=True)
             return copy.normalize(inplace=False)

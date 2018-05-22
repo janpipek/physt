@@ -1,14 +1,23 @@
+"""Facade constructors to make creation of histograms easier."""
+from collections import Iterable
+from typing import Optional, Union
+
 from .schema import build_schema
 from .histogram import Histogram
 
 
-def h1(a, kind="human", *, weights=None, **kwargs):
-    schema = build_schema(kind, **kwargs)
-    values = schema.fit_and_apply(a, weights=weights)
+
+def h1(a=None, *, schema=None, bins: Optional[Union[str, int,Iterable]]=None, weights=None, **kwargs) -> Histogram:
+    # TODO: In passing arguments, take inspiration from scikit...
+    schema = build_schema(schema, bins=bins, **kwargs)
+    if a is not None:
+        values = schema.fit_and_apply(a, weights=weights)
+    else:
+        values = None
     return Histogram(schema=schema, values=values)
 
 
-def h2(a, *b, kind="human", **kwargs):
+def h2(a=None, *b, kind="human", **kwargs) -> Histogram:
     raise NotImplementedError()
 
 
@@ -38,3 +47,7 @@ def h8():
 
 def h9():
     raise NotImplementedError()
+
+
+# Namespace clean up
+del (Iterable, Union, Optional)

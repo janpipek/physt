@@ -20,5 +20,11 @@ class TestBuildSchema(unittest.TestCase):
         assert schema.edges is None
 
         # TODO: Test fail with invalid data type for bins
+
+    def test_unknown_schema(self):
+        from physt.schema import UnknownSchemaError
+        with self.assertRaises(UnknownSchemaError):
+            _ = build_schema("invalid")
+
         
 
