@@ -1,11 +1,12 @@
 import numpy as np
-
 from .schema import Schema
 
 __all__ = ["Histogram",]
 
 
 class Histogram:
+
+
     """
 
     Attributes
@@ -18,6 +19,19 @@ class Histogram:
         # self.dtype = int
         self._values = values
         self._schema = schema
+        self._dtype = None
+
+    @property
+    def dtype(self):
+        # TODO: Rethink
+        if self._values is not None:
+            return self._values.dtype
+        else:
+            return self._dtype
+
+    @dtype.setter
+    def dtype(self, value):
+        self._values = self._values.astype(value)
 
     @property
     def schema(self):
@@ -62,7 +76,8 @@ class Histogram:
         Parameters
         ----------
         shallow:
-            If True, the values are not copied, but shared.
+            If True, the values are not copied, but shared
+            (useful when the copy is immediately discarded).
         """
         new_schema = self._schema.copy()
         new_values = self._values if shallow else self._values.copy()
@@ -70,16 +85,20 @@ class Histogram:
         return self.__class__(schema=new_schema, values=new_values)
 
     def normalize(self, inplace=False) -> 'Histogram':
-        if not self.values:
+        if self.values is None:
             raise RuntimeError("Cannot normalize histogram without values.")
         if not inplace:
             copy = self.copy(shallow=True)
             return copy.normalize(inplace=True)
         else:
             # TODO: Make sure to convert to float
+            self.dtype = np.float
             self._values /= self.total
             return self
     
     @property
     def densities(self) -> np.ndarray:
-        pass
+        if self._values is None:
+            return None
+        else:
+            return self._values / self._schema.bin_sizes

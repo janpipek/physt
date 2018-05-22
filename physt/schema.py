@@ -51,6 +51,12 @@ class Schema:
         return bins
 
     @property
+    def bin_sizes(self) -> np.ndarray:
+        if self.bins is None:
+            return None
+        return self.bins[1:] - self.bins[:-1]
+
+    @property
     def edges(self):
         return getattr(self, "_edges", None)
 
@@ -60,7 +66,7 @@ class Schema:
 
     @property
     def shape(self):
-        if self.bins:
+        if self.bins is not None:
             return self.bins.shape[0]
         else:
             return None
@@ -106,7 +112,7 @@ class StaticSchema(Schema):
         self._mask = mask
 
     def fit(self, data):
-        pass
+        pass  # Do nothing
 
     def copy(self) -> 'StaticSchema':
         return self.__class__(
@@ -117,13 +123,24 @@ class StaticSchema(Schema):
 class NumpySchema(Schema):
     """Binning schema mimicking the behaviour of numpy.histogram"""
 
+    BIN_COUNT_ALGORITHMS = ("auto", "fd", "doane", "scott", "rice", "sturges",
+                            "sqrt")
+
     def __init__(self, *, bins: Union[str, int] = 10, range=None):
+        is isinstance(bins, str):
+            if bins not in NumpySchema.BIN_COUNT_ALGORITHMS:
+                raise ValueError("Invalid bin count algoritm: {0}".format(bins))
         self.bin_arg = bins
         self.range = range
 
     @property
     def mask(self):
         return None
+
+    def copy(self) -> "NumpySchema":
+        schema = NumpySchema(bins=self.bin_arg, range=self.range)
+        schema._edges = self._edges
+        return schema
 
     @property
     def bins(self):
@@ -184,6 +201,7 @@ class FixedWidthSchema(Schema):
             bin_shift=self._bin_shift,
         )
 
+
 @Schema.register("integer")
 class IntegerSchema(FixedWidthSchema):
     def __init__(self):
@@ -228,6 +246,7 @@ class MultiSchema:
 
     Note: this class can be inherited from in order to capture inter-dimensional relationships.
     """
+
     def __init__(self, schemas):
         self._schemas = tuple(schemas)
 
@@ -314,12 +333,14 @@ def build_schema(kind: Union[str, type, Schema] = None,
         raise ValueError("Cannot interpret {0} as schema".format(kind))
 
 
-def build_multi_schema(kind:Union[Iterable, str, type, Schema], ndim:int, **kwargs) -> MultiSchema:
+def build_multi_schema(kind: Union[Iterable, str, type, Schema], ndim: int,
+                       **kwargs) -> MultiSchema:
     if isinstance(kind, (Schema, str, type)):
         schemas = [kind] * ndim
         return build_multi_schema(schemas, ndim, **kwargs)
     elif isinstance(kind, Iterable):
         schemas = [build_schema(k, **kwargs) for k in kind]
-        return MultiSchema(schemas=schemas) 
+        return MultiSchema(schemas=schemas)
     else:
-        raise ValueError("Cannot interpret {0} as schema or multischema".format(kind))
+        raise ValueError(
+            "Cannot interpret {0} as schema or multischema".format(kind))
