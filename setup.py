@@ -18,7 +18,7 @@ import itertools
 from setuptools import setup, find_packages
 # from physt.version import __version__
 
-VERSION = "0.0.4"
+VERSION = "0.4"
 
 options = dict(
     name="physt",

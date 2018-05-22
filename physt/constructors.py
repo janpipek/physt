@@ -2,9 +2,9 @@
 from collections import Iterable
 from typing import Optional, Union
 
-from .schema import build_schema
+from .schema import build_schema, build_multi_schema
 from .histogram import Histogram
-
+from .array_utils import make_2d_array
 
 
 def h1(a=None, *, schema=None, bins: Optional[Union[str, int,Iterable]]=None, weights=None, **kwargs) -> Histogram:
@@ -17,15 +17,18 @@ def h1(a=None, *, schema=None, bins: Optional[Union[str, int,Iterable]]=None, we
     return Histogram(schema=schema, values=values)
 
 
-def h2(a=None, *b, kind="human", **kwargs) -> Histogram:
+def h2(a, *b, kind=None, weights=None, **kwargs):
+    schema = build_multi_schema(kind, ndim=2, **kwargs)
+    data = make_2d_array(2, a, *b)
+    values = schema.fit_and_apply(data, weights=weights)
+    return Histogram(schema=schema, values=values)
+
+
+def h3(a, *bc, kind=None, **kwargs):
     raise NotImplementedError()
 
 
-def h3(a, *bc, kind="human", **kwargs):
-    raise NotImplementedError()
-
-
-def h4(a, *bcd, kind="human", **kwargs):
+def h4(a, *bcd, kind=None, **kwargs):
     raise NotImplementedError()
 
 
