@@ -249,7 +249,7 @@ class MultiSchema:
 
     @property
     def bins(self):
-        return tuple(schema.bins for Schema in self._schemas)
+        return tuple(schema.bins for schema in self._schemas)
 
     @property
     def schemas(self):
@@ -273,7 +273,7 @@ class MultiSchema:
         values, _ = np.histogramdd(data, bins=edges, weights=weights)
 
         changed = False
-        for i, mask in enumerate(masks):
+        for _, mask in enumerate(masks):
             if mask:
                 # TODO: Apply the subselection
                 pass
