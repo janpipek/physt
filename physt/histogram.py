@@ -34,6 +34,14 @@ class Histogram:
         self._values = self._values.astype(value)
 
     @property
+    def ndim(self):
+        return self._schema.ndim
+
+    @property
+    def shape(self):
+        return self._schema.shape
+
+    @property
     def schema(self):
         return self._schema
 
