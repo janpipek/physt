@@ -11,6 +11,10 @@ class UnknownSchemaError(RuntimeError):
     pass
 
 
+class UnknownBinCountAlgorithmError(RuntimeError):
+    pass
+
+
 class Schema:
     """Base class for all one-dimensional schemas.
 
@@ -43,6 +47,8 @@ class Schema:
 
     @property
     def bins(self) -> np.ndarray:
+        if hasattr(self, "_bins"):
+            return self._bins
         edges = self.edges
         bins = np.asarray([edges[:-1], edges[1:]]).T
         mask = self.mask
@@ -104,8 +110,22 @@ class StaticSchema(Schema):
             if edges is not None:
                 raise ValueError(
                     "Cannot specify both bins and edges at the same time.")
+            bins = np.asarray(bins)
+            if bins.ndim != 2:
+                raise ValueError(
+                    "Invalid dimension for bins: {0}, must be 2".format(
+                        bins.ndim))
+            if bins.shape[1] != 2:
+                raise ValueError(
+                    "bins must be an array of pairs, array of shape {0} given instead".
+                    format(bins.shape))
             self._bins = bins.copy()
         elif edges is not None:
+            edges = np.asarray(edges)
+            if edges.ndim != 1:
+                raise ValueError(
+                    "Invalid dimension for edges: {0}, must be 1".format(
+                        edges.ndim))
             self._edges = edges.copy()
         else:
             raise ValueError("Must specify either bins or edges.")
@@ -129,7 +149,8 @@ class NumpySchema(Schema):
     def __init__(self, *, bins: Union[str, int] = 10, range=None):
         if isinstance(bins, str):
             if bins not in NumpySchema.BIN_COUNT_ALGORITHMS:
-                raise ValueError("Invalid bin count algoritm: {0}".format(bins))
+                raise UnknownBinCountAlgorithmError(
+                    "Invalid bin count algoritm: {0}".format(bins))
         self.bin_arg = bins
         self.range = range
 
@@ -306,14 +327,21 @@ def build_schema(kind: Union[str, type, Schema] = None,
                  bins: Optional[Union[str, int, Iterable]] = None,
                  **kwargs) -> Schema:
     """Helper method to create binning schema from various argument sets.
+
+    If kind is None, bins are interpreted closely to the 
+    way numpy does (for clarity).
     """
     if bins:
         if kind is None:
             # Automatically deduce static or numpy schema
-            if isinstance(bins, Iterable):
-                kind = StaticSchema
-            else:
+            if isinstance(bins, (str, int)):
                 kind = NumpySchema
+            elif isinstance(bins, Iterable):
+                kind = StaticSchema
+                bins = np.asarray(bins)
+                if bins.ndim == 1:
+                    kwargs["edges"] = bins
+                    bins = None
 
         # In any case, bins need to be passed if they exist
         kwargs["bins"] = bins
@@ -321,7 +349,7 @@ def build_schema(kind: Union[str, type, Schema] = None,
     if isinstance(kind, Schema):
         return kind
     elif isinstance(kind, type):
-        return type(**kwargs)
+        return kind(**kwargs)
     elif isinstance(kind, str):
         if kind not in Schema.registered_schemas:
             raise UnknownSchemaError(
