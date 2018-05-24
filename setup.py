@@ -16,11 +16,10 @@ P.S. I am looking for anyone interested in using / developing physt. You can con
 
 import itertools
 from setuptools import setup, find_packages
-from physt import __version__
 
 options = dict(
     name='physt',
-    version=__version__,
+    version='0.3.36',
     packages=find_packages(),
     # package_data={'': ['LICENSE', 'MANIFEST.in', 'README.md', 'HISTORY.txt']},
     license='MIT',

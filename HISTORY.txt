@@ -1,3 +1,7 @@
+0.3.36 (24th May 2018)
+----------------------
+- Fixed: requires numpy for installation (setup.py)
+
 0.3.35 (16th May 2018)
 ----------------------
 - Added: plotly plotting backend (basics)
