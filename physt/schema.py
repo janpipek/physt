@@ -127,7 +127,7 @@ class NumpySchema(Schema):
                             "sqrt")
 
     def __init__(self, *, bins: Union[str, int] = 10, range=None):
-        is isinstance(bins, str):
+        if isinstance(bins, str):
             if bins not in NumpySchema.BIN_COUNT_ALGORITHMS:
                 raise ValueError("Invalid bin count algoritm: {0}".format(bins))
         self.bin_arg = bins

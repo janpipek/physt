@@ -9,6 +9,8 @@ from physt.schema import NumpySchema, StaticSchema, Schema, MultiSchema
 
 __all__ = ["histogram", "histogram2d", "histogramdd"]
 
+BIN_COUNT_ALGORITHMS = NumpySchema.BIN_COUNT_ALGORITHMS
+
 
 def histogram(a, bins=10, range=None, normed=False, weights=None, density=None) -> Histogram:
     """Numpy-compatible 1D histogram.
