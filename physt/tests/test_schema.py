@@ -7,6 +7,11 @@ from physt.schema import build_schema
 
 
 class TestBuildSchema(unittest.TestCase):
+    def test_no_params(self):
+        from physt.schema import HumanSchema
+        schema = build_schema()
+        assert isinstance(schema, HumanSchema)
+
     def test_numpy(self):
         from physt.schema import NumpySchema
         schema = build_schema("numpy")
@@ -25,6 +30,12 @@ class TestBuildSchema(unittest.TestCase):
         from physt.schema import UnknownSchemaError
         with self.assertRaises(UnknownSchemaError):
             _ = build_schema("invalid")
+
+    def test_integer(self):
+        from physt.schema import NumpySchema
+        schema = build_schema(bins=4)
+        assert isinstance(schema, NumpySchema)
+        assert schema.bin_arg == 4
 
     def test_string(self):
         from physt.schema import NumpySchema, UnknownBinCountAlgorithmError
@@ -59,6 +70,6 @@ class TestBuildSchema(unittest.TestCase):
             "wrong_2nd_dim": [[4, 3, 4], [1, 2, 2]],
             "3dim": [[[2, 3], [3, 4], [5, 6]]],
         }
-        for key, value in bins.items():
+        for _, value in bins.items():
             with self.assertRaises(ValueError):
-                schema = build_schema(bins = value)
+                _ = build_schema(bins = value)

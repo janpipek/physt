@@ -6,6 +6,7 @@ from typing import Tuple, Union, Optional
 
 import numpy as np
 
+DEFAULT_SCHEMA_NAME = "human"
 
 class UnknownSchemaError(RuntimeError):
     pass
@@ -50,6 +51,8 @@ class Schema:
         if hasattr(self, "_bins"):
             return self._bins
         edges = self.edges
+        if edges is None:
+            return None
         bins = np.asarray([edges[:-1], edges[1:]]).T
         mask = self.mask
         if mask is not None:
@@ -188,11 +191,20 @@ class FixedWidthSchema(Schema):
                  bin_width,
                  bin_count=None,
                  bin_times_min=None,
-                 bin_shift=None):
+                 bin_shift=0.0):
         self._bin_width = bin_width
         self._bin_count = bin_count
         self._bin_times_min = bin_times_min
         self._bin_shift = bin_shift
+
+    def _is_fully_specified(self):
+        # TODO: Generalize to Schema (with proper name)
+        return (
+            (self._bin_count is not None) and 
+            (self._bin_shift is not None) and
+            (self._bin_times_min is not None) and
+            (self._bin_width is not None)
+        )
 
     def fit(self, data):
         data_min, data_max = data.min(), data.max()
@@ -206,6 +218,8 @@ class FixedWidthSchema(Schema):
 
     @property
     def edges(self):
+        if not self._is_fully_specified():
+            return None
         indices = np.arange(self._bin_count + 1)
         return self._bin_width * (
             self._bin_times_min + indices) + self._bin_shift
@@ -345,6 +359,9 @@ def build_schema(kind: Union[str, type, Schema] = None,
 
         # In any case, bins need to be passed if they exist
         kwargs["bins"] = bins
+
+    if kind is None:
+        kind = DEFAULT_SCHEMA_NAME
 
     if isinstance(kind, Schema):
         return kind
