@@ -41,7 +41,7 @@ class Schema:
     def copy(self) -> 'Schema':
         raise NotImplementedError()
 
-    def is_fitted(self):
+    def is_fitted(self) -> bool:
         return ((getattr(self, "_edges", None) is not None)
                 or (getattr(self, "_bins", None) is not None))
 
@@ -124,6 +124,8 @@ class Schema:
 @Schema.register("static")
 class StaticSchema(Schema):
     def __init__(self, *, bins=None, edges=None, mask=None):
+        from .array_utils import make_bin_array, bins_to_edges_and_mask
+
         if bins is not None:
             if edges is not None:
                 raise ValueError(
@@ -138,6 +140,7 @@ class StaticSchema(Schema):
                     "bins must be an array of pairs, array of shape {0} given instead".
                     format(bins.shape))
             self._bins = bins.copy()
+            self._edges, self._mask = bins_to_edges_and_mask(self._bins)
         elif edges is not None:
             edges = np.asarray(edges)
             if edges.ndim != 1:
@@ -145,6 +148,7 @@ class StaticSchema(Schema):
                     "Invalid dimension for edges: {0}, must be 1".format(
                         edges.ndim))
             self._edges = edges.copy()
+            self._bins = make_bin_array(self._edges)
         else:
             raise ValueError("Must specify either bins or edges.")
         self._mask = mask

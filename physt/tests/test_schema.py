@@ -3,17 +3,16 @@ from unittest.mock import Mock, patch
 
 import numpy as np
 
-from physt.schema import build_schema
+from physt.schema import (build_schema, StaticSchema, NumpySchema, HumanSchema,
+                          UnknownBinCountAlgorithmError)
 
 
 class TestBuildSchema(unittest.TestCase):
     def test_no_params(self):
-        from physt.schema import HumanSchema
         schema = build_schema()
         assert isinstance(schema, HumanSchema)
 
     def test_numpy(self):
-        from physt.schema import NumpySchema
         schema = build_schema("numpy")
         assert isinstance(schema, NumpySchema)
         assert schema.bin_arg == 10
@@ -32,14 +31,11 @@ class TestBuildSchema(unittest.TestCase):
             _ = build_schema("invalid")
 
     def test_integer(self):
-        from physt.schema import NumpySchema
         schema = build_schema(bins=4)
         assert isinstance(schema, NumpySchema)
         assert schema.bin_arg == 4
 
     def test_string(self):
-        from physt.schema import NumpySchema, UnknownBinCountAlgorithmError
-
         algo = "sqrt"
         schema = build_schema(bins=algo)
         assert isinstance(schema, NumpySchema)
@@ -47,19 +43,15 @@ class TestBuildSchema(unittest.TestCase):
 
         algo = "nonexistent"
         with self.assertRaises(UnknownBinCountAlgorithmError):
-            schema = build_schema(bins=algo)     
+            schema = build_schema(bins=algo)
 
     def test_edge_array(self):
-        from physt.schema import StaticSchema
-
         bins = [0, 1, 2, 3]
         schema = build_schema(bins=bins)
         assert isinstance(schema, StaticSchema)
         assert np.array_equal(schema.edges, bins)
 
     def test_bin_array(self):
-        from physt.schema import StaticSchema
-
         bins = [[0, 1], [1, 2], [2, 3.2]]
         schema = build_schema(bins=bins)
         assert isinstance(schema, StaticSchema)
@@ -72,4 +64,49 @@ class TestBuildSchema(unittest.TestCase):
         }
         for _, value in bins.items():
             with self.assertRaises(ValueError):
-                _ = build_schema(bins = value)
+                _ = build_schema(bins=value)
+
+
+class TestStaticSchema(unittest.TestCase):
+    def test_no_bins_init(self):
+        with self.assertRaises(ValueError) as err:
+            _ = StaticSchema()
+            assert err.msg == "Must specify either bins or edges."
+
+    def test_bins_init(self):
+        bins = [[0, 1], [1, 2], [2, 3]]
+        edges = [0, 1, 2, 3]
+        schema = StaticSchema(bins=bins)
+        assert np.array_equal(bins, schema.bins)
+        assert np.array_equal(edges, schema.edges)
+
+    def test_edges_init(self):
+        bins = [[0, 1], [1, 2], [2, 3]]
+        edges = [0, 1, 2, 3]
+        schema = StaticSchema(edges=edges)
+        assert np.array_equal(bins, schema.bins)
+        assert np.array_equal(edges, schema.edges)
+
+    def test_bins_and_edges_init(self):
+        bins = [[0, 1], [1, 2], [2, 3]]
+        edges = [0, 1, 2, 3]
+        with self.assertRaises(ValueError):
+            _ = StaticSchema(bins=bins, edges=edges)
+
+    def test_invalid_edges_shape(self):
+        pass
+
+    def test_invalid_bins_shape(self):
+        pass
+
+
+class TestNumpySchema(unittest.TestCase):
+    pass
+
+
+class TestFixedWidthSchema(unittest.TestCase):
+    pass
+
+
+class TestHumanSchema(unittest.TestCase):
+    pass
