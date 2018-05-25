@@ -8,11 +8,16 @@ import numpy as np
 
 DEFAULT_SCHEMA_NAME = "human"
 
+
 class UnknownSchemaError(RuntimeError):
     pass
 
 
 class UnknownBinCountAlgorithmError(RuntimeError):
+    pass
+
+
+class NotFittedError(RuntimeError):
     pass
 
 
@@ -35,6 +40,10 @@ class Schema:
 
     def copy(self) -> 'Schema':
         raise NotImplementedError()
+
+    def is_fitted(self):
+        return ((getattr(self, "_edges", None) is not None)
+                or (getattr(self, "_bins", None) is not None))
 
     @staticmethod
     def register(name: str):
@@ -98,6 +107,12 @@ class Schema:
         if dropna:
             data = data[~np.isnan(data)]
         self.fit(data)
+        return self.apply(data, weights=weights, dropna=False)
+
+    def apply(self, data, weights=None, dropna: bool = True) -> np.ndarray:
+        if not self.is_fitted():
+            raise NotFittedError(
+                "Schema cannot be applied without fitting first.")
         numpy_result, _ = np.histogram(data, bins=self.edges, weights=weights)
         mask = self.mask
         if mask is not None:
@@ -168,6 +183,8 @@ class NumpySchema(Schema):
 
     @property
     def bins(self):
+        if self._edges is None:
+            return None
         return np.asarray([self._edges[:-1], self._edges[1:]])
 
     def fit(self, data):
@@ -197,14 +214,10 @@ class FixedWidthSchema(Schema):
         self._bin_times_min = bin_times_min
         self._bin_shift = bin_shift
 
-    def _is_fully_specified(self):
-        # TODO: Generalize to Schema (with proper name)
-        return (
-            (self._bin_count is not None) and 
-            (self._bin_shift is not None) and
-            (self._bin_times_min is not None) and
-            (self._bin_width is not None)
-        )
+    def is_fitted(self):
+        return ((self._bin_count is not None) and (self._bin_shift is not None)
+                and (self._bin_times_min is not None)
+                and (self._bin_width is not None))
 
     def fit(self, data):
         data_min, data_max = data.min(), data.max()
@@ -218,7 +231,7 @@ class FixedWidthSchema(Schema):
 
     @property
     def edges(self):
-        if not self._is_fully_specified():
+        if not self.is_fitted():
             return None
         indices = np.arange(self._bin_count + 1)
         return self._bin_width * (
@@ -378,9 +391,9 @@ def build_schema(kind: Union[str, type, Schema] = None,
         raise ValueError("Cannot interpret {0} as schema".format(kind))
 
 
-def build_multi_schema(kind: Union[Iterable, str, type, Schema], ndim: int,
-                       **kwargs) -> MultiSchema:
-    if isinstance(kind, (Schema, str, type)):
+def build_multi_schema(kind: Optional[Union[Iterable, str, type, Schema]],
+                       ndim: int, **kwargs) -> MultiSchema:
+    if isinstance(kind, (Schema, str, type)) or kind is None:
         schemas = [kind] * ndim
         return build_multi_schema(schemas, ndim, **kwargs)
     elif isinstance(kind, Iterable):
