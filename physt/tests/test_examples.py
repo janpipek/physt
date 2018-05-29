@@ -10,9 +10,11 @@ class TestExample(unittest.TestCase):
         hist = normal_h1(1000)
         assert hist.ndim == 1
         assert hist.total == 1000
+        assert "Normal distribution" in hist.meta_data.title
 
     def test_normal_h2(self):
         from physt.examples import normal_h2
         hist = normal_h2(1000)
         assert hist.ndim == 2
         assert hist.total == 1000
+        assert "Normal distribution" in hist.meta_data.title
