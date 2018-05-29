@@ -1,5 +1,12 @@
+from typing import Tuple
+from collections.abc import Mapping
+from collections import UserDict
+from numbers import Number
+
 import numpy as np
+
 from .schema import Schema
+from .histogram_meta_data import HistogramMetaData
 
 __all__ = ["Histogram",]
 
@@ -15,11 +22,15 @@ class Histogram:
     - bins
     
     """
-    def __init__(self, schema: Schema, values: np.ndarray):
-        # self.dtype = int
+    def __init__(self, schema: Schema, values: np.ndarray, meta_data: Mapping=None):
         self._values = values
         self._schema = schema
         self._dtype = None
+        self._meta_data = HistogramMetaData(meta_data)
+
+    @property
+    def meta_data(self):
+        return self._meta_data
 
     @property
     def dtype(self):
@@ -34,15 +45,15 @@ class Histogram:
         self._values = self._values.astype(value)
 
     @property
-    def ndim(self):
+    def ndim(self) -> int:
         return self._schema.ndim
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[int]:
         return self._schema.shape
 
     @property
-    def schema(self):
+    def schema(self) -> Schema:
         return self._schema
 
     @property
@@ -54,9 +65,9 @@ class Histogram:
         return self._values
 
     @property
-    def total(self) -> int:
+    def total(self) -> Number:
         if self.values is None:
-            return None 
+            return None
         return self.values.sum()
 
     def __repr__(self) -> str:
@@ -103,10 +114,14 @@ class Histogram:
             self.dtype = np.float
             self._values /= self.total
             return self
-    
+
     @property
     def densities(self) -> np.ndarray:
         if self._values is None:
             return None
         else:
             return self._values / self._schema.bin_sizes
+
+
+# Clean up namespace
+del Tuple, Mapping, UserDict

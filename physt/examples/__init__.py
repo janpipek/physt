@@ -21,7 +21,9 @@ def normal_h1(size=10000, mean=0, sigma=1):
     from ..constructors import h1
 
     data = np.random.normal(mean, sigma, (size,))
-    return h1(data)
+    histogram = h1(data)
+    histogram.meta_data.title = "Normal distribution (μ = {0}, σ = {1})".format(mean, sigma)
+    return histogram
 
 
 def normal_h2(size=10000):
@@ -41,5 +43,6 @@ def normal_h2(size=10000):
 
     data1 = np.random.normal(0, 1, (size,))
     data2 = np.random.normal(0, 1, (size,))
-    return h2(data1, data2)
-
+    histogram = h2(data1, data2)
+    histogram.meta_data.title = "Normal distribution in 2D"
+    return histogram
