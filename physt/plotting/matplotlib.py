@@ -39,7 +39,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 from functools import wraps
 
-from .common import get_data, get_err_data
+from .common import get_data, get_err_data, pop_kwargs_with_prefix
 
 
 # To be filled by register function
@@ -113,6 +113,7 @@ def bar(h1, ax, errors=False, **kwargs):
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
     label = kwargs.pop("label", h1.name)
+    text_kwargs = pop_kwargs_with_prefix("text_", kwargs)
 
     data = get_data(h1, cumulative=cumulative, density=density)
 
@@ -137,7 +138,7 @@ def bar(h1, ax, errors=False, **kwargs):
            label=label, color=colors, **kwargs)
 
     if show_values:
-        _add_values(ax, h1, data, value_format=value_format)
+        _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
     if show_stats:
         _add_stats_box(h1, ax)
 
@@ -163,6 +164,7 @@ def scatter(h1, ax, errors=False, **kwargs):
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
     value_format = kwargs.pop("value_format", None)
+    text_kwargs = pop_kwargs_with_prefix("text_", kwargs)
 
     data = get_data(h1, cumulative=cumulative, density=density)
 
@@ -184,7 +186,7 @@ def scatter(h1, ax, errors=False, **kwargs):
     ax.scatter(h1.bin_centers, data, **kwargs)
 
     if show_values:
-        _add_values(ax, h1, data, value_format=value_format)
+        _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
     if show_stats:
         _add_stats_box(h1, ax)
     return ax
@@ -209,6 +211,7 @@ def line(h1, ax, errors=False, **kwargs):
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
     value_format = kwargs.pop("value_format", None)
+    text_kwargs = pop_kwargs_with_prefix("text_", kwargs)
 
     data = get_data(h1, cumulative=cumulative, density=density)
     _apply_xy_lims(ax, h1, data, kwargs)
@@ -225,7 +228,7 @@ def line(h1, ax, errors=False, **kwargs):
     if show_stats:
         _add_stats_box(h1, ax)
     if show_values:
-        _add_values(ax, h1, data, value_format=value_format)
+        _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
     return ax
 
 
@@ -309,6 +312,8 @@ def map(h2, ax, show_zero=True, show_values=False, show_colorbar=True, x=None, y
         transformed = True
 
     value_format = kwargs.pop("value_format", lambda x: str(x))
+    # TODO: Implement correctly the text_kwargs
+
     if isinstance(value_format, str):
         format_str = "{0:" + value_format + "}"
         value_format = lambda x: format_str.format(x)
@@ -873,7 +878,7 @@ def _add_labels(ax, h, kwargs):
     ax.get_figure().tight_layout()
 
 
-def _add_values(ax, h1, data, value_format=lambda x: x):
+def _add_values(ax, h1, data, value_format=lambda x: x, **kwargs):
     """Show values next to each bin in a 1D plot.
 
     Parameters
@@ -882,12 +887,16 @@ def _add_values(ax, h1, data, value_format=lambda x: x):
     h1 : physt.histogram1d.Histogram1D
     data : array_like
         The values to be displayed
+    kwargs : dict
+        Parameters to be passed to matplotlib to override standard text params.
     """
     from .common import get_value_format
     value_format = get_value_format(value_format)
+    text_kwargs = {"ha": "center", "va": "bottom", "clip_on" : True}
+    text_kwargs.update(kwargs)
 
     for x, y in zip(h1.bin_centers, data):
-        ax.text(x, y, str(value_format(y)), ha='center', va='bottom', clip_on=True)
+        ax.text(x, y, str(value_format(y)), **text_kwargs)
 
 
 def _add_colorbar(ax, cmap, cmap_data, norm):

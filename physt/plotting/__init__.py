@@ -56,6 +56,8 @@ zorder : int (optional)
 
 text_color : 
 text_alpha : 
+text_* : 
+    Other options that are passed to the formatting of values without the prefix
 
 1D histograms
 ~~~~~~~~~~~~~
