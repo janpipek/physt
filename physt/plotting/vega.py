@@ -141,6 +141,10 @@ def bar(h1, **kwargs):
     ----------
     h1 : physt.histogram1d.Histogram1D
         Dimensionality of histogram for which it is applicable
+    lw : float
+        Width of the line between bars
+    alpha : float
+        Opacity of the bars
     """
     vega = _create_figure(kwargs)
     _add_title(h1, vega, kwargs)
@@ -173,14 +177,14 @@ def bar(h1, **kwargs):
                     "y": {"scale": "yscale", "value": 0},
                     "y2": {"scale": "yscale", "field": "y"},
                     # "stroke": {"scale": "color", "field": "c"},
-                    "strokeWidth": {"value": 2}
+                    "strokeWidth": {"value": kwargs.pop("lw", 2)}
                 },
                 "update": {
-                    "fillOpacity": {"value": 1}
+                    "fillOpacity": {"value": kwargs.pop("alpha", 1)}
                 },
-                "hover": {
-                     "fillOpacity": {"value": 0.5}
-                }
+                # "hover": {
+                #      "fillOpacity": {"value": 0.5}
+                # }
             }
         }
     ]
@@ -332,9 +336,9 @@ def map(h2, show_zero=True, show_values=False, **kwargs):
                     # "strokeWidth": {"value": 0},
                     # "fillColor": {"value": "#ffff00"}
                 },
-                # "update": {
-                #     "fillOpacity": {"value": 0.6}
-                # },
+                "update": {
+                    "fillOpacity": {"value": kwargs.pop("alpha", 1)}
+                },
                 # "hover": {
                 #     "fillOpacity": {"value": 0.5}
                 # }
