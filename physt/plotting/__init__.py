@@ -4,7 +4,7 @@ Available backends
 ------------------
 - matplotlib
 - vega
-- pyplot (simple wrapper around matplotlib for 1D histograms)
+- plotly (simple wrapper around matplotlib for 1D histograms)
 - folium (just for the geographical histograms)
 
 Calling the plotting functions

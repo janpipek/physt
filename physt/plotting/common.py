@@ -88,7 +88,7 @@ def get_value_format(value_format=str):
 
 
 def pop_kwargs_with_prefix(prefix, kwargs):
-    """Pop all items from an dictionary that have keys beginning with a prefix.
+    """Pop all items from a dictionary that have keys beginning with a prefix.
 
     Parameters
     ----------
