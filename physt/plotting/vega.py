@@ -184,6 +184,7 @@ def bar(h1, **kwargs):
             }
         }
     ]
+    _create_tooltips(h1, vega, kwargs)
 
     return vega
 
@@ -222,6 +223,7 @@ def scatter(h1, **kwargs):
             }
         }
     ]
+    _create_tooltips(h1, vega, kwargs)
     return vega
 
 
@@ -258,6 +260,7 @@ def line(h1, **kwargs):
             }
         }
     ]
+    _create_tooltips(h1, vega, kwargs)
     return vega
 
 
@@ -598,6 +601,40 @@ def _create_axes(hist, vega, kwargs):
         {"orient": "bottom", "scale": "xscale", "title": xlabel},
         {"orient": "left", "scale": "yscale", "title": ylabel}
     ]
+
+
+def _create_tooltips(hist, vega, kwargs):
+    if kwargs.pop("tooltips", False):
+        vega["signals"] = vega.get("signals", [])
+        vega["signals"].append({
+          "name": "tooltip",
+          "value": {},
+          "on": [
+            {"events": "rect:mouseover", "update": "datum"},
+            {"events": "rect:mouseout",  "update": "{}"}
+          ]
+        })
+
+        vega["marks"] = vega.get("marks", [])
+        vega["marks"].append({
+          "type": "text",
+          "encode": {
+            "enter": {
+              "align": {"value": "center"},
+              "baseline": {"value": "bottom"},
+              "fill": {"value": "#333"}
+            },
+            "update": {
+              "x": {"scale": "xscale", "signal": "(tooltip.x + tooltip.x2) / 2", "band": 0.5},
+              "y": {"scale": "yscale", "signal": "tooltip.y", "offset": -2},
+              "text": {"signal": "tooltip.y"},
+              "fillOpacity": [
+                {"test": "datum === tooltip", "value": 0},
+                {"value": 1}
+              ]
+            }
+          }
+        })
 
 
 def _add_title(hist, vega, kwargs):
