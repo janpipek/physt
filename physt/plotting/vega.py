@@ -1,9 +1,14 @@
-"""Vega backend for plotting in physt.
+"""Vega3 backend for plotting in physt.
 
 The JSON can be produced without any external dependency, the ability
-to show plots in-line in matplotlib requires 'vega3' library.
+to show plots in-line in IPython requires 'vega3' library.
 
 Implementation note: Values passed to JSON cannot be of type np.int64 (solution: explicit cast to float)
+
+Common parameters
+-----------------
+See the `enable_inline_view` wrapper.
+
 """
 # TODO: Custom JSON serializer better than conversion?
 
@@ -114,23 +119,54 @@ def enable_inline_view(f):
             display = write_to is None
 
         if write_to:
-            spec = json.dumps(vega_data, indent=indent)
-            if write_format == "html" or write_format is "auto" and write_to.endswith(".html"):
-                output = HTML_TEMPLATE.replace("{{ title }}", hist.title).replace("{{ spec }}", spec)
-            elif write_format == "json" or write_format is "auto" and write_to.endswith(".json"):
-                output = spec
-            else:
-                raise RuntimeError("Format not understood.")
-            with codecs.open(write_to, "w", encoding="utf-8") as out:
-                out.write(output)
-
-        if VEGA_IPYTHON_PLUGIN_ENABLED and display:
-            from vega3 import Vega
-            return Vega(vega_data)
-        else:
-            return vega_data
+            write_vega(vega_data, hist.title, write_to, write_format, indent)
+            
+        return display_vega(vega_data, display)
 
     return wrapper
+
+
+def write_vega(vega_data, title, write_to, write_format="auto", indent=2):
+    """Write vega dictionary to an external file.
+
+
+    Parameters
+    ----------
+    vega_data : dict
+        Valid vega data as dictionary
+    write_to: str (optional)
+        Path to write vega JSON/HTML to.
+    write_format: "auto" | "json" | "html"
+        Whether to create a JSON data file or a full-fledged HTML page.
+    indent: int
+        Indentation of JSON
+    """
+    spec = json.dumps(vega_data, indent=indent)
+    if write_format == "html" or write_format is "auto" and write_to.endswith(".html"):
+        output = HTML_TEMPLATE.replace("{{ title }}", title or "Histogram").replace("{{ spec }}", spec)
+    elif write_format == "json" or write_format is "auto" and write_to.endswith(".json"):
+        output = spec
+    else:
+        raise RuntimeError("Format not understood.")
+    with codecs.open(write_to, "w", encoding="utf-8") as out:
+        out.write(output)
+
+
+def display_vega(vega_data, display=True):
+    """Optionally display vega dictionary.
+
+    Parameters
+    ----------
+    vega_data : dict
+        Valid vega data as dictionary
+    display: True | False
+        Whether to try in-line display in IPython        
+    """
+    if VEGA_IPYTHON_PLUGIN_ENABLED and display:
+        from vega3 import Vega
+        return Vega(vega_data)
+    else:
+        return vega_data    
 
 
 @enable_inline_view
