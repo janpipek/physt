@@ -181,6 +181,8 @@ def bar(h1, **kwargs):
         Width of the line between bars
     alpha : float
         Opacity of the bars
+    hover_alpha: float
+        Opacity of the bars when hover on
     """
     vega = _create_figure(kwargs)
     _add_title(h1, vega, kwargs)
@@ -202,6 +204,9 @@ def bar(h1, **kwargs):
         ]
     }]
 
+    alpha = kwargs.pop("alpha", 1)
+    hover_alpha = kwargs.pop("hover_alpha", alpha)
+
     vega["marks"] = [
         {
             "type": "rect",
@@ -216,11 +221,11 @@ def bar(h1, **kwargs):
                     "strokeWidth": {"value": kwargs.pop("lw", 2)}
                 },
                 "update": {
-                    "fillOpacity": {"value": kwargs.pop("alpha", 1)}
+                    "fillOpacity": [
+                        {"test": "datum === tooltip", "value": hover_alpha},
+                        {"value": alpha}
+                    ]
                 },
-                # "hover": {
-                #      "fillOpacity": {"value": 0.5}
-                # }
             }
         }
     ]
@@ -631,7 +636,6 @@ def _create_axes(hist, vega, kwargs):
     Parameters
     ----------
     hist : physt.histogram_base.HistogramBase
-        Dimensionality of histogram for which it is applicable
     vega : dict
     kwargs : dict
     """
@@ -644,6 +648,14 @@ def _create_axes(hist, vega, kwargs):
 
 
 def _create_tooltips(hist, vega, kwargs):
+    """In one-dimensional plots, show values above the value on hover.
+
+    Parameters
+    ----------
+    hist : physt.histogram_base.HistogramBase
+    vega : dict
+    kwargs: dict
+    """
     if kwargs.pop("tooltips", False):
         vega["signals"] = vega.get("signals", [])
         vega["signals"].append({
