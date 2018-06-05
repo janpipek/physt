@@ -29,9 +29,9 @@ xscale : str (optional)
     If "log", x axis will be scaled logarithmically
 yscale : str (optional)
     If "log", y axis will be scaled logarithmically
-xlim:
-
-ylim :
+xlim : tuple | "auto" | "keep"
+    
+ylim : tuple | "auto" | "keep"
 
 invert_y : bool
     If True, the y axis points downwards
@@ -73,7 +73,8 @@ errors : bool
 show_zero : bool
     Whether to show bins that have no content
 grid_color : 
-show_colorbar : 
+show_colorbar : bool
+    Whether to display a colorbar next to the plot itself
 """
 
 from __future__ import absolute_import

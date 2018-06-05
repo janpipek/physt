@@ -583,7 +583,20 @@ def _create_scales(hist, vega, kwargs):
     else:
         bins0 = hist.bins[0].astype(float)
 
-    # TODO: Apply xlim & ylim parameters
+    xlim = kwargs.pop("xlim", "auto")
+    ylim = kwargs.pop("ylim", "auto")
+
+    if xlim is "auto":
+        nice_x = True
+    else:
+        nice_x = False
+
+    if ylim is "auto":
+        nice_y = True
+    else:
+        nice_y = False
+
+    # TODO: Unify xlim & ylim parameters with matplotlib
     # TODO: Apply xscale & yscale parameters
 
     vega["scales"] = [
@@ -591,18 +604,18 @@ def _create_scales(hist, vega, kwargs):
             "name": "xscale",
             "type": "linear",
             "range": "width",
-            "nice": True,
+            "nice": nice_x,
             "zero": None,
-            "domain": [bins0[0, 0], bins0[-1, 1]],
+            "domain": [bins0[0, 0], bins0[-1, 1]] if xlim == "auto" else [float(xlim[0]), float(xlim[1])],
             # "domain": {"data": "table", "field": "x"}
         },
         {
             "name": "yscale",
             "type": "linear",
             "range": "height",
-            "nice": True,
+            "nice": nice_y,
             "zero": True if hist.ndim == 1 else None,
-            "domain": {"data": "table", "field": "y"}
+            "domain": {"data": "table", "field": "y"} if ylim == "auto" else [float(ylim[0]), float(ylim[1])]
         }
     ]
 
