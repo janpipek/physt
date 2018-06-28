@@ -56,7 +56,7 @@ def to_numpy_bins(bins):
     if bins.ndim == 1:     # Already in the proper format
         return bins
     if not is_consecutive(bins):
-        raise RuntimeError("Cannot create numpy bins from inconsecutive")
+        raise RuntimeError("Cannot create numpy bins from inconsecutive edges")
     return np.concatenate([bins[:1, 0], bins[:, 1]])
 
 
