@@ -548,6 +548,7 @@ def globe_map(hist, ax, show_zero=True, **kwargs):
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
     colors = cmap(cmap_data)
+    lw = kwargs.pop("lw", 1)
 
     r = 1
     xs = r * np.outer(np.sin(hist.numpy_bins[0]), np.cos(hist.numpy_bins[1]))
@@ -564,6 +565,8 @@ def globe_map(hist, ax, show_zero=True, **kwargs):
             verts = [list(zip(x, y, z))]
             col = Poly3DCollection(verts)
             col.set_facecolor(colors[i, j])
+            col.set_edgecolor("black")
+            col.set_linewidth(lw)
             ax.add_collection3d(col)
 
     ax.set_xlabel("x")
