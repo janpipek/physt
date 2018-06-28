@@ -30,7 +30,7 @@ def _wrap_matplotlib_f(f):
 
 
 types = ["bar", "scatter", "line"]
-dims = {x : 1  for x in types}
+dims = {x : [1]  for x in types}
 
 for plot_type in types:
     globals()[plot_type] = _wrap_matplotlib_f(mpl_backend.__dict__[plot_type])

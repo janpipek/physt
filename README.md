@@ -157,3 +157,4 @@ I am looking for anyone interested in using / developing physt. You can contribu
 * <https://github.com/HDembinski/histogram>
 * <https://github.com/theodoregoetz/histogram>
 * <https://github.com/ibab/matplotlib-hep>
+* <https://github.com/diana-hep/histbook>

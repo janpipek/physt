@@ -4,7 +4,7 @@ Available backends
 ------------------
 - matplotlib
 - vega
-- pyplot (simple wrapper around matplotlib for 1D histograms)
+- plotly (simple wrapper around matplotlib for 1D histograms)
 - folium (just for the geographical histograms)
 
 Calling the plotting functions
@@ -29,9 +29,9 @@ xscale : str (optional)
     If "log", x axis will be scaled logarithmically
 yscale : str (optional)
     If "log", y axis will be scaled logarithmically
-xlim:
-
-ylim :
+xlim : tuple | "auto" | "keep"
+    
+ylim : tuple | "auto" | "keep"
 
 invert_y : bool
     If True, the y axis points downwards
@@ -56,6 +56,8 @@ zorder : int (optional)
 
 text_color : 
 text_alpha : 
+text_* : 
+    Other options that are passed to the formatting of values without the prefix
 
 1D histograms
 ~~~~~~~~~~~~~
@@ -71,7 +73,8 @@ errors : bool
 show_zero : bool
     Whether to show bins that have no content
 grid_color : 
-show_colorbar : 
+show_colorbar : bool
+    Whether to display a colorbar next to the plot itself
 """
 
 from __future__ import absolute_import

@@ -1,9 +1,14 @@
-"""Vega backend for plotting in physt.
+"""Vega3 backend for plotting in physt.
 
 The JSON can be produced without any external dependency, the ability
-to show plots in-line in matplotlib requires 'vega3' library.
+to show plots in-line in IPython requires 'vega3' library.
 
 Implementation note: Values passed to JSON cannot be of type np.int64 (solution: explicit cast to float)
+
+Common parameters
+-----------------
+See the `enable_inline_view` wrapper.
+
 """
 # TODO: Custom JSON serializer better than conversion?
 
@@ -114,23 +119,54 @@ def enable_inline_view(f):
             display = write_to is None
 
         if write_to:
-            spec = json.dumps(vega_data, indent=indent)
-            if write_format == "html" or write_format is "auto" and write_to.endswith(".html"):
-                output = HTML_TEMPLATE.replace("{{ title }}", hist.title or "Histogram").replace("{{ spec }}", spec)
-            elif write_format == "json" or write_format is "auto" and write_to.endswith(".json"):
-                output = spec
-            else:
-                raise RuntimeError("Format not understood.")
-            with codecs.open(write_to, "w", encoding="utf-8") as out:
-                out.write(output)
-
-        if VEGA_IPYTHON_PLUGIN_ENABLED and display:
-            from vega3 import Vega
-            return Vega(vega_data)
-        else:
-            return vega_data
+            write_vega(vega_data, hist.title, write_to, write_format, indent)
+            
+        return display_vega(vega_data, display)
 
     return wrapper
+
+
+def write_vega(vega_data, title, write_to, write_format="auto", indent=2):
+    """Write vega dictionary to an external file.
+
+
+    Parameters
+    ----------
+    vega_data : dict
+        Valid vega data as dictionary
+    write_to: str (optional)
+        Path to write vega JSON/HTML to.
+    write_format: "auto" | "json" | "html"
+        Whether to create a JSON data file or a full-fledged HTML page.
+    indent: int
+        Indentation of JSON
+    """
+    spec = json.dumps(vega_data, indent=indent)
+    if write_format == "html" or write_format is "auto" and write_to.endswith(".html"):
+        output = HTML_TEMPLATE.replace("{{ title }}", title or "Histogram").replace("{{ spec }}", spec)
+    elif write_format == "json" or write_format is "auto" and write_to.endswith(".json"):
+        output = spec
+    else:
+        raise RuntimeError("Format not understood.")
+    with codecs.open(write_to, "w", encoding="utf-8") as out:
+        out.write(output)
+
+
+def display_vega(vega_data, display=True):
+    """Optionally display vega dictionary.
+
+    Parameters
+    ----------
+    vega_data : dict
+        Valid vega data as dictionary
+    display: True | False
+        Whether to try in-line display in IPython        
+    """
+    if VEGA_IPYTHON_PLUGIN_ENABLED and display:
+        from vega3 import Vega
+        return Vega(vega_data)
+    else:
+        return vega_data    
 
 
 @enable_inline_view
@@ -141,6 +177,12 @@ def bar(h1, **kwargs):
     ----------
     h1 : physt.histogram1d.Histogram1D
         Dimensionality of histogram for which it is applicable
+    lw : float
+        Width of the line between bars
+    alpha : float
+        Opacity of the bars
+    hover_alpha: float
+        Opacity of the bars when hover on
     """
     vega = _create_figure(kwargs)
     _add_title(h1, vega, kwargs)
@@ -162,6 +204,9 @@ def bar(h1, **kwargs):
         ]
     }]
 
+    alpha = kwargs.pop("alpha", 1)
+    hover_alpha = kwargs.pop("hover_alpha", alpha)
+
     vega["marks"] = [
         {
             "type": "rect",
@@ -173,17 +218,18 @@ def bar(h1, **kwargs):
                     "y": {"scale": "yscale", "value": 0},
                     "y2": {"scale": "yscale", "field": "y"},
                     # "stroke": {"scale": "color", "field": "c"},
-                    "strokeWidth": {"value": 2}
+                    "strokeWidth": {"value": kwargs.pop("lw", 2)}
                 },
                 "update": {
-                    "fillOpacity": {"value": 1}
+                    "fillOpacity": [
+                        {"test": "datum === tooltip", "value": hover_alpha},
+                        {"value": alpha}
+                    ]
                 },
-                "hover": {
-                     "fillOpacity": {"value": 0.5}
-                }
             }
         }
     ]
+    _create_tooltips(h1, vega, kwargs)
 
     return vega
 
@@ -222,6 +268,7 @@ def scatter(h1, **kwargs):
             }
         }
     ]
+    _create_tooltips(h1, vega, kwargs)
     return vega
 
 
@@ -258,6 +305,7 @@ def line(h1, **kwargs):
             }
         }
     ]
+    _create_tooltips(h1, vega, kwargs)
     return vega
 
 
@@ -329,9 +377,9 @@ def map(h2, show_zero=True, show_values=False, **kwargs):
                     # "strokeWidth": {"value": 0},
                     # "fillColor": {"value": "#ffff00"}
                 },
-                # "update": {
-                #     "fillOpacity": {"value": 0.6}
-                # },
+                "update": {
+                    "fillOpacity": {"value": kwargs.pop("alpha", 1)}
+                },
                 # "hover": {
                 #     "fillOpacity": {"value": 0.5}
                 # }
@@ -535,7 +583,20 @@ def _create_scales(hist, vega, kwargs):
     else:
         bins0 = hist.bins[0].astype(float)
 
-    # TODO: Apply xlim & ylim parameters
+    xlim = kwargs.pop("xlim", "auto")
+    ylim = kwargs.pop("ylim", "auto")
+
+    if xlim is "auto":
+        nice_x = True
+    else:
+        nice_x = False
+
+    if ylim is "auto":
+        nice_y = True
+    else:
+        nice_y = False
+
+    # TODO: Unify xlim & ylim parameters with matplotlib
     # TODO: Apply xscale & yscale parameters
 
     vega["scales"] = [
@@ -543,18 +604,18 @@ def _create_scales(hist, vega, kwargs):
             "name": "xscale",
             "type": "linear",
             "range": "width",
-            "nice": True,
+            "nice": nice_x,
             "zero": None,
-            "domain": [bins0[0, 0], bins0[-1, 1]],
+            "domain": [bins0[0, 0], bins0[-1, 1]] if xlim == "auto" else [float(xlim[0]), float(xlim[1])],
             # "domain": {"data": "table", "field": "x"}
         },
         {
             "name": "yscale",
             "type": "linear",
             "range": "height",
-            "nice": True,
+            "nice": nice_y,
             "zero": True if hist.ndim == 1 else None,
-            "domain": {"data": "table", "field": "y"}
+            "domain": {"data": "table", "field": "y"} if ylim == "auto" else [float(ylim[0]), float(ylim[1])]
         }
     ]
 
@@ -588,7 +649,6 @@ def _create_axes(hist, vega, kwargs):
     Parameters
     ----------
     hist : physt.histogram_base.HistogramBase
-        Dimensionality of histogram for which it is applicable
     vega : dict
     kwargs : dict
     """
@@ -598,6 +658,48 @@ def _create_axes(hist, vega, kwargs):
         {"orient": "bottom", "scale": "xscale", "title": xlabel},
         {"orient": "left", "scale": "yscale", "title": ylabel}
     ]
+
+
+def _create_tooltips(hist, vega, kwargs):
+    """In one-dimensional plots, show values above the value on hover.
+
+    Parameters
+    ----------
+    hist : physt.histogram_base.HistogramBase
+    vega : dict
+    kwargs: dict
+    """
+    if kwargs.pop("tooltips", False):
+        vega["signals"] = vega.get("signals", [])
+        vega["signals"].append({
+          "name": "tooltip",
+          "value": {},
+          "on": [
+            {"events": "rect:mouseover", "update": "datum"},
+            {"events": "rect:mouseout",  "update": "{}"}
+          ]
+        })
+
+        vega["marks"] = vega.get("marks", [])
+        vega["marks"].append({
+          "type": "text",
+          "encode": {
+            "enter": {
+              "align": {"value": "center"},
+              "baseline": {"value": "bottom"},
+              "fill": {"value": "#333"}
+            },
+            "update": {
+              "x": {"scale": "xscale", "signal": "(tooltip.x + tooltip.x2) / 2", "band": 0.5},
+              "y": {"scale": "yscale", "signal": "tooltip.y", "offset": -2},
+              "text": {"signal": "tooltip.y"},
+              "fillOpacity": [
+                {"test": "datum === tooltip", "value": 0},
+                {"value": 1}
+              ]
+            }
+          }
+        })
 
 
 def _add_title(hist, vega, kwargs):

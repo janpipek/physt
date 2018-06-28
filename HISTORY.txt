@@ -1,3 +1,14 @@
+0.3.38 (??)
+-----------
+- Added: vega plotting backend: xlim, ylim arguments
+
+0.3.37 (6th June 2018)
+----------------------
+- Added: vega plotting backend shows tooltips
+- Added: vega plotting backend accepts more formatting options
+- Added: text formatting for values displayed in the plot
+- Fixed: plotly plotting function did not work sometimes
+
 0.3.36 (24th May 2018)
 ----------------------
 - Fixed: requires numpy for installation (setup.py)

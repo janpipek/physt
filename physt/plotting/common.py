@@ -85,3 +85,20 @@ def get_value_format(value_format=str):
         value_format = lambda x: format_str.format(x)
     
     return value_format
+
+
+def pop_kwargs_with_prefix(prefix, kwargs):
+    """Pop all items from a dictionary that have keys beginning with a prefix.
+
+    Parameters
+    ----------
+    prefix : str
+    kwargs : dict
+
+    Returns
+    -------
+    kwargs : dict
+        Items popped from the original directory, with prefix removed.
+    """
+    keys = [key for key in kwargs if key.startswith(prefix)]
+    return {key[len(prefix):]: kwargs.pop(key) for key in keys}

@@ -7,3 +7,5 @@ API Reference
    physt
    physt.plotting
    physt.compat
+   physt.helpers
+   physt.examples
