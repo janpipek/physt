@@ -28,6 +28,8 @@ DEFAULT_WIDTH = 400
 DEFAULT_HEIGHT = 200
 DEFAULT_PADDING = 5
 
+DEFAULT_FONTSIZE = 16
+
 PALETTES = [
     "Viridis",
     "Magma",
@@ -680,6 +682,8 @@ def _create_tooltips(hist, vega, kwargs):
           ]
         })
 
+        font_size = kwargs.get("fontsize", DEFAULT_FONTSIZE)
+
         vega["marks"] = vega.get("marks", [])
         vega["marks"].append({
           "type": "text",
@@ -687,7 +691,8 @@ def _create_tooltips(hist, vega, kwargs):
             "enter": {
               "align": {"value": "center"},
               "baseline": {"value": "bottom"},
-              "fill": {"value": "#333"}
+              "fill": {"value": "#333"},
+              "fontSize": {"value": font_size}
             },
             "update": {
               "x": {"scale": "xscale", "signal": "(tooltip.x + tooltip.x2) / 2", "band": 0.5},
