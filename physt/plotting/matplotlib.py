@@ -102,6 +102,8 @@ def bar(h1, ax, errors=False, **kwargs):
         A function converting or str
     show_stats: bool
         If True, display a small box with statistical info
+    lw (or linewidth): float
+        Width of the bar lines.
 
     Returns
     -------
@@ -113,6 +115,7 @@ def bar(h1, ax, errors=False, **kwargs):
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
     label = kwargs.pop("label", h1.name)
+    lw = kwargs.pop("linewidth", kwargs.pop("lw", 0.5))
 
     data = get_data(h1, cumulative=cumulative, density=density)
 
@@ -134,7 +137,7 @@ def bar(h1, ax, errors=False, **kwargs):
 
     _add_labels(ax, h1, kwargs)
     ax.bar(h1.bin_left_edges, data, h1.bin_widths, align="edge",
-           label=label, color=colors, **kwargs)
+           label=label, color=colors, linewidth=lw, **kwargs)
 
     if show_values:
         _add_values(ax, h1, data, value_format=value_format)
