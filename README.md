@@ -7,6 +7,8 @@ and to create one representation that is easily manipulated with from the data p
 nice integration into IPython notebook and various plotting options. In short, whatever you want to do with histograms,
 **physt** aims to be on your side.
 
+*Note: Version 0.3.x is feature-full while a re-design in the form of 0.4 is on the way.*
+
 *Note: bokeh plotting backend has been discontinued (due to external library being redesigned.)*
 
 [![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/physt.svg)](https://gitter.im/physt/physt) [![PyPI version](https://badge.fury.io/py/physt.svg)](https://badge.fury.io/py/physt)
