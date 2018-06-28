@@ -116,7 +116,7 @@ def enable_inline_view(f):
         if write_to:
             spec = json.dumps(vega_data, indent=indent)
             if write_format == "html" or write_format is "auto" and write_to.endswith(".html"):
-                output = HTML_TEMPLATE.replace("{{ title }}", hist.title).replace("{{ spec }}", spec)
+                output = HTML_TEMPLATE.replace("{{ title }}", hist.title or "Histogram").replace("{{ spec }}", spec)
             elif write_format == "json" or write_format is "auto" and write_to.endswith(".json"):
                 output = spec
             else:
