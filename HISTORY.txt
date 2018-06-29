@@ -1,6 +1,8 @@
-0.3.38 (??)
------------
+0.3.38 (29th June 2018)
+-----------------------
 - Added: vega plotting backend: xlim, ylim arguments
+- Added: matplotib plotting backend: simplified stats box with totals
+- Fixed: several minor bugs
 
 0.3.37 (6th June 2018)
 ----------------------
