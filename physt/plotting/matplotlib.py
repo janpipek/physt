@@ -143,7 +143,7 @@ def bar(h1, ax, errors=False, **kwargs):
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
     if show_stats:
-        _add_stats_box(h1, ax)
+        _add_stats_box(h1, ax, stats=show_stats)
 
     return ax
 
@@ -191,7 +191,7 @@ def scatter(h1, ax, errors=False, **kwargs):
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
     if show_stats:
-        _add_stats_box(h1, ax)
+        _add_stats_box(h1, ax, stats=show_stats)
     return ax
 
 
@@ -229,7 +229,7 @@ def line(h1, ax, errors=False, **kwargs):
         ax.plot(h1.bin_centers, data, **kwargs)
 
     if show_stats:
-        _add_stats_box(h1, ax)
+        _add_stats_box(h1, ax, stats=show_stats)
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
     return ax
@@ -259,7 +259,7 @@ def fill(h1, ax, **kwargs):
     ax.fill_between(h1.bin_centers, 0, data, **kwargs)
 
     if show_stats:
-        _add_stats_box(h1, ax)
+        _add_stats_box(h1, ax, stats=show_stats)
     # if show_values:
     #     _add_values(ax, h1, data)
     return ax
@@ -921,7 +921,7 @@ def _add_colorbar(ax, cmap, cmap_data, norm):
     fig.colorbar(mappable, ax=ax)
 
 
-def _add_stats_box(h1, ax):
+def _add_stats_box(h1, ax, stats="all"):
     """Insert a small legend-like box with statistical information.
 
     Parameters
@@ -930,6 +930,8 @@ def _add_stats_box(h1, ax):
         Axes to draw it into
     h1 : physt.histogram1d.Histogram1D
         Histogram with valid statistics information
+    stats : "all" | "total" | True
+        What info to display
 
     Note
     ----
@@ -937,8 +939,14 @@ def _add_stats_box(h1, ax):
     """
 
     # place a text box in upper left in axes coords
-    text = "Total: {0}\nMean: {1:.2f}\nStd.dev: {2:.2f}".format(
-        h1.total, h1.mean(), h1.std())
+    if stats is True or stats == "all":
+        text = "Total: {0}\nMean: {1:.2f}\nStd.dev: {2:.2f}".format(
+            h1.total, h1.mean(), h1.std())
+    elif stats == "total":
+        text = "Total: {0}".format(h1.total)
+    else:
+        raise ValueError("Invalid stats specification")
+        
     ax.text(0.05, 0.95, text, transform=ax.transAxes,
             verticalalignment='top', horizontalalignment='left')
 
