@@ -133,6 +133,13 @@ class HistogramND(HistogramBase):
             if len(index) > self.ndim:
                 raise IndexError("Too many indices ({0}) to select from {1}D histogram".
                                  format(len(index), self.ndim))
+
+            # Scalar case => return (bin edges), (frequency)
+            if len(index) == self.ndim and all((isinstance(i, int) for i in index)):
+                return (
+                    tuple((self.get_bin_left_edges(i)[j], self.get_bin_right_edges(i)[j]) for i, j in enumerate(index)),
+                    self._frequencies[index]
+                )
             current = self
             for i, subindex in enumerate(index):              
                 current = current.select(i + current.ndim - self.ndim, subindex, force_copy=False)
