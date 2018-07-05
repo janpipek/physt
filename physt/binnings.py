@@ -349,6 +349,9 @@ class BinningBase(object):
         binning = StaticBinning(bins, includes_right_edge=includes_right_edge)
         return binning
 
+    def __repr__(self):
+        return "{0}({1})".format(self.__class__.__name__, repr(self.numpy_bins))
+
 
 class StaticBinning(BinningBase):
     inconsecutive_allowed = True
@@ -391,6 +394,9 @@ class StaticBinning(BinningBase):
         if is_bin_subset(other.bins, self.bins):
             indices = np.searchsorted(other.bins[:, 0], self.bins[:, 0])
             return None, list(enumerate(indices))
+
+    def __repr__(self):
+        return "{0}({1})".format(self.__class__.__name__, repr(self.bins))
 
 
 class NumpyBinning(BinningBase):
@@ -440,6 +446,15 @@ class FixedWidthBinning(BinningBase):
             self._shift = bin_shift or 0.0
         self._bins = None
         self._numpy_bins = None
+
+    def __repr__(self):
+        result = "{0}(bin_width={1}, bin_count={2}, min={3}".format( 
+            self.__class__.__name__,
+            self.bin_width, self.bin_count, self.first_edge
+        )
+        if self.is_adaptive():
+            result += ", adaptive=True"
+        return result + ")"
 
     def is_regular(self, *args, **kwargs):
         return True
@@ -623,7 +638,7 @@ class ExponentialBinning(BinningBase):
     def _update_dict(self, a_dict):
         a_dict["log_min"] = self._log_min
         a_dict["log_width"] = self._log_width
-        a_dict["bin_count"] = self._bin_count
+        a_dict["bin_count"] = self._bin_count        
 
 
 def numpy_binning(data, bins=10, range=None, *args, **kwargs):
