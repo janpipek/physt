@@ -84,7 +84,7 @@ class HistogramBase(object):
                 frequencies = np.asarray(frequencies)
                 if np.issubdtype(frequencies.dtype, np.integer):
                     frequencies = frequencies.astype(np.int64)
-                elif np.issubdtype(frequencies.dtype, np.float):
+                elif np.issubdtype(frequencies.dtype, np.floating):
                     frequencies = frequencies.astype(np.float64)
                 else:
                     raise RuntimeError("Frequencies of type {0} not understood"
@@ -851,7 +851,7 @@ class HistogramBase(object):
     def __imul__(self, other):
         if not np.isscalar(other):
             raise RuntimeError("Histograms may be multiplied only by a constant.")
-        if np.issubdtype(self.dtype, int) and np.issubdtype(type(other), float):
+        if np.issubdtype(self.dtype, np.integer) and np.issubdtype(type(other), np.floating):
             self.dtype = float
         self._frequencies *= other
         self._errors2 *= other ** 2
