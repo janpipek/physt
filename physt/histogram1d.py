@@ -132,6 +132,18 @@ class Histogram1D(HistogramBase):
         self._binnings = [value]
 
     @property
+    def binning(self):
+        """The binning.
+
+        Note: Please, do not try to update the object themself.
+
+        Returns
+        -------
+        physt.binnings.BinningBase
+        """
+        return self._binning
+
+    @property
     def bins(self):
         """Array of all bin edges.
 

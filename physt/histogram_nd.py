@@ -61,6 +61,18 @@ class HistogramND(HistogramBase):
         return [binning.bins for binning in self._binnings]
 
     @property
+    def binnings(self):
+        """The binnings.
+
+        Note: Please, do not try to update the objects themselves.
+
+        Returns
+        -------
+        list[physt.binnings.BinningBase]
+        """
+        return self._binnings
+
+    @property
     def numpy_bins(self):
         """Numpy-like bins (if available)
 
