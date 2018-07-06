@@ -8,6 +8,7 @@ Plot functions for 1D histograms
 - scatter
 - fill
 - line
+- step
 
 Plot functions for 2D histograms
 - map
@@ -262,6 +263,39 @@ def fill(h1, ax, **kwargs):
         _add_stats_box(h1, ax, stats=show_stats)
     # if show_values:
     #     _add_values(ax, h1, data)
+    return ax
+
+
+@register(1)
+def step(h1, ax, **kwargs):
+    """Step line-plot of 1D histogram.
+
+    Parameters
+    ----------
+    h1 : Histogram1D
+
+    Returns
+    -------
+    plt.Axes
+    """
+    show_stats = kwargs.pop("show_stats", False)
+    show_values = kwargs.pop("show_values", False)
+    density = kwargs.pop("density", False)
+    cumulative = kwargs.pop("cumulative", False)
+    value_format = kwargs.pop("value_format", None)
+    text_kwargs = pop_kwargs_with_prefix("text_", kwargs)
+
+    data = get_data(h1, cumulative=cumulative, density=density)
+    _apply_xy_lims(ax, h1, data, kwargs)
+    _add_ticks(ax, h1, kwargs)
+    _add_labels(ax, h1, kwargs)
+
+    ax.step(h1.numpy_bins, np.concatenate([[0.], data]), **kwargs)
+
+    if show_stats:
+        _add_stats_box(h1, ax, stats=show_stats)
+    if show_values:
+        _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
     return ax
 
 
