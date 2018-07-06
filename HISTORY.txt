@@ -1,7 +1,13 @@
-0.3.38 (29th June 2018)
+0.3.39 (7th July 2018)
+----------------------
+- Added: matplotlib backend step plot
+- Added: string representation for binnings
+- Added: binning(s) as a public property of histograms
+
+0.3.38 (4th July 2018)
 -----------------------
 - Added: vega plotting backend: xlim, ylim arguments
-- Added: matplotib plotting backend: simplified stats box with totals
+- Added: matplotlib plotting backend: simplified stats box with totals
 - Fixed: several minor bugs
 
 0.3.37 (6th June 2018)
