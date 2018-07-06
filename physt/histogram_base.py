@@ -150,6 +150,8 @@ class HistogramBase(object):
     @property
     def title(self):
         """Title of the histogram to be displayed when plotted (stored in meta-data).
+        
+        If not specified, defaults to `name`.
 
         Returns
         -------
@@ -768,8 +770,12 @@ class HistogramBase(object):
         return save_json(self, path, **kwargs)
 
     def __repr__(self):
-        result = "{0}(bins={1}, total={2}, dtype={3})".format(
-            self.__class__.__name__, self.shape, self.total, self.dtype)
+        if self.name:
+            result = "{0}('{4}', bins={1}, total={2}, dtype={3})".format(
+                self.__class__.__name__, self.shape, self.total, self.dtype, self.name)
+        else:
+            result = "{0}(bins={1}, total={2}, dtype={3})".format(
+                self.__class__.__name__, self.shape, self.total, self.dtype)
         return result
 
     def __add__(self, other):
