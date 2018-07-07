@@ -405,6 +405,7 @@ class HistogramBase(object):
         -------
         bool
         """
+        # TODO: remove in favour of adaptive property
         return all(binning.is_adaptive() for binning in self._binnings)
 
     def set_adaptive(self, value=True):
@@ -416,8 +417,19 @@ class HistogramBase(object):
         ----------
         value : bool
         """
+        # TODO: remove in favour of adaptive property
+        if not all(b.adaptive_allowed for b in self._binnings):
+            raise RuntimeError("All binnings must allow adaptive behaviour.")
         for binning in self._binnings:
             binning.set_adaptive(value)
+
+    @property
+    def adaptive(self):
+        return self.is_adaptive()
+
+    @adaptive.setter
+    def adaptive(self, value):
+        self.set_adaptive(value)
 
     def _change_binning(self, new_binning, bin_map, axis=0):
         """Set new binnning and update the bin contents according to a map.
@@ -897,7 +909,7 @@ class HistogramBase(object):
         keys = set(first._meta_data.keys())
         keys = keys.union(set(second._meta_data.keys()))
         return {key:
-                (first._meta_data[key] if first._meta_data[key] == second._meta_data[key] else None)
+                (first._meta_data.get(key, None) if first._meta_data.get(key, None) == second._meta_data.get(key, None) else None)
                 for key in keys}
 
     def __array__(self):
