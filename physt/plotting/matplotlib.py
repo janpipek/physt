@@ -290,7 +290,7 @@ def step(h1, ax, **kwargs):
     _add_ticks(ax, h1, kwargs)
     _add_labels(ax, h1, kwargs)
 
-    ax.step(h1.numpy_bins, np.concatenate([[0.], data]), **kwargs)
+    ax.step(h1.numpy_bins, np.concatenate([data[:1], data]), **kwargs)
 
     if show_stats:
         _add_stats_box(h1, ax, stats=show_stats)
