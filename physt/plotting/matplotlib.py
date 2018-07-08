@@ -751,6 +751,7 @@ def pair_bars(first, second, orientation="vertical", kind="bar", **kwargs):
     second: Histogram1D
     color1:
     color2:
+    orientation: str
 
     Returns
     -------
@@ -988,6 +989,8 @@ def _add_stats_box(h1, ax, stats="all"):
 def _apply_xy_lims(ax, h, data, kwargs):
     """Apply axis limits and scales from kwargs.
 
+    Note: if exponential binning is used, the scale defaults to "log"
+
     Parameters
     ----------
     ax : plt.Axes
@@ -1016,11 +1019,12 @@ def _apply_xy_lims(ax, h, data, kwargs):
     --------
     plt.Axes.set_xlim, plt.Axes.set_ylim, plt.Axes.set_xscale, plt.Axes.set_yscale
     """
-    xscale = kwargs.pop("xscale", None)
-    yscale = kwargs.pop("yscale", None)
     ylim = kwargs.pop("ylim", "auto")
     xlim = kwargs.pop("xlim", "auto")
     invert_y = kwargs.pop("invert_y", False)
+    xscale = yscale = None
+
+    from ..binnings import ExponentialBinning
 
     if ylim is not "keep":
         if isinstance(ylim, tuple):
@@ -1028,12 +1032,16 @@ def _apply_xy_lims(ax, h, data, kwargs):
         elif ylim:
             ylim = ax.get_ylim()
             if h.ndim == 1:
+                xscale = kwargs.pop("xscale", "log" if isinstance(h.binning, ExponentialBinning) else None)
+                yscale = kwargs.pop("yscale", None)
                 if data.size > 0 and data.max() > 0:
                     ylim = (0, max(ylim[1], data.max() +
                                    (data.max() - ylim[0]) * 0.1))
                 if yscale == "log":
                     ylim = (abs(data[data > 0].min()) * 0.9, ylim[1] * 1.1)
             elif h.ndim == 2:
+                xscale = kwargs.pop("xscale", "log" if isinstance(h.binnings[0], ExponentialBinning) else None)
+                yscale = kwargs.pop("yscale", "log" if isinstance(h.binnings[1], ExponentialBinning) else None)
                 if h.shape[1] >= 2:
                     ylim = (h.get_bin_left_edges(1)[0],
                             h.get_bin_right_edges(1)[-1])
