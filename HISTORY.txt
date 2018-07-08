@@ -1,3 +1,8 @@
+0.3.40 (8th July 2018)
+----------------------
+- Added: .adaptive property to histograms (deprecating is_/set_ methods)
+- Fixed: various small bugs
+
 0.3.39 (7th July 2018)
 ----------------------
 - Added: matplotlib backend step plot

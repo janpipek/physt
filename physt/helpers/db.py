@@ -15,7 +15,6 @@ def create_h1(cursor, *args, **kwargs):
         raise RuntimeError("Invalid number of columns: {0}".format(len(axis_names)))
     kwargs["axis_name"] = kwargs.get("axis_name", axis_names[0])
     if kwargs.get("adaptive", False):
-        
         h = h1(None, *args, **kwargs)
         for row in cursor:
             h << row[0]
