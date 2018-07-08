@@ -176,7 +176,7 @@ class HistogramBase(object):
         tuple[str]
         """
         default = ["axis{0}".format(i) for i in range(self.ndim)]
-        return tuple(self._meta_data.get("axis_names", default))
+        return tuple(self._meta_data.get("axis_names", None) or default)
 
     @axis_names.setter
     def axis_names(self, value):
