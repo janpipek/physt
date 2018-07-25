@@ -523,7 +523,7 @@ def image(h2, ax, show_colorbar=True, **kwargs):
 
 
 @register(2, use_polar=True)
-def polar_map(hist, ax, show_zero=True, **kwargs):
+def polar_map(hist, ax, show_zero=True, show_colorbar=True, **kwargs):
     """Polar map of polar histograms.
 
     Similar to map, but supports less parameters.
@@ -560,6 +560,8 @@ def polar_map(hist, ax, show_zero=True, **kwargs):
                           alpha=alphas[i], **bar_args)
 
     ax.set_rmax(rmax.max())
+    if show_colorbar:
+        _add_colorbar(ax, cmap, cmap_data, norm)
     return ax
 
 
