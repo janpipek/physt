@@ -1,3 +1,7 @@
+0.3.41 (25th July 2018)
+-----------------------
+- Added: colorbar with matplotlib polar_map
+
 0.3.40 (8th July 2018)
 ----------------------
 - Added: .adaptive property to histograms (deprecating is_/set_ methods)
