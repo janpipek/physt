@@ -1,5 +1,14 @@
-// Implement Histograms as protocol buffers
-// Requires separate Binning as in the json implementation
+/* Protocol buffer implementation of physt classed.
+
+Idea and first implementation by Ryan Mackenzie White
+(ttps://github.com/ryanmackenziewhite).
+
+Note: Work in progress and not all properties
+    can be serialized. Future versions of the protocol
+    will try to keep consistency. 
+
+
+*/
 syntax = "proto3";
 package physt;
 
@@ -7,7 +16,7 @@ message Meta {
     string name = 1;
     string title = 2;
     repeated string axis_names = 3;
-    map<string, string> user_defined = 4;
+    /* map<string, string> user_defined = 4; */  // not supported yet
 }
 
 message BinLimits {
@@ -16,29 +25,26 @@ message BinLimits {
 }
 
 message Binning {
-    bool adaptive = 1;
-    string binning_type = 2;
-    repeated BinLimits bins = 3;
+    string binning_type = 1;
+    repeated BinLimits bins = 2;
+    /* bool adaptive = 1; */  // not supported yet
 }
 
-// For nD histograms, binnings should be repeated
 message Histogram {
-    string histogram_type = 1;
-    repeated Binning binnings = 2;    
-    repeated double frequencies = 3;
-    string dtype = 4;
-    repeated double errors2 = 5;
-    Meta meta = 6;
-    repeated double missed = 7;
-    bool missed_keep = 8;
-    string physt_version = 9;
-    string physt_compatible = 10;
+    string physt_version = 1;
+    string physt_compatible = 2;
+    string histogram_type = 3;
+    repeated Binning binnings = 4;    
+    string dtype = 5;
+    repeated double frequencies = 6;
+    repeated double errors2 = 7;
+    /* repeated double missed = 8;
+    bool missed_keep = 9; */
+    Meta meta = 10;
+    
 }
 
-// histogram name and histogram
-// Ability to merge Summary files
-// Keys should be unique, see language docs
-message HistogramCollection {
+/* message HistogramCollection {
     map<string, Histogram> histograms = 1;
-}
+}*/
 
