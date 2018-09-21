@@ -1,10 +1,14 @@
 """Input and output for histograms.
+
+JSON format is included by default.
+Other formats are/will be available as modules.
+
 """
 import json
 
-from . import __version__
-from .histogram_base import HistogramBase
-from .util import find_subclass
+from .. import __version__
+from ..histogram_base import HistogramBase
+from ..util import find_subclass
 
 
 def save_json(histogram, path=None, **kwargs):
