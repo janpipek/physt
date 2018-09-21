@@ -59,7 +59,7 @@ def to_protobuf(histogram):
             limits.upper = edges[1]
 
     # All meta data
-    meta_message = MetaMessage()
+    meta_message = message.meta
     # user_defined = {}
     # for key, value in histogram.meta_data.items():
     #     if key not in PREDEFINED:
@@ -67,8 +67,8 @@ def to_protobuf(histogram):
     for key in SIMPLE_META_KEYS:
         if key in histogram.meta_data:
             setattr(meta_message, key, str(histogram.meta_data[key]))
-    if histogram.axis_names:
-        meta_message.axis_names.extend(histogram.axis_names)
+    if "axis_names" in histogram.meta_data:
+        meta_message.axis_names.extend(histogram.meta_data["axis_names"])
 
     message.physt_version = CURRENT_VERSION
     message.physt_compatible = COMPATIBLE_VERSION
@@ -102,9 +102,16 @@ def _dict_from_v0342(message):
             _binning_to_dict(b) for b in message.binnings
         ],
         "meta_data": {
-            k: getattr(message.meta, k) for k in SIMPLE_META_KEYS
+            k: getattr(message.meta, k) for k in SIMPLE_META_KEYS if getattr(message.meta, k)
         },
     })
+    axis_names = list(message.meta.axis_names)
+    if axis_names:
+        a_dict["meta_data"].update({
+            "axis_names": axis_names
+        })
+
+    print(a_dict)
 
     shape = [len(binning["bins"]) for binning in a_dict["binnings"]]
     a_dict.update({
