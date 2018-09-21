@@ -19,15 +19,15 @@ message Meta {
     /* map<string, string> user_defined = 4; */  // not supported yet
 }
 
-message BinLimits {
+message Bin {
     double lower = 1;
     double upper = 2;
 }
 
 message Binning {
-    string binning_type = 1;
-    repeated BinLimits bins = 2;
-    /* bool adaptive = 1; */  // not supported yet
+    string binning_type = 1;        // always 'StaticBinning' 
+    repeated Bin bins = 2;
+    /* bool adaptive = 1; */        // not supported yet
 }
 
 message Histogram {
@@ -38,13 +38,13 @@ message Histogram {
     string dtype = 5;
     repeated double frequencies = 6;
     repeated double errors2 = 7;
-    /* repeated double missed = 8;
-    bool missed_keep = 9; */
+    /* repeated double missed = 8;  // not supported yet
+    bool missed_keep = 9; */        // not supported yet
     Meta meta = 10;
     
 }
 
-/* message HistogramCollection {
+message HistogramCollection {
     map<string, Histogram> histograms = 1;
-}*/
+}
 

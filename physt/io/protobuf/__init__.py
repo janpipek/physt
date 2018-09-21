@@ -1,11 +1,12 @@
 """Google's protocol buffer I/O support."""
+import warnings
+
 import numpy as np
 
 from physt import __version__
 from physt.histogram_base import HistogramBase
 from physt.io import require_compatible_version, create_from_dict
-from .histogram_pb2 import Histogram as HistogramMessage
-from .histogram_pb2 import Meta as MetaMessage
+from .histogram_pb2 import Histogram, Meta, HistogramCollection
 
 # Name of fields that are re-used from to_dict / from_dict
 SIMPLE_CONVERSION_FIELDS = (
@@ -20,7 +21,7 @@ CURRENT_VERSION = __version__
 COMPATIBLE_VERSION = "0.3.42"
 
 
-def to_protobuf(histogram):
+def write(histogram):
     """Convert a histogram to a protobuf message.
 
     Note: Currently, all binnings are converted to
@@ -41,7 +42,7 @@ def to_protobuf(histogram):
     """
     
     histogram_dict = histogram.to_dict()
-    message = HistogramMessage()
+    message = Histogram()
 
     for field in SIMPLE_CONVERSION_FIELDS:
         setattr(message, field, histogram_dict[field])
@@ -75,12 +76,29 @@ def to_protobuf(histogram):
     return message
 
 
-def from_protobuf(message):
+def read(message):
+    """Convert a parsed protobuf message into a histogram."""
     require_compatible_version(message.physt_compatible)
 
     # Currently the only implementation
     a_dict = _dict_from_v0342(message)
     return create_from_dict(a_dict, "Message")
+
+
+def write_many(histogram_collection):
+    warnings.warn("Histogram collections are unstable API. May be removed.")
+    message = HistogramCollection()
+    for name, histogram in histogram_collection.items():
+        proto = message.histograms[name]
+        proto.CopyFrom(write(histogram))
+    return message
+    # TODO: Will change with real HistogramCollection class
+
+
+def read_many(message):
+    warnings.warn("Histogram collections are unstable API. May be removed.")
+    return { name: read(value) for name, value in message.histograms.items() }
+    # TODO: Will change with real HistogramCollection class
 
 
 def _binning_to_dict(binning_message):

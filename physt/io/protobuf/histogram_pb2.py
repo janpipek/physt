@@ -19,48 +19,11 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='physt',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0fhistogram.proto\x12\x05physt\"\x9f\x01\n\x04Meta\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\x12\x12\n\naxis_names\x18\x03 \x03(\t\x12\x32\n\x0cuser_defined\x18\x04 \x03(\x0b\x32\x1c.physt.Meta.UserDefinedEntry\x1a\x32\n\x10UserDefinedEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\")\n\tBinLimits\x12\r\n\x05lower\x18\x01 \x01(\x01\x12\r\n\x05upper\x18\x02 \x01(\x01\"Q\n\x07\x42inning\x12\x10\n\x08\x61\x64\x61ptive\x18\x01 \x01(\x08\x12\x14\n\x0c\x62inning_type\x18\x02 \x01(\t\x12\x1e\n\x04\x62ins\x18\x03 \x03(\x0b\x32\x10.physt.BinLimits\"\xeb\x01\n\tHistogram\x12\x16\n\x0ehistogram_type\x18\x01 \x01(\t\x12 \n\x08\x62innings\x18\x02 \x03(\x0b\x32\x0e.physt.Binning\x12\x13\n\x0b\x66requencies\x18\x03 \x03(\x01\x12\r\n\x05\x64type\x18\x04 \x01(\t\x12\x0f\n\x07\x65rrors2\x18\x05 \x03(\x01\x12\x19\n\x04meta\x18\x06 \x01(\x0b\x32\x0b.physt.Meta\x12\x0e\n\x06missed\x18\x07 \x03(\x01\x12\x13\n\x0bmissed_keep\x18\x08 \x01(\x08\x12\x15\n\rphyst_version\x18\t \x01(\t\x12\x18\n\x10physt_compatible\x18\n \x01(\t\"\x9a\x01\n\x13HistogramCollection\x12>\n\nhistograms\x18\x01 \x03(\x0b\x32*.physt.HistogramCollection.HistogramsEntry\x1a\x43\n\x0fHistogramsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1f\n\x05value\x18\x02 \x01(\x0b\x32\x10.physt.Histogram:\x02\x38\x01\x62\x06proto3')
+  serialized_pb=_b('\n\x0fhistogram.proto\x12\x05physt\"7\n\x04Meta\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\x12\x12\n\naxis_names\x18\x03 \x03(\t\")\n\tBinLimits\x12\r\n\x05lower\x18\x01 \x01(\x01\x12\r\n\x05upper\x18\x02 \x01(\x01\"?\n\x07\x42inning\x12\x14\n\x0c\x62inning_type\x18\x01 \x01(\t\x12\x1e\n\x04\x62ins\x18\x02 \x03(\x0b\x32\x10.physt.BinLimits\"\xc6\x01\n\tHistogram\x12\x15\n\rphyst_version\x18\x01 \x01(\t\x12\x18\n\x10physt_compatible\x18\x02 \x01(\t\x12\x16\n\x0ehistogram_type\x18\x03 \x01(\t\x12 \n\x08\x62innings\x18\x04 \x03(\x0b\x32\x0e.physt.Binning\x12\r\n\x05\x64type\x18\x05 \x01(\t\x12\x13\n\x0b\x66requencies\x18\x06 \x03(\x01\x12\x0f\n\x07\x65rrors2\x18\x07 \x03(\x01\x12\x19\n\x04meta\x18\n \x01(\x0b\x32\x0b.physt.Meta\"\x9a\x01\n\x13HistogramCollection\x12>\n\nhistograms\x18\x01 \x03(\x0b\x32*.physt.HistogramCollection.HistogramsEntry\x1a\x43\n\x0fHistogramsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1f\n\x05value\x18\x02 \x01(\x0b\x32\x10.physt.Histogram:\x02\x38\x01\x62\x06proto3')
 )
 
 
 
-
-_META_USERDEFINEDENTRY = _descriptor.Descriptor(
-  name='UserDefinedEntry',
-  full_name='physt.Meta.UserDefinedEntry',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='physt.Meta.UserDefinedEntry.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='value', full_name='physt.Meta.UserDefinedEntry.value', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=_b('8\001'),
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=136,
-  serialized_end=186,
-)
 
 _META = _descriptor.Descriptor(
   name='Meta',
@@ -90,17 +53,10 @@ _META = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='user_defined', full_name='physt.Meta.user_defined', index=3,
-      number=4, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
-  nested_types=[_META_USERDEFINEDENTRY, ],
+  nested_types=[],
   enum_types=[
   ],
   serialized_options=None,
@@ -109,8 +65,8 @@ _META = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=27,
-  serialized_end=186,
+  serialized_start=26,
+  serialized_end=81,
 )
 
 
@@ -147,8 +103,8 @@ _BINLIMITS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=188,
-  serialized_end=229,
+  serialized_start=83,
+  serialized_end=124,
 )
 
 
@@ -160,22 +116,15 @@ _BINNING = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='adaptive', full_name='physt.Binning.adaptive', index=0,
-      number=1, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='binning_type', full_name='physt.Binning.binning_type', index=1,
-      number=2, type=9, cpp_type=9, label=1,
+      name='binning_type', full_name='physt.Binning.binning_type', index=0,
+      number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='bins', full_name='physt.Binning.bins', index=2,
-      number=3, type=11, cpp_type=10, label=3,
+      name='bins', full_name='physt.Binning.bins', index=1,
+      number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -192,8 +141,8 @@ _BINNING = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=231,
-  serialized_end=312,
+  serialized_start=126,
+  serialized_end=189,
 )
 
 
@@ -205,72 +154,58 @@ _HISTOGRAM = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='histogram_type', full_name='physt.Histogram.histogram_type', index=0,
+      name='physt_version', full_name='physt.Histogram.physt_version', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='binnings', full_name='physt.Histogram.binnings', index=1,
-      number=2, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='frequencies', full_name='physt.Histogram.frequencies', index=2,
-      number=3, type=1, cpp_type=5, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='dtype', full_name='physt.Histogram.dtype', index=3,
-      number=4, type=9, cpp_type=9, label=1,
+      name='physt_compatible', full_name='physt.Histogram.physt_compatible', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='errors2', full_name='physt.Histogram.errors2', index=4,
-      number=5, type=1, cpp_type=5, label=3,
+      name='histogram_type', full_name='physt.Histogram.histogram_type', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='binnings', full_name='physt.Histogram.binnings', index=3,
+      number=4, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='meta', full_name='physt.Histogram.meta', index=5,
-      number=6, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='dtype', full_name='physt.Histogram.dtype', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='missed', full_name='physt.Histogram.missed', index=6,
+      name='frequencies', full_name='physt.Histogram.frequencies', index=5,
+      number=6, type=1, cpp_type=5, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='errors2', full_name='physt.Histogram.errors2', index=6,
       number=7, type=1, cpp_type=5, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='missed_keep', full_name='physt.Histogram.missed_keep', index=7,
-      number=8, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='physt_version', full_name='physt.Histogram.physt_version', index=8,
-      number=9, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='physt_compatible', full_name='physt.Histogram.physt_compatible', index=9,
-      number=10, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='meta', full_name='physt.Histogram.meta', index=7,
+      number=10, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -286,8 +221,8 @@ _HISTOGRAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=315,
-  serialized_end=550,
+  serialized_start=192,
+  serialized_end=390,
 )
 
 
@@ -324,8 +259,8 @@ _HISTOGRAMCOLLECTION_HISTOGRAMSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=640,
-  serialized_end=707,
+  serialized_start=480,
+  serialized_end=547,
 )
 
 _HISTOGRAMCOLLECTION = _descriptor.Descriptor(
@@ -354,12 +289,10 @@ _HISTOGRAMCOLLECTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=553,
-  serialized_end=707,
+  serialized_start=393,
+  serialized_end=547,
 )
 
-_META_USERDEFINEDENTRY.containing_type = _META
-_META.fields_by_name['user_defined'].message_type = _META_USERDEFINEDENTRY
 _BINNING.fields_by_name['bins'].message_type = _BINLIMITS
 _HISTOGRAM.fields_by_name['binnings'].message_type = _BINNING
 _HISTOGRAM.fields_by_name['meta'].message_type = _META
@@ -374,19 +307,11 @@ DESCRIPTOR.message_types_by_name['HistogramCollection'] = _HISTOGRAMCOLLECTION
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Meta = _reflection.GeneratedProtocolMessageType('Meta', (_message.Message,), dict(
-
-  UserDefinedEntry = _reflection.GeneratedProtocolMessageType('UserDefinedEntry', (_message.Message,), dict(
-    DESCRIPTOR = _META_USERDEFINEDENTRY,
-    __module__ = 'histogram_pb2'
-    # @@protoc_insertion_point(class_scope:physt.Meta.UserDefinedEntry)
-    ))
-  ,
   DESCRIPTOR = _META,
   __module__ = 'histogram_pb2'
   # @@protoc_insertion_point(class_scope:physt.Meta)
   ))
 _sym_db.RegisterMessage(Meta)
-_sym_db.RegisterMessage(Meta.UserDefinedEntry)
 
 BinLimits = _reflection.GeneratedProtocolMessageType('BinLimits', (_message.Message,), dict(
   DESCRIPTOR = _BINLIMITS,
@@ -425,6 +350,5 @@ _sym_db.RegisterMessage(HistogramCollection)
 _sym_db.RegisterMessage(HistogramCollection.HistogramsEntry)
 
 
-_META_USERDEFINEDENTRY._options = None
 _HISTOGRAMCOLLECTION_HISTOGRAMSENTRY._options = None
 # @@protoc_insertion_point(module_scope)
