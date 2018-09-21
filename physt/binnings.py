@@ -65,7 +65,7 @@ class BinningBase(object):
 
     @staticmethod
     def from_dict(a_dict):
-        binning_type = a_dict.pop("binning_type", StaticBinning)
+        binning_type = a_dict.pop("binning_type", 'StaticBinning')
         klass = find_subclass(BinningBase, binning_type)
         return klass(**a_dict)
 
