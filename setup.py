@@ -19,7 +19,7 @@ from setuptools import setup, find_packages
 
 options = dict(
     name='physt',
-    version='0.3.41',
+    version='0.3.42',
     packages=find_packages(),
     # package_data={'': ['LICENSE', 'MANIFEST.in', 'README.md', 'HISTORY.txt']},
     license='MIT',
@@ -31,7 +31,7 @@ options = dict(
     package_data={"physt" : ["examples/*.csv"]},
     install_requires = ['numpy'],
     extras_require = {
-        'all' : ['dask', 'matplotlib', 'folium', 'vega3', 'xarray']
+        'all' : ['dask', 'matplotlib', 'folium', 'vega3', 'xarray', 'protobuf']
     },
     entry_points = {
         'console_scripts' : [

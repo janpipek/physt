@@ -1,3 +1,8 @@
+0.3.42 (21st September 2018)
+----------------------------
+- Added: google protobuf I/O of histograms (experimental, incomplete)
+- Changed: restructured the physt.io package into more modules
+
 0.3.41 (25th July 2018)
 -----------------------
 - Added: colorbar with matplotlib polar_map

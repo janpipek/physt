@@ -114,9 +114,10 @@ Using pip:
   - human-friendly
   - mathematical
 * IO, conversions
-  - I/O xarray.DataSet
-  - I/O JSON
-  - O pandas.DataFrame
+  - I/O JSON 
+  - I/O xarray.DataSet (experimental)
+  - I/O protobuf (experimental)
+  - O pandas.DataFrame (basic)
 
 ### Planned
 * Rebinning
@@ -134,10 +135,11 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
-- Python 3.5+ targeted, 2.7 passes unit tests (hopefully)
+- Python 3.5+ targeted, 2.7 mostly working (support will be dropped in 2019)
 - numpy
 - (optional) matplotlib - simple output
 - (optional) xarray - I/O
+- (optional) protobuf - I/O
 - (optional) astropy - additional binning algorithms
 - (optional) folium - map plotting
 - (optional) vega3 - for vega in-line in IPython notebook (note that to generate vega JSON, this is not necessary)
@@ -147,6 +149,9 @@ Rationale (for both): physt is dumb, but precise.
 ## Contribution
 
 I am looking for anyone interested in using / developing physt. You can contribute by reporting errors, implementing missing features and suggest new one.
+
+Thanks to:
+- **Ryan Mackenzie White** - <https://github.com/ryanmackenziewhite> for the protobuf idea and first implementation
 
 ## Alternatives and inspirations
 
