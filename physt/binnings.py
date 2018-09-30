@@ -942,6 +942,9 @@ binning_methods = {
 
 
 try:
+    # If possible, import astropy's binning methods
+    # See: http://docs.astropy.org/en/stable/visualization/histogram.html
+
     from astropy.stats.histogram import histogram as _astropy_histogram   # Just check
     import warnings
     warnings.filterwarnings("ignore", module="astropy\..*")
