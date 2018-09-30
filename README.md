@@ -148,6 +148,12 @@ Rationale (for both): physt is dumb, but precise.
 - (testing) py.test, pandas
 - (docs) sphinx, sphinx_rtd_theme, ipython
 
+## Publicity
+
+Talk at PyData Berlin 2018:
+- <https://janpipek.github.io/pydata2018-berlin/> - repository with slides and links
+- <https://www.youtube.com/watch?v=ZG-wH3-Up9Y> - video of the talk
+
 ## Contribution
 
 I am looking for anyone interested in using / developing physt. You can contribute by reporting errors, implementing missing features and suggest new one.
