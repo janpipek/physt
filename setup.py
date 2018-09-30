@@ -19,7 +19,7 @@ from setuptools import setup, find_packages
 
 options = dict(
     name='physt',
-    version='0.3.43',
+    version='0.3.43.1',
     packages=find_packages(),
     # package_data={'': ['LICENSE', 'MANIFEST.in', 'README.md', 'HISTORY.txt']},
     license='MIT',
