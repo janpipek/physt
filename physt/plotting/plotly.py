@@ -17,12 +17,12 @@ def _wrap_matplotlib_f(f):
     import plotly.plotly as pyp
 
     @wraps(f)
-    def new_f(*args, offline=True, filename=None, **kwargs):
+    def new_f(*args, offline=True, write_to=None, **kwargs):
         py = pyo if offline else pyp
         ax = f(*args, **kwargs)
         fig = ax.figure
-        if filename:
-            return py.plot_mpl(fig, filename=filename)
+        if write_to:
+            return py.plot_mpl(fig, filename=write_to)
         else:
             return py.iplot_mpl(fig)
 

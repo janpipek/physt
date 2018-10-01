@@ -37,6 +37,13 @@ class TestNumpyBins(object):
         assert np.isnan(hist.underflow)
         assert np.isnan(hist.overflow)
 
+    def test_metadata(self):
+        arr = np.arange(0, 1.00, 0.01)
+        hist = histogram(arr, name="name", title="title", axis_name="axis_name")
+        assert hist.name == "name"
+        assert hist.title == "title"
+        assert hist.axis_names == ("axis_name",)
+
 
 if __name__ == "__main__":
     pytest.main(__file__)

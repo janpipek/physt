@@ -5,14 +5,14 @@ physt
 P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram,
 but designed for humans(TM) on steroids(TM).
 
-(C) Jan Pipek, 2016-7, MIT licence
+(C) Jan Pipek, 2016-8, MIT licence
 See https://github.com/janpipek/physt
 """
 
 from __future__ import absolute_import
 from . import binnings
 
-__version__ = str('0.3.42')
+__version__ = str('0.3.43.1')
 
 
 def histogram(data, bins=None, *args, **kwargs):
@@ -84,6 +84,7 @@ def histogram(data, bins=None, *args, **kwargs):
     keep_missed = kwargs.pop("keep_missed", True)
     name = kwargs.pop("name", None)
     axis_name = kwargs.pop("axis_name", None)
+    title = kwargs.pop("title", None)
 
     # Convert to array
     if data is not None:
@@ -124,7 +125,8 @@ def histogram(data, bins=None, *args, **kwargs):
     return Histogram1D(binning=binning, frequencies=frequencies,
                        errors2=errors2, overflow=overflow,
                        underflow=underflow, stats=stats, dtype=dtype,
-                       keep_missed=keep_missed, name=name, axis_name=axis_name)
+                       keep_missed=keep_missed, name=name, axis_name=axis_name,
+                       title=title)
 
 
 def histogram2d(data1, data2, bins=10, *args, **kwargs):
@@ -200,6 +202,7 @@ def histogramdd(data, bins=10, *args, **kwargs):
     adaptive = kwargs.pop("adaptive", False)
     dropna = kwargs.pop("dropna", True)
     name = kwargs.pop("name", None)
+    title = kwargs.pop("title", None)
     dim = kwargs.pop("dim", None)
     axis_names = kwargs.pop("axis_names", None)
 
@@ -241,6 +244,8 @@ def histogramdd(data, bins=10, *args, **kwargs):
                                                                       weights=weights)
 
     kwargs["name"] = name
+    if title:
+        kwargs["title"] = title
     if axis_names:
         kwargs["axis_names"] = axis_names
     if dim == 2:

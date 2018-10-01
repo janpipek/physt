@@ -117,6 +117,7 @@ Using pip:
   - I/O JSON 
   - I/O xarray.DataSet (experimental)
   - I/O protobuf (experimental)
+  - O ROOT file (experimental)
   - O pandas.DataFrame (basic)
 
 ### Planned
@@ -140,11 +141,18 @@ Rationale (for both): physt is dumb, but precise.
 - (optional) matplotlib - simple output
 - (optional) xarray - I/O
 - (optional) protobuf - I/O
+- (optional) uproot - I/O
 - (optional) astropy - additional binning algorithms
 - (optional) folium - map plotting
 - (optional) vega3 - for vega in-line in IPython notebook (note that to generate vega JSON, this is not necessary)
 - (testing) py.test, pandas
 - (docs) sphinx, sphinx_rtd_theme, ipython
+
+## Publicity
+
+Talk at PyData Berlin 2018:
+- <https://janpipek.github.io/pydata2018-berlin/> - repository with slides and links
+- <https://www.youtube.com/watch?v=ZG-wH3-Up9Y> - video of the talk
 
 ## Contribution
 
@@ -155,7 +163,7 @@ Thanks to:
 
 ## Alternatives and inspirations
 
-* <https://github.com/HDembinski/histogram>
+* <https://github.com/HDembinski/histogram> (C++)
 * <https://github.com/theodoregoetz/histogram>
 * <https://github.com/ibab/matplotlib-hep>
 * <https://github.com/diana-hep/histbook>
