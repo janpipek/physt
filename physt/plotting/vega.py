@@ -727,9 +727,10 @@ HTML_TEMPLATE = """
 <html>
 <head>
     <title>{{ title }}</title>
-    <script src="https://cdn.jsdelivr.net/npm/vega@3.1.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-lite@2.1.3"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-embed@3.0.0"></script></head>
+        <script src="https://cdn.jsdelivr.net/npm/vega@4.2.0"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vega-lite@2.6.0"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vega-embed@3.18.1"></script>
+    </head> 
 <script>
     function render(spec) {
             view = new vega.View(vega.parse(spec))
