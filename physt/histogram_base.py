@@ -561,16 +561,16 @@ class HistogramBase(object):
             if isinstance(bin_map, int):
                 new_index = [slice(None) for i in range(self.ndim)]
                 new_index[axis] = slice(bin_map, bin_map + old_frequencies.shape[axis])
-                new_frequencies[new_index] += old_frequencies
-                new_errors2[new_index] += old_errors2
+                new_frequencies[tuple(new_index)] += old_frequencies
+                new_errors2[tuple(new_index)] += old_errors2
             else:
                 for (old, new) in bin_map:      # Generic enough
                     new_index = [slice(None) for i in range(self.ndim)]
                     new_index[axis] = new
                     old_index = [slice(None) for i in range(self.ndim)]
                     old_index[axis] = old
-                    new_frequencies[new_index] += old_frequencies[old_index]
-                    new_errors2[new_index] += old_errors2[old_index]
+                    new_frequencies[tuple(new_index)] += old_frequencies[tuple(old_index)]
+                    new_errors2[tuple(new_index)] += old_errors2[tuple(old_index)]
 
     def has_same_bins(self, other):
         """Whether two histograms share the same binning.

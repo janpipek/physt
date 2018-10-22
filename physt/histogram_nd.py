@@ -105,8 +105,8 @@ class HistogramND(HistogramBase):
         array_index = [slice(None, None, None) for i in range(self.ndim)]
         array_index[axis_id] = index
 
-        frequencies = self._frequencies[array_index].copy()
-        errors2 = self._errors2[array_index].copy()
+        frequencies = self._frequencies[tuple(array_index)].copy()
+        errors2 = self._errors2[tuple(array_index)].copy()
 
         if isinstance(index, int):
             return self._reduce_dimension([ax for ax in range(self.ndim) if ax != axis_id], frequencies, errors2)
