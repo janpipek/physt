@@ -16,7 +16,6 @@ P.S. I am looking for anyone interested in using / developing physt. You can con
 
 import itertools
 from setuptools import setup, find_packages
-# from physt.version import __version__
 
 VERSION = "0.4"
 

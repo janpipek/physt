@@ -12,9 +12,9 @@ __all__ = ["Histogram",]
 
 
 class Histogram:
+    """A histogram.
 
-
-    """
+    The main class around which the physt library is built.
 
     Attributes
     ----------
@@ -42,7 +42,10 @@ class Histogram:
 
     @dtype.setter
     def dtype(self, value):
-        self._values = self._values.astype(value)
+        if self._values is not None:
+            self._values = self._values.astype(value)
+        else:
+            self._dtype = value
 
     @property
     def ndim(self) -> int:
@@ -89,19 +92,31 @@ class Histogram:
         """
         return self.values
 
-    def copy(self, shallow:bool=False) -> 'Histogram':
-        """"Create an identical copy of the histogram.
+    def copy(self, shallow:bool=False, clear:bool=False) -> 'Histogram':
+        """"Create a copy of the histogram.
         
         Parameters
         ----------
         shallow:
             If True, the values are not copied, but shared
             (useful when the copy is immediately discarded).
+        clear:
+            If True, the values are not copied, None is used.
         """
         new_schema = self._schema.copy()
-        new_values = self._values if shallow else self._values.copy()
+        if clear:
+            new_values = None
+        elif shallow:
+            new_values = self._values
+        else:
+            new_values = self._values.copy()
+        new_meta_data = self.meta_data.copy()
 
-        return self.__class__(schema=new_schema, values=new_values)
+        histogram = self.__class__(
+            schema=new_schema, values=new_values, meta_data=new_meta_data)
+        if clear:
+            histogram.dtype = self.dtype
+        return histogram
 
     def normalize(self, inplace=False) -> 'Histogram':
         if self.values is None:
