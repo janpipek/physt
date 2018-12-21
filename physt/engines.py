@@ -39,11 +39,13 @@ class NumpyEngine(Engine):
     def prepare_data(cls, a):
         return np.asarray(a)
 
+    # TODO: histogramdd
+
 
 class DaskEngine(Engine):
     fallback = NumpyEngine
 
-    chunk_split = 32
+    chunk_split = 16
 
     @classmethod
     def _run_dask(cls, name, data, compute, method, func):
@@ -70,23 +72,32 @@ class DaskEngine(Engine):
         if hasattr(a, "dask"):
             return a
         else:
-            a = np.asarray(a)
+            a = np.asarray(a).flatten()
+            print(a.shape)
+            print(int(a.shape[0] / cls.chunk_split))
             return da.from_array(a, chunks=max(1, int(a.shape[0] / cls.chunk_split)))
 
     @classmethod
-    def histogram(cls, a, bins, **kwargs):
+    def histogram(cls, a, bins, weights=None, **kwargs):
         # Idempotent
+        import dask.array as da
+
         a = cls.prepare_data(a)
+        weights = cls.prepare_data(weights) if weights is not None else None
+        values, _ = da.histogram(a, bins=bins, weights=weights)
+        return values.compute()
 
-        def block_hist(array):
-            return NumpyEngine.histogram(array, bins=bins)
+        #def block_hist(array):
+        #    return NumpyEngine.histogram(array, bins=bins)
 
-        return cls._run_dask(
-            name="dask_adaptive1d",
-            data=a,
-            compute=True,   # TODO: Can we not compute?
-            method=kwargs.pop("dask_method", "threaded"),
-            func=block_hist)
+        #return cls._run_dask(
+        #    name="dask_histogram1d",
+        #    data=a,
+        #    compute=True,   # TODO: Can we not compute?
+        #    method=kwargs.pop("dask_method", "threaded"),
+        #    func=block_hist)
+
+    # TODO: histogramdd
 
 
 class TensorflowEagerEngine(Engine):
@@ -94,6 +105,10 @@ class TensorflowEagerEngine(Engine):
 
 
 class TensorflowEngine(Engine):
+    fallback = NumpyEngine
+
+
+class PytorchEngine(Engine):
     fallback = NumpyEngine
 
 

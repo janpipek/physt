@@ -77,6 +77,7 @@ class TestStaticSchema(unittest.TestCase):
         bins = [[0, 1], [1, 2], [2, 3]]
         edges = [0, 1, 2, 3]
         schema = StaticSchema(bins=bins)
+        assert schema.is_fitted()
         assert np.array_equal(bins, schema.bins)
         assert np.array_equal(edges, schema.edges)
 
@@ -84,6 +85,7 @@ class TestStaticSchema(unittest.TestCase):
         bins = [[0, 1], [1, 2], [2, 3]]
         edges = [0, 1, 2, 3]
         schema = StaticSchema(edges=edges)
+        assert schema.is_fitted()
         assert np.array_equal(bins, schema.bins)
         assert np.array_equal(edges, schema.edges)
 
@@ -101,7 +103,8 @@ class TestStaticSchema(unittest.TestCase):
 
 
 class TestNumpySchema(unittest.TestCase):
-    pass
+    def test_int(self):
+        pass
 
 
 class TestFixedWidthSchema(unittest.TestCase):

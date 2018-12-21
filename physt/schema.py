@@ -6,6 +6,8 @@ from typing import Tuple, Union, Optional
 
 import numpy as np
 
+from .engines import find_best_engine
+
 DEFAULT_SCHEMA_NAME = "human"
 
 
@@ -103,17 +105,20 @@ class Schema:
     def fit_and_apply(self, data, weights=None,
                       dropna: bool = True) -> np.ndarray:
         # TODO: Handle data to make them 1D array ?
-        data = np.asarray(data)
+        engine = find_best_engine(data)
+        data = engine.prepare_data(data)
         if dropna:
             data = data[~np.isnan(data)]
         self.fit(data)
         return self.apply(data, weights=weights, dropna=False)
 
     def apply(self, data, weights=None, dropna: bool = True) -> np.ndarray:
+        engine = find_best_engine(data)
         if not self.is_fitted():
             raise NotFittedError(
                 "Schema cannot be applied without fitting first.")
-        numpy_result, _ = np.histogram(data, bins=self.edges, weights=weights)
+        numpy_result = engine.histogram(data, bins=self.edges, weight=weights)
+        # numpy_result, _ = np.histogram(data, bins=self.edges, weights=weights)
         mask = self.mask
         if mask is not None:
             return numpy_result[mask].copy()
