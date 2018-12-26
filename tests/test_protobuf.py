@@ -4,10 +4,16 @@ import os
 import pytest
 
 sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
-from physt.io.protobuf import write, write_many, read, read_many
-from physt.examples import normal_h1, normal_h2
+
+try:
+    from physt.io.protobuf import write, write_many, read, read_many
+    # PROTOBUF_TEST_ENABLED = os.environ.get("PROTOBUF_TEST_ENABLED", False)
+    PROTOBUF_TEST_ENABLED = True
+except:
+    PROTOBUF_TEST_ENABLED = False
 
 
+@pytest.mark.skipif(not PROTOBUF_TEST_ENABLED, reason="Skipping protobuf tests because of an error")
 class TestProtobuf(object):
     # End-to-end test
     def test_h1(self):
