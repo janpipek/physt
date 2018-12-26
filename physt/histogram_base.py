@@ -74,7 +74,7 @@ class HistogramBase(object):
 
         # Frequencies + appropriate dtypes
         if frequencies is None:
-            dtype = kwargs.pop("dtype", np.int64)
+            dtype = kwargs.pop("dtype", None) or np.int64
             self._frequencies = np.zeros(self.shape, dtype=dtype)
         else:
             dtype = kwargs.pop("dtype", None)
@@ -95,7 +95,7 @@ class HistogramBase(object):
             if np.any(frequencies < 0):
                 raise RuntimeError("Cannot have negative frequencies.")
             self._frequencies = frequencies
-        self._dtype = dtype
+        self._dtype, _ = self._eval_dtype(dtype)
 
         # Errors
         if errors2 is None:
@@ -240,6 +240,30 @@ class HistogramBase(object):
         """
         return self._dtype
 
+    @classmethod
+    def _eval_dtype(cls, value):
+        """Convert dtype into canonical form, check its applicability and return info.
+        
+        Parameters
+        ----------
+        value: np.dtype or something convertible to it.
+
+        Returns
+        -------
+        value: np.dtype
+        type_info: 
+            Information about the dtype
+        """
+        value = np.dtype(value)
+        if value.kind in "iu":
+            type_info = np.iinfo(value)
+        elif value.kind == "f":
+            type_info = np.finfo(value)
+        else:
+            raise RuntimeError("Unsupported dtype. Only integer/floating-point types are supported.")
+
+        return value, type_info
+
     def set_dtype(self, value, check=True):
         """Change data type of the bin contents.
 
@@ -254,22 +278,12 @@ class HistogramBase(object):
         check: bool
             If True (default), all values are checked against the limits
         """
-
-        # TODO: Refactor out?
         # TODO? Deal with unsigned types
-        value = np.dtype(value)
+        value, type_info = self._eval_dtype(value)
+        if value == self._dtype:
+            return
 
-        if value == self.dtype:
-            return    # No change
-
-        if value.kind in "iu":
-            type_info = np.iinfo(value)
-        elif value.kind == "f":
-            type_info = np.finfo(value)
-        else:
-            raise RuntimeError("Unsupported dtype. Only integer/floating-point types are supported.")
-
-        if np.can_cast(self.dtype, value):
+        if self.dtype is None or np.can_cast(self.dtype, value):
             pass    # Ok
         elif check:
             if np.issubdtype(value, np.integer):
@@ -295,9 +309,12 @@ class HistogramBase(object):
         ----------
         other_dtype : np.dtype or type
         """
-        new_dtype = np.find_common_type([self.dtype, np.dtype(other_dtype)], [])
+        if self._dtype is None:
+            new_dtype = np.dtype(other_dtype)
+        else:
+            new_dtype = np.find_common_type([self._dtype, np.dtype(other_dtype)], [])
         if new_dtype != self.dtype:
-            self.dtype = new_dtype
+            self.set_dtype(new_dtype)
 
     @property
     def bin_count(self):

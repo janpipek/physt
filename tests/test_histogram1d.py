@@ -415,6 +415,9 @@ class TestDtype(object):
         with pytest.raises(TypeError):
             example * complex(4, 5)
 
+    def test_empty(self):
+        example = h1(None, "fixed_width", 10, adaptive=True)
+        assert example.dtype == np.int64
 
 if __name__ == "__main__":
     pytest.main(__file__)
