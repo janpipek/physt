@@ -555,7 +555,7 @@ def polar_map(hist, ax, show_zero=True, show_colorbar=True, **kwargs):
         if data[i] > 0 or show_zero:
             bin_color = colors[i]
             # TODO: align = "edge"
-            bars = ax.bar(phipos[i], dr[i], width=dphi[i], bottom=rpos[i], color=bin_color,
+            bars = ax.bar(phipos[i], dr[i], width=dphi[i], bottom=rpos[i], align='edge', color=bin_color,
                           edgecolor=kwargs.get("grid_color", cmap(0.5)), lw=kwargs.get("lw", 0.5),
                           alpha=alphas[i], **bar_args)
 
@@ -619,7 +619,7 @@ def globe_map(hist, ax, show_zero=True, **kwargs):
 
 @register(2, use_3d=True)
 def cylinder_map(hist, ax, show_zero=True, **kwargs):
-    """Heat map plotted on the surface of a cylinde.
+    """Heat map plotted on the surface of a cylinder.
 
     Parameters
     ----------
