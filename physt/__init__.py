@@ -12,7 +12,7 @@ See https://github.com/janpipek/physt
 from __future__ import absolute_import
 from . import binnings
 
-__version__ = str('0.3.43.1')
+__version__ = str('0.3.43.3')
 
 
 def histogram(data, bins=None, *args, **kwargs):
