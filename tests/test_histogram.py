@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 
-class TestNumpyBins(object):
+class TestNumpyBins:
     def test_nbin(self):
         arr = np.random.rand(100)
         hist = histogram(arr, bins=15)

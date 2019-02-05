@@ -119,19 +119,19 @@ class TestAdaptive2D(object):
         assert h.total == 4
         assert h.shape == (3, 6)
 
-class TestAdaptiveND(object):
+class TestAdaptiveND:
     def test_create_empty(self):
         h = histogramdd(None, "fixed_width", 10, dim=7, adaptive=True)
         assert h.ndim == 7
         assert h.is_adaptive()
 
-# class TestChangeBins(object):
+# class TestChangeBins:
 #     def test_change_bin_simple(self):
 #         h = h1(None, "fixed_width", 10, adaptive=True)
 #         h.fill_n([10])
 #         assert False
 
-class TestAdaptiveArithmetics(object):
+class TestAdaptiveArithmetics:
     def test_adding_empty(self):
         ha1 = h1(None, "fixed_width", 10, adaptive=True)
         ha1.fill_n(np.random.normal(100, 10, 1000))

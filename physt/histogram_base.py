@@ -4,7 +4,7 @@ import numpy as np
 from .binnings import as_binning
 
 
-class HistogramBase(object):
+class HistogramBase:
     """Histogram base class.
 
     Behaviour shared by all histogram classes.

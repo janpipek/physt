@@ -10,7 +10,7 @@ from .util import find_subclass
 # TODO: Locking and edit operations (like numpy read-only)
 
 
-class BinningBase(object):
+class BinningBase:
     """Abstract base class for binning schemas.
 
     Inheriting

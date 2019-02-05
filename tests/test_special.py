@@ -7,7 +7,7 @@ import pytest
 from physt import special
 
 
-class TestPolar(object):
+class TestPolar:
     def test_simple_create(self):
         data = np.array([[0.01, 0.01], [0.01, 0.99], [-1, .01], [-1, -.01]])
         x = data[:,0]
@@ -36,7 +36,7 @@ class TestPolar(object):
         assert special.AzimuthalHistogram == type(h.projection("phi"))
 
 
-class TestSpherical(object):
+class TestSpherical:
     def test_transform(self):
         t = special.SphericalHistogram.transform([0, 0, 1])
         assert np.array_equal(t,  [1, 0, 0])
@@ -54,7 +54,7 @@ class TestSpherical(object):
         assert special.DirectionalHistogram == type(h.projection("theta", "phi"))
 
 
-class TestCylindricalSurface(object):
+class TestCylindricalSurface:
     def test_radius(self):
         h = special.cylindrical_histogram([[1,2,3], [2, 3, 4]])
         proj = h.projection("phi", "z")
@@ -66,7 +66,7 @@ class TestCylindricalSurface(object):
         assert special.AzimuthalHistogram == type(proj.projection("phi"))
 
 
-class TestCylindrical(object):
+class TestCylindrical:
     def test_transform(self):
         t = special.CylindricalHistogram.transform([0, 0, 1])
         assert np.array_equal(t,  [0, 0, 1])

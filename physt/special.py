@@ -25,7 +25,7 @@ from .histogram1d import Histogram1D
 from . import binnings, histogram_nd
 
 
-class TransformedHistogramMixin(object):
+class TransformedHistogramMixin:
     """Histogram with non-cartesian (or otherwise transformed) axes.
 
     This is a mixin, providing transform-aware find_bin, fill and fill_n.

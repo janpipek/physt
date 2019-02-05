@@ -6,7 +6,7 @@ sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 from physt import examples
 
 
-class TestExamples(object):
+class TestExamples:
     # def test_iris(self):
     #     iris = examples.iris_h1()
     #     assert iris.name == "iris"

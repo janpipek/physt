@@ -187,7 +187,7 @@ def plot(histogram, kind=None, backend=None, **kwargs):
                            .format(kind, backend_name))
 
 
-class PlottingProxy(object):
+class PlottingProxy:
     """Proxy enabling to call plotting methods on histogram objects.
 
     It can be used both as a method or as an object containing methods. In any case,

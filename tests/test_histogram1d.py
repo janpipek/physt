@@ -12,7 +12,7 @@ values = [4, 0, 3, 7.2]
 example = Histogram1D(bins, values, overflow=1, underflow=2)
 
 
-class TestBins(object):
+class TestBins:
     def test_nbins(self):
         assert example.bin_count == 4
 
@@ -28,7 +28,7 @@ class TestBins(object):
         assert np.allclose(example.bin_widths, [0.2, 0.1, 0.2, 0.1])
 
 
-class TestValues(object):
+class TestValues:
     def test_values(self):
         assert np.allclose(example.frequencies, [4, 0, 3, 7.2])
 
@@ -52,7 +52,7 @@ class TestValues(object):
         assert np.isclose(example.total, 14.2)
 
 
-class TestCopy(object):
+class TestCopy:
     def test_copy(self):
         new = example.copy()
         assert new is not example
@@ -84,7 +84,7 @@ class TestCopy(object):
         assert h1.meta_data == copy.meta_data
 
 
-class TestEquivalence(object):
+class TestEquivalence:
     def test_eq(self):
         bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
         values = [4, 0, 3, 7.2]
@@ -124,7 +124,7 @@ class TestEquivalence(object):
         assert other3 == example
 
 
-class TestIndexing(object):
+class TestIndexing:
     def test_single(self):
         zeroth = example[0]
         assert np.allclose(zeroth[0], (1.2, 1.4))
@@ -188,7 +188,7 @@ class TestIndexing(object):
         assert np.array_equal(selected.frequencies, [4, 3, 7.2])
 
 
-class TestArithmetic(object):
+class TestArithmetic:
     def test_add_number(self):
         with pytest.raises(RuntimeError):
             example + 4
@@ -270,7 +270,7 @@ class TestArithmetic(object):
         assert np.allclose(new.frequencies, example.frequencies / 4)
 
 
-class TestMerging(object):
+class TestMerging:
     def test_2(self):
         data = np.random.rand(100)
         hh = h1(data, 120)
@@ -279,7 +279,7 @@ class TestMerging(object):
         assert hha == hhb
 
 
-class TestConversion(object):
+class TestConversion:
     def test_pandas(self):
         df = example.to_dataframe()
         assert df.shape == (4, 4)
@@ -294,7 +294,7 @@ class TestConversion(object):
     #     assert example == h2
 
 
-class TestFindBin(object):
+class TestFindBin:
     def test_normal(self):
         # bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
         assert example.find_bin(1) == -1
@@ -315,7 +315,7 @@ class TestFindBin(object):
         assert selected.find_bin(1.9) == 2
 
 
-class TestFill(object):
+class TestFill:
     def test_fill(self):
         # bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
         # values = [4, 0, 3, 7.2]
@@ -344,7 +344,7 @@ class TestFill(object):
         assert np.allclose(h.frequencies, [1, 4.2, 3])
 
 
-class TestDtype(object):
+class TestDtype:
     def test_simple(self):
         example = h1(values)
         assert example.dtype == np.int64

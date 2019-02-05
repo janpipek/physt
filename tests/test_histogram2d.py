@@ -22,7 +22,7 @@ vals = [
 np.random.seed(42)
 
 
-class TestCalculateFrequencies(object):
+class TestCalculateFrequencies:
     def test_simple(self):
         bins = [[0, 1, 2], [0, 1, 2]]
         schemas = [binnings.static_binning(None, np.asarray(bs)) for bs in bins]
@@ -56,7 +56,7 @@ class TestCalculateFrequencies(object):
         assert np.array_equal([[0, 0], [0, 4]], errors2)
 
 
-class TestHistogram2D(object):
+class TestHistogram2D:
     def test_simple_random(self):
         x = np.random.normal(100, 1, 1000)
         y = np.random.normal(10, 10, 1000)
@@ -83,7 +83,7 @@ freqs = np.array([[ 1.,  0.],
     [ 1.,  0.]])
 
 
-class TestArithmetics(object):
+class TestArithmetics:
     def test_multiply_by_constant(self):
         xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
         yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
@@ -160,13 +160,13 @@ class TestArithmetics(object):
             h - 4
 
 
-class TestDtype(object):
+class TestDtype:
     def test_simple(self):
         from physt import examples
         assert examples.normal_h2().dtype == np.dtype(np.int64)
 
 
-class TestMerging(object):
+class TestMerging:
     def test_2(self):
         data1 = np.random.rand(100)
         data2 = np.random.rand(100)
@@ -176,7 +176,7 @@ class TestMerging(object):
         assert hha == hhb
 
 
-class TestPartialNormalizing(object):
+class TestPartialNormalizing:
     def test_wrong_arguments(self):
         freqs = [
             [1, 0],

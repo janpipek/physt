@@ -9,7 +9,7 @@ from physt import bin_utils, io
 from physt.histogram1d import Histogram1D
 
 
-class TestIO(object):
+class TestIO:
     def test_json_write_string(self):
         bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
         values = [4, 0, 3, 7.2]

@@ -9,7 +9,7 @@ import pytest
 #
 
 
-class TestCalculateBinsNd(object):
+class TestCalculateBinsNd:
     def test_range(self):
         data1 = np.linspace(0, 10, 100)
         data = np.array([data1, data1]).T
@@ -30,7 +30,7 @@ class TestCalculateBinsNd(object):
         assert bins2.last_edge == 10
 
 
-class TestNumpyBins(object):
+class TestNumpyBins:
     def test_int_behaviour(self):
         data = np.random.rand(100)
         the_binning = binnings.numpy_binning(data, 10)
@@ -47,7 +47,7 @@ class TestNumpyBins(object):
         assert np.allclose(the_binning.numpy_bins, np.histogram(data, edges)[1])
 
 
-class TestFixedWidthBins(object):
+class TestFixedWidthBins:
     def test_without_alignment(self):
         data = np.asarray([4.6, 7.3])
         the_binning = binnings.fixed_width_binning(data, 1.0, align=False)
@@ -129,7 +129,7 @@ class TestFixedWidthBins(object):
             b3.adapt(b1)
 
 
-class TestHumanBins(object):
+class TestHumanBins:
     def test_exact(self):
         data = np.random.rand(1000)
         the_binning = binnings.human_binning(data, 10)
@@ -142,7 +142,7 @@ class TestHumanBins(object):
         assert np.allclose(the_binning.numpy_bins, np.linspace(0, 1, 11))
 
 
-class TestIntegerBins(object):
+class TestIntegerBins:
     def test_dice(self):
         data = np.asarray([1, 2, 3, 5, 6, 2, 4, 3, 2, 3, 4, 5, 6, 6, 1, 2, 5])
         the_binning = binnings.integer_binning(data)
@@ -152,7 +152,7 @@ class TestIntegerBins(object):
         assert np.allclose(the_binning.numpy_bins, [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
 
 
-class TestExponentialBins(object):
+class TestExponentialBins:
     def test_data(self):
         data = np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.5, 3.5, 10.0])
         the_binning = binnings.exponential_binning(data, 2)
@@ -162,7 +162,7 @@ class TestExponentialBins(object):
         assert np.allclose(the_binning.numpy_bins, [1.0, 10.0, 100.0])
 
 
-class TestQuantileBins(object):
+class TestQuantileBins:
     def test_simple(self):
         data = np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])
         the_binning = binnings.quantile_binning(data, 2)
@@ -187,7 +187,7 @@ class TestQuantileBins(object):
 #         raise RuntimeError("You need to have 'mock' package installed in Python < 3.3")
 #
 #
-# class TestCalculateBins(object):
+# class TestCalculateBins:
 #     def test_proper_forwarding(self):
 #         for key in list(binning.binning_methods.keys()):
 #             binning.binning_methods[key] = mock.MagicMock()

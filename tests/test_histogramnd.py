@@ -9,7 +9,7 @@ from physt.histogram1d import Histogram1D
 from physt import h2, h3
 
 
-class TestHistogramND(object):
+class TestHistogramND:
     def test_creation(self):
         data1 = np.random.rand(100)
         data2 = np.random.rand(100)
@@ -43,7 +43,7 @@ class TestHistogramND(object):
         assert h.bin_sizes.shape == (10, 11, 12)
 
 
-class TestProjections(object):
+class TestProjections:
     def test_4_to_3(self):
         data = np.random.rand(100, 4)
         h = physt.histogramdd(data, (4, 5, 6, 7), axis_names=["1", "2", "3", "4"])
@@ -125,12 +125,12 @@ class TestSlicing:
         assert h[:,2].shape == (4,)
         # TODO: Add more combinations
 
-class TestH2(object):
+class TestH2:
     def test_create_empty_h2(self):
         h2(None, None, "integer", adaptive=True)
 
 
-class TestH3(object):
+class TestH3:
     def test_create_empty_h3(self):
         h3(None, "integer", adaptive=True)
 

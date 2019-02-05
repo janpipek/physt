@@ -11,7 +11,7 @@ values = [1, 2, 3, 4]
 weights = [1, 1, 1, 2]
 
 
-class TestStatistics(object):
+class TestStatistics:
     def test_stats_filled_in(self):
         h = physt.h1(values)
         assert h._stats["sum"] == 10

@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 
-class TestGeant4Compat(object):
+class TestGeant4Compat:
     def test_read_h1(self):
         path = os.path.join(os.path.dirname(__file__), "data/geant-h1.csv")
         h = geant4.load_csv(path)

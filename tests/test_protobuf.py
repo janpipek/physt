@@ -14,7 +14,7 @@ except:
 
 
 @pytest.mark.skipif(not PROTOBUF_TEST_ENABLED, reason="Skipping protobuf tests because of an error")
-class TestProtobuf(object):
+class TestProtobuf:
     # End-to-end test
     def test_h1(self):
         H = normal_h1()

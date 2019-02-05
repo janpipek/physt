@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 
-class TestMakeArray(object):
+class TestMakeArray:
     def test_make_from_numpy(self):
         arr = bin_utils.make_bin_array([0, 1, 2])
         assert np.array_equal(arr, [[0, 1], [1, 2]])
@@ -16,7 +16,7 @@ class TestMakeArray(object):
         assert np.array_equal(arr, [[0, 1], [2, 3]])
 
 
-class TestNumpyBinsWithMask(object):
+class TestNumpyBinsWithMask:
     def test_numpy_style(self):
         arr = np.array([1, 2, 3.1, 4])
         edges, mask = bin_utils.to_numpy_bins_with_mask(arr)
@@ -44,7 +44,7 @@ class TestNumpyBinsWithMask(object):
             bin_utils.to_numpy_bins_with_mask(arr)
 
 
-class TestValidation(object):
+class TestValidation:
     def test_rising(self):
         valid = [
             [[1, 2], [2, 3], [3, 4]],
