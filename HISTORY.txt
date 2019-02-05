@@ -1,4 +1,4 @@
-0.4.0 (5th February 2018)
+0.4.0 (5th February 2019)
 -------------------------
 - CHANGE: Drop support for Python 2.7
 
