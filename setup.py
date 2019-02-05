@@ -17,9 +17,11 @@ P.S. I am looking for anyone interested in using / developing physt. You can con
 import itertools
 from setuptools import setup, find_packages
 
+VERSION = "0.4.0"
+
 options = dict(
     name='physt',
-    version='0.3.43.3',
+    version=VERSION,
     packages=find_packages(),
     # package_data={'': ['LICENSE', 'MANIFEST.in', 'README.md', 'HISTORY.txt']},
     license='MIT',
@@ -30,6 +32,7 @@ options = dict(
     url='https://github.com/janpipek/physt',
     package_data={"physt" : ["examples/*.csv"]},
     install_requires = ['numpy'],
+    python_requires="~=3.5",
     extras_require = {
         'all' : ['dask', 'matplotlib', 'folium', 'vega3', 'xarray',
                  'protobuf', 'uproot']

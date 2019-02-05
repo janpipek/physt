@@ -16,6 +16,12 @@ nice integration into IPython notebook and various plotting options. In short, w
 [![Anaconda-Server Badge](https://anaconda.org/janpipek/physt/badges/version.svg)](https://anaconda.org/janpipek/physt)
 [![Anaconda-Server Badge](https://anaconda.org/janpipek/physt/badges/license.svg)](https://anaconda.org/janpipek/physt)
 
+### Versioning
+
+* Versions 0.3.x support Python 2.7 (no new releases in 2019)
+* Versions 0.4.x supports only Python 3.5 while preserving most of the 0.3 API
+* Versions 0.5.x will contain reworked API
+
 ## Simple example
 
 ```python
@@ -136,7 +142,7 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
-- Python 3.5+ targeted, 2.7 mostly working (support will be dropped in 2019)
+- Python 3.5+
 - numpy
 - (optional) matplotlib - simple output
 - (optional) xarray - I/O
