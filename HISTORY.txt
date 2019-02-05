@@ -1,6 +1,7 @@
 0.4.0 (5th February 2019)
 -------------------------
 - CHANGE: Drop support for Python 2.7
+- Fixed: several small bugs - #49, #54, ... 
 
 0.3.43 (1st October 2018)
 -------------------------
