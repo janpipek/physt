@@ -12,6 +12,8 @@ try:
 except:
     PROTOBUF_TEST_ENABLED = False
 
+from physt.examples import normal_h1, normal_h2
+
 
 @pytest.mark.skipif(not PROTOBUF_TEST_ENABLED, reason="Skipping protobuf tests because of an error")
 class TestProtobuf:
