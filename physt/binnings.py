@@ -1,6 +1,4 @@
 """Different binning algorithms/schemas for the histograms."""
-from __future__ import absolute_import, division
-
 import numpy as np
 from .bin_utils import (make_bin_array, is_consecutive, to_numpy_bins,
                         is_rising, is_bin_subset, to_numpy_bins_with_mask)

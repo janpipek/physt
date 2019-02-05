@@ -1,5 +1,4 @@
 """Methods for investigation and manipulation of bin arrays."""
-from __future__ import absolute_import
 import numpy as np
 
 

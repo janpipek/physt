@@ -1,4 +1,3 @@
-from __future__ import division
 import sys
 import os
 sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path

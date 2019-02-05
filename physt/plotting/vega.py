@@ -12,7 +12,6 @@ See the `enable_inline_view` wrapper.
 """
 # TODO: Custom JSON serializer better than conversion?
 
-from __future__ import absolute_import
 
 import codecs
 import json

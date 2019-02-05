@@ -3,7 +3,6 @@ Plotting inside maps with folium.
 
 Very experimental!
 """
-from __future__ import absolute_import
 
 import folium
 

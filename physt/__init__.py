@@ -8,8 +8,6 @@ but designed for humans(TM) on steroids(TM).
 (C) Jan Pipek, 2016-8, MIT licence
 See https://github.com/janpipek/physt
 """
-
-from __future__ import absolute_import
 from . import binnings
 
 __version__ = str('0.3.43.3')

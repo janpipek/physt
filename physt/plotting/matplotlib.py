@@ -26,22 +26,20 @@ plotting helper functions that do part of the plotting job and popped of the use
 parameters.
 
 """
-# TODO: Write notes about the zorder argument
+from functools import wraps
 
-from __future__ import absolute_import
+# TODO: Write notes about the zorder argument
 import matplotlib
-import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 import matplotlib.patches as patches
 import matplotlib.path as path
+import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-import numpy as np
-from functools import wraps
 
 from .common import get_data, get_err_data, pop_kwargs_with_prefix
-
 
 # To be filled by register function
 types = []

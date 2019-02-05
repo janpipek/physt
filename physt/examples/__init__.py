@@ -1,5 +1,4 @@
 """A set of examples used for demonstrating the physt capabilities / in tests."""
-from __future__ import division
 import numpy as np
 from ..import h1, h2, h3
 

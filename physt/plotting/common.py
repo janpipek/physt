@@ -2,7 +2,6 @@
 Functions that are shared by several (all) plotting backends.
 
 """
-from __future__ import absolute_import
 
 
 def get_data(histogram, density=False, cumulative=False, flatten=False):

@@ -1,6 +1,4 @@
 """Dask-based and dask oriented variants of physt histogram facade functions."""
-
-from __future__ import absolute_import
 from .. import h1 as original_h1
 from .. import histogramdd as original_hdd
 

@@ -77,7 +77,6 @@ show_colorbar : bool
     Whether to display a colorbar next to the plot itself
 """
 
-from __future__ import absolute_import
 from collections import OrderedDict
 
 
