@@ -35,7 +35,7 @@ try:
     import xtermcolor
 
     SUPPORTED_CMAPS = ("Greys", "Greys_r")
-    DEFAULT_CMAP = SUPPORTED_CMAPS[0]
+    DEFAULT_CMAP = SUPPORTED_CMAPS[1]
 
     def map(h2: 'Histogram2D', **kwargs):
         """Heat map
@@ -56,10 +56,10 @@ try:
         
         # Colour map
         cmap = kwargs.pop("cmap", DEFAULT_CMAP)
-        if cmap == "Greys_r":
+        if cmap == "Greys":
             data = 255 - data
             colorbar_range = range(h2.shape[1] + 1, -1, -1)
-        elif cmap == "Grey":
+        elif cmap == "Greys_r":
             colorbar_range = range(h2.shape[1] + 2)
         else:
             raise ValueError("Unsupported colormap: {0}, select from: {1}".format(cmap, SUPPORTED_CMAPS))
