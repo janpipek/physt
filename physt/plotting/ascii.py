@@ -1,7 +1,14 @@
-# -*- coding: utf-8 -*-
-"""ASCII plots
+"""ASCII plots (experimental).
+
+The plots are printed directly to standard output.
+
 """
-from __future__ import absolute_import
+try:
+    import asciiplotlib
+    ENABLE_ASCIIPLOTLIB = True
+except ImportError:
+    asciiplotlib = None
+    ENABLE_ASCIIPLOTLIB = False
 
 types = ("hbar",)
 
@@ -10,17 +17,27 @@ dims = {
 }
 
 def hbar(h1, width=80, show_values=False):
-    data = (h1.normalize().frequencies * width).round().astype(int)
-    for i in range(h1.bin_count):
-        if show_values:
-            print("#" * data[i], h1.frequencies[i])
-        else:
-            print("#" * data[i])
-
+    if ENABLE_ASCIIPLOTLIB:
+        data = h1.frequencies
+        edges = h1.numpy_bins
+        fig = asciiplotlib.figure()
+        fig.hist(data, edges, orientation="horizontal")
+        fig.show()
+    else:
+        data = (h1.normalize().frequencies * width).round().astype(int)
+        for i in range(h1.bin_count):
+            if show_values:
+                print("#" * data[i], h1.frequencies[i])
+            else:
+                print("#" * data[i])
 
 try:
     import xtermcolor
-    def map(h2, **kwargs):
+
+    SUPPORTED_CMAPS = ("Greys", "Greys_r")
+    DEFAULT_CMAP = SUPPORTED_CMAPS[0]
+
+    def map(h2: 'Histogram2D', **kwargs):
         """Heat map
 
         Available only if xtermcolor present
@@ -29,17 +46,30 @@ try:
         ----------
         h2 : physt.histogram_nd.Histogram2D
         """
-        val_format = kwargs.pop("value_format", ".2f")
+
+        # Value format
+        val_format = kwargs.pop("value_format", ".2f")         
         if isinstance(val_format, str):
             value_format = lambda val: (("{0:" + val_format + "}").format(val))
+        
         data = (h2.frequencies / h2.frequencies.max() * 255).astype(int)
+        
+        # Colour map
+        cmap = kwargs.pop("cmap", DEFAULT_CMAP)
+        if cmap == "Greys_r":
+            data = 255 - data
+            colorbar_range = range(h2.shape[1] + 1, -1, -1)
+        elif cmap == "Grey":
+            colorbar_range = range(h2.shape[1] + 2)
+        else:
+            raise ValueError("Unsupported colormap: {0}, select from: {1}".format(cmap, SUPPORTED_CMAPS))
         colors = (65536 + 256 + 1) * data
+
         print((value_format(h2.get_bin_right_edges(0)[-1]) + " →").rjust(h2.shape[1] + 2, " "))
         print("+" + "-" * h2.shape[1] + "+")
         for i in range(h2.shape[0]-1, -1, -1):
             line = [
                 xtermcolor.colorize("█", bg=0, rgb=colors[i,j])
-                # xtermcolor.colorize(" ", rgb="#000000", bg="#{0}{0}{0}".format(hex(i)[2:].zfill(2)))
                 for j in range(h2.shape[1])
             ]
             line = "|" + "".join(line) + "|"
@@ -52,8 +82,7 @@ try:
         print("←", value_format(h2.get_bin_left_edges(0)[0]))
         colorbar = [
             xtermcolor.colorize("█", bg=0, rgb=(65536 + 256 + 1) * int(j * 255 / (h2.shape[1] + 2)))
-            # xtermcolor.colorize(" ", rgb="#000000", bg="#{0}{0}{0}".format(hex(i)[2:].zfill(2)))
-            for j in range(h2.shape[1] + 2)
+            for j in colorbar_range
             ]
         colorbar = "".join(colorbar)
         print()
