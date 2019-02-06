@@ -111,9 +111,10 @@ Using pip:
 * Simple statistics for original data (mean, std, sem)
 * Plotting with several backends
   - matplotlib (static plots with many options)
-  - vega (interactive plots, beta)
+  - vega (interactive plots, beta, help wanted!)
   - folium (experimental for geo-data)
-  - plotly (very basic)
+  - plotly (very basic, help wanted!)
+  - ascii (experimental)
 * Algorithms for optimized binning
   - human-friendly
   - mathematical
@@ -149,6 +150,8 @@ Rationale (for both): physt is dumb, but precise.
 - (optional) astropy - additional binning algorithms
 - (optional) folium - map plotting
 - (optional) vega3 - for vega in-line in IPython notebook (note that to generate vega JSON, this is not necessary)
+- (optional) asciiplotlib - for ASCII bar plots
+- (optional) xtermcolot - for ASCII color maps
 - (testing) py.test, pandas
 - (docs) sphinx, sphinx_rtd_theme, ipython
 

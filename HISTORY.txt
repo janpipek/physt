@@ -1,3 +1,7 @@
+0.4.1 (6th February 2019)
+-------------------------
+- Added: Basic ASCII plots (experimental)
+
 0.4.0 (5th February 2019)
 -------------------------
 - CHANGE: Drop support for Python 2.7

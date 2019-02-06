@@ -17,7 +17,7 @@ P.S. I am looking for anyone interested in using / developing physt. You can con
 import itertools
 from setuptools import setup, find_packages
 
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 
 options = dict(
     name='physt',
@@ -35,7 +35,7 @@ options = dict(
     python_requires="~=3.5",
     extras_require = {
         'all' : ['dask', 'matplotlib', 'folium', 'vega3', 'xarray',
-                 'protobuf', 'uproot']
+                 'protobuf', 'uproot', 'asciiplotlib', 'xtermcolor']
     },
     entry_points = {
         'console_scripts' : [
