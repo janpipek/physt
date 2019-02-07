@@ -1,7 +1,10 @@
 """Multi-dimensional histograms."""
+from typing import Optional, List
+
 import numpy as np
 
-from .histogram_base import HistogramBase
+from .histogram_base import HistogramBase, AxisIdentifier
+from .binnings import BinningBase
 
 
 class HistogramND(HistogramBase):
@@ -12,7 +15,7 @@ class HistogramND(HistogramBase):
 
     """
 
-    def __init__(self, dimension, binnings, frequencies=None, **kwargs):
+    def __init__(self, dimension: int, binnings, frequencies=None, **kwargs):
         """Constructor
 
         Parameters
@@ -48,18 +51,12 @@ class HistogramND(HistogramBase):
     _stats = None
 
     @property
-    def bins(self):
-        """Matrix of bins.
-
-        Returns
-        -------
-        list[np.ndarray]
-            Two sets of array bins.
-        """
+    def bins(self) -> List[np.ndarray]:
+        """List of bin matrices."""
         return [binning.bins for binning in self._binnings]
 
     @property
-    def binnings(self):
+    def binnings(self) -> List[BinningBase]:
         """The binnings.
 
         Note: Please, do not try to update the objects themselves.
@@ -71,7 +68,7 @@ class HistogramND(HistogramBase):
         return self._binnings
 
     @property
-    def numpy_bins(self):
+    def numpy_bins(self) -> List[np.ndarray]:
         """Numpy-like bins (if available)
 
         Returns
@@ -80,7 +77,7 @@ class HistogramND(HistogramBase):
         """
         return [binning.numpy_bins for binning in self._binnings]
 
-    def select(self, axis, index, force_copy=False):
+    def select(self, axis: AxisIdentifier, index, force_copy: bool = False) -> HistogramBase:
         """Select in an axis.
 
         Parameters
@@ -161,14 +158,15 @@ class HistogramND(HistogramBase):
 
     # Missing: cumulative_frequencies - does it make sense?
 
-    def get_bin_widths(self, axis=None):  # -> Base
+    def get_bin_widths(self, axis: Optional[AxisIdentifier] = None) -> np.ndarray:  # TODO: -> Base ?
         if axis is not None:
+            axis = self._get_axis(axis)
             return self.get_bin_right_edges(axis) - self.get_bin_left_edges(axis)
         else:
             return np.meshgrid(*[self.get_bin_widths(i) for i in range(self.ndim)], indexing='ij')
 
     @property
-    def bin_sizes(self):
+    def bin_sizes(self) -> np.ndarray:
         # TODO: Some kind of caching?
         sizes = self.get_bin_widths(0)
         for i in range(1, self.ndim):
@@ -189,35 +187,39 @@ class HistogramND(HistogramBase):
         """
         return np.sum(self.bin_sizes)
 
-    def get_bin_edges(self, axis=None):
-        # TODO: test for non-numpy ones
+    def get_bin_edges(self, axis: Optional[AxisIdentifier] = None) -> np.ndarray:
         if axis is not None:
+            axis = self._get_axis(axis)
             return self.numpy_bins[self._get_axis(axis)]
         else:
             edges = [self.get_bin_edges(i) for i in range(self.ndim)]
             return np.meshgrid(*edges, indexing='ij')
 
-    def get_bin_left_edges(self, axis=None):
+    def get_bin_left_edges(self, axis: Optional[AxisIdentifier] = None) -> np.ndarray:
         if axis is not None:
-            return self.bins[self._get_axis(axis)][:, 0]
+            axis = self._get_axis(axis)
+            return self.bins[axis][:, 0]
         else:
             edges = [self.get_bin_left_edges(i) for i in range(self.ndim)]
             return np.meshgrid(*edges, indexing='ij')
 
-    def get_bin_right_edges(self, axis=None):
+    def get_bin_right_edges(self, axis: Optional[AxisIdentifier] = None) -> np.ndarray:
         if axis is not None:
-            return self.bins[self._get_axis(axis)][:, 1]
+            axis = self._get_axis(axis)
+            return self.bins[axis][:, 1]
         else:
             edges = [self.get_bin_right_edges(i) for i in range(self.ndim)]
             return np.meshgrid(*edges, indexing='ij')
 
-    def get_bin_centers(self, axis=None):
+    def get_bin_centers(self, axis: Optional[AxisIdentifier] = None) -> np.ndarray:
         if axis is not None:
+            axis = self._get_axis(axis)
             return (self.get_bin_right_edges(axis) + self.get_bin_left_edges(axis)) / 2
         else:
             return np.meshgrid(*[self.get_bin_centers(i) for i in range(self.ndim)], indexing='ij')
 
-    def find_bin(self, value, axis=None):  # TODO: Check!
+    # TODO: Check!
+    def find_bin(self, value, axis: Optional[AxisIdentifier] = None):
         """Index(indices) of bin corresponding to a value.
 
         Parameters
@@ -234,6 +236,7 @@ class HistogramND(HistogramBase):
             If axis is specified, a number. Otherwise, a tuple. If not available, None.
         """
         if axis is not None:
+            axis = self._get_axis(axis)
             ixbin = np.searchsorted(self.get_bin_left_edges(axis), value, side="right")
             if ixbin == 0:
                 return None
@@ -269,7 +272,7 @@ class HistogramND(HistogramBase):
             self._errors2[ixbin] += weight ** 2
         return ixbin
 
-    def fill_n(self, values, weights=None, dropna=True, columns=False):
+    def fill_n(self, values, weights=None, dropna: bool = True, columns: bool = False):
         """Add more values at once.
 
         Parameters
@@ -328,7 +331,7 @@ class HistogramND(HistogramBase):
         invert = tuple(invert)
         return (axes, invert)
 
-    def _reduce_dimension(self, axes, frequencies, errors2, **kwargs):
+    def _reduce_dimension(self, axes, frequencies, errors2, **kwargs) -> HistogramBase:
         name = kwargs.pop("name", self.name)
         axis_names = [name for i, name in enumerate(self.axis_names) if i in axes]
         bins = [bins for i, bins in enumerate(self._binnings) if i in axes]
@@ -346,7 +349,7 @@ class HistogramND(HistogramBase):
             return klass(dimension=len(axes), binnings=bins, frequencies=frequencies,
                          errors2=errors2, axis_names=axis_names, name=name)
 
-    def accumulate(self, axis):
+    def accumulate(self, axis: AxisIdentifier) -> HistogramBase:
         """Calculate cumulative frequencies along a certain axis.
 
         Parameters
@@ -426,7 +429,7 @@ class Histogram2D(HistogramND):
                                           frequencies=frequencies, **kwargs)
 
     @property
-    def T(self):
+    def T(self) -> "Histogram2D":
         """Histogram with swapped axes.
 
         Returns
@@ -440,7 +443,7 @@ class Histogram2D(HistogramND):
         a_copy._errors2 = a_copy._errors2.T
         return a_copy
 
-    def partial_normalize(self, axis=0, inplace=False):
+    def partial_normalize(self, axis: AxisIdentifier = 0, inplace: bool = False):
         """Normalize in rows or columns.
 
         Parameters

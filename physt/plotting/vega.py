@@ -16,6 +16,7 @@ See the `enable_inline_view` wrapper.
 import codecs
 import json
 from functools import wraps
+from typing import Mapping, Any
 
 from .common import get_data, get_value_format
 
@@ -553,7 +554,7 @@ def _scatter_or_line(h1, kwargs):
     return vega
 
 
-def _create_figure(kwargs):
+def _create_figure(kwargs: Mapping[str, Any]) -> dict:
     """Create basic dictionary object with figure properties."""
     return {
         "$schema": "https://vega.github.io/schema/vega/v3.json",

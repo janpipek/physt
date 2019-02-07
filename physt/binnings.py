@@ -1,9 +1,11 @@
 """Different binning algorithms/schemas for the histograms."""
-import numpy as np
-from .bin_utils import (make_bin_array, is_consecutive, to_numpy_bins,
-                        is_rising, is_bin_subset, to_numpy_bins_with_mask)
-from .util import find_subclass
+from collections import OrderedDict
 
+import numpy as np
+
+from .bin_utils import (is_bin_subset, is_consecutive, is_rising,
+                        make_bin_array, to_numpy_bins, to_numpy_bins_with_mask)
+from .util import find_subclass
 
 # TODO: Locking and edit operations (like numpy read-only)
 
@@ -71,12 +73,11 @@ class BinningBase:
     inconsecutive_allowed = False
     # TODO: adding allowed?
 
-    def to_dict(self):
+    def to_dict(self) -> OrderedDict:
         """Dictionary representation of the binning schema.
 
         This serves as template method, please implement _update_dict
         """
-        from collections import OrderedDict
         result = OrderedDict()
         result["adaptive"] = self._adaptive
         result["binning_type"] = type(self).__name__
@@ -106,17 +107,13 @@ class BinningBase:
         """
         return np.allclose(np.diff(self.bins[1] - self.bins[0]), 0.0, rtol=rtol, atol=atol)
 
-    def is_consecutive(self, rtol=1.e-5, atol=1.e-8):
+    def is_consecutive(self, rtol: float = 1.e-5, atol: float = 1.e-8) -> bool:
         """Whether all bins are in a growing order.
 
         Parameters
         ----------
         rtol, atol : float
             numpy tolerance parameters
-
-        Returns
-        -------
-        bool
         """
         if self.inconsecutive_allowed:
             if self._consecutive is None:
@@ -127,13 +124,8 @@ class BinningBase:
         else:
             return True
 
-    def is_adaptive(self):
-        """Whether the binning can be adapted to include values not currently spanned.
-
-        Returns
-        -------
-        bool
-        """
+    def is_adaptive(self) -> bool:
+        """Whether the binning can be adapted to include values not currently spanned."""
         return self._adaptive
 
     def force_bin_existence(self, values):
@@ -675,7 +667,7 @@ def numpy_binning(data, bins=10, range=None, *args, **kwargs):
     return NumpyBinning(bins)
 
 
-def human_binning(data=None, bin_count=None, range=None, **kwargs):
+def human_binning(data=None, bin_count=None, range=None, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width ninning schema with bins automatically optimized to human-friendly widths.
 
     Typical widths are: 1.0, 25,0, 0.02, 500, 2.5e-7, ...
@@ -760,7 +752,7 @@ def integer_binning(data=None, **kwargs):
                                align=True, bin_shift=0.5, **kwargs)
 
 
-def fixed_width_binning(data=None, bin_width=1, range=None, includes_right_edge=False, **kwargs):
+def fixed_width_binning(data=None, bin_width=1, range=None, includes_right_edge=False, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width binning schema.
 
     Parameters
@@ -789,7 +781,7 @@ def fixed_width_binning(data=None, bin_width=1, range=None, includes_right_edge=
     return result
 
 
-def exponential_binning(data=None, bin_count=None, range=None, **kwargs):
+def exponential_binning(data=None, bin_count=None, range=None, **kwargs) -> ExponentialBinning:
     """Construct exponential binning schema.
 
     Parameters
@@ -1098,7 +1090,7 @@ def ideal_bin_count(data, method="default"):
 bincount_methods = ["default", "sturges", "rice", "sqrt", "doane"]
 
 
-def as_binning(obj, copy=False):
+def as_binning(obj, copy: bool = False) -> BinningBase:
     """Ensure that an object is a binning
 
     Parameters

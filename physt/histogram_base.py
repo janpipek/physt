@@ -1,6 +1,13 @@
 """HistogramBase - base for all histogram classes."""
+from collections import OrderedDict
+from typing import List, Optional, Iterable, Mapping, Any, Tuple, Union
+
 import numpy as np
+
 from .binnings import as_binning
+
+
+AxisIdentifier = Union[int, str]
 
 
 class HistogramBase:
@@ -116,7 +123,7 @@ class HistogramBase:
         self._meta_data = kwargs.copy()
 
     @property
-    def meta_data(self):
+    def meta_data(self) -> dict:
         """A dictionary of non-numerical information about the histogram.
 
         It contains several pre-defined ones, but you can add any other.
@@ -129,17 +136,12 @@ class HistogramBase:
         return self._meta_data
 
     @property
-    def name(self):
-        """Name of the histogram (stored in meta-data).
-
-        Returns
-        -------
-        str
-        """
+    def name(self) -> Optional[str]:
+        """Name of the histogram (stored in meta-data)."""
         return self._meta_data.get("name", None)
 
     @name.setter
-    def name(self, value):
+    def name(self, value: str):
         """Name of the histogram.
 
         In plotting, this will be used as label.
@@ -147,19 +149,15 @@ class HistogramBase:
         self._meta_data["name"] = str(value)
 
     @property
-    def title(self):
+    def title(self) -> Optional[str]:
         """Title of the histogram to be displayed when plotted (stored in meta-data).
         
         If not specified, defaults to `name`.
-
-        Returns
-        -------
-        str
         """
         return self._meta_data.get("title", self.name)
 
     @title.setter
-    def title(self, value):
+    def title(self, value: str):
         """Title of the histogram.
 
         In plotting, this will be used as plot title.
@@ -167,7 +165,7 @@ class HistogramBase:
         self._meta_data["title"] = str(value)
 
     @property
-    def axis_names(self):
+    def axis_names(self) -> List[str]:
         """Names of axes (stored in meta-data).
 
         Returns
@@ -178,21 +176,11 @@ class HistogramBase:
         return tuple(self._meta_data.get("axis_names", None) or default)
 
     @axis_names.setter
-    def axis_names(self, value):
+    def axis_names(self, value: Iterable[str]):
         self._meta_data["axis_names"] = tuple(str(name) for name in value)
 
-    def _get_axis(self, name_or_index):
-        """Get index of an axis and check its existence
-
-        Parameters
-        ----------
-        name_or_index : str or int
-
-        Returns
-        -------
-        int
-            zero-based axis index
-        """
+    def _get_axis(self, name_or_index: AxisIdentifier) -> int:
+        """Get a zero-based index of an axis and check its existence."""
         # TODO: Add unit test
         if isinstance(name_or_index, int):
             if name_or_index < 0 or name_or_index >= self.ndim:
@@ -208,25 +196,20 @@ class HistogramBase:
             raise RuntimeError("Argument of type {0} not understood, int or str expected.".format(type(name_or_index)))
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[int, ...]:
         """Shape of histogram's data.
 
         Returns
         -------
-        tuple[int]
-            One-element tuple with the number of bins along each axis.
+        One-element tuple with the number of bins along each axis.
         """
         return tuple(bins.bin_count for bins in self._binnings)
 
     @property
-    def ndim(self):
+    def ndim(self) -> int:
         """Dimensionality of histogram's data.
 
         i.e. the number of axes along which we bin the values.
-
-        Returns
-        -------
-        int
         """
         return len(self._binnings)
 
@@ -316,24 +299,13 @@ class HistogramBase:
             self.set_dtype(new_dtype)
 
     @property
-    def bin_count(self):
-        """Total number of bins.
-
-        Returns
-        -------
-        int
-        """
+    def bin_count(self) -> int:
+        """Total number of bins."""
         return np.product(self.shape)
 
     @property
-    def frequencies(self):
-        """Frequencies (values, contents) of the histogram bins.
-
-        Returns
-        -------
-        np.ndarray
-            Array of bin frequencies
-        """
+    def frequencies(self) -> Optional[np.ndarray]:
+        """Frequencies (values, contents) of the histogram bins."""
         return self._frequencies
 
     @property
@@ -348,7 +320,7 @@ class HistogramBase:
         """
         return self._frequencies / self.bin_sizes
 
-    def normalize(self, inplace=False, percent=False):
+    def normalize(self, inplace: bool = False, percent: bool = False) -> "HistogramBase":
         """Normalize the histogram, so that the total weight is equal to 1.
 
         Parameters
@@ -395,13 +367,8 @@ class HistogramBase:
         return np.sqrt(self.errors2)
 
     @property
-    def total(self):
-        """Total number (sum of weights) of entries excluding underflow and overflow.
-
-        Returns
-        -------
-        float
-        """
+    def total(self) -> float:
+        """Total number (sum of weights) of entries excluding underflow and overflow."""
         return self._frequencies.sum()
 
     @property
@@ -414,24 +381,15 @@ class HistogramBase:
         """
         return self._missed.sum()
 
-    def is_adaptive(self):
-        """Whether the binning can be changed with operations.
-
-        Returns
-        -------
-        bool
-        """
+    def is_adaptive(self) -> bool:
+        """Whether the binning can be changed with operations."""
         # TODO: remove in favour of adaptive property
         return all(binning.is_adaptive() for binning in self._binnings)
 
-    def set_adaptive(self, value=True):
+    def set_adaptive(self, value: bool = True):
         """Change the histogram binning to (non)adaptive.
 
         This requires binning in all dimensions to allow this.
-
-        Parameters
-        ----------
-        value : bool
         """
         # TODO: remove in favour of adaptive property
         if not all(b.adaptive_allowed for b in self._binnings):
@@ -440,11 +398,11 @@ class HistogramBase:
             binning.set_adaptive(value)
 
     @property
-    def adaptive(self):
+    def adaptive(self) -> bool:
         return self.is_adaptive()
 
     @adaptive.setter
-    def adaptive(self, value):
+    def adaptive(self, value: bool):
         self.set_adaptive(value)
 
     def _change_binning(self, new_binning, bin_map, axis=0):
@@ -588,13 +546,8 @@ class HistogramBase:
                     new_frequencies[tuple(new_index)] += old_frequencies[tuple(old_index)]
                     new_errors2[tuple(new_index)] += old_errors2[tuple(old_index)]
 
-    def has_same_bins(self, other):
-        """Whether two histograms share the same binning.
-
-        Returns
-        -------
-        bool
-        """
+    def has_same_bins(self, other: "HistogramBase") -> bool:
+        """Whether two histograms share the same binning."""
         if self.shape != other.shape:
             return False
         elif self.ndim == 1:
@@ -605,17 +558,13 @@ class HistogramBase:
                     return False
             return True
 
-    def copy(self, include_frequencies=True):
+    def copy(self, include_frequencies: bool = True) -> "HistogramBase":
         """Copy the histogram.
 
         Parameters
         ----------
-        include_frequencies : Optional[bool]
+        include_frequencies : bool
             If false, all frequencies are set to zero.
-
-        Returns
-        -------
-        copy : HistogramBase
         """
         if include_frequencies:
             frequencies = np.copy(self.frequencies)
@@ -641,7 +590,7 @@ class HistogramBase:
     def fill(self, value, weight=1, **kwargs):
         """Add a value.
 
-        Abstract method - to be implemented in daughter classes.s
+        Abstract method - to be implemented in daughter classes.
 
         Parameters
         ----------
@@ -685,21 +634,17 @@ class HistogramBase:
                 self.fill(value, **kwargs)
 
     @property
-    def plot(self):
+    def plot(self) -> "physt.plotting.PlottingProxy":
         """Proxy to plotting.
 
         This attribute is a special proxy to plotting. In the most
         simple cases, it can be used as a method. For more sophisticated
         use, see the documentation for physt.plotting package.
-
-        Returns
-        -------
-        physt.plotting.PlottingProxy
         """
         from .plotting import PlottingProxy
         return PlottingProxy(self)
 
-    def to_dict(self):
+    def to_dict(self) -> OrderedDict:
         """Dictionary with all data in the histogram.
 
         This is used for export into various formats (e.g. JSON)
@@ -710,7 +655,6 @@ class HistogramBase:
         -------
         collections.OrderedDict
         """
-        from collections import OrderedDict
         result = OrderedDict()
         result["histogram_type"] = type(self).__name__
         result["binnings"] = [binning.to_dict() for binning in self._binnings]
@@ -767,7 +711,7 @@ class HistogramBase:
         return kwargs
 
     @classmethod
-    def from_dict(cls, a_dict):
+    def from_dict(cls, a_dict: Mapping[str, Any]) -> "HistogramBase":
         """Create an instance from a dictionary.
 
         If customization is necessary, override the _from_dict_kwargs
@@ -776,15 +720,11 @@ class HistogramBase:
         Parameters
         ----------
         a_dict : dict
-
-        Returns
-        -------
-        HistogramBase
         """
         kwargs = cls._from_dict_kwargs(a_dict)
         return cls(**kwargs)
 
-    def to_json(self, path=None, **kwargs):
+    def to_json(self, path: Optional[str] = None, **kwargs) -> str:
         """Convert to JSON representation.
 
         Parameters
@@ -920,7 +860,7 @@ class HistogramBase:
         self.fill(value)
 
     @classmethod
-    def _merge_meta_data(cls, first, second):
+    def _merge_meta_data(cls, first, second) -> dict:
         """Merge meta data of two histograms leaving only the equal values.
 
         (Used in addition and subtraction)
@@ -931,7 +871,7 @@ class HistogramBase:
                 (first._meta_data.get(key, None) if first._meta_data.get(key, None) == second._meta_data.get(key, None) else None)
                 for key in keys}
 
-    def __array__(self):
+    def __array__(self) -> np.ndarray:
         """Convert to numpy array.
 
         Returns

@@ -1,13 +1,14 @@
 import json
+from typing import Optional
 
-from . import CURRENT_VERSION, create_from_dict
-from ..histogram_base import HistogramBase
-from ..util import find_subclass
+from physt.io import CURRENT_VERSION, create_from_dict
+from physt.histogram_base import HistogramBase
+from physt.util import find_subclass
 
 COMPATIBLE_VERSION = "0.3.20"
 
 
-def save_json(histogram, path=None, **kwargs):
+def save_json(histogram: HistogramBase, path: Optional[str] = None, **kwargs) -> str:
     """Save histogram to JSON format.
 
     Parameters
@@ -34,30 +35,14 @@ def save_json(histogram, path=None, **kwargs):
     return text
 
 
-def load_json(path=None):
-    """Load histogram from a JSON file.
-
-    Parameters
-    ----------
-    path : str
-        Path to the histogram file.
-
-    Returns
-    -------
-    hist : HistogramBase
-    """
-    with open(path, "r", encoding="utf-8") as f:
+def load_json(path: str, encoding: str = "utf-8") -> HistogramBase:
+    """Load histogram from a JSON file."""
+    with open(path, "r", encoding=encoding) as f:
         text = f.read()
         return parse_json(text)
 
 
-def parse_json(text):
-    """Create histogram from a JSON string.
-
-    Parameters
-    ----------
-    text : str
-        UTF-8 encoded JSON
-    """
-    data = json.loads(text, encoding="utf-8")
+def parse_json(text: str, encoding: str = "utf-8") -> HistogramBase:
+    """Create histogram from a JSON string."""
+    data = json.loads(text, encoding=encoding)
     return create_from_dict(data, format_name="JSON")

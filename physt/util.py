@@ -3,9 +3,10 @@
 These functions are mostly general Python functions, not specific
 for numerical computing, histogramming, etc.
 """
+from typing import Tuple
 
 
-def all_subclasses(cls):
+def all_subclasses(cls) -> Tuple[type, ...]:
     """All subclasses of a class.
 
     From: http://stackoverflow.com/a/17246726/2692780
@@ -17,7 +18,7 @@ def all_subclasses(cls):
     return tuple(subclasses)
 
 
-def find_subclass(base, name):
+def find_subclass(base: type, name: str) -> type:
     """Find a named subclass of a base class.
 
     Uses only the class name without namespace.
