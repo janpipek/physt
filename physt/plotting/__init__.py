@@ -67,14 +67,22 @@ density : bool
     If True, does not show bin contents but contents divided by width
 errors : bool
     Whether to show error bars (if available)
+show_stats : bool
+    If True, display a small box with statistical info
 
 2D heatmaps
 ~~~~~~~~~~~
 show_zero : bool
-    Whether to show bins that have no content
+    Whether to show bins that have 0 frequency
 grid_color : 
+    Colour of line between bins
 show_colorbar : bool
     Whether to display a colorbar next to the plot itself
+
+Line plots
+~~~~~~~~~~
+lw (or linewidth) : int
+    Width of the lines
 """
 
 from collections import OrderedDict
