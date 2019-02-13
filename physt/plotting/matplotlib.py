@@ -25,10 +25,13 @@ The very general keyword argument dict is sequentially forwarded to
 plotting helper functions that do part of the plotting job and popped of the used
 parameters.
 
+Parameters
+----------
+
 """
 from functools import wraps
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-# TODO: Write notes about the zorder argument
 import matplotlib
 import matplotlib.cm as cm
 import matplotlib.colors as colors
@@ -36,10 +39,16 @@ import matplotlib.patches as patches
 import matplotlib.path as path
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-from .common import get_data, get_err_data, pop_kwargs_with_prefix
+from physt.histogram1d import Histogram1D
+from physt.histogram_nd import Histogram2D
+from physt.plotting.common import (get_data, get_err_data,
+                                   pop_kwargs_with_prefix)
+from physt.special import CylinderSurfaceHistogram, DirectionalHistogram
 
 # To be filled by register function
 types = []
@@ -51,21 +60,15 @@ default_figsize = matplotlib.rcParams["figure.figsize"]
 default_cmap = "Greys"  # matplotlib.rcParams['image.cmap']
 
 
-def register(*dim, **kwargs):
+def register(*dim: List[int], use_3d: bool = False, use_polar: bool = False):
     """Decorator to wrap common plotting functionality.
 
     Parameters
     ----------
-    dim : list(int)
-        Dimensionality of histogram for which it is applicable
-    use_3d : bool
-        If True, the figure will be 3D.
-    use_polar : bool
-        If True, the figure will be in polar coordinates.
-    """
-    use_3d = kwargs.get("use_3d", False)
-    use_polar = kwargs.get("use_polar", False)
-    
+    dim : Dimensionality of histogram for which it is applicable
+    use_3d : If True, the figure will be 3D.
+    use_polar : If True, the figure will be in polar coordinates.
+    """   
     if use_3d and use_polar:
         raise RuntimeError("Cannot have polar and 3d coordinates simultaneously.")
     
@@ -89,25 +92,8 @@ def register(*dim, **kwargs):
 
 
 @register(1)
-def bar(h1, ax, errors=False, **kwargs):
-    """Bar plot of 1D histograms.
-
-    Parameters
-    ----------
-    h1: Histogram1D
-    errors: bool
-        Whether to draw error bars.
-    value_format:
-        A function converting or str
-    show_stats: bool
-        If True, display a small box with statistical info
-    lw (or linewidth): float
-        Width of the bar lines.
-
-    Returns
-    -------
-    plt.Axes
-    """
+def bar(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
+    """Bar plot of 1D histograms."""
     show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
     value_format = kwargs.pop("value_format", None)
@@ -144,23 +130,10 @@ def bar(h1, ax, errors=False, **kwargs):
     if show_stats:
         _add_stats_box(h1, ax, stats=show_stats)
 
-    return ax
-
 
 @register(1)
-def scatter(h1, ax, errors=False, **kwargs):
-    """Scatter plot of 1D histogram.
-
-    Parameters
-    ----------
-    h1: Histogram1D
-    errors: bool
-        Whether to draw error bars.
-
-    Returns
-    -------
-    plt.Axes
-    """
+def scatter(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
+    """Scatter plot of 1D histogram."""
     show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
@@ -191,23 +164,11 @@ def scatter(h1, ax, errors=False, **kwargs):
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
     if show_stats:
         _add_stats_box(h1, ax, stats=show_stats)
-    return ax
 
 
 @register(1)
-def line(h1, ax, errors=False, **kwargs):
-    """Line plot of 1D histogram.
-
-    Parameters
-    ----------
-    h1 : Histogram1D
-    errors : bool
-        Whether to draw error bars.
-
-    Returns
-    -------
-    plt.Axes
-    """
+def line(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
+    """Line plot of 1D histogram."""
     show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
@@ -231,21 +192,11 @@ def line(h1, ax, errors=False, **kwargs):
         _add_stats_box(h1, ax, stats=show_stats)
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
-    return ax
 
 
 @register(1)
-def fill(h1, ax, **kwargs):
-    """Fill plot of 1D histogram.
-
-    Parameters
-    ----------
-    h1 : Histogram1D
-
-    Returns
-    -------
-    plt.Axes
-    """
+def fill(h1: Histogram1D, ax: Axes, **kwargs):
+    """Fill plot of 1D histogram."""
     show_stats = kwargs.pop("show_stats", False)
     # show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
@@ -265,17 +216,8 @@ def fill(h1, ax, **kwargs):
 
 
 @register(1)
-def step(h1, ax, **kwargs):
-    """Step line-plot of 1D histogram.
-
-    Parameters
-    ----------
-    h1 : Histogram1D
-
-    Returns
-    -------
-    plt.Axes
-    """
+def step(h1: Histogram1D, ax: Axes, **kwargs):
+    """Step line-plot of 1D histogram."""
     show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
@@ -294,24 +236,18 @@ def step(h1, ax, **kwargs):
         _add_stats_box(h1, ax, stats=show_stats)
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
-    return ax
 
 
 @register(2)
-def map(h2, ax, show_zero=True, show_values=False, show_colorbar=True, x=None, y=None, **kwargs):
+def map(h2: Histogram2D, ax: Axes, *, show_zero: bool = True, show_values: bool = False, show_colorbar: bool = True, x=None, y=None, **kwargs):
     """Coloured-rectangle plot of 2D histogram.
 
     Parameters
     ----------
-    h2 : Histogram2D
-    show_zero : Optional[bool]
-        Whether to show coloured box for bins with 0 frequency (otherwise background).
-    show_values : Optional[bool]
-        Whether to show labels with frequencies/densities in the middle of the bin
-    show_colorbar : Optional[bool]
-        Whether to show colorbar next to the plot.
-    grid_color : Optional
-        Colour of line between bins
+    show_zero : Whether to show coloured box for bins with 0 frequency (otherwise background).
+    show_values : Whether to show labels with frequencies/densities in the middle of the bin
+
+
     text_color : Optional
         Colour of text descriptions
     text_alpha : Optional[float]
@@ -322,10 +258,6 @@ def map(h2, ax, show_zero=True, show_values=False, show_colorbar=True, x=None, y
         Transformation of y bin coordinates
     zorder : float
         z-order in the axis (higher number above lower)
-
-    Returns
-    -------
-    plt.Axes
 
     See Also
     --------
@@ -436,21 +368,10 @@ def map(h2, ax, show_zero=True, show_values=False, show_colorbar=True, x=None, y
     if show_colorbar:
         _add_colorbar(ax, cmap, cmap_data, norm)
 
-    return ax
-
 
 @register(2, use_3d=True)
-def bar3d(h2, ax, **kwargs):
-    """Plot of 2D histograms as 3D boxes.
-
-    Parameters
-    ----------
-    h2 : Histogram2D
-
-    Returns
-    -------
-    plt.Axes
-    """
+def bar3d(h2: Histogram2D, ax: Axes3D, **kwargs):
+    """Plot of 2D histograms as 3D boxes."""
     density = kwargs.pop("density", False)
     data = get_data(h2, cumulative=False, flatten=True, density=density)
 
@@ -469,11 +390,9 @@ def bar3d(h2, ax, **kwargs):
     ax.bar3d(xpos, ypos, zpos, dx, dy, data, color=colors, **kwargs)
     ax.set_zlabel("density" if density else "frequency")
 
-    return ax
-
 
 @register(2)
-def image(h2, ax, show_colorbar=True, **kwargs):
+def image(h2: Histogram2D, ax: Axes, *, show_colorbar: bool = True, interpolation: str = "nearest", **kwargs):
     """Plot of 2D histograms based on pixmaps.
 
     Similar to map, but it:
@@ -483,13 +402,7 @@ def image(h2, ax, show_colorbar=True, **kwargs):
 
     Parameters
     ----------
-    h2: physt.histogram_nd.Histogram2D
-    interpolation: str
-        interpolation parameter passed to imshow, default: "nearest" (creates rectangles)
-
-    Returns
-    -------
-    plt.Axes
+    interpolation: interpolation parameter passed to imshow, default: "nearest" (creates rectangles)
     """
     cmap = _get_cmap(kwargs)   # h2 as well?
     data = get_data(h2, cumulative=False, density=kwargs.pop("density", False))
@@ -501,8 +414,7 @@ def image(h2, ax, show_colorbar=True, **kwargs):
             raise RuntimeError(
                 "Histograms with irregular bins cannot be plotted using image method.")
 
-    if "interpolation" not in kwargs:
-        kwargs["interpolation"] = "nearest"
+    kwargs["interpolation"] = interpolation
     if kwargs.get("xscale") == "log" or kwargs.get("yscale") == "log":
         raise RuntimeError("Cannot use logarithmic axes with image plots.")
 
@@ -517,19 +429,12 @@ def image(h2, ax, show_colorbar=True, **kwargs):
     if show_colorbar:
         _add_colorbar(ax, cmap, cmap_data, norm)
 
-    return ax
-
 
 @register(2, use_polar=True)
-def polar_map(hist, ax, show_zero=True, show_colorbar=True, **kwargs):
+def polar_map(hist: Histogram2D, ax: Axes, *, show_zero: bool = True, show_colorbar: bool = True, **kwargs):
     """Polar map of polar histograms.
 
-    Similar to map, but supports less parameters.
-
-    Returns
-    -------
-    plt.Axes
-    """
+    Similar to map, but supports less parameters."""
     data = get_data(hist, cumulative=False, flatten=True,
                     density=kwargs.pop("density", False))
 
@@ -560,22 +465,11 @@ def polar_map(hist, ax, show_zero=True, show_colorbar=True, **kwargs):
     ax.set_rmax(rmax.max())
     if show_colorbar:
         _add_colorbar(ax, cmap, cmap_data, norm)
-    return ax
 
 
 @register(2, use_3d=True)
-def globe_map(hist, ax, show_zero=True, **kwargs):
-    """Heat map plotted on the surface of a sphere.
-
-    Parameters
-    ----------
-    hist : Histogram2D | physt.special.DirectionalHistogram
-    show_zero : bool
-
-    Returns
-    -------
-
-    """
+def globe_map(hist: Union[Histogram2D, DirectionalHistogram], ax: Axes3D, *, show_zero: bool = True, **kwargs):
+    """Heat map plotted on the surface of a sphere."""
     data = get_data(hist, cumulative=False, flatten=False,
                     density=kwargs.pop("density", False))
 
@@ -616,18 +510,8 @@ def globe_map(hist, ax, show_zero=True, **kwargs):
 
 
 @register(2, use_3d=True)
-def cylinder_map(hist, ax, show_zero=True, **kwargs):
-    """Heat map plotted on the surface of a cylinder.
-
-    Parameters
-    ----------
-    hist : Histogram2D | physt.special.CylinderSurfaceHistogram
-    show_zero : bool
-
-    Returns
-    -------
-
-    """
+def cylinder_map(hist: Union[Histogram2D, CylinderSurfaceHistogram], ax: Axes3D, *, show_zero: bool = True, **kwargs):
+    """Heat map plotted on the surface of a cylinder."""
     data = get_data(hist, cumulative=False, flatten=False,
                     density=kwargs.pop("density", False))
 
@@ -666,11 +550,9 @@ def cylinder_map(hist, ax, show_zero=True, **kwargs):
     ax.set_ylim(-r * 1.1, r * 1.1)
     ax.set_zlim(zs.min(), zs.max())
 
-    return ax
-
 
 @register(2, use_3d=True)
-def surface_map(hist, ax, show_zero=True, x=(lambda x, y: x),
+def surface_map(hist, ax: Axes3D, *, show_zero: bool = True, x=(lambda x, y: x),
                 y=(lambda x, y: y), z=(lambda x, y: 0), **kwargs):
     """Coloured-rectangle plot of 2D histogram, placed on an arbitrary surface.
 
@@ -742,7 +624,8 @@ def surface_map(hist, ax, show_zero=True, x=(lambda x, y: x),
 
     return ax
 
-def pair_bars(first, second, orientation="vertical", kind="bar", **kwargs):
+
+def pair_bars(first: Histogram1D, second: Histogram2D, *, orientation: str = "vertical", kind: str = "bar", **kwargs):
     """Draw two different histograms mirrored in one figure.
 
     Parameters
@@ -778,15 +661,13 @@ def pair_bars(first, second, orientation="vertical", kind="bar", **kwargs):
     return ax
 
 
-def _get_axes(kwargs, use_3d=False, use_polar=False):
+def _get_axes(kwargs: Dict[str, Any], *, use_3d: bool = False, use_polar: bool = False) -> Tuple[Figure, Union[Axes, Axes3D]]:
     """Prepare the axis to draw into.
 
     Parameters
     ----------
-    use_3d: bool
-        If yes, an axis with 3D projection is created.
-    use_polar: bool
-        If yes, the plot will have polar coordinates.
+    use_3d: If True, an axis with 3D projection is created.
+    use_polar: If True, the plot will have polar coordinates.
 
     Kwargs
     ------
@@ -815,7 +696,7 @@ def _get_axes(kwargs, use_3d=False, use_polar=False):
     return fig, ax
 
 
-def _get_cmap(kwargs):
+def _get_cmap(kwargs: dict) -> colors.Colormap:
     """Get the colour map for plots that support it.
 
     Parameters
@@ -823,10 +704,6 @@ def _get_cmap(kwargs):
     cmap : str or colors.Colormap or list of colors
         A map or an instance of cmap. This can also be a seaborn palette
         (if seaborn is installed).
-
-    Returns
-    -------
-    colors.Colormap
     """
     from matplotlib.colors import ListedColormap
 
@@ -847,7 +724,7 @@ def _get_cmap(kwargs):
     return cmap
 
 
-def _get_cmap_data(data, kwargs):
+def _get_cmap_data(data, kwargs) -> Tuple[colors.Normalize, np.ndarray]:
     """Get normalized values to be used with a colormap.
 
     Parameters
@@ -878,18 +755,13 @@ def _get_cmap_data(data, kwargs):
     return norm, norm(data)
 
 
-def _get_alpha_data(data, kwargs):
+def _get_alpha_data(data: np.ndarray, kwargs) -> Union[float, np.ndarray]:
     """Get alpha values for all data points.
 
     Parameters
     ----------
-    data : array_like
     alpha: Callable or float
         This can be a fixed value or a function of the data.
-
-    Returns
-    -------
-    array_like
     """
     alpha = kwargs.pop("alpha", 1)
     if hasattr(alpha, "__call__"):
@@ -897,14 +769,10 @@ def _get_alpha_data(data, kwargs):
     return alpha
 
 
-def _add_labels(ax, h, kwargs):
+def _add_labels(ax: Axes, h: Union[Histogram1D, Histogram2D], kwargs: dict):
     """Add axis and plot labels.
-
-    Parameters
-    ----------
-    ax : plt.Axes
-    h : Histogram1D or Histogram2D
-    kwargs: dict
+    
+    TODO: Document kwargs
     """
     title = kwargs.pop("title", h.title)
     xlabel = kwargs.pop("xlabel", h.axis_names[0])
@@ -919,7 +787,7 @@ def _add_labels(ax, h, kwargs):
     ax.get_figure().tight_layout()
 
 
-def _add_values(ax, h1, data, value_format=lambda x: x, **kwargs):
+def _add_values(ax: Axes, h1: Histogram1D, data, *, value_format=lambda x: x, **kwargs):
     """Show values next to each bin in a 1D plot.
 
     Parameters
@@ -940,31 +808,19 @@ def _add_values(ax, h1, data, value_format=lambda x: x, **kwargs):
         ax.text(x, y, str(value_format(y)), **text_kwargs)
 
 
-def _add_colorbar(ax, cmap, cmap_data, norm):
-    """Show a colorbar right of the plot.
-
-    Parameters
-    ----------
-    ax : plt.Axes
-    cmap : colors.Colormap
-    cmap_data : array_like
-    norm : colors.Normalize
-    """
+def _add_colorbar(ax: Axes, cmap: colors.Colormap, cmap_data: np.ndarray, norm: colors.Normalize):
+    """Show a colorbar right of the plot."""
     fig = ax.get_figure()
     mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
     mappable.set_array(cmap_data)   # TODO: Or what???
     fig.colorbar(mappable, ax=ax)
 
 
-def _add_stats_box(h1, ax, stats="all"):
+def _add_stats_box(h1: Histogram1D, ax: Axes, stats: Union[str, bool] = "all"):
     """Insert a small legend-like box with statistical information.
 
     Parameters
     ----------
-    ax : plt.Axes
-        Axes to draw it into
-    h1 : physt.histogram1d.Histogram1D
-        Histogram with valid statistics information
     stats : "all" | "total" | True
         What info to display
 
@@ -974,7 +830,7 @@ def _add_stats_box(h1, ax, stats="all"):
     """
 
     # place a text box in upper left in axes coords
-    if stats is True or stats == "all":
+    if stats in ["all", True]:
         text = "Total: {0}\nMean: {1:.2f}\nStd.dev: {2:.2f}".format(
             h1.total, h1.mean(), h1.std())
     elif stats == "total":
@@ -986,15 +842,13 @@ def _add_stats_box(h1, ax, stats="all"):
             verticalalignment='top', horizontalalignment='left')
 
 
-def _apply_xy_lims(ax, h, data, kwargs):
+def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarray, kwargs: dict):
     """Apply axis limits and scales from kwargs.
 
     Note: if exponential binning is used, the scale defaults to "log"
 
     Parameters
     ----------
-    ax : plt.Axes
-    h1 : Histogram1D or Histogram2D
     data : np.ndarray
         The frequencies or densities or otherwise manipulated data
     kwargs: dict
@@ -1084,13 +938,11 @@ def _apply_xy_lims(ax, h, data, kwargs):
         ax.set_yscale(yscale)
 
 
-def _add_ticks(ax, h1, kwargs):
+def _add_ticks(ax: Axes, h1: Histogram1D, kwargs: dict):
     """Customize ticks for an axis (1D histogram).
 
     Parameters
     ----------
-    ax : plt.Axes
-    h1 : physt.histogram1d.Histogram1D
     ticks: {"center", "edge"}, optional
     """
     ticks = kwargs.pop("ticks", None)
