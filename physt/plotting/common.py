@@ -149,7 +149,7 @@ class TimeTickHandler:
             matchers = (
                 ("^([0-9]+)?h(our(s)?)?$", lambda m : ("hour", int(m[1] or 1))),
                 ("^([0-9]+)?m(in(s)?)?$", lambda m : ("min", int(m[1] or 1))),
-                ("^([0-9]+)?(\.[0-9]+)?s(ec(s)?)?$", lambda m : ("sec", float(m[1] or 1) + float("0." + (m[2] or "0")))),
+                ("^([0-9\.]+)?(\.[0-9]+)?s(ec(s)?)?$", lambda m : ("sec", float(m[1] or 1) + float("0." + (m[2] or "0")))),
             )
             for matcher in matchers:
                 match = re.match(matcher[0], value)
@@ -173,29 +173,39 @@ class TimeTickHandler:
         return list(np.arange(min_factor, max_factor + 1) * width)
         
     @classmethod
-    def split_hms(cls, value) -> Tuple[int, int, Union[int, float]]:
+    def split_hms(cls, value) -> Tuple[bool, int, int, Union[int, float]]:
+        value, negative = (value, False) if value >= 0 else (-value, True)
         hm, s = divmod(value, 60)
         h, m = divmod(hm, 60)
-        return h, m, s
+        s = s if s % 1 else int(s)
+        return negative, h, m, s
     
     def format_time_ticks(self, ticks: List[float]) -> List[str]:
         hms = [self.split_hms(tick) for tick in ticks]
-        include_secs = any(s != 0 for _, _, s in hms)
-        include_mins = any(h or m for h, m, _ in hms)
-        include_hours = any(h for h, _, _ in hms)
+        include_hours = any(h for _, h, _, _ in hms)
+        include_mins = any(h or m for _, h, m, _ in hms) 
+        include_secs = any(s != 0 for _, _, _, s in hms) or not include_hours
+        secs_float = any(s % 1 for _, _, _, s in hms)
+        sign = any(neg for neg, _, _, _ in hms)
+
         format = ""
-        format += "{0}" if include_hours else ""
-        format += ":{1}" if include_mins else ""
-        format += ":{2}" if include_secs else ""
-        return [format.format(
+        format += "{0}:" if include_hours else ""
+        format += "{1}" if include_mins else ""
+        format += ":" if include_mins and include_secs else ""
+        format += "{2}" if include_secs else ""
+        
+        return [
+                (("-" if neg else "+") if sign else "") +
+                format.format(
                               h,
                               m if not include_hours else str(m).zfill(2),
                               s if not include_mins else str(s).zfill(2)
                               )
-                for h, m, s in hms]
+                for neg, h, m, s in hms]
 
     def __call__(self, h1: Histogram1D, min_: float, max_: float) -> TickCollection:
         level = self.level or cls.deduce_level(h1)
         ticks = self.get_time_ticks(h1, level, min_, max_)
         tick_labels = self.format_time_ticks(ticks)
+        print(tick_labels)  # TODO: Remove
         return ticks, tick_labels 
