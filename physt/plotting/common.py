@@ -121,7 +121,7 @@ class TimeTickHandler:
 
     def __init__(self, level=None, format=None):
         self.level = self.parse_level(level) if level else None
-        self.format = format
+        self.format = format  # Really?
 
     LEVELS = {
         "sec": 1,
@@ -173,29 +173,26 @@ class TimeTickHandler:
         return list(np.arange(min_factor, max_factor + 1) * width)
         
     @classmethod
-    def split_hms(cls, value) -> Tuple[int, int, float]:
-        ...
+    def split_hms(cls, value) -> Tuple[int, int, Union[int, float]]:
+        hm, s = divmod(value, 60)
+        h, m = divmod(hm, 60)
+        return h, m, s
     
     def format_time_ticks(self, ticks: List[float]) -> List[str]:
-        ...
-        # return [str(tick) for tick in ticks]
-        
-        # deltas = [self.split_hms(tick) for tick in ticks]
-        # if self.format:
-        #     format = self.format
-        # else:
-        #     include_micros = any(delta.microseconds for delta in deltas)
-        #     include_secs = any(delta.seconds % 60 for delta in deltas) or include_micros
-        #     include_hours = any(delta.total_seconds() >= 3600 for delta in deltas)
-        #     include_minutes = include_hours or any(delta.total_seconds() >= 60 for delta in deltas)
-        #     # format = "%H:%M:%S"
-        #     format = ""
-        #     format += "%H:" if include_hours else ""
-        #     format += "%M" if include_minutes else ""
-        #     format += ":%S" if include_secs else ""
-        #     format += ".%f" if include_micros else ""
-        #     format += "}"
-        # return [format.format(time(delta)) for delta in deltas]
+        hms = [self.split_hms(tick) for tick in ticks]
+        include_secs = any(s != 0 for _, _, s in hms)
+        include_mins = any(h or m for h, m, _ in hms)
+        include_hours = any(h for h, _, _ in hms)
+        format = ""
+        format += "{0}" if include_hours else ""
+        format += ":{1}" if include_mins else ""
+        format += ":{2}" if include_secs else ""
+        return [format.format(
+                              h,
+                              m if not include_hours else str(m).zfill(2),
+                              s if not include_mins else str(s).zfill(2)
+                              )
+                for h, m, s in hms]
 
     def __call__(self, h1: Histogram1D, min_: float, max_: float) -> TickCollection:
         level = self.level or cls.deduce_level(h1)

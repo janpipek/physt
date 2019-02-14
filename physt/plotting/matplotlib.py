@@ -30,7 +30,7 @@ Parameters
 
 """
 from functools import wraps
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Callable, Union
 
 import matplotlib
 import matplotlib.cm as cm
