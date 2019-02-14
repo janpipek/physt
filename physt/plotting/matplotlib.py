@@ -944,11 +944,21 @@ def _add_ticks(ax: Axes, h1: Histogram1D, kwargs: dict):
     Parameters
     ----------
     ticks: {"center", "edge"}, optional
+        Position of the ticks
+    tick_handler: Callable[[Histogram1D, float, float], Tuple[List[float], List[str]]]
+        ...
     """
     ticks = kwargs.pop("ticks", None)
-    if not ticks:
-        return
-    elif ticks == "center":
+    tick_handler = kwargs.pop("tick_handler", None)
+
+    if tick_handler:
+        if ticks:
+            raise ValueError("Cannot specify both tick and tick_handler")
+        ticks, labels = tick_handler(h1, *ax.get_xlim())
+        ax.set_xticks(ticks)
+        ax.set_xticklabels(labels)
+
+    if ticks == "center":
         ax.set_xticks(h1.bin_centers)
-    elif ticks == "edge":
+    if ticks == "edge":
         ax.set_xticks(h1.bin_left_edges)
