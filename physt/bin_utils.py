@@ -1,18 +1,16 @@
 """Methods for investigation and manipulation of bin arrays."""
+from typing import Tuple
+
 import numpy as np
 
 
-def make_bin_array(bins):
+def make_bin_array(bins) -> np.ndarray:
     """Turn bin data into array understood by HistogramXX classes.
 
     Parameters
     ----------
     bins: array_like
         Array of edges or array of edge tuples
-
-    Returns
-    -------
-    numpy.ndarray
 
     Examples
     --------
@@ -38,7 +36,7 @@ def make_bin_array(bins):
         raise RuntimeError("Binning schema must have ndim==1 or ndim==2")
 
 
-def to_numpy_bins(bins):
+def to_numpy_bins(bins) -> np.ndarray:
     """Convert physt bin format to numpy edges.
 
     Parameters
@@ -48,8 +46,7 @@ def to_numpy_bins(bins):
 
     Returns
     -------
-    edges: np.ndarray
-        all edges
+    edges: all edges
     """
     bins = np.asarray(bins)
     if bins.ndim == 1:     # Already in the proper format
@@ -59,7 +56,7 @@ def to_numpy_bins(bins):
     return np.concatenate([bins[:1, 0], bins[:, 1]])
 
 
-def to_numpy_bins_with_mask(bins):
+def to_numpy_bins_with_mask(bins) -> Tuple[np.ndarray, np.ndarray]:
     """Numpy binning edges including gaps.
 
     Parameters
@@ -111,7 +108,7 @@ def to_numpy_bins_with_mask(bins):
     return edges, mask
 
 
-def is_rising(bins):
+def is_rising(bins) -> bool:
     """Check whether the bins are in raising order.
 
     Does not check if the bins are consecutive.
@@ -119,10 +116,6 @@ def is_rising(bins):
     Parameters
     ----------
     bins: array_like
-
-    Returns
-    -------
-    bool
     """
     # TODO: Optimize for numpy bins
     bins = make_bin_array(bins)
@@ -133,14 +126,10 @@ def is_rising(bins):
     return True
 
 
-def is_consecutive(bins, rtol=1.e-5, atol=1.e-8):
+def is_consecutive(bins, rtol=1.e-5, atol=1.e-8) -> bool:
     """Check whether the bins are consecutive (edges match).
 
     Does not check if the bins are in rising order.
-
-    Returns
-    -------
-    bool
     """
     bins = np.asarray(bins)
     if bins.ndim == 1:
@@ -150,7 +139,7 @@ def is_consecutive(bins, rtol=1.e-5, atol=1.e-8):
         return np.allclose(bins[1:, 0], bins[:-1, 1], rtol, atol)
 
 
-def is_bin_subset(sub, sup):
+def is_bin_subset(sub, sup) -> bool:
     """Check whether all bins in one binning are present also in another:
 
     Parameters
@@ -159,11 +148,6 @@ def is_bin_subset(sub, sup):
         Candidate for the bin subset
     sup: array_like
         Candidate for the bin superset
-
-    Returns
-    -------
-    bool
-
     """
     sub = make_bin_array(sub)
     sup = make_bin_array(sup)
@@ -175,6 +159,6 @@ def is_bin_subset(sub, sup):
     return True
 
 
-def is_bin_superset(sup, sub):
+def is_bin_superset(sup, sub) -> bool:
     """Inverse of is_bin_subset"""
     return is_bin_subset(sub=sub, sup=sup)
