@@ -1,5 +1,6 @@
 """Different binning algorithms/schemas for the histograms."""
 from collections import OrderedDict
+from typing import Optional, Tuple, List, Union
 
 import numpy as np
 
@@ -89,21 +90,16 @@ class BinningBase:
                                   .format(type(self).__name__))
 
     @property
-    def includes_right_edge(self):
+    def includes_right_edge(self) -> bool:
         # TODO: Document and explain
         return self._includes_right_edge
 
-    def is_regular(self, rtol=1.e-5, atol=1.e-8):
+    def is_regular(self, rtol: float = 1.e-5, atol: float = 1.e-8) -> bool:
         """Whether all bins have the same width.
 
         Parameters
         ----------
-        rtol, atol : float
-            numpy tolerance parameters
-
-        Returns
-        -------
-        bool
+        rtol, atol : numpy tolerance parameters
         """
         return np.allclose(np.diff(self.bins[1] - self.bins[0]), 0.0, rtol=rtol, atol=atol)
 
@@ -112,8 +108,7 @@ class BinningBase:
 
         Parameters
         ----------
-        rtol, atol : float
-            numpy tolerance parameters
+        rtol, atol : numpy tolerance parameters
         """
         if self.inconsecutive_allowed:
             if self._consecutive is None:
@@ -156,16 +151,12 @@ class BinningBase:
         # TODO: in-place
         raise NotImplementedError()
 
-    def adapt(self, other):
+    def adapt(self, other: 'BinningBase'):
         """Adapt this binning so that it contains all bins of another binning.
 
         Parameters
         ----------
         other: BinningBase
-
-        Returns
-        -------
-
         """
         # TODO: in-place arg
         if np.array_equal(self.bins, other.bins):
@@ -175,7 +166,7 @@ class BinningBase:
         else:
             return self._adapt(other)
 
-    def set_adaptive(self, value=True):
+    def set_adaptive(self, value: bool = True):
         """Set/unset the adaptive property of the binning.
 
         This is available only for some of the binning types.
@@ -201,17 +192,12 @@ class BinningBase:
         return self._bins
 
     @property
-    def bin_count(self):
-        """The total number of bins.
-
-        Returns
-        -------
-        int
-        """
+    def bin_count(self) -> int:
+        """The total number of bins."""
         return self.bins.shape[0]
 
     @property
-    def numpy_bins(self):
+    def numpy_bins(self) -> np.ndarray:
         """Bins in the numpy format
 
         This might not be available for inconsecutive binnings.
@@ -226,7 +212,7 @@ class BinningBase:
         return self._numpy_bins
 
     @property
-    def numpy_bins_with_mask(self):
+    def numpy_bins_with_mask(self) -> Tuple[np.ndarray, np.ndarray]:
         """Bins in the numpy format, including the gaps in inconsecutive binnings.
 
         Returns
@@ -243,32 +229,22 @@ class BinningBase:
         return bwm
 
     @property
-    def first_edge(self):
-        """The left edge of the first bin.
-
-        Returns
-        -------
-        float
-        """
+    def first_edge(self) -> float:
+        """The left edge of the first bin."""
         if self._numpy_bins is None:
             return self._numpy_bins[0]
         else:
             return self.bins[0][0]
 
     @property
-    def last_edge(self):
-        """The right edge of the last bin.
-
-        Returns
-        -------
-        float
-        """
+    def last_edge(self) -> float:
+        """The right edge of the last bin."""
         if self._numpy_bins is None:
             return self._numpy_bins[-1]
         else:
             return self.bins[-1][1]
 
-    def as_static(self, copy=True):
+    def as_static(self, copy: bool = True) -> 'StaticBinning':
         """Convert binning to a static form.
 
         Parameters
@@ -302,26 +278,17 @@ class BinningBase:
         else:
             raise RuntimeError("Cannot create fixed-width binning from differing bin widths.")
 
-    def copy(self):
-        """An identical, independent copy.
-
-        Returns
-        -------
-        BinningBase
-        """
+    def copy(self) -> 'BinningBase':
+        """An identical, independent copy."""
         raise NotImplementedError()
 
-    def apply_bin_map(self, bin_map):
+    def apply_bin_map(self, bin_map) -> 'BinningBase':
         """
 
         Parameters
         ----------
         bin_map: Iterator(tuple)
             The bins must be in ascending order
-
-        Returns
-        -------
-        BinningBase
         """
         length = max(item[1] for item in bin_map) + 1
         bins = np.empty((length, 2), dtype=float)
@@ -349,7 +316,7 @@ class StaticBinning(BinningBase):
     def __init__(self, bins, includes_right_edge=True, **kwargs):
         super(StaticBinning, self).__init__(bins=bins, includes_right_edge=includes_right_edge)
 
-    def as_static(self, copy=True):
+    def as_static(self, copy: bool = True) -> 'StaticBinning':
         """Convert binning to a static form.
 
         Returns
@@ -359,8 +326,7 @@ class StaticBinning(BinningBase):
 
         Parameters
         ----------
-        copy : bool
-            if True, returns itself (already satisfying conditions).
+        copy : if True, returns itself (already satisfying conditions).
         """
         if copy:
             return StaticBinning(bins=self.bins.copy(),
@@ -549,12 +515,8 @@ class FixedWidthBinning(BinningBase):
         self._bins = None
         self._numpy_bins = None
 
-    def _adapt(self, other):
+    def _adapt(self, other: BinningBase):
         """
-
-        Parameters
-        ----------
-        other: BinningBase
 
         Returns
         -------
@@ -609,7 +571,7 @@ class ExponentialBinning(BinningBase):
         self._log_width = log_width
         self._bin_count = bin_count
 
-    def is_regular(self, *args, **kwargs):
+    def is_regular(self, *args, **kwargs) -> bool:
         return False
 
     @property
@@ -621,7 +583,7 @@ class ExponentialBinning(BinningBase):
             self._numpy_bins = 10.0 ** log_bins
         return self._numpy_bins
 
-    def copy(self):
+    def copy(self) -> 'ExponentialBinning':
         return ExponentialBinning(self._log_min, self._log_width,
                                   self._bin_count, self.includes_right_edge)
 
@@ -631,7 +593,7 @@ class ExponentialBinning(BinningBase):
         a_dict["bin_count"] = self._bin_count        
 
 
-def numpy_binning(data, bins=10, range=None, *args, **kwargs):
+def numpy_binning(data, bins=10, range=None, *args, **kwargs) -> NumpyBinning:
     """Construct binning schema compatible with numpy.histogram
 
     Parameters
@@ -643,10 +605,6 @@ def numpy_binning(data, bins=10, range=None, *args, **kwargs):
         (min, max)
     includes_right_edge: Optional[bool]
         default: True
-
-    Returns
-    -------
-    NumpyBinning
 
     See Also
     --------
@@ -667,21 +625,16 @@ def numpy_binning(data, bins=10, range=None, *args, **kwargs):
     return NumpyBinning(bins)
 
 
-def human_binning(data=None, bin_count=None, range=None, **kwargs) -> FixedWidthBinning:
+def human_binning(data=None, bin_count: Optional[int] = None, *, range=None, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width ninning schema with bins automatically optimized to human-friendly widths.
 
     Typical widths are: 1.0, 25,0, 0.02, 500, 2.5e-7, ...
 
     Parameters
     ----------
-    bin_count: Optional[int]
-        Number of bins
+    bin_count: Number of bins
     range: Optional[tuple]
         (min, max)
-
-    Returns
-    -------
-    FixedWidthBinning
     """
     subscales = np.array([0.5, 1, 2, 2.5, 5, 10])
 
@@ -700,7 +653,7 @@ def human_binning(data=None, bin_count=None, range=None, **kwargs) -> FixedWidth
     return fixed_width_binning(bin_width=bin_width, data=data, range=range, **kwargs)
 
 
-def quantile_binning(data=None, bins=10, qrange=(0.0, 1.0), **kwargs):
+def quantile_binning(data=None, bins=10, *, qrange=(0.0, 1.0), **kwargs) -> StaticBinning:
     """Binning schema based on quantile ranges.
 
     This binning finds equally spaced quantiles. This should lead to
@@ -727,12 +680,12 @@ def quantile_binning(data=None, bins=10, qrange=(0.0, 1.0), **kwargs):
     return static_binning(bins=make_bin_array(bins), includes_right_edge=True)
 
 
-def static_binning(data=None, bins=None, **kwargs):
+def static_binning(data=None, bins=None, **kwargs) -> StaticBinning:
     """Construct static binning with whatever bins."""
     return StaticBinning(bins=make_bin_array(bins), **kwargs)
 
 
-def integer_binning(data=None, **kwargs):
+def integer_binning(data=None, **kwargs) -> StaticBinning:
     """Construct fixed-width binning schema with bins centered around integers.
 
     Parameters
@@ -741,10 +694,6 @@ def integer_binning(data=None, **kwargs):
         min (included) and max integer (excluded) bin
     bin_width: Optional[int]
         group "bin_width" integers into one bin (not recommended)
-
-    Returns
-    -------
-    StaticBinning
     """
     if "range" in kwargs:
         kwargs["range"] = tuple(r - 0.5 for r in kwargs["range"])
@@ -752,7 +701,7 @@ def integer_binning(data=None, **kwargs):
                                align=True, bin_shift=0.5, **kwargs)
 
 
-def fixed_width_binning(data=None, bin_width=1, range=None, includes_right_edge=False, **kwargs) -> FixedWidthBinning:
+def fixed_width_binning(data=None, bin_width: Union[float, int] = 1, *, range=None, includes_right_edge=False, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width binning schema.
 
     Parameters
@@ -762,10 +711,6 @@ def fixed_width_binning(data=None, bin_width=1, range=None, includes_right_edge=
         (min, max)
     align: Optional[float]
         Must be multiple of bin_width
-
-    Returns
-    -------
-    FixedWidthBinning
     """
     result = FixedWidthBinning(bin_width=bin_width, includes_right_edge=includes_right_edge,
                                **kwargs)
@@ -781,7 +726,7 @@ def fixed_width_binning(data=None, bin_width=1, range=None, includes_right_edge=
     return result
 
 
-def exponential_binning(data=None, bin_count=None, range=None, **kwargs) -> ExponentialBinning:
+def exponential_binning(data=None, bin_count: Optional[int] = None, *, range=None, **kwargs) -> ExponentialBinning:
     """Construct exponential binning schema.
 
     Parameters
@@ -790,10 +735,6 @@ def exponential_binning(data=None, bin_count=None, range=None, **kwargs) -> Expo
         Number of bins
     range: Optional[tuple]
         (min, max)
-
-    Returns
-    -------
-    ExponentialBinning
 
     See also
     --------
@@ -810,7 +751,7 @@ def exponential_binning(data=None, bin_count=None, range=None, **kwargs) -> Expo
     return ExponentialBinning(log_min=range[0], log_width=log_width, bin_count=bin_count, **kwargs)
 
 
-def calculate_bins(array, _=None, *args, **kwargs):
+def calculate_bins(array, _=None, *args, **kwargs) -> BinningBase:
     """Find optimal binning from arguments.
 
     Parameters
@@ -939,7 +880,7 @@ try:
     import warnings
     warnings.filterwarnings("ignore", module="astropy\..*")
 
-    def bayesian_blocks_binning(data, range=None, **kwargs):
+    def bayesian_blocks_binning(data, range=None, **kwargs) -> NumpyBinning:
         """Binning schema based on Bayesian blocks (from astropy).
 
         Computationally expensive for large data sets.
@@ -947,10 +888,6 @@ try:
         Parameters
         ----------
         range: Optional[tuple]
-
-        Returns
-        -------
-        StaticBinning
 
         See also
         --------
@@ -963,7 +900,7 @@ try:
         edges = bayesian_blocks(data)
         return NumpyBinning(edges, **kwargs)
 
-    def knuth_binning(data, range=None, **kwargs):
+    def knuth_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Knuth's rule (from astropy).
 
         Computationally expensive for large data sets.
@@ -972,10 +909,6 @@ try:
         ----------
         data: arraylike
         range: Optional[tuple]
-
-        Returns
-        -------
-        StaticBinning
 
         See also
         --------
@@ -989,17 +922,13 @@ try:
         _, edges = knuth_bin_width(data, True)
         return NumpyBinning(edges, **kwargs)
 
-    def scott_binning(data, range=None, **kwargs):
+    def scott_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Scott's rule (from astropy).
 
         Parameters
         ----------
         data: arraylike
         range: Optional[tuple]
-
-        Returns
-        -------
-        StaticBinning
 
         See also
         --------
@@ -1012,17 +941,13 @@ try:
         _, edges = scott_bin_width(data, True)
         return NumpyBinning(edges, **kwargs)
 
-    def freedman_binning(data, range=None, **kwargs):
+    def freedman_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Freedman-Diaconis rule (from astropy).
 
         Parameters
         ----------
         data: arraylike
         range: Optional[tuple]
-
-        Returns
-        -------
-        StaticBinning
 
         See also
         --------
@@ -1044,12 +969,12 @@ except:
     pass     # astropy is not required
 
 
-def ideal_bin_count(data, method="default"):
+def ideal_bin_count(data, method: str = "default") -> int:
     """A theoretically ideal bin count.
 
     Parameters
     ----------
-    data: array_like or None
+    data: array_likes
         Data to work on. Most methods don't use this.
     method: str
         Name of the method to apply, available values:
@@ -1059,11 +984,6 @@ def ideal_bin_count(data, method="default"):
           - doane
           - rice
         See https://en.wikipedia.org/wiki/Histogram for the description
-
-    Returns
-    -------
-    int
-        Number of bins, always >= 1
     """
     n = data.size
     if n < 1:
@@ -1097,8 +1017,7 @@ def as_binning(obj, copy: bool = False) -> BinningBase:
     ---------
     obj : BinningBase or array_like
         Can be a binning, numpy-like bins or full physt bins
-    copy : bool
-        If true, ensure that the returned object is independent
+    copy : If true, ensure that the returned object is independent
     """
     if isinstance(obj, BinningBase):
         if copy:

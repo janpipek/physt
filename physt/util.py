@@ -6,7 +6,7 @@ for numerical computing, histogramming, etc.
 from typing import Tuple
 
 
-def all_subclasses(cls) -> Tuple[type, ...]:
+def all_subclasses(cls: type) -> Tuple[type, ...]:
     """All subclasses of a class.
 
     From: http://stackoverflow.com/a/17246726/2692780
