@@ -16,7 +16,13 @@ See the `enable_inline_view` wrapper.
 import codecs
 import json
 from functools import wraps
-from typing import Mapping, Any
+from typing import Any, Mapping, Optional, Union
+
+import numpy as np
+
+from physt.histogram1d import Histogram1D
+from physt.histogram_base import HistogramBase
+from physt.histogram_nd import Histogram2D, HistogramND
 
 from .common import get_data, get_value_format
 
@@ -128,20 +134,16 @@ def enable_inline_view(f):
     return wrapper
 
 
-def write_vega(vega_data, title, write_to, write_format="auto", indent=2):
+def write_vega(vega_data, *, title: Optional[str], write_to: str, write_format: str = "auto", indent: int = 2):
     """Write vega dictionary to an external file.
-
 
     Parameters
     ----------
-    vega_data : dict
-        Valid vega data as dictionary
-    write_to: str (optional)
-        Path to write vega JSON/HTML to.
+    vega_data : Valid vega data as dictionary
+    write_to: Path to write vega JSON/HTML to.
     write_format: "auto" | "json" | "html"
         Whether to create a JSON data file or a full-fledged HTML page.
-    indent: int
-        Indentation of JSON
+    indent: Indentation of JSON
     """
     spec = json.dumps(vega_data, indent=indent)
     if write_format == "html" or write_format is "auto" and write_to.endswith(".html"):
@@ -154,15 +156,13 @@ def write_vega(vega_data, title, write_to, write_format="auto", indent=2):
         out.write(output)
 
 
-def display_vega(vega_data, display=True):
+def display_vega(vega_data: dict, display: bool = True) -> Union['Vega', dict]:
     """Optionally display vega dictionary.
 
     Parameters
     ----------
-    vega_data : dict
-        Valid vega data as dictionary
-    display: True | False
-        Whether to try in-line display in IPython        
+    vega_data : Valid vega data as dictionary
+    display: Whether to try in-line display in IPython        
     """
     if VEGA_IPYTHON_PLUGIN_ENABLED and display:
         from vega3 import Vega
@@ -172,13 +172,11 @@ def display_vega(vega_data, display=True):
 
 
 @enable_inline_view
-def bar(h1, **kwargs):
+def bar(h1: Histogram1D, **kwargs) -> dict:
     """Bar plot of 1D histogram.
 
     Parameters
     ----------
-    h1 : physt.histogram1d.Histogram1D
-        Dimensionality of histogram for which it is applicable
     lw : float
         Width of the line between bars
     alpha : float
@@ -224,7 +222,7 @@ def bar(h1, **kwargs):
                 },
                 "update": {
                     "fillOpacity": [
-                        {"test": "datum === tooltip", "value": hover_alpha},
+                        # {"test": "datum === tooltip", "value": hover_alpha},
                         {"value": alpha}
                     ]
                 },
@@ -237,15 +235,13 @@ def bar(h1, **kwargs):
 
 
 @enable_inline_view
-def scatter(h1, **kwargs):
+def scatter(h1: Histogram1D, **kwargs) -> dict:
     """Scatter plot of 1D histogram values.
 
     Points are horizontally placed in bin centers.
 
     Parameters
     ----------
-    h1 : physt.histogram1d.Histogram1D
-        Dimensionality of histogram for which it is applicable
     """
     vega = _scatter_or_line(h1, kwargs)
     vega["marks"] = [
@@ -275,7 +271,7 @@ def scatter(h1, **kwargs):
 
 
 @enable_inline_view
-def line(h1, **kwargs):
+def line(h1: Histogram1D, **kwargs) -> dict:
     """Line plot of 1D histogram values.
 
     Points are horizontally placed in bin centers.
@@ -312,16 +308,8 @@ def line(h1, **kwargs):
 
 
 @enable_inline_view
-def map(h2, show_zero=True, show_values=False, **kwargs):
-    """Heat-map of two-dimensional histogram.
-
-    Parameters
-    ----------
-    h2 : physt.histogram_nd.Histogram2D
-        Dimensionality of histogram for which it is applicable
-    show_zero : bool
-    show_values : bool
-    """
+def map(h2: Histogram2D, *, show_zero: bool = True, show_values: bool = False, **kwargs) -> dict:
+    """Heat-map of two-dimensional histogram."""
     vega = _create_figure(kwargs)
 
     values_arr = get_data(h2, kwargs.pop("density", None), kwargs.pop("cumulative", None))
@@ -412,15 +400,11 @@ def map(h2, show_zero=True, show_values=False, **kwargs):
 
 
 @enable_inline_view
-def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
+def map_with_slider(h3: HistogramND, *, show_zero: bool = True, show_values: bool = False, **kwargs) -> dict:
     """Heatmap showing slice in first two dimensions, third dimension represented as a slider.
 
     Parameters
     ----------
-    h3 : physt.histogram_nd.HistogramND
-        A three-dimensional diagram to plot.
-    show_zero : bool
-    show_values : bool
     """
     vega = _create_figure(kwargs)
 
@@ -529,15 +513,8 @@ def map_with_slider(h3, show_zero=True, show_values=False, **kwargs):
     return vega
 
 
-def _scatter_or_line(h1, kwargs):
-    """
-
-    Parameters
-    ----------
-    h1 : physt.histogram1d.Histogram1D
-        Dimensionality of histogram for which it is applicable
-    kwargs : dict
-    """
+def _scatter_or_line(h1: Histogram1D, kwargs: dict) -> dict:
+    """Create shared properties for scatter / line plot."""
     vega = _create_figure(kwargs)
     data = get_data(h1, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
     centers = h1.bin_centers.tolist()
@@ -564,22 +541,15 @@ def _create_figure(kwargs: Mapping[str, Any]) -> dict:
     }
 
 
-def _create_colorbar(vega, kwargs):
+def _create_colorbar(vega: dict, kwargs: dict):
     if kwargs.pop("show_colorbar", True):
         vega["legends"] = [
             {"fill": "color", "type": "gradient"}
         ]
 
 
-def _create_scales(hist, vega, kwargs):
-    """Find proper scales for axes.
-
-    Parameters
-    ----------
-    hist: physt.histogram_base.HistogramBase
-    vega : dict
-    kwargs : dict
-    """
+def _create_scales(hist: HistogramBase, vega: dict, kwargs: dict):
+    """Find proper scales for axes."""
     if hist.ndim == 1:
         bins0 = hist.bins.astype(float)
     else:
@@ -626,7 +596,7 @@ def _create_scales(hist, vega, kwargs):
         vega["scales"][1]["domain"] = [bins1[0, 0], bins1[-1, 1]]
 
 
-def _create_cmap_scale(values_arr, vega, kwargs):
+def _create_cmap_scale(values_arr: np.ndarray, vega: dict, kwargs: dict):
     cmap = kwargs.pop("cmap", DEFAULT_PALETTE)
     cmap_min = float(kwargs.pop("cmap_min", values_arr.min()))
     cmap_max = float(kwargs.pop("cmap_max", values_arr.max()))
@@ -645,15 +615,8 @@ def _create_cmap_scale(values_arr, vega, kwargs):
     )
 
 
-def _create_axes(hist, vega, kwargs):
-    """
-
-    Parameters
-    ----------
-    hist : physt.histogram_base.HistogramBase
-    vega : dict
-    kwargs : dict
-    """
+def _create_axes(hist: HistogramBase, vega: dict, kwargs: dict):
+    """Create axes in the figure."""
     xlabel = kwargs.pop("xlabel", hist.axis_names[0])
     ylabel = kwargs.pop("ylabel", hist.axis_names[1] if len(hist.axis_names) >= 2 else None)
     vega["axes"] = [
@@ -662,15 +625,8 @@ def _create_axes(hist, vega, kwargs):
     ]
 
 
-def _create_tooltips(hist, vega, kwargs):
-    """In one-dimensional plots, show values above the value on hover.
-
-    Parameters
-    ----------
-    hist : physt.histogram_base.HistogramBase
-    vega : dict
-    kwargs: dict
-    """
+def _create_tooltips(hist: Histogram1D, vega: dict, kwargs: dict):
+    """In one-dimensional plots, show values above the value on hover."""
     if kwargs.pop("tooltips", False):
         vega["signals"] = vega.get("signals", [])
         vega["signals"].append({
@@ -707,16 +663,8 @@ def _create_tooltips(hist, vega, kwargs):
         })
 
 
-def _add_title(hist, vega, kwargs):
-    """Display plot title if available.
-
-    Parameters
-    ----------
-    hist : physt.histogram_base.HistogramBase
-        Dimensionality of histogram for which it is applicable
-    vega : dict
-    kwargs : dict
-    """
+def _add_title(hist: HistogramBase, vega: dict, kwargs: dict):
+    """Display plot title if available."""
     title = kwargs.pop("title", hist.title)
     if title:
         vega["title"] = {
