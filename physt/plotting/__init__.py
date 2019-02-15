@@ -86,7 +86,9 @@ lw (or linewidth) : int
 """
 
 from collections import OrderedDict
+from typing import Optional
 
+from physt.histogram_base import HistogramBase
 
 backends = OrderedDict()
 
@@ -133,13 +135,8 @@ else:
     _default_backend = None
 
 
-def set_default_backend(name):
-    """Choose a default backend.
-    
-    Parameters
-    ----------
-    name: str
-    """
+def set_default_backend(name: str):
+    """Choose a default backend."""
     global _default_backend
     if name == "bokeh":
         raise RuntimeError("Support for bokeh has been discontinued. At some point, we may return to support holoviews.")
@@ -148,15 +145,10 @@ def set_default_backend(name):
     _default_backend = name
 
 
-def _get_backend(name=None):
+def _get_backend(name: str = None):
     """Get a plotting backend.
 
     Tries to get it using the name - or the default one.
-
-    Parameters
-    ----------
-    name: Optional[str]
-        Name of the backend. If not specified, default one is selected.
     """
     if not backends:
         raise RuntimeError("No plotting backend available. Please, install matplotlib (preferred) or bokeh (limited).")
@@ -170,17 +162,14 @@ def _get_backend(name=None):
     return name, backends[name]
 
 
-def plot(histogram, kind=None, backend=None, **kwargs):
+def plot(histogram: HistogramBase, kind: Optional[str] = None, backend: Optional[str] = None, **kwargs):
     """Universal plotting function.
 
     All keyword arguments are passed to the plotting methods.
 
     Parameters
     ----------
-    histogram: physt.HistogramBase
-    kind: Optional[str]
-        Type of the plot (like "scatter", "line", ...), similar to pandas
-    backend: Optional[str]
+    kind: Type of the plot (like "scatter", "line", ...), similar to pandas
     """
     backend_name, backend = _get_backend(backend)
     if kind is None:
@@ -218,19 +207,14 @@ class PlottingProxy:
 
     """
 
-    def __init__(self, h):
+    def __init__(self, h: HistogramBase):
         self.histogram = h
 
-    def __call__(self, kind=None, **kwargs):
-        """Use the plotter as callable.
-
-        Parameters
-        ----------
-        histtype: Optional[str]
-        """
+    def __call__(self, kind: Optional[str] = None, **kwargs):
+        """Use the plotter as callable."""
         return plot(self.histogram, kind=kind, **kwargs)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str):
         """Use the plotter as a proxy object with separate plotting methods."""
         def plot_function(**kwargs):
             return plot(self.histogram, name, **kwargs)

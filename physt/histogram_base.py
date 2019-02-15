@@ -309,14 +309,10 @@ class HistogramBase:
         return self._frequencies
 
     @property
-    def densities(self):
+    def densities(self) -> np.ndarray:
         """Frequencies normalized by bin sizes.
 
         Useful when bins are not of the same size.
-
-        Returns
-        -------
-        np.ndarray
         """
         return self._frequencies / self.bin_sizes
 
@@ -347,23 +343,13 @@ class HistogramBase:
             return self / self.total * (100 if percent else 1)
 
     @property
-    def errors2(self):
-        """Squares of the bin errors.
-
-        Returns
-        -------
-        np.ndarray
-        """
+    def errors2(self) -> np.ndarray:
+        """Squares of the bin errors."""
         return self._errors2
 
     @property
-    def errors(self):
-        """Bin errors.
-
-        Returns
-        -------
-        np.ndarray
-        """
+    def errors(self) -> np.ndarray:
+        """Bin errors."""
         return np.sqrt(self.errors2)
 
     @property
@@ -650,10 +636,6 @@ class HistogramBase:
         This is used for export into various formats (e.g. JSON)
         If a descendant class needs to update the dictionary in some way
         (put some more information), override the _update_dict method.
-
-        Returns
-        -------
-        collections.OrderedDict
         """
         result = OrderedDict()
         result["histogram_type"] = type(self).__name__
