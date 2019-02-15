@@ -1,33 +1,25 @@
 """
-Funct;ions that are shared by several (all) plotting backends.
+Functions that are shared by several (all) plotting backends.
 
 """
 import re
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Callable
 from datetime import timedelta, time
 
 import numpy as np
 
+from physt.histogram_base import HistogramBase
 from physt.histogram1d import Histogram1D
 
 
-def get_data(histogram, density=False, cumulative=False, flatten=False):
+def get_data(histogram: HistogramBase, density: bool = False, cumulative: bool = False, flatten: bool = False) -> np.ndarray:
     """Get histogram data based on plotting parameters.
 
     Parameters
     ----------
-    h : physt.histogram_base.HistogramBase
-    density : bool
-        Whether to divide bin contents by bin size
-    cumulative : bool
-        Whether to return cumulative sums instead of individual
-    flatten : bool
-        Whether to flatten multidimensional bins
-
-    Returns
-    -------
-    np.ndarray
-
+    density : Whether to divide bin contents by bin size
+    cumulative : Whether to return cumulative sums instead of individual
+    flatten : Whether to flatten multidimensional bins
     """
     if density:
         if cumulative:
@@ -45,22 +37,14 @@ def get_data(histogram, density=False, cumulative=False, flatten=False):
     return data
 
 
-def get_err_data(histogram, density=False, cumulative=False, flatten=False):
+def get_err_data(histogram: HistogramBase, density: bool = False, cumulative: bool = False, flatten: bool = False) -> np.ndarray:
     """Get histogram error data based on plotting parameters.
 
     Parameters
     ----------
-    h : physt.histogram_base.HistogramBase
-    density : bool
-        Whether to divide bin contents by bin size
-    cumulative : bool
-        Whether to return cumulative sums instead of individual
-    flatten : bool
-        Whether to flatten multidimensional bins
-
-    Returns
-    -------
-    np.ndarray
+    density : Whether to divide bin contents by bin size
+    cumulative : Whether to return cumulative sums instead of individual
+    flatten : Whether to flatten multidimensional bins
     """
     if cumulative:
         raise RuntimeError("Error bars not supported for cumulative plots.")
@@ -73,16 +57,8 @@ def get_err_data(histogram, density=False, cumulative=False, flatten=False):
     return data
 
 
-def get_value_format(value_format=str):
+def get_value_format(value_format: Union[Callable, str] = str) -> Callable[[float], str]:
     """Create a formatting function from a generic value_format argument.
-
-    Parameters
-    ----------
-    value_format : str or Callable
-
-    Returns
-    -------
-    Callable
     """
     if value_format is None:
         value_format = ""
@@ -94,7 +70,7 @@ def get_value_format(value_format=str):
     return value_format
 
 
-def pop_kwargs_with_prefix(prefix, kwargs):
+def pop_kwargs_with_prefix(prefix: str, kwargs: dict) -> dict:
     """Pop all items from a dictionary that have keys beginning with a prefix.
 
     Parameters
@@ -115,14 +91,14 @@ TickCollection = Tuple[List[float], List[str]]
 
 
 class TimeTickHandler:
-    """
+    """Callable that creates ticks and labels corresponding to "sane" time values.
 
     Note: This class is very experimental and subject to change or disappear.
     """
 
-    def __init__(self, level=None, format=None):
+    def __init__(self, level: str = None): #, format=None):
         self.level = self.parse_level(level) if level else None
-        self.format = format  # Really?
+        # self.format = format  # TODO: Really?
 
     LEVELS = {
         "sec": 1,
@@ -143,9 +119,9 @@ class TimeTickHandler:
                 raise ValueError("Invalid level: {0}".format(vaiue))
             return value
         elif isinstance(value, (float, int)):
-            ...
+            return cls.parse_level(timedelta(seconds=value))
         elif isinstance(value, timedelta):
-            ...
+            ... # TODO: Implement
         elif isinstance(value, str):
             matchers = (
                 ("^(center|edge)s?$", lambda m: (m[1], 0)),
@@ -188,6 +164,7 @@ class TimeTickHandler:
             return ("hour", cls.find_human_width_decimal(ideal_width / 3600))
 
     def get_time_ticks(self, h1: Histogram1D, level: LevelType, min_: float, max_: float) -> List[float]:
+        # TODO: Change to class method?
         if level[0] == "edge":
             return h1.numpy_bins.tolist()
         elif level[0] == "center":
@@ -235,5 +212,4 @@ class TimeTickHandler:
         level = self.level or self.deduce_level(h1, min_, max_)
         ticks = self.get_time_ticks(h1, level, min_, max_)
         tick_labels = self.format_time_ticks(ticks)
-        print(tick_labels)  # TODO: Remove
         return ticks, tick_labels

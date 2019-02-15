@@ -1,3 +1,8 @@
+0.4.2 (15th February 2019)
+--------------------------
+- Added: Time-based ticks for matplotlib plots (experimental)
+- Added: A lot of type hints in whole codebase
+
 0.4.1 (6th February 2019)
 -------------------------
 - Added: Basic ASCII plots (experimental)
