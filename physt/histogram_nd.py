@@ -1,5 +1,5 @@
 """Multi-dimensional histograms."""
-from typing import Optional, List
+from typing import Optional, List, Any
 
 import numpy as np
 
@@ -174,12 +174,8 @@ class HistogramND(HistogramBase):
         return sizes
 
     @property
-    def total_size(self):
+    def total_size(self) -> float:
         """The total size of the bin space.
-
-        Returns
-        -------
-        float
 
         Note
         ----
@@ -313,7 +309,7 @@ class HistogramND(HistogramBase):
         self._errors2 += errors2
         self._missed[0] += missed
 
-    def _get_projection_axes(self, *axes):
+    def _get_projection_axes(self, *axes: List[AxisIdentifier]):
         axes = list(axes)
         for i, axis in enumerate(axes):
             if isinstance(axis, str):
@@ -352,14 +348,9 @@ class HistogramND(HistogramBase):
     def accumulate(self, axis: AxisIdentifier) -> HistogramBase:
         """Calculate cumulative frequencies along a certain axis.
 
-        Parameters
-        ----------
-        axis: int or str
-
         Returns
         -------
-        new_hist : HistogramND or Histogram2D
-            Histogram of the same type & size
+        new_hist: Histogram of the same type & size
         """
         # TODO: Merge with Histogram1D.cumulative_frequencies
         # TODO: Deal with errors and totals etc.
@@ -368,7 +359,7 @@ class HistogramND(HistogramBase):
         new_one._frequencies = np.cumsum(new_one.frequencies, axis_id[0])
         return new_one
 
-    def projection(self, *axes, **kwargs):
+    def projection(self, *axes: List[AxisIdentifier], **kwargs) -> HistogramBase:
         """Reduce dimensionality by summing along axis/axes.
 
         Parameters
@@ -391,7 +382,7 @@ class HistogramND(HistogramBase):
         errors2 = self.errors2.sum(axis=invert)
         return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any):
         """Equality comparison
 
         """
