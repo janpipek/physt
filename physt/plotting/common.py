@@ -75,7 +75,7 @@ def get_err_data(histogram, density=False, cumulative=False, flatten=False):
 
 def get_value_format(value_format=str):
     """Create a formatting function from a generic value_format argument.
-    
+
     Parameters
     ----------
     value_format : str or Callable
@@ -88,8 +88,9 @@ def get_value_format(value_format=str):
         value_format = ""
     if isinstance(value_format, str):
         format_str = "{0:" + value_format + "}"
-        value_format = lambda x: format_str.format(x)
-    
+
+        def value_format(x): return format_str.format(x)
+
     return value_format
 
 
@@ -129,7 +130,7 @@ class TimeTickHandler:
         "hour": 3600,
     }
 
-    LevelType = Tuple[str, int]
+    LevelType = Tuple[str, Union[float, int]]
 
     @classmethod
     def parse_level(cls, value: Union[LevelType, float, str, timedelta]) -> LevelType:
@@ -147,9 +148,11 @@ class TimeTickHandler:
             ...
         elif isinstance(value, str):
             matchers = (
-                ("^([0-9]+)?h(our(s)?)?$", lambda m : ("hour", int(m[1] or 1))),
-                ("^([0-9]+)?m(in(s)?)?$", lambda m : ("min", int(m[1] or 1))),
-                ("^([0-9\.]+)?(\.[0-9]+)?s(ec(s)?)?$", lambda m : ("sec", float(m[1] or 1) + float("0." + (m[2] or "0")))),
+                ("^(center|edge)s?$", lambda m: (m[1], 0)),
+                ("^([0-9]+)?h(our(s)?)?$", lambda m: ("hour", int(m[1] or 1))),
+                ("^([0-9]+)?m(in(s)?)?$", lambda m: ("min", int(m[1] or 1))),
+                ("^([0-9\.]+)?(\.[0-9]+)?s(ec(s)?)?$", lambda m: ("sec",
+                                                                  float(m[1] or 1) + float("0." + (m[2] or "0")))),
             )
             for matcher in matchers:
                 match = re.match(matcher[0], value)
@@ -160,30 +163,55 @@ class TimeTickHandler:
             raise ValueError("Invalid level: {0}".format(vaiue))
 
     @classmethod
-    def deduce_level(cls, h1: Histogram1D) -> str:
-        return ("min", 1)
-        # TODO: really?
+    def find_human_width_decimal(cls, raw_width: float) -> float:
+        subscales = np.array([0.5, 1, 2, 2.5, 5, 10])
+        power = np.floor(np.log10(raw_width)).astype(int)
+        best_index = np.argmin(np.abs(np.log(subscales * (10.0 ** power) / raw_width)))
+        return (10.0 ** power) * subscales[best_index]
 
-    def get_time_ticks(self, h1: Histogram1D, level, min_: float, max_: float) -> List[float]:
-        width = level[1] * self.LEVELS[level[0]]
-        min_factor = int(min_ // width)
-        if min_ % width != 0:
-            min_factor += 1
-        max_factor = int(max_ // width)
-        return list(np.arange(min_factor, max_factor + 1) * width)
-        
+    @classmethod
+    def find_human_width_60(cls, raw_width: float) -> int:
+        subscales = (1, 2, 5, 10, 15, 20, 30,)
+        best_index = np.argmin(np.abs(np.log(subscales / raw_width)))
+        return subscales[best_index]     
+
+    @classmethod
+    def deduce_level(cls, h1: Histogram1D, min_: float, max_: float) -> LevelType:
+        ideal_width = (max_ - min_) / 6
+        if ideal_width < 0.8:
+            return ("sec", cls.find_human_width_decimal(ideal_width))
+        elif ideal_width < 50:
+            return ("sec", cls.find_human_width_60(ideal_width))
+        elif ideal_width < 3000:
+            return ("min", cls.find_human_width_60(ideal_width / 60))
+        else:
+            return ("hour", cls.find_human_width_decimal(ideal_width / 3600))
+
+    def get_time_ticks(self, h1: Histogram1D, level: LevelType, min_: float, max_: float) -> List[float]:
+        if level[0] == "edge":
+            return h1.numpy_bins.tolist()
+        elif level[0] == "center":
+            return h1.bin_centers
+        else:
+            width = level[1] * self.LEVELS[level[0]]
+            min_factor = int(min_ // width)
+            if min_ % width != 0:
+                min_factor += 1
+            max_factor = int(max_ // width)
+            return list(np.arange(min_factor, max_factor + 1) * width)
+
     @classmethod
     def split_hms(cls, value) -> Tuple[bool, int, int, Union[int, float]]:
         value, negative = (value, False) if value >= 0 else (-value, True)
         hm, s = divmod(value, 60)
-        h, m = divmod(hm, 60)
+        h, m = (int(x) for x in divmod(hm, 60))
         s = s if s % 1 else int(s)
         return negative, h, m, s
-    
+
     def format_time_ticks(self, ticks: List[float]) -> List[str]:
         hms = [self.split_hms(tick) for tick in ticks]
         include_hours = any(h for _, h, _, _ in hms)
-        include_mins = any(h or m for _, h, m, _ in hms) 
+        include_mins = any(h or m for _, h, m, _ in hms)
         include_secs = any(s != 0 for _, _, _, s in hms) or not include_hours
         secs_float = any(s % 1 for _, _, _, s in hms)
         sign = any(neg for neg, _, _, _ in hms)
@@ -193,19 +221,19 @@ class TimeTickHandler:
         format += "{1}" if include_mins else ""
         format += ":" if include_mins and include_secs else ""
         format += "{2}" if include_secs else ""
-        
+
         return [
-                (("-" if neg else "+") if sign else "") +
-                format.format(
-                              h,
-                              m if not include_hours else str(m).zfill(2),
-                              s if not include_mins else str(s).zfill(2)
-                              )
-                for neg, h, m, s in hms]
+            (("-" if neg else "+") if sign else "") +
+            format.format(
+                h,
+                m if not include_hours else str(m).zfill(2),
+                s if not include_mins else str(s).zfill(2)
+            )
+            for neg, h, m, s in hms]
 
     def __call__(self, h1: Histogram1D, min_: float, max_: float) -> TickCollection:
-        level = self.level or cls.deduce_level(h1)
+        level = self.level or self.deduce_level(h1, min_, max_)
         ticks = self.get_time_ticks(h1, level, min_, max_)
         tick_labels = self.format_time_ticks(ticks)
         print(tick_labels)  # TODO: Remove
-        return ticks, tick_labels 
+        return ticks, tick_labels
