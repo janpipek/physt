@@ -31,7 +31,7 @@ options = dict(
     author_email='jan.pipek@gmail.com',
     url='https://github.com/janpipek/physt',
     package_data={"physt" : ["examples/*.csv"]},
-    install_requires = ['numpy'],
+    install_requires = ['numpy', 'packaging'],
     python_requires="~=3.5",
     extras_require = {
         'all' : ['dask', 'matplotlib', 'folium', 'vega3', 'xarray',
