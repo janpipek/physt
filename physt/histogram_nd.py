@@ -1,5 +1,5 @@
 """Multi-dimensional histograms."""
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Tuple
 
 import numpy as np
 
@@ -79,10 +79,6 @@ class HistogramND(HistogramBase):
             Index of bin (as in numpy).
         force_copy: bool
             If True, identity slice force a copy to be made.
-
-        Returns
-        -------
-        HistogramND or Histogram2D or Histogram1D (or others in special cases)
         """
         if index == slice(None) and not force_copy:
             return self
@@ -300,25 +296,28 @@ class HistogramND(HistogramBase):
         self._errors2 += errors2
         self._missed[0] += missed
 
-    def _get_projection_axes(self, *axes: List[AxisIdentifier]):
-        axes = list(axes)
-        for i, axis in enumerate(axes):
-            if isinstance(axis, str):
-                if axis not in self.axis_names:
-                    raise RuntimeError("Invalid axis name for projection: " + axis)
-                axes[i] = self.axis_names.index(axis)
+    def _get_projection_axes(self, *axes: AxisIdentifier) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
+        """Find axis identifiers for projection and all the remaining ones.
+        
+        Returns
+        -------
+        axes: axes to include in the projection
+        invert: axes along which to reduce
+        """
+        axes = [self._get_axis(ax) for ax in axes]
         if not axes:
-            raise RuntimeError("No axis selected for projection")
+            raise ValueError("No axis selected for projection")
         if len(axes) != len(set(axes)):
-            raise RuntimeError("Duplicate axes in projection")
+            raise ValueError("Duplicate axes in projection")
         invert = list(range(self.ndim))
         for axis in axes:
             invert.remove(axis)
         axes = tuple(axes)
         invert = tuple(invert)
-        return (axes, invert)
+        return axes, invert
 
     def _reduce_dimension(self, axes, frequencies, errors2, **kwargs) -> HistogramBase:
+        # TODO: document
         name = kwargs.pop("name", self.name)
         axis_names = [name for i, name in enumerate(self.axis_names) if i in axes]
         bins = [bins for i, bins in enumerate(self._binnings) if i in axes]
@@ -345,12 +344,13 @@ class HistogramND(HistogramBase):
         """
         # TODO: Merge with Histogram1D.cumulative_frequencies
         # TODO: Deal with errors and totals etc.
+        # TODO: inplace
         new_one = self.copy()
-        axis_id, _ = self._get_projection_axes(axis)
+        axis_id = self._get_axis(axis)
         new_one._frequencies = np.cumsum(new_one.frequencies, axis_id[0])
         return new_one
 
-    def projection(self, *axes: List[AxisIdentifier], **kwargs) -> HistogramBase:
+    def projection(self, *axes: AxisIdentifier, **kwargs) -> HistogramBase:
         """Reduce dimensionality by summing along axis/axes.
 
         Parameters
@@ -367,7 +367,7 @@ class HistogramND(HistogramBase):
         -------
         HistogramND or Histogram2D or Histogram1D (or others in special cases)
         """
-        # TODO: rename to project in 0.4
+        # TODO: rename to project in 0.5
         axes, invert = self._get_projection_axes(*axes)
         frequencies = self.frequencies.sum(axis=invert)
         errors2 = self.errors2.sum(axis=invert)
@@ -439,6 +439,7 @@ class Histogram2D(HistogramND):
         -------
         hist : Histogram2D
         """
+        # TODO: Is this applicable for HistogramND?
         axis = self._get_axis(axis)
         if not inplace:
             copy = self.copy()
@@ -459,7 +460,7 @@ class Histogram2D(HistogramND):
         return self.frequencies, self.numpy_bins[0], self.numpy_bins[1]
 
 
-def calculate_frequencies(data, ndim, binnings, weights=None, dtype=None):
+def calculate_frequencies(data, ndim: int, binnings, weights=None, dtype=None) -> Tuple[np.ndarray, np.ndarray, float]:
     """"Get frequencies and bin errors from the data (n-dimensional variant).
 
     Parameters

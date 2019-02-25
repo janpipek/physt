@@ -100,13 +100,13 @@ class TestProjections:
     def test_invalid(self):
         data = np.random.rand(100, 4)
         h = physt.histogramdd(data, (4, 5, 6, 7), axis_names=["1", "2", "3", "4"])
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             h.projection("1", "1")
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             h.projection("0", "1")
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             h.projection("1", "2", "3", "4", "5")
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             h.projection()
 
 
