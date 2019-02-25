@@ -116,7 +116,7 @@ class TimeTickHandler:
             if value[0] not in cls.LEVELS:
                 raise ValueError("Invalid level: {0}".format(value))
             if not isinstance(value[1], (float, int)):
-                raise ValueError("Invalid level: {0}".format(vaiue))
+                raise ValueError("Invalid level: {0}".format(value))
             return value
         elif isinstance(value, (float, int)):
             return cls.parse_level(timedelta(seconds=value))
@@ -136,7 +136,7 @@ class TimeTickHandler:
                     return matcher[1](match)
             raise ValueError("Cannot parse level: {0}".format(value))
         else:
-            raise ValueError("Invalid level: {0}".format(vaiue))
+            raise ValueError("Invalid level: {0}".format(value))
 
     @classmethod
     def find_human_width_decimal(cls, raw_width: float) -> float:
