@@ -126,7 +126,7 @@ def is_rising(bins) -> bool:
     return True
 
 
-def is_consecutive(bins, rtol=1.e-5, atol=1.e-8) -> bool:
+def is_consecutive(bins, rtol: float = 1.e-5, atol: float = 1.e-8) -> bool:
     """Check whether the bins are consecutive (edges match).
 
     Does not check if the bins are in rising order.

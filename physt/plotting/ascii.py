@@ -38,13 +38,9 @@ try:
     DEFAULT_CMAP = SUPPORTED_CMAPS[1]
 
     def map(h2: 'Histogram2D', **kwargs):
-        """Heat map
+        """Heat map.
 
-        Available only if xtermcolor present
-
-        Parameters
-        ----------
-        h2 : physt.histogram_nd.Histogram2D
+        Note: Available only if xtermcolor present.
         """
 
         # Value format
