@@ -165,13 +165,8 @@ class HistogramBase:
         self._meta_data["title"] = str(value)
 
     @property
-    def axis_names(self) -> List[str]:
-        """Names of axes (stored in meta-data).
-
-        Returns
-        -------
-        tuple[str]
-        """
+    def axis_names(self) -> Tuple[str, ...]:
+        """Names of axes (stored in meta-data)."""
         default = ["axis{0}".format(i) for i in range(self.ndim)]
         return tuple(self._meta_data.get("axis_names", None) or default)
 
@@ -184,16 +179,16 @@ class HistogramBase:
         # TODO: Add unit test
         if isinstance(name_or_index, int):
             if name_or_index < 0 or name_or_index >= self.ndim:
-                raise RuntimeError("No such axis, must be from 0 to {0}".format(self.ndim-1))
+                raise ValueError("No such axis, must be from 0 to {0}".format(self.ndim-1))
             return name_or_index
         elif isinstance(name_or_index, str):
             if name_or_index not in self.axis_names:
                 named_axes = [name for name in self.axis_names if name]
-                raise RuntimeError("No axis with such name: {0}, available names: {1}. In most places, you can also use numbers."
+                raise ValueError("No axis with such name: {0}, available names: {1}. In most places, you can also use numbers."
                                    .format(name_or_index, ", ".join(named_axes)))
             return self.axis_names.index(name_or_index)
         else:
-            raise RuntimeError("Argument of type {0} not understood, int or str expected.".format(type(name_or_index)))
+            raise TypeError("Argument of type {0} not understood, int or str expected.".format(type(name_or_index)))
 
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -246,7 +241,7 @@ class HistogramBase:
 
         return value, type_info
 
-    def set_dtype(self, value, check=True):
+    def set_dtype(self, value, check: bool = True):
         """Change data type of the bin contents.
 
         Allowed conversions:
@@ -321,10 +316,8 @@ class HistogramBase:
 
         Parameters
         ----------
-        inplace: bool
-            If True, updates itself. If False (default), returns copy
-        percent: bool
-            If True, normalizes to percent instead of 1. Default: False
+        inplace: If True, updates itself. If False (default), returns copy
+        percent: If True, normalizes to percent instead of 1. Default: False
 
         Returns
         -------
@@ -334,7 +327,6 @@ class HistogramBase:
         --------
         densities
         HistogramND.partial_normalize
-
         """
         if inplace:
             self /= self.total * (.01 if percent else 1)
@@ -391,7 +383,7 @@ class HistogramBase:
     def adaptive(self, value: bool):
         self.set_adaptive(value)
 
-    def _change_binning(self, new_binning, bin_map, axis=0):
+    def _change_binning(self, new_binning, bin_map: Iterable[Tuple[int, int]], axis: int = 0):
         """Set new binnning and update the bin contents according to a map.
 
         Fills frequencies and errors with 0.
@@ -411,25 +403,18 @@ class HistogramBase:
         self._reshape_data(new_binning.bin_count, bin_map, axis)
         self._binnings[axis] = new_binning
 
-    def merge_bins(self, amount=None, min_frequency=None, axis=None, inplace=False):
+    def merge_bins(self, amount: Optional[int] = None, *, min_frequency: Optional[float] = None,
+                   axis: Optional[AxisIdentifier] = None, inplace: bool = False) -> 'HistogramBase':
         """Reduce the number of bins and add their content:
 
         Parameters
         ----------
-        amount: int
-            How many adjacent bins to join together.
-        min_frequency: float
-            Try to have at least this value in each bin
+        amount: How many adjacent bins to join together.
+        min_frequency: Try to have at least this value in each bin
             (this is not enforce e.g. for minima between high bins)
         axis: int or None
             On which axis to do this (None => all)
-        inplace:
-            Whether to modify this histogram or return a new one
-
-        Returns
-        -------
-        HistogramBase or None
-            if inplace, return
+        inplace: Whether to modify this histogram or return a new one
         """
         if not inplace:
             histogram = self.copy()
@@ -439,6 +424,7 @@ class HistogramBase:
             for i in range(self.ndim):
                 self.merge_bins(amount=amount, min_frequency=min_frequency, axis=i, inplace=True)
         else:
+            axis = self._get_axis(axis)
             if amount is not None:
                 if not amount == int(amount):
                     raise RuntimeError("Amount must be integer")
@@ -464,6 +450,7 @@ class HistogramBase:
                 raise NotImplementedError("Not yet implemented.")
             new_binning = self._binnings[axis].apply_bin_map(bin_map)
             self._change_binning(new_binning, bin_map, axis=axis)
+            return self
 
     def _reshape_data(self, new_size, bin_map, axis=0):
         """Reshape data to match new binning schema.
@@ -549,8 +536,7 @@ class HistogramBase:
 
         Parameters
         ----------
-        include_frequencies : bool
-            If false, all frequencies are set to zero.
+        include_frequencies : If false, all frequencies are set to zero.
         """
         if include_frequencies:
             frequencies = np.copy(self.frequencies)
@@ -651,20 +637,19 @@ class HistogramBase:
         self._update_dict(result)
         return result
 
-    def _update_dict(self, a_dict):
+    def _update_dict(self, a_dict: dict):
         """Update the dictionary for export.
 
         Override if you want to customize the process.
 
         Parameters
         ----------
-        a_dict : dict
-            Dictionary exported by the default implementation of to_dict
+        a_dict : Dictionary exported by the default implementation of to_dict
         """
         pass
 
     @classmethod
-    def _from_dict_kwargs(cls, a_dict):
+    def _from_dict_kwargs(cls, a_dict: dict):
         """Modify __init__ arguments from an external dictionary.
 
         Template method for from dict.
@@ -716,8 +701,7 @@ class HistogramBase:
 
         Returns
         -------
-        str:
-            The JSON representation.
+        The JSON representation.
         """
         from .io import save_json
         return save_json(self, path, **kwargs)
@@ -842,7 +826,7 @@ class HistogramBase:
         self.fill(value)
 
     @classmethod
-    def _merge_meta_data(cls, first, second) -> dict:
+    def _merge_meta_data(cls, first: "HistogramBase", second: "HistogramBase") -> dict:
         """Merge meta data of two histograms leaving only the equal values.
 
         (Used in addition and subtraction)
@@ -858,8 +842,7 @@ class HistogramBase:
 
         Returns
         -------
-        np.ndarray
-            The array of frequencies
+        The array of frequencies
 
         See also
         --------
