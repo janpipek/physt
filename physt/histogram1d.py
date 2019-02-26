@@ -1,4 +1,6 @@
 """One-dimensional histograms."""
+from typing import Optional
+
 import numpy as np
 from . import bin_utils
 from .histogram_base import HistogramBase
@@ -155,7 +157,7 @@ class Histogram1D(HistogramBase):
         return self._binning.bins  # TODO: or this should be read-only copy?
 
     @property
-    def numpy_bins(self):
+    def numpy_bins(self) -> np.ndarray:
         """Bins in the format of numpy.
 
         Returns
@@ -169,14 +171,10 @@ class Histogram1D(HistogramBase):
         return self.frequencies, self.numpy_bins
 
     @property
-    def cumulative_frequencies(self):
+    def cumulative_frequencies(self) -> np.ndarray:
         """Cumulative frequencies.
 
         Note: underflow values are not considered
-
-        Returns
-        -------
-        numpy.ndarray
         """
         return self._frequencies.cumsum()
 
@@ -210,15 +208,11 @@ class Histogram1D(HistogramBase):
     def inner_missed(self, value):
         self._missed[2] = value
 
-    def mean(self):
+    def mean(self) -> Optional[float]:
         """Statistical mean of all values entered into histogram.
 
         This number is precise, because we keep the necessary data
         separate from bin contents.
-
-        Returns
-        -------
-        float
         """
         if self._stats:    # TODO: should be true always?
             if self.total > 0:
@@ -228,16 +222,11 @@ class Histogram1D(HistogramBase):
         else:
             return None    # TODO: or error
 
-    def std(self, ddof=0):
+    def std(self) -> Optional[float]:  #, ddof=0):
         """Standard deviation of all values entered into histogram.
 
         This number is precise, because we keep the necessary data
         separate from bin contents.
-
-        Parameters
-        ----------
-        ddof: int
-            Not yet used.
 
         Returns
         -------
@@ -245,20 +234,15 @@ class Histogram1D(HistogramBase):
         """
         # TODO: Add DOF
         if self._stats:
-            return np.sqrt(self.variance(ddof=ddof))
+            return np.sqrt(self.variance())
         else:
             return None    # TODO: or error
 
-    def variance(self, ddof=0):
+    def variance(self) -> Optional[float]:  #, ddof: int = 0) -> float:
         """Statistical variance of all values entered into histogram.
 
         This number is precise, because we keep the necessary data
         separate from bin contents.
-
-        Parameters
-        ----------
-        ddof: int
-            Not yet used.
 
         Returns
         -------
@@ -426,7 +410,7 @@ class Histogram1D(HistogramBase):
                 self._stats["sum2"] += weight * value ** 2
         return ixbin
 
-    def fill_n(self, values, weights=None, dropna=True):
+    def fill_n(self, values, weights=None, dropna: bool = True):
         """Update histograms with a set of values.
 
         Parameters
@@ -480,14 +464,10 @@ class Histogram1D(HistogramBase):
             return False
         return True
 
-    def to_dataframe(self):
+    def to_dataframe(self) -> "pd.DataFrame":
         """Convert to pandas DataFrame.
 
         This is not a lossless conversion - (under/over)flow info is lost.
-
-        Returns
-        -------
-        pandas.DataFrame
         """
         import pandas as pd
         df = pd.DataFrame(
@@ -501,18 +481,13 @@ class Histogram1D(HistogramBase):
         return df
 
     @classmethod
-    def _from_dict_kwargs(cls, a_dict):
-        kwargs = HistogramBase._from_dict_kwargs.__func__(cls, a_dict)
+    def _kwargs_from_dict(cls, a_dict: dict) -> dict:
+        kwargs = HistogramBase._kwargs_from_dict.__func__(cls, a_dict)
         kwargs["binning"] = kwargs.pop("binnings")[0]
         return kwargs
 
-    def to_xarray(self):
-        """Convert to xarray.Dataset
-
-        Returns
-        -------
-        xarray.Dataset
-        """
+    def to_xarray(self) -> "xarray.Dataset":
+        """Convert to xarray.Dataset"""
         import xarray as xr
         data_vars = {
             "frequencies": xr.DataArray(self.frequencies, dims="bin"),
@@ -531,13 +506,12 @@ class Histogram1D(HistogramBase):
         return xr.Dataset(data_vars, coords, attrs)
 
     @classmethod
-    def from_xarray(cls, arr):
+    def from_xarray(cls, arr: "xarray.Dataset") -> "Histogram1D":
         """Convert form xarray.Dataset
 
         Parameters
         ----------
-        arr: xarray.Dataset
-            The data in xarray representation
+        arr: The data in xarray representation
         """
         kwargs = {'frequencies': arr["frequencies"],
                   'binning': arr["bins"],

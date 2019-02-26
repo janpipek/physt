@@ -1,15 +1,18 @@
 """Helper functions to consume DB cursors."""
 # TODO: Add tests with in-memory SQLite
 # TODO: Implement non-adaptive
+from typing import Tuple
 
 from physt import h1, h2, h3
+from physt.histogram1d import Histogram1D
+from physt.histogram_nd import HistogramND, Histogram2D
 
 
-def _get_axis_names(cursor):
+def _get_axis_names(cursor) -> Tuple[str, ...]:
     return tuple(field[0] for field in cursor.description)
 
 
-def create_h1(cursor, *args, **kwargs):
+def create_h1(cursor, *args, **kwargs) -> Histogram1D:
     axis_names = _get_axis_names(cursor)
     if len(axis_names) != 1:
         raise RuntimeError("Invalid number of columns: {0}".format(len(axis_names)))
@@ -23,7 +26,7 @@ def create_h1(cursor, *args, **kwargs):
         raise NotImplementedError()
 
 
-def create_h2(cursor, *args, **kwargs):
+def create_h2(cursor, *args, **kwargs) -> Histogram2D:
     axis_names = _get_axis_names(cursor)
     if len(axis_names) != 2:
         raise RuntimeError(
@@ -38,7 +41,7 @@ def create_h2(cursor, *args, **kwargs):
         raise NotImplementedError()
 
 
-def create_h3(cursor, *args, **kwargs):
+def create_h3(cursor, *args, **kwargs) -> HistogramND:
     # TODO: Refactor
     axis_names = _get_axis_names(cursor)
     if len(axis_names) != 3:

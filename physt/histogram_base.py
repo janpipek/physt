@@ -649,19 +649,11 @@ class HistogramBase:
         pass
 
     @classmethod
-    def _from_dict_kwargs(cls, a_dict: dict):
+    def _kwargs_from_dict(cls, a_dict: dict) -> dict:
         """Modify __init__ arguments from an external dictionary.
 
         Template method for from dict.
         Override if necessary (like it's done in Histogram1D).
-
-        Parameters
-        ----------
-        a_dict : dict
-
-        Returns
-        -------
-        dict
         """
         from .binnings import BinningBase
         kwargs = {
@@ -683,12 +675,8 @@ class HistogramBase:
 
         If customization is necessary, override the _from_dict_kwargs
         template method, not this one.
-
-        Parameters
-        ----------
-        a_dict : dict
         """
-        kwargs = cls._from_dict_kwargs(a_dict)
+        kwargs = cls._kwargs_from_dict(a_dict)
         return cls(**kwargs)
 
     def to_json(self, path: Optional[str] = None, **kwargs) -> str:
