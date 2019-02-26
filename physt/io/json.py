@@ -1,9 +1,9 @@
+"""JSON I/O"""
 import json
 from typing import Optional
 
 from physt.io import CURRENT_VERSION, create_from_dict
 from physt.histogram_base import HistogramBase
-from physt.util import find_subclass
 
 COMPATIBLE_VERSION = "0.3.20"
 
@@ -13,15 +13,12 @@ def save_json(histogram: HistogramBase, path: Optional[str] = None, **kwargs) ->
 
     Parameters
     ----------
-    histogram : HistogramBase
-        Any histogram
-    path : str
-        If set, also writes to the path.
+    histogram : Any histogram
+    path : If set, also writes to the path.
 
     Returns
     -------
-    json : str
-        The JSON representation of the histogram
+    json : The JSON representation of the histogram
     """
     # TODO: Implement multiple histograms in one file?
     data = histogram.to_dict()
