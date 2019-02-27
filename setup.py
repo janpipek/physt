@@ -34,7 +34,7 @@ options = dict(
     install_requires = ['numpy', 'packaging'],
     python_requires="~=3.5",
     extras_require = {
-        'all' : ['dask', 'matplotlib', 'folium', 'vega3', 'xarray',
+        'all' : ['dask', 'pandas', 'matplotlib', 'folium', 'vega3', 'xarray',
                  'protobuf', 'uproot', 'asciiplotlib', 'xtermcolor']
     },
     entry_points = {
