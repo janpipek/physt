@@ -243,17 +243,15 @@ def scatter(h1: Histogram1D, **kwargs) -> dict:
     Parameters
     ----------
     """
-    vega = _scatter_or_line(h1, kwargs)
-    vega["marks"] = [
-        {
+    mark_template = [{
             "type": "symbol",
-            "from": {"data": "table"},
+            "from": {"data": "series"},
             "encode": {
                 "enter": {
                     "x": {"scale": "xscale", "field": "x"},
                     "y": {"scale": "yscale", "field": "y"},
                     "shape": {"value": "circle"},
-                    # "stroke": {"scale": "color", "field": "c"},
+                    "stroke": {"scale": "series", "field": "c"},
                     "strokeWidth": {"value": 2}
                 },
                 # "update": {
@@ -264,8 +262,8 @@ def scatter(h1: Histogram1D, **kwargs) -> dict:
                 #     "fillOpacity": {"value": 0.5}
                 # }
             }
-        }
-    ]
+        }]
+    vega = _scatter_or_line(h1, mark_template=mark_template, kwargs=kwargs)
     _create_tooltips(h1, vega, kwargs)
     return vega
 
@@ -281,28 +279,21 @@ def line(h1: Histogram1D, **kwargs) -> dict:
     h1 : physt.histogram1d.Histogram1D
         Dimensionality of histogram for which it is applicable
     """
-    vega = _scatter_or_line(h1, kwargs)
-    vega["marks"] = [
-        {
-            "type": "line",
-            "from": {"data": "table"},
-            "encode": {
-                "enter": {
-                    "x": {"scale": "xscale", "field": "x"},
-                    "y": {"scale": "yscale", "field": "y"},
-                    # "stroke": {"scale": "color", "field": "c"},
-                    "strokeWidth": {"value": 2}
-                },
-                # "update": {
-                #     "interpolate": {"signal": "interpolate"},
-                #     "fillOpacity": {"value": 1}
-                # },
-                # "hover": {
-                #     "fillOpacity": {"value": 0.5}
-                # }
+
+    mark_template = [{
+        "type": "line",
+        "encode": {
+            "enter": {
+                "x": {"scale": "xscale", "field": "x"},
+                "y": {"scale": "yscale", "field": "y"},
+                "stroke": {"scale": "series", "field": "c"},
+                "strokeWidth": {"value": 2}
             }
-        }
-    ]
+        },
+        "from": {"data": "series"},
+    }]
+    vega = _scatter_or_line(h1, mark_template=mark_template, kwargs=kwargs)
+
     _create_tooltips(h1, vega, kwargs)
     return vega
 
@@ -513,20 +504,32 @@ def map_with_slider(h3: HistogramND, *, show_zero: bool = True, show_values: boo
     return vega
 
 
-def _scatter_or_line(h1: Histogram1D, kwargs: dict) -> dict:
+def _scatter_or_line(h1: Histogram1D, mark_template: list, kwargs: dict) -> dict:
     """Create shared properties for scatter / line plot."""
+    from physt.histogram_collection import HistogramCollection
+    if isinstance(h1, HistogramCollection):
+        collection = h1
+        h1 = h1[0]
+    else:
+        collection = HistogramCollection(h1)
+
     vega = _create_figure(kwargs)
-    data = get_data(h1, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
-    centers = h1.bin_centers.tolist()
 
     vega["data"] = [{
         "name": "table",
-        "values": [{"x": centers[i], "y": data[i]} for i in range(h1.bin_count)]
+        "values": []
     }]
 
-    _add_title(h1, vega, kwargs)
-    _create_scales(h1, vega, kwargs)
-    _create_axes(h1, vega, kwargs)
+    for hist_i, histogram in enumerate(collection):
+        centers = histogram.bin_centers.tolist()
+        data = get_data(histogram, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
+        vega["data"][0]["values"] += [{"x": centers[i], "y": data[i], "c": hist_i} for i in range(histogram.bin_count)]
+
+    _add_title(collection, vega, kwargs)
+    _create_scales(collection, vega, kwargs)
+    _create_axes(collection, vega, kwargs)
+    _create_series_scale(vega)
+    _create_series_faceted_marks(vega, mark_template)
 
     return vega
 
@@ -594,6 +597,31 @@ def _create_scales(hist: HistogramBase, vega: dict, kwargs: dict):
     if hist.ndim >= 2:
         bins1 = hist.bins[1].astype(float)
         vega["scales"][1]["domain"] = [bins1[0, 0], bins1[-1, 1]]
+
+
+def _create_series_scale(vega: dict):
+    vega["scales"].append({
+        "name": "series",
+        "type": "ordinal",
+        "range": "category",
+        "domain": {"data": "table", "field": "c"}
+    })
+
+
+def _create_series_faceted_marks(vega: dict, pattern: list) -> None:
+    vega["marks"] = [
+        {
+            "type": "group",
+            "from": {
+                "facet": {
+                    "name": "series",
+                    "data": "table",
+                    "groupby": "c"
+                }
+            },
+            "marks": pattern
+        }
+    ]
 
 
 def _create_cmap_scale(values_arr: np.ndarray, vega: dict, kwargs: dict):
