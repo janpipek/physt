@@ -30,7 +30,7 @@ Parameters
 
 """
 from functools import wraps
-from typing import Any, Dict, List, Optional, Tuple, Callable, Union
+from typing import Any, Dict, List, Optional, Tuple, Callable, Union, Iterable
 
 import matplotlib
 import matplotlib.cm as cm
@@ -60,7 +60,7 @@ default_figsize = matplotlib.rcParams["figure.figsize"]
 default_cmap = "Greys"  # matplotlib.rcParams['image.cmap']
 
 
-def register(*dim: List[int], use_3d: bool = False, use_polar: bool = False):
+def register(*dim: List[int], use_3d: bool = False, use_polar: bool = False, collection: bool = False):
     """Decorator to wrap common plotting functionality.
 
     Parameters
@@ -68,6 +68,7 @@ def register(*dim: List[int], use_3d: bool = False, use_polar: bool = False):
     dim : Dimensionality of histogram for which it is applicable
     use_3d : If True, the figure will be 3D.
     use_polar : If True, the figure will be in polar coordinates.
+    collection : Whether to allow histogram collections to be used
     """   
     if use_3d and use_polar:
         raise RuntimeError("Cannot have polar and 3d coordinates simultaneously.")
@@ -79,9 +80,22 @@ def register(*dim: List[int], use_3d: bool = False, use_polar: bool = False):
         dims[function.__name__] = dim
 
         @wraps(function)
-        def f(hist, write_to=None, dpi=None, **kwargs):
+        def f(hist, write_to: Optional[str] = None, dpi:Optional[float] = None, **kwargs):
             fig, ax = _get_axes(kwargs, use_3d=use_3d, use_polar=use_polar)
-            function(hist, ax=ax, **kwargs)
+
+            from physt.histogram_collection import HistogramCollection
+            if collection and isinstance(hist, HistogramCollection):
+                title = kwargs.pop("title", hist.title)
+                if not hist:
+                    raise ValueError("Cannot plot empty histogram collection")
+                for i, h in enumerate(hist):
+                    # TODO: Add some mechanism for argument maps (like sklearn?)
+                    function(h, ax=ax,  **kwargs)
+                ax.legend()
+                ax.set_title(title)
+            else:
+                function(hist, ax=ax, **kwargs)
+
             if write_to:
                 fig = ax.figure
                 fig.tight_layout()
@@ -91,7 +105,7 @@ def register(*dim: List[int], use_3d: bool = False, use_polar: bool = False):
     return decorate
 
 
-@register(1)
+@register(1, collection=True)
 def bar(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
     """Bar plot of 1D histograms."""
     show_stats = kwargs.pop("show_stats", False)
@@ -131,7 +145,7 @@ def bar(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
         _add_stats_box(h1, ax, stats=show_stats)
 
 
-@register(1)
+@register(1, collection=True)
 def scatter(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
     """Scatter plot of 1D histogram."""
     show_stats = kwargs.pop("show_stats", False)
@@ -166,15 +180,18 @@ def scatter(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
         _add_stats_box(h1, ax, stats=show_stats)
 
 
-@register(1)
-def line(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
+@register(1, collection=True)
+def line(h1: Union[Histogram1D, "HistogramCollection"], ax: Axes, *, errors: bool = False, **kwargs):
     """Line plot of 1D histogram."""
+
+
     show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
     value_format = kwargs.pop("value_format", None)
     text_kwargs = pop_kwargs_with_prefix("text_", kwargs)
+    kwargs["label"] = kwargs.get("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density)
     _apply_xy_lims(ax, h1, data, kwargs)
@@ -194,17 +211,19 @@ def line(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
 
 
-@register(1)
+@register(1, collection=True)
 def fill(h1: Histogram1D, ax: Axes, **kwargs):
     """Fill plot of 1D histogram."""
     show_stats = kwargs.pop("show_stats", False)
     # show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
+    kwargs["label"] = kwargs.get("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density)
     _apply_xy_lims(ax, h1, data, kwargs)
     _add_ticks(ax, h1, kwargs)
+    _add_labels(ax, h1, kwargs)
 
     ax.fill_between(h1.bin_centers, 0, data, **kwargs)
 
@@ -215,7 +234,7 @@ def fill(h1: Histogram1D, ax: Axes, **kwargs):
     return ax
 
 
-@register(1)
+@register(1, collection=True)
 def step(h1: Histogram1D, ax: Axes, **kwargs):
     """Step line-plot of 1D histogram."""
     show_stats = kwargs.pop("show_stats", False)
@@ -224,6 +243,7 @@ def step(h1: Histogram1D, ax: Axes, **kwargs):
     cumulative = kwargs.pop("cumulative", False)
     value_format = kwargs.pop("value_format", None)
     text_kwargs = pop_kwargs_with_prefix("text_", kwargs)
+    kwargs["label"] = kwargs.get("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density)
     _apply_xy_lims(ax, h1, data, kwargs)

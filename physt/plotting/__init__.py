@@ -125,7 +125,7 @@ try:
     backends["folium"] = folium_backend
 except:
     pass
-    
+
 from . import ascii as ascii_backend
 backends["ascii"] = ascii_backend
 
@@ -175,7 +175,7 @@ def plot(histogram: HistogramBase, kind: Optional[str] = None, backend: Optional
     if kind is None:
         kinds = [t for t in backend.types if histogram.ndim in backend.dims[t]]
         if not kinds:
-            raise RuntimeError("No histogram type is supported for {0}"
+            raise RuntimeError("No plot type is supported for {0}"
                                .format(histogram.__class__.__name__))
         kind = kinds[0]
     if kind in backend.types:
@@ -223,3 +223,5 @@ class PlottingProxy:
     def __dir__(self):
         _, backend = _get_backend()
         return tuple((t for t in backend.types if self.histogram.ndim in backend.dims[t]))
+
+

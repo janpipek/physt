@@ -2,6 +2,7 @@ from typing import Optional, Collection
 
 from .histogram1d import Histogram1D
 from .binnings import BinningBase
+from .plotting import PlottingProxy
 
 
 class HistogramCollection(Collection[Histogram1D]):
@@ -71,3 +72,7 @@ class HistogramCollection(Collection[Histogram1D]):
             return candidates[0]
         else:
             return self.histograms[item]
+
+    @property
+    def plot(self) -> PlottingProxy:
+        return PlottingProxy(self)
