@@ -8,7 +8,9 @@ class HistogramCollection(Collection[Histogram1D]):
     """Experimental collection of histograms."""
     def __init__(self,
                  *histograms: Histogram1D,
-                 binning: Optional[BinningBase] = None):
+                 binning: Optional[BinningBase] = None,
+                 title = Optional[str],
+                 name = Optional[str]):
         self.histograms = list(histograms)
         if histograms:
             if binning:
@@ -18,6 +20,8 @@ class HistogramCollection(Collection[Histogram1D]):
                 raise ValueError("All histogram should share the same binning.")
         else:
             self._binning = binning
+        self.name = name
+        self.title = title or self.name
 
     def __contains__(self, item):
         try:
@@ -25,6 +29,10 @@ class HistogramCollection(Collection[Histogram1D]):
             return True
         except KeyError:
             return False
+
+    @property
+    def ndim(self) -> int:
+        return 1
 
     def __iter__(self):
         return iter(self.histograms)
@@ -50,16 +58,16 @@ class HistogramCollection(Collection[Histogram1D]):
             "axis_name": self.axis_name
         }
         init_kwargs.update(kwargs)
-        histogram = Histogram1D(binning=self.binning, name=name, axis_name=self.axis_name, **init_kwargs)
+        histogram = Histogram1D(binning=self.binning, name=name, **init_kwargs)
         histogram.fill_n(values, weights=weights, dropna=dropna)
         self.histograms.append(histogram)
         return histogram
 
     def __getitem__(self, item) -> Histogram1D:
-        if isinstance(item, int):
-            return self.histograms[item]
-        else:
+        if isinstance(item, str):
             candidates = [h for h in self.histograms if h.name == item]
             if len(candidates) == 0:
                 raise KeyError("Collection does not contain histogram named {0}".format(item))
             return candidates[0]
+        else:
+            return self.histograms[item]
