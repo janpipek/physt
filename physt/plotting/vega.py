@@ -184,6 +184,9 @@ def bar(h1: Histogram1D, **kwargs) -> dict:
     hover_alpha: float
         Opacity of the bars when hover on
     """
+    # TODO: Enable collections
+    # TODO: Enable legend
+
     vega = _create_figure(kwargs)
     _add_title(h1, vega, kwargs)
     _create_scales(h1, vega, kwargs)
@@ -205,7 +208,7 @@ def bar(h1: Histogram1D, **kwargs) -> dict:
     }]
 
     alpha = kwargs.pop("alpha", 1)
-    hover_alpha = kwargs.pop("hover_alpha", alpha)
+    # hover_alpha = kwargs.pop("hover_alpha", alpha)
 
     vega["marks"] = [
         {
@@ -234,6 +237,9 @@ def bar(h1: Histogram1D, **kwargs) -> dict:
     return vega
 
 
+DEFAULT_SCATTER_SHAPE = "circle"
+# DEFAULT_SCATTER_SIZE = 2
+
 @enable_inline_view
 def scatter(h1: Histogram1D, **kwargs) -> dict:
     """Scatter plot of 1D histogram values.
@@ -242,31 +248,29 @@ def scatter(h1: Histogram1D, **kwargs) -> dict:
 
     Parameters
     ----------
+    shape : str
     """
+    shape = kwargs.pop("shape", DEFAULT_SCATTER_SHAPE)
+    # size = kwargs.pop("size", DEFAULT_SCATTER_SIZE)
+
     mark_template = [{
-            "type": "symbol",
-            "from": {"data": "series"},
-            "encode": {
-                "enter": {
-                    "x": {"scale": "xscale", "field": "x"},
-                    "y": {"scale": "yscale", "field": "y"},
-                    "shape": {"value": "circle"},
-                    "stroke": {"scale": "series", "field": "c"},
-                    "strokeWidth": {"value": 2}
-                },
-                # "update": {
-                #     "interpolate": {"signal": "interpolate"},
-                #     "fillOpacity": {"value": 1}
-                # },
-                # "hover": {
-                #     "fillOpacity": {"value": 0.5}
-                # }
-            }
-        }]
+        "type": "symbol",
+        "from": {"data": "series"},
+        "encode": {
+            "enter": {
+                "x": {"scale": "xscale", "field": "x"},
+                "y": {"scale": "yscale", "field": "y"},
+                "shape": {"value": shape},
+                # "size": {"value": size},
+                "fill": {"scale": "series", "field": "c"},
+            },
+        }
+    }]
     vega = _scatter_or_line(h1, mark_template=mark_template, kwargs=kwargs)
-    _create_tooltips(h1, vega, kwargs)
     return vega
 
+
+DEFAULT_STROKE_WIDTH = 2
 
 @enable_inline_view
 def line(h1: Histogram1D, **kwargs) -> dict:
@@ -280,6 +284,8 @@ def line(h1: Histogram1D, **kwargs) -> dict:
         Dimensionality of histogram for which it is applicable
     """
 
+    lw = kwargs.pop("lw", DEFAULT_STROKE_WIDTH)
+
     mark_template = [{
         "type": "line",
         "encode": {
@@ -287,14 +293,12 @@ def line(h1: Histogram1D, **kwargs) -> dict:
                 "x": {"scale": "xscale", "field": "x"},
                 "y": {"scale": "yscale", "field": "y"},
                 "stroke": {"scale": "series", "field": "c"},
-                "strokeWidth": {"value": 2}
+                "strokeWidth": {"value": lw}
             }
         },
         "from": {"data": "series"},
     }]
     vega = _scatter_or_line(h1, mark_template=mark_template, kwargs=kwargs)
-
-    _create_tooltips(h1, vega, kwargs)
     return vega
 
 
@@ -515,10 +519,17 @@ def _scatter_or_line(h1: Histogram1D, mark_template: list, kwargs: dict) -> dict
 
     vega = _create_figure(kwargs)
 
-    vega["data"] = [{
-        "name": "table",
-        "values": []
-    }]
+    legend = kwargs.pop("legend", len(collection) > 1)
+
+    vega["data"] = [
+        {
+            "name": "table",
+            "values": []
+        },
+        {
+            "name": "labels",
+            "values": [h.name for h in collection]
+        }]
 
     for hist_i, histogram in enumerate(collection):
         centers = histogram.bin_centers.tolist()
@@ -528,8 +539,11 @@ def _scatter_or_line(h1: Histogram1D, mark_template: list, kwargs: dict) -> dict
     _add_title(collection, vega, kwargs)
     _create_scales(collection, vega, kwargs)
     _create_axes(collection, vega, kwargs)
-    _create_series_scale(vega)
+    _create_series_scales(vega)
     _create_series_faceted_marks(vega, mark_template)
+    _create_tooltips(h1, vega, kwargs)  # TODO: Make it work!
+    if legend:
+        _create_series_legend(vega)
 
     return vega
 
@@ -599,12 +613,18 @@ def _create_scales(hist: HistogramBase, vega: dict, kwargs: dict):
         vega["scales"][1]["domain"] = [bins1[0, 0], bins1[-1, 1]]
 
 
-def _create_series_scale(vega: dict):
+def _create_series_scales(vega: dict):
     vega["scales"].append({
         "name": "series",
         "type": "ordinal",
         "range": "category",
         "domain": {"data": "table", "field": "c"}
+    })
+    vega["scales"].append({
+        "name": "labels",
+        "type": "ordinal",
+        "range": "category",
+        "domain": {"data": "labels", "field": "data"}
     })
 
 
@@ -622,6 +642,13 @@ def _create_series_faceted_marks(vega: dict, pattern: list) -> None:
             "marks": pattern
         }
     ]
+
+
+def _create_series_legend(vega: dict) -> None:
+    vega["legends"] = [{
+        "type": "symbol",
+        "fill": "labels",
+    }]
 
 
 def _create_cmap_scale(values_arr: np.ndarray, vega: dict, kwargs: dict):
