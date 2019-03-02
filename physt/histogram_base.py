@@ -208,7 +208,7 @@ class HistogramBase:
         """
         return len(self._binnings)
 
-    def _get_dtype(self):
+    def _get_dtype(self) -> np.dtype:
         """Data type of the bin contents.
 
         Returns
@@ -684,8 +684,7 @@ class HistogramBase:
 
         Parameters
         ----------
-        path: Optional[str]
-            Where to write the JSON.
+        path: Where to write the JSON.
 
         Returns
         -------

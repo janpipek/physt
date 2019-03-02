@@ -5,7 +5,7 @@ import numpy as np
 
 sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 import physt
-from physt import bin_utils, io
+from physt import io
 from physt.histogram1d import Histogram1D
 
 

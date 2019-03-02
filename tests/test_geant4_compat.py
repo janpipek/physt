@@ -1,10 +1,10 @@
-import sys
 import os
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
-from physt import h1, h2, histogramdd
-from physt.compat import geant4
-import numpy as np
+import sys
+
 import pytest
+
+sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
+from physt.compat import geant4
 
 
 class TestGeant4Compat:

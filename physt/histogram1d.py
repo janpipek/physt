@@ -1,9 +1,10 @@
 """One-dimensional histograms."""
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 from . import bin_utils
 from .histogram_base import HistogramBase
+from .binnings import BinningBase
 
 # TODO: Fix I/O with binning
 
@@ -66,14 +67,14 @@ class Histogram1D(HistogramBase):
             self._missed = np.zeros(3, dtype=self.dtype)
 
     @property
-    def axis_name(self):
+    def axis_name(self) -> str:
         return self.axis_names[0]
 
     @axis_name.setter
-    def axis_name(self, value):
+    def axis_name(self, value: str):
         self.axis_names = (value,)
 
-    def select(self, axis, index, force_copy=False):
+    def select(self, axis, index, force_copy: bool = False):
         """Alias for [] to be compatible with HistogramND."""
         if axis == 0:
             if index == slice(None) and not force_copy:
@@ -124,50 +125,41 @@ class Histogram1D(HistogramBase):
                               name=self.name, axis_name=self.axis_name)
 
     @property
-    def _binning(self):
+    def _binning(self) -> BinningBase:
         """Adapter property for HistogramBase interface"""
         return self._binnings[0]
 
     @_binning.setter
-    def _binning(self, value):
+    def _binning(self, value: BinningBase):
         self._binnings = [value]
 
     @property
-    def binning(self):
+    def binning(self) -> BinningBase:
         """The binning.
 
-        Note: Please, do not try to update the object themself.
-
-        Returns
-        -------
-        physt.binnings.BinningBase
+        Note: Please, do not try to update the object itself.
         """
         return self._binning
 
     @property
-    def bins(self):
+    def bins(self) -> np.ndarray:
         """Array of all bin edges.
 
         Returns
         -------
-        numpy.ndarray
-            Wide-format [[leftedge1, rightedge1], ... [leftedgeN, rightedgeN]]
+        Wide-format [[leftedge1, rightedge1], ... [leftedgeN, rightedgeN]]
         """
         # TODO: Read-only copy
         return self._binning.bins  # TODO: or this should be read-only copy?
 
     @property
     def numpy_bins(self) -> np.ndarray:
-        """Bins in the format of numpy.
-
-        Returns
-        -------
-        numpy.ndarray
-        """
+        """Bins in the format of numpy."""
         # TODO: If not consecutive, does not make sense
         return self._binning.numpy_bins
 
-    def numpy_like(self):
+    def numpy_like(self) -> Tuple[np.ndarray, np.ndarray]:
+        """Return """
         return self.frequencies, self.numpy_bins
 
     @property
@@ -464,7 +456,7 @@ class Histogram1D(HistogramBase):
             return False
         return True
 
-    def to_dataframe(self) -> "pd.DataFrame":
+    def to_dataframe(self) -> "pandas.DataFrame":
         """Convert to pandas DataFrame.
 
         This is not a lossless conversion - (under/over)flow info is lost.
