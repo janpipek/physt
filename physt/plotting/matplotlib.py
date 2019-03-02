@@ -950,7 +950,7 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
                     if xlim[0] <= 0:
                         raise RuntimeError(
                             "Cannot use logarithmic scale for non-positive bins.")
-        ax.set_xlim(xlim)
+        ax.set_xlim(*xlim)
 
     if xscale:
         ax.set_xscale(xscale)
