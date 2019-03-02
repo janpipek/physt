@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Optional, Collection
 
 from .histogram1d import Histogram1D
 from .binnings import BinningBase
 
 
-class HistogramCollection:
+class HistogramCollection(Collection[Histogram1D]):
     """Experimental collection of histograms."""
     def __init__(self,
                  *histograms: Histogram1D,
@@ -18,6 +18,19 @@ class HistogramCollection:
                 raise ValueError("All histogram should share the same binning.")
         else:
             self._binning = binning
+
+    def __contains__(self, item):
+        try:
+            _ = self[item]
+            return True
+        except KeyError:
+            return False
+
+    def __iter__(self):
+        return iter(self.histograms)
+
+    def __len__(self):
+        return len(self.histograms)
 
     @property
     def binning(self) -> BinningBase:
@@ -48,5 +61,5 @@ class HistogramCollection:
         else:
             candidates = [h for h in self.histograms if h.name == item]
             if len(candidates) == 0:
-                raise KeyError("Collection does not contain histogram named {0}".format)
+                raise KeyError("Collection does not contain histogram named {0}".format(item))
             return candidates[0]
