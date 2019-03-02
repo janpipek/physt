@@ -1,15 +1,23 @@
+0.4.3 (2nd March 2019)
+----------------------
+- Added: histogram collection (experiment, basic behaviour)
+- Added: some basic collection plotting in vega & matplotlib
+- Added: legends in vega (for some plots)
+- Fixed: several small bugs
+- Added: more documentation and typing hints
+
 0.4.2 (15th February 2019)
 --------------------------
-- Added: Time-based ticks for matplotlib plots (experimental)
-- Added: A lot of type hints in whole codebase
+- Added: time-based ticks for matplotlib plots (experimental)
+- Added: a lot of type hints in whole codebase
 
 0.4.1 (6th February 2019)
 -------------------------
-- Added: Basic ASCII plots (experimental)
+- Added: basic ASCII plots (experimental)
 
 0.4.0 (5th February 2019)
 -------------------------
-- CHANGE: Drop support for Python 2.7
+- CHANGE: drop support for Python 2.7
 - Fixed: several small bugs - #49, #54, ... 
 
 0.3.43 (1st October 2018)
