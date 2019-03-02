@@ -1,4 +1,6 @@
-from typing import Optional, Collection
+from typing import Optional, Collection, Tuple
+
+import numpy as np
 
 from .histogram1d import Histogram1D
 from .binnings import BinningBase
@@ -10,8 +12,8 @@ class HistogramCollection(Collection[Histogram1D]):
     def __init__(self,
                  *histograms: Histogram1D,
                  binning: Optional[BinningBase] = None,
-                 title = Optional[str],
-                 name = Optional[str]):
+                 title: Optional[str] = None,
+                 name: Optional[str] = None):
         self.histograms = list(histograms)
         if histograms:
             if binning:
@@ -46,8 +48,16 @@ class HistogramCollection(Collection[Histogram1D]):
         return self._binning
 
     @property
+    def bins(self) -> np.ndarray:
+        return self.binning.bins
+
+    @property
     def axis_name(self) ->  Optional[str]:
         return self.histograms and self.histograms[0].axis_name or None
+
+    @property
+    def axis_names(self) -> Tuple[str]:
+        return (self.axis_name,)
 
     def add(self, histogram: Histogram1D):
         if not self.binning == histogram.binning:
