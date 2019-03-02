@@ -25,7 +25,7 @@ class Histogram1D(HistogramBase):
     These are the basic attributes that can be used in the constructor (see there)
     Other attributes are dynamic.
     """
-    def __init__(self, binning, frequencies=None, errors2=None, **kwargs):
+    def __init__(self, binning, frequencies=None, errors2=None, *, stats=None, **kwargs):
         """Constructor
 
         Parameters
@@ -49,8 +49,6 @@ class Histogram1D(HistogramBase):
         stats: dict
             Dictionary of various statistics ("sum", "sum2")
         """
-        self._stats = kwargs.pop("stats", None)
-
         missed = [
             kwargs.pop("underflow", 0),
             kwargs.pop("overflow", 0),
@@ -61,10 +59,17 @@ class Histogram1D(HistogramBase):
 
         HistogramBase.__init__(self, [binning], frequencies, errors2, **kwargs)
 
+        if frequencies is None:
+            self._stats = Histogram1D.EMPTY_STATS.copy()
+        else:
+            self._stats = stats
+
         if self.keep_missed:
             self._missed = np.array(missed, dtype=self.dtype)
         else:
             self._missed = np.zeros(3, dtype=self.dtype)
+
+    EMPTY_STATS = {"sum": 0.0, "sum2": 0.0}
 
     @property
     def axis_name(self) -> str:
@@ -431,8 +436,9 @@ class Histogram1D(HistogramBase):
         if self.keep_missed:
             self.underflow += underflow
             self.overflow += overflow
-        for key in self._stats:
-            self._stats[key] += stats.get(key, 0.0)
+        if self._stats:
+            for key in self._stats:
+                self._stats[key] += stats.get(key, 0.0)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -556,6 +562,7 @@ def calculate_frequencies(data, binning, weights=None, validate_bins=True,
 
     # TODO: Is it possible to merge with histogram_nd.calculate_frequencies?
     # TODO: What if data is None
+    # TODO: Change stats into namedtuple
 
     # Statistics
     sum = 0.0
