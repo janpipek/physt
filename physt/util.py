@@ -3,7 +3,7 @@
 These functions are mostly general Python functions, not specific
 for numerical computing, histogramming, etc.
 """
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 
 def all_subclasses(cls: type) -> Tuple[type, ...]:
@@ -32,3 +32,25 @@ def find_subclass(base: type, name: str) -> type:
     elif len(class_candidates) > 1:
         raise RuntimeError("Multiple \"{0}\" subclasses of \"{1}\".".format(base.__name__, name))
     return class_candidates[0]
+
+
+def pop_many(a_dict: Dict[str, Any], *args: str,  **kwargs) -> Dict[str, Any]:
+    """Pop multiple items from a dictionary.
+    
+    Parameters
+    ----------
+    a_dict : Dictionary from which the items will popped
+    args: Keys which will be popped (and not included if not present)
+    kwargs: Keys + default value pairs (if key not found, this default is included)
+
+    Returns
+    -------
+    A dictionary of collected items.
+    """
+    result = {}
+    for arg in args:
+        if arg in a_dict:
+            result[arg] = a_dict.pop(arg)
+    for key, value in kwargs.items():
+        result[key] = a_dict.pop(key, value)
+    return result
