@@ -142,7 +142,7 @@ def bar(h, *,
         barmode: str = DEFAULT_BARMODE,
         alpha: float = DEFAULT_ALPHA,
         **kwargs):
-    """
+    """Bar plot.
 
     Parameters
     ----------
@@ -167,8 +167,23 @@ def bar(h, *,
     return figure
 
 
+@wrap()
+def map(h2,
+        **kwargs):
+    """Heatmap.
+
+    """
+    data = [go.Heatmap(z=h2.frequencies, **kwargs)]
+    layout = go.Layout()
+    figure = go.Figure(data=data, layout=layout)
+    return figure
+
+
 types = ["bar", "scatter", "line"]
 dims = {x:[1] for x in types}
+
+types.append("map")
+dims["map"] = [2]
 
 # for plot_type in types:
 #     if plot_type not in globals():
