@@ -4,7 +4,6 @@ import numpy as np
 
 from .histogram1d import Histogram1D
 from .binnings import BinningBase
-from .plotting import PlottingProxy
 
 
 class HistogramCollection(Collection[Histogram1D]):
@@ -84,5 +83,12 @@ class HistogramCollection(Collection[Histogram1D]):
             return self.histograms[item]
 
     @property
-    def plot(self) -> PlottingProxy:
+    def plot(self) -> "physt.plotting.PlottingProxy":
+        """Proxy to plotting.
+
+        This attribute is a special proxy to plotting. In the most
+        simple cases, it can be used as a method. For more sophisticated
+        use, see the documentation for physt.plotting package.
+        """
+        from .plotting import PlottingProxy
         return PlottingProxy(self)
