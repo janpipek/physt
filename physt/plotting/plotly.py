@@ -15,6 +15,7 @@ import plotly.plotly as pyp
 import plotly.graph_objs as go
 
 from physt.histogram1d import Histogram1D, HistogramBase
+from physt.histogram_nd import Histogram2D
 from physt.histogram_collection import HistogramCollection
 from physt.util import pop_many
 from . import matplotlib as mpl_backend
@@ -77,8 +78,9 @@ def wrap(*, mpl_function: Optional[Any] = None):
 
 
 def enable_collection(f):
+    """Call the wrapped function with a HistogramCollection as argument."""
     @wraps(f)
-    def new_f(h: Union[Histogram1D, "HistogramCollection"], **kwargs):
+    def new_f(h: AbstractHistogram1D, **kwargs):
         from physt.histogram_collection import HistogramCollection
         if isinstance(h, HistogramCollection):
             return f(h, **kwargs)
@@ -127,18 +129,18 @@ def _line_or_scatter(h: AbstractHistogram1D, *, mode: str, **kwargs):
 
 
 @wrap(mpl_function=mpl_backend.scatter)
-def scatter(h, **kwargs):
+def scatter(h: AbstractHistogram1D, **kwargs):
     return _line_or_scatter(h, mode="markers", **kwargs)
 
 
 @wrap(mpl_function=mpl_backend.line)
-def line(h, **kwargs):
+def line(h: AbstractHistogram1D, **kwargs):
     return _line_or_scatter(h, mode="lines", **kwargs)
 
 
 @wrap(mpl_function=mpl_backend.bar)
 @enable_collection
-def bar(h, *,
+def bar(h: Histogram2D, *,
         barmode: str = DEFAULT_BARMODE,
         alpha: float = DEFAULT_ALPHA,
         **kwargs):
@@ -168,7 +170,7 @@ def bar(h, *,
 
 
 @wrap()
-def map(h2,
+def map(h2: Histogram2D,
         **kwargs):
     """Heatmap.
 

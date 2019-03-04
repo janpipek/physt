@@ -86,9 +86,10 @@ lw (or linewidth) : int
 """
 
 from collections import OrderedDict
-from typing import Optional
+from typing import Optional, Union
 
 from physt.histogram_base import HistogramBase
+from physt.histogram_collection import HistogramCollection
 
 backends = OrderedDict()
 
@@ -207,7 +208,7 @@ class PlottingProxy:
 
     """
 
-    def __init__(self, h: HistogramBase):
+    def __init__(self, h: Union[HistogramBase, HistogramCollection]):
         self.histogram = h
 
     def __call__(self, kind: Optional[str] = None, **kwargs):
