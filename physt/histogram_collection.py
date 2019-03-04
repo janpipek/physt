@@ -98,13 +98,16 @@ class HistogramCollection(Collection[Histogram1D]):
             return self.histograms[item]
 
     def normalize_bins(self, inplace: bool = False) -> "HistogramCollection":
-        """Normalize each bin in the collection so that the sum is 1.0 for each bin."""
+        """Normalize each bin in the collection so that the sum is 1.0 for each bin.
+
+        Note: If a bin is zero in all collections, the result will be inf.
+        """
         col = self if inplace else self.copy()
         sums = self.sum().frequencies
         for h in col.histograms:
             h.set_dtype(float)
             h._frequencies /= sums
-            h._errors2 /= sums ** 2
+            h._errors2 /= sums ** 2  # TODO: Does this make sense?
         return col
 
     def sum(self) -> Histogram1D:

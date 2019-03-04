@@ -17,7 +17,7 @@ P.S. I am looking for anyone interested in using / developing physt. You can con
 import itertools
 from setuptools import setup, find_packages
 
-VERSION = "0.4.3"
+VERSION = "0.4.4"
 
 options = dict(
     name='physt',
