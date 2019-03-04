@@ -1,3 +1,10 @@
+0.4.4
+----------------------
+- Changed: plotly plots now using the original API instead of wrapping matplotlib
+- Added: new methods for histogram collections
+- Added: plotting histogram collections in plotly
+- Added: basic 'map' plot for plotly
+
 0.4.3 (2nd March 2019)
 ----------------------
 - Added: histogram collection (experiment, basic behaviour)
