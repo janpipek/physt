@@ -44,6 +44,18 @@ class HistogramCollection(Collection[Histogram1D]):
     def __len__(self):
         return len(self.histograms)
 
+    def copy(self) -> "HistogramCollection":
+        # TODO: The binnings are probably not consistent in the copies
+        copy_binning = self.binning.copy()
+        histograms = [h.copy() for h in self.histograms]
+        for h in histograms:
+            h._binning = copy_binning
+        return HistogramCollection(
+            *histograms,
+            title=self.title,
+            name=self.name
+        )
+
     @property
     def binning(self) -> BinningBase:
         return self._binning
@@ -53,7 +65,7 @@ class HistogramCollection(Collection[Histogram1D]):
         return self.binning.bins
 
     @property
-    def axis_name(self) ->  Optional[str]:
+    def axis_name(self) -> Optional[str]:
         return self.histograms and self.histograms[0].axis_name or None
 
     @property
@@ -66,6 +78,7 @@ class HistogramCollection(Collection[Histogram1D]):
         self.histograms.append(histogram)
 
     def create(self, name: str, values, *, weights=None, dropna: bool = True, **kwargs):
+        # TODO: Perhaps rename?
         init_kwargs = {
             "axis_name": self.axis_name
         }
@@ -84,6 +97,20 @@ class HistogramCollection(Collection[Histogram1D]):
         else:
             return self.histograms[item]
 
+    def normalize_bins(self, inplace: bool = False) -> "HistogramCollection":
+        """Normalize each bin in the collection so that the sum is 1.0 for each bin."""
+        col = self if inplace else self.copy()
+        sums = self.sum().frequencies
+        for h in col.histograms:
+            h.set_dtype(float)
+            h._frequencies /= sums
+            h._errors2 /= sums ** 2
+        return col
+
+    def sum(self) -> Histogram1D:
+        """Return the sum of all contained histograms."""
+        return sum(self.histograms)
+
     @property
     def plot(self) -> "physt.plotting.PlottingProxy":
         """Proxy to plotting.
@@ -97,6 +124,7 @@ class HistogramCollection(Collection[Histogram1D]):
 
     @classmethod
     def h1(cls, a_dict: Dict[str, Any], bins=None, **kwargs) -> "HistogramCollection":
+        # TODO: Rename
         mega_values = np.concatenate(list(a_dict.values()))
         binning = h1(mega_values, bins, **kwargs).binning
 
@@ -107,7 +135,3 @@ class HistogramCollection(Collection[Histogram1D]):
         for key, value in a_dict.items():
             collection.create(key, value)
         return collection
-
-
-
-
