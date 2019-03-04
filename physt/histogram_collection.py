@@ -1,9 +1,11 @@
-from typing import Optional, Collection, Tuple
+from typing import Optional, Collection, Tuple, Dict, Any
 
 import numpy as np
 
 from .histogram1d import Histogram1D
 from .binnings import BinningBase
+
+from . import h1
 
 
 class HistogramCollection(Collection[Histogram1D]):
@@ -56,7 +58,7 @@ class HistogramCollection(Collection[Histogram1D]):
 
     @property
     def axis_names(self) -> Tuple[str]:
-        return (self.axis_name,)
+        return self.axis_name,
 
     def add(self, histogram: Histogram1D):
         if not self.binning == histogram.binning:
@@ -92,3 +94,20 @@ class HistogramCollection(Collection[Histogram1D]):
         """
         from .plotting import PlottingProxy
         return PlottingProxy(self)
+
+    @classmethod
+    def h1(cls, a_dict: Dict[str, Any], bins=None, **kwargs) -> "HistogramCollection":
+        mega_values = np.concatenate(list(a_dict.values()))
+        binning = h1(mega_values, bins, **kwargs).binning
+
+        title = kwargs.pop("title", None)
+        name = kwargs.pop("name", None)
+
+        collection = HistogramCollection(binning=binning, title=title, name=name)
+        for key, value in a_dict.items():
+            collection.create(key, value)
+        return collection
+
+
+
+
