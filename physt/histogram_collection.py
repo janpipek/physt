@@ -1,4 +1,5 @@
-from typing import Optional, Collection, Tuple, Dict, Any
+from typing import Optional, Container, Tuple, Dict, Any
+import sys
 
 import numpy as np
 
@@ -8,7 +9,7 @@ from .binnings import BinningBase
 from . import h1
 
 
-class HistogramCollection(Collection[Histogram1D]):
+class HistogramCollection(Container[Histogram1D]):
     """Experimental collection of histograms.
     
     It contains (potentially nama-addressable) histograms
