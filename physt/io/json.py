@@ -1,14 +1,16 @@
 """JSON I/O"""
 import json
-from typing import Optional
+from typing import Optional, Union
 
-from physt.io import CURRENT_VERSION, create_from_dict
+from physt.io import CURRENT_VERSION, create_from_dict, VersionError
 from physt.histogram_base import HistogramBase
+from physt.histogram_collection import HistogramCollection
 
 COMPATIBLE_VERSION = "0.3.20"
+COLLECTION_COMPATIBLE_VERSION = "0.4.5"
 
 
-def save_json(histogram: HistogramBase, path: Optional[str] = None, **kwargs) -> str:
+def save_json(histogram: Union[HistogramBase, HistogramCollection], path: Optional[str] = None, **kwargs) -> str:
     """Save histogram to JSON format.
 
     Parameters
@@ -22,8 +24,14 @@ def save_json(histogram: HistogramBase, path: Optional[str] = None, **kwargs) ->
     """
     # TODO: Implement multiple histograms in one file?
     data = histogram.to_dict()
+
     data["physt_version"] = CURRENT_VERSION
-    data["physt_compatible"] = COMPATIBLE_VERSION
+    if isinstance(histogram, HistogramBase):
+        data["physt_compatible"] = COMPATIBLE_VERSION
+    elif isinstance(histogram, HistogramCollection):
+        data["physt_compatible"] = COLLECTION_COMPATIBLE_VERSION
+    else:
+        raise TypeError("Cannot save unknown type: {0}".format(type(histogram)))
 
     text = json.dumps(data, **kwargs)
     if path:

@@ -1,4 +1,9 @@
-0.4.4
+0.4.5 (1st April 2019)
+----------------------
+- Added: I/O for HistogramCollection
+- Added: physt.collection facade function
+
+0.4.4 (4th March 2019)
 ----------------------
 - Changed: plotly plots now using the original API instead of wrapping matplotlib
 - Added: new methods for histogram collections

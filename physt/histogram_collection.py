@@ -9,7 +9,11 @@ from . import h1
 
 
 class HistogramCollection(Collection[Histogram1D]):
-    """Experimental collection of histograms."""
+    """Experimental collection of histograms.
+    
+    It contains (potentially nama-addressable) histograms
+    with a shared binning.
+    """
     def __init__(self,
                  *histograms: Histogram1D,
                  binning: Optional[BinningBase] = None,
@@ -73,12 +77,13 @@ class HistogramCollection(Collection[Histogram1D]):
         return self.axis_name,
 
     def add(self, histogram: Histogram1D):
-        if not self.binning == histogram.binning:
+        """Add a histogram to the collection."""
+        if self.binning and not self.binning == histogram.binning:
             raise ValueError("Cannot add histogram with different binning.")
         self.histograms.append(histogram)
 
     def create(self, name: str, values, *, weights=None, dropna: bool = True, **kwargs):
-        # TODO: Perhaps rename?
+        # TODO: Rename!
         init_kwargs = {
             "axis_name": self.axis_name
         }
@@ -96,6 +101,13 @@ class HistogramCollection(Collection[Histogram1D]):
             return candidates[0]
         else:
             return self.histograms[item]
+
+    def __eq__(self, other) -> bool:
+        return (
+            (type(other) == HistogramCollection) and
+            (len(other) == len(self)) and
+            all((h1 == h2) for h1, h2 in zip(self.histograms, other.histograms))
+        )
 
     def normalize_bins(self, inplace: bool = False) -> "HistogramCollection":
         """Normalize each bin in the collection so that the sum is 1.0 for each bin.
@@ -126,10 +138,11 @@ class HistogramCollection(Collection[Histogram1D]):
         return PlottingProxy(self)
 
     @classmethod
-    def h1(cls, a_dict: Dict[str, Any], bins=None, **kwargs) -> "HistogramCollection":
-        # TODO: Rename
+    def multi_h1(cls, a_dict: Dict[str, Any], bins=None, **kwargs) -> "HistogramCollection":
+        """Create a collection from multiple datasets."""
+        from physt.binnings import calculate_bins
         mega_values = np.concatenate(list(a_dict.values()))
-        binning = h1(mega_values, bins, **kwargs).binning
+        binning = calculate_bins(mega_values, bins, **kwargs)
 
         title = kwargs.pop("title", None)
         name = kwargs.pop("name", None)
@@ -138,3 +151,32 @@ class HistogramCollection(Collection[Histogram1D]):
         for key, value in a_dict.items():
             collection.create(key, value)
         return collection
+
+    @classmethod
+    def from_dict(cls, a_dict: dict) -> "HistogramCollection":
+        from physt.io import create_from_dict
+        col = HistogramCollection()
+        for item in a_dict["histograms"]:
+            h = create_from_dict(item, "HistogramCollection", check_version=False)
+            col.add(h)
+        return col
+
+    def to_dict(self):
+        return {
+            "histogram_type": "histogram_collection",
+            "histograms": [h.to_dict() for h in self.histograms]
+        }
+
+    def to_json(self, path: Optional[str] = None, **kwargs) -> str:
+        """Convert to JSON representation.
+
+        Parameters
+        ----------
+        path: Where to write the JSON.
+
+        Returns
+        -------
+        The JSON representation.
+        """
+        from .io import save_json
+        return save_json(self, path, **kwargs)

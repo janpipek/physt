@@ -8,18 +8,21 @@ Note: When implementing, try to work with a JSON-like
 """
 from packaging.version import Version
 from pkg_resources import parse_version
+from typing import Union
 
 from physt import __version__
 from physt.util import find_subclass
 from physt.histogram_base import HistogramBase
+from physt.histogram_collection import HistogramCollection
 
 CURRENT_VERSION = __version__
+
 
 class VersionError(Exception):
     pass
 
 
-def create_from_dict(data, format_name):
+def create_from_dict(data: dict, format_name: str, check_version: bool = True) -> Union[HistogramBase, HistogramCollection]:
     """Once dict from source data is created, turn this into histogram.
     
     Parameters
@@ -33,12 +36,16 @@ def create_from_dict(data, format_name):
         A histogram (of any dimensionality)
     """
     # Version
-    compatible_version = data["physt_compatible"]
-    require_compatible_version(compatible_version, format_name)
+    if check_version:
+        compatible_version = data["physt_compatible"]
+        require_compatible_version(compatible_version, format_name)
 
     # Construction
     histogram_type = data["histogram_type"]
-    klass = find_subclass(HistogramBase, histogram_type)
+    if histogram_type == "histogram_collection":
+        klass = HistogramCollection
+    else:
+        klass = find_subclass(HistogramBase, histogram_type)
     return klass.from_dict(data)
 
 
@@ -56,4 +63,4 @@ def require_compatible_version(compatible_version, word="File"):
         ))
 
 
-from .json import  save_json, load_json, parse_json
+from .json import save_json, load_json, parse_json

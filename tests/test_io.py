@@ -7,6 +7,7 @@ sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 import physt
 from physt import io
 from physt.histogram1d import Histogram1D
+from physt.histogram_collection import HistogramCollection
 
 
 class TestIO:
@@ -39,6 +40,19 @@ class TestIO:
         json = h.to_json()
         read = io.parse_json(json)
         assert h == read
+
+
+class TestCollectionIO:
+    def test_json_write_collection(self):
+        bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
+        values1 = [4, 0, 3, 7.2]
+        values2 = [14, 10, 13, 17.2]
+        col = HistogramCollection()
+        col.add(Histogram1D(bins, values1))
+        col.add(Histogram1D(bins, values2))
+        json = col.to_json()
+        read = io.parse_json(json)
+        assert read == col
 
 
 if __name__ == "__main__":

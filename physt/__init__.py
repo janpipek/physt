@@ -10,7 +10,7 @@ See https://github.com/janpipek/physt
 """
 from . import binnings
 
-__version__ = str('0.4.4')
+__version__ = str('0.4.5')
 
 
 def histogram(data, bins=None, *args, **kwargs):
@@ -282,5 +282,14 @@ def h3(data, *args, **kwargs):
     else:
         kwargs["dim"] = 3    
     return histogramdd(data, *args, **kwargs)
+
+
+def collection(data, bins=10, *args, **kwargs):
+    """Create histogram collection with shared binnning."""
+    from physt.histogram_collection import HistogramCollection
+    if hasattr(data, "columns"):
+        data = {column: data[column] for column in data.columns}
+    return HistogramCollection.multi_h1(data, bins, **kwargs)
+
 
 from .special import polar_histogram
