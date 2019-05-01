@@ -127,7 +127,7 @@ def enable_inline_view(f):
             display = write_to is None
 
         if write_to:
-            write_vega(vega_data, hist.title, write_to, write_format, indent)
+            write_vega(vega_data, title=hist.title, write_to=write_to, write_format=write_format, indent=indent)
             
         return display_vega(vega_data, display)
 
