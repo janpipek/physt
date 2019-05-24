@@ -65,8 +65,20 @@ class HistogramND(HistogramBase):
 
     @property
     def numpy_bins(self) -> List[np.ndarray]:
-        """Numpy-like bins (if available)."""
+        """Numpy-like bins (if available).
+
+        TODO: Deprecate.
+        """
         return [binning.numpy_bins for binning in self._binnings]
+
+    @property
+    def edges(self) -> List[np.ndarray]:
+        return self.numpy_bins
+
+    @property
+    def numpy_like(self) -> Tuple[np.ndarray, np.ndarray]:
+        """Same result as would the numpy.histogram function return."""
+        return self.frequencies, self.numpy_bins
 
     def select(self, axis: AxisIdentifier, index, force_copy: bool = False) -> HistogramBase:
         """Select in an axis.
@@ -456,7 +468,8 @@ class Histogram2D(HistogramND):
             self._errors2 /= (divisor * divisor)  # Has its limitations
             return self
 
-    def numpy_like(self):
+    def numpy_like(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins[0], self.numpy_bins[1]
 
 

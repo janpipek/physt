@@ -159,12 +159,19 @@ class Histogram1D(HistogramBase):
 
     @property
     def numpy_bins(self) -> np.ndarray:
-        """Bins in the format of numpy."""
+        """Bins in the format of numpy.
+        """
         # TODO: If not consecutive, does not make sense
+        # TODO: Deprecate
         return self._binning.numpy_bins
 
+    @property
+    def edges(self) -> np.ndarray:
+        return self.numpy_bins
+
+    @property
     def numpy_like(self) -> Tuple[np.ndarray, np.ndarray]:
-        """Return """
+        """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins
 
     @property
