@@ -166,7 +166,7 @@ class BinningBase:
         else:
             return self._adapt(other)
 
-    def set_adaptive(self, value: bool = True):
+    def set_adaptive(self, value: bool = True) -> None:
         """Set/unset the adaptive property of the binning.
 
         This is available only for some of the binning types.
@@ -179,7 +179,7 @@ class BinningBase:
         raise RuntimeError("Cannot adapt binning.")
 
     @property
-    def bins(self):
+    def bins(self) -> np.ndarray:
         """Bins in the wider format (as edge pairs)
 
         Returns
@@ -368,11 +368,11 @@ class NumpyBinning(BinningBase):
     def numpy_bins(self):
         return self._numpy_bins
 
-    def copy(self):
+    def copy(self) -> "NumpyBinning":
         return NumpyBinning(numpy_bins=self.numpy_bins,
                             includes_right_edge=self.includes_right_edge)
 
-    def _update_dict(self, a_dict):
+    def _update_dict(self, a_dict: dict) -> None:
         a_dict["numpy_bins"] = self.numpy_bins.tolist()
 
 
@@ -412,7 +412,7 @@ class FixedWidthBinning(BinningBase):
             result += ", adaptive=True"
         return result + ")"
 
-    def is_regular(self, *args, **kwargs):
+    def is_regular(self, *args, **kwargs) -> bool:
         return True
 
     def _force_bin_existence_single(self, value, includes_right_edge=None):
@@ -460,11 +460,11 @@ class FixedWidthBinning(BinningBase):
                 return result
 
     @property
-    def first_edge(self):
+    def first_edge(self) -> float:
         return self._times_min * self._bin_width + self._shift
 
     @property
-    def last_edge(self):
+    def last_edge(self) -> float:
         return (self._times_min + self._bin_count) * self._bin_width + self._shift
 
     @property
@@ -685,7 +685,7 @@ def static_binning(data=None, bins=None, **kwargs) -> StaticBinning:
     return StaticBinning(bins=make_bin_array(bins), **kwargs)
 
 
-def integer_binning(data=None, **kwargs) -> StaticBinning:
+def integer_binning(data=None, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width binning schema with bins centered around integers.
 
     Parameters
