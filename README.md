@@ -172,6 +172,9 @@ I am looking for anyone interested in using / developing physt. You can contribu
 Thanks to:
 - **Ryan Mackenzie White** - <https://github.com/ryanmackenziewhite> for the protobuf idea and first implementation
 
+Patches:
+- **Matthieu Marinangeli** - <https://github.com/marinang>
+
 ## Alternatives and inspirations
 
 * <https://github.com/HDembinski/histogram> (C++)
