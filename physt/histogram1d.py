@@ -431,7 +431,7 @@ class Histogram1D(HistogramBase):
         if self._binning.is_adaptive():
             map = self._binning.force_bin_existence(values)
             self._reshape_data(self._binning.bin_count, map)
-        if weights:
+        if weights is not None:
             weights = np.asarray(weights)
             self._coerce_dtype(weights.dtype)
         (frequencies, errors2, underflow, overflow, stats) = \
