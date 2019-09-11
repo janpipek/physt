@@ -124,7 +124,7 @@ def bar(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
         _, cmap_data = _get_cmap_data(data, kwargs)
         colors = cmap(cmap_data)
     else:
-        colors = kwargs.pop("color", None)
+        colors = kwargs.pop("color", kwargs.pop("c", None))
 
     _apply_xy_lims(ax, h1, data, kwargs)
     _add_ticks(ax, h1, kwargs)
@@ -162,7 +162,7 @@ def scatter(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
         _, cmap_data = _get_cmap_data(data, kwargs)
         kwargs["color"] = cmap(cmap_data)
     else:
-        kwargs["color"] = kwargs.pop("color", "blue")
+        kwargs["color"] = kwargs.pop("color", kwargs.pop("c", "blue"))
 
     _apply_xy_lims(ax, h1, data, kwargs)
     _add_ticks(ax, h1, kwargs)
@@ -400,7 +400,7 @@ def bar3d(h2: Histogram2D, ax: Axes3D, **kwargs):
         _, cmap_data = _get_cmap_data(data, kwargs)
         colors = cmap(cmap_data)
     else:
-        colors = kwargs.pop("color", "blue")
+        colors = kwargs.pop("color", kwargs.pop("c", "blue"))
 
     xpos, ypos = (arr.flatten() for arr in h2.get_bin_centers())
     zpos = np.zeros_like(ypos)
