@@ -123,6 +123,13 @@ class HistogramCollection(Container[Histogram1D]):
             h._errors2 /= sums ** 2  # TODO: Does this make sense?
         return col
 
+    def normalize_all(self, inplace: bool = False) -> "HistogramCollection":
+        """Normalize all histograms so that total content of each of them is equal to 1.0."""
+        col = self if inplace else self.copy()
+        for h in col.histograms:
+            h.normalize(inplace=True)
+        return col
+
     def sum(self) -> Histogram1D:
         """Return the sum of all contained histograms."""
         return sum(self.histograms)
