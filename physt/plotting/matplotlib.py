@@ -896,9 +896,18 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
     ylim = kwargs.pop("ylim", "auto")
     xlim = kwargs.pop("xlim", "auto")
     invert_y = kwargs.pop("invert_y", False)
-    xscale = yscale = None
 
     from ..binnings import ExponentialBinning
+
+    # First, get the axis scaling
+    if h.ndim == 1:
+        xscale = kwargs.pop("xscale", "log" if isinstance(h.binning, ExponentialBinning) else None)
+        yscale = kwargs.pop("yscale", None)
+    elif h.ndim == 2:
+        xscale = kwargs.pop("xscale", "log" if isinstance(h.binnings[0], ExponentialBinning) else None)
+        yscale = kwargs.pop("yscale", "log" if isinstance(h.binnings[1], ExponentialBinning) else None)
+    else:
+        raise ValueError("Invalid histogram dimension: {0}".format(h.ndim))
 
     if ylim is not "keep":
         if isinstance(ylim, tuple):
@@ -906,26 +915,19 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
         elif ylim:
             ylim = ax.get_ylim()
             if h.ndim == 1:
-                xscale = kwargs.pop("xscale", "log" if isinstance(h.binning, ExponentialBinning) else None)
-                yscale = kwargs.pop("yscale", None)
                 if data.size > 0 and data.max() > 0:
                     ylim = (0, max(ylim[1], data.max() +
                                    (data.max() - ylim[0]) * 0.1))
                 if yscale == "log":
                     ylim = (abs(data[data > 0].min()) * 0.9, ylim[1] * 1.1)
             elif h.ndim == 2:
-                xscale = kwargs.pop("xscale", "log" if isinstance(h.binnings[0], ExponentialBinning) else None)
-                yscale = kwargs.pop("yscale", "log" if isinstance(h.binnings[1], ExponentialBinning) else None)
                 if h.shape[1] >= 2:
                     ylim = (h.get_bin_left_edges(1)[0],
                             h.get_bin_right_edges(1)[-1])
                     if yscale == "log":
                         if ylim[0] <= 0:
-                            raise RuntimeError(
+                            raise ValueError(
                                 "Cannot use logarithmic scale for non-positive bins.")
-            else:
-                raise RuntimeError("Invalid dimension: {0}".format(h.ndim))
-
             if invert_y:
                 ylim = ylim[::-1]
                 # ax.xaxis.tick_top()
@@ -944,12 +946,12 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
                     xlim = (h.get_bin_left_edges(0)[
                             0], h.get_bin_right_edges(0)[-1])
                 else:
-                    raise RuntimeError(
+                    raise ValueError(
                         "Invalid dimension: {0}".format(h.ndim))
                 if xscale == "log":
                     if xlim[0] <= 0:
-                        raise RuntimeError(
-                            "Cannot use logarithmic scale for non-positive bins.")
+                        raise ValueError(
+                            "Cannot use xscale='log' for non-positive bins.")
         ax.set_xlim(*xlim)
 
     if xscale:
