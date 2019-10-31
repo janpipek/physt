@@ -10,7 +10,7 @@ See https://github.com/janpipek/physt
 """
 from . import binnings
 
-__version__ = '0.4.6'
+__version__ = '0.4.7'
 
 
 def histogram(data, bins=None, *args, **kwargs):
