@@ -12,7 +12,7 @@ from . import h1
 class HistogramCollection(Container[Histogram1D]):
     """Experimental collection of histograms.
     
-    It contains (potentially nama-addressable) histograms
+    It contains (potentially name-addressable) histograms
     with a shared binning.
     """
     def __init__(self,
@@ -169,7 +169,7 @@ class HistogramCollection(Container[Histogram1D]):
             col.add(h)
         return col
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "histogram_type": "histogram_collection",
             "histograms": [h.to_dict() for h in self.histograms]

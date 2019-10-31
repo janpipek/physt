@@ -375,7 +375,7 @@ class Histogram1D(HistogramBase):
         else:
             return None
 
-    def fill(self, value, weight=1):
+    def fill(self, value: float, weight: float = 1) -> int:
         """Update histogram with a new value.
 
         Parameters
@@ -528,8 +528,8 @@ class Histogram1D(HistogramBase):
         return cls(**kwargs)
 
 
-def calculate_frequencies(data, binning, weights=None, validate_bins=True,
-                          already_sorted=False, dtype=None):
+def calculate_frequencies(data, binning, weights=None, *, validate_bins=True,
+                          already_sorted: bool = False, dtype=None):
     """Get frequencies and bin errors from the data.
 
     Parameters

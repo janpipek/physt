@@ -637,7 +637,7 @@ class HistogramBase:
         self._update_dict(result)
         return result
 
-    def _update_dict(self, a_dict: dict):
+    def _update_dict(self, a_dict: dict) -> None:
         """Update the dictionary for export.
 
         Override if you want to customize the process.

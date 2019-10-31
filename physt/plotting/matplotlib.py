@@ -645,20 +645,16 @@ def surface_map(hist, ax: Axes3D, *, show_zero: bool = True, x=(lambda x, y: x),
     return ax
 
 
-def pair_bars(first: Histogram1D, second: Histogram2D, *, orientation: str = "vertical", kind: str = "bar", **kwargs):
+def pair_bars(first: Histogram1D, second: Histogram2D, *, orientation: str = "vertical", kind: str = "bar", **kwargs) -> Axes:
     """Draw two different histograms mirrored in one figure.
 
     Parameters
     ----------
-    first: Histogram1D
-    second: Histogram1D
+    first: 
+    second:
     color1:
     color2:
-    orientation: str
-
-    Returns
-    -------
-    plt.Axes
+    orientation: vertical (not enabled yet) or horizontal
     """
     # TODO: enable vertical as well as horizontal
     _, ax = _get_axes(kwargs)
@@ -914,7 +910,7 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
             pass
         elif ylim:
             ylim = ax.get_ylim()
-            if h.ndim == 1:
+            if h.ndim == 1:  
                 if data.size > 0 and data.max() > 0:
                     ylim = (0, max(ylim[1], data.max() +
                                    (data.max() - ylim[0]) * 0.1))
