@@ -905,7 +905,7 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
     else:
         raise ValueError("Invalid histogram dimension: {0}".format(h.ndim))
 
-    if ylim is not "keep":
+    if ylim != "keep":
         if isinstance(ylim, tuple):
             pass
         elif ylim:
@@ -930,7 +930,7 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
                 # ax.xaxis.set_label_position('top')
         ax.set_ylim(ylim)
 
-    if xlim is not "keep":
+    if xlim != "keep":
         if isinstance(xlim, tuple):
             pass
         elif xlim:

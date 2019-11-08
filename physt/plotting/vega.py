@@ -146,9 +146,9 @@ def write_vega(vega_data, *, title: Optional[str], write_to: str, write_format: 
     indent: Indentation of JSON
     """
     spec = json.dumps(vega_data, indent=indent)
-    if write_format == "html" or write_format is "auto" and write_to.endswith(".html"):
+    if write_format == "html" or write_format == "auto" and write_to.endswith(".html"):
         output = HTML_TEMPLATE.replace("{{ title }}", title or "Histogram").replace("{{ spec }}", spec)
-    elif write_format == "json" or write_format is "auto" and write_to.endswith(".json"):
+    elif write_format == "json" or write_format == "auto" and write_to.endswith(".json"):
         output = spec
     else:
         raise RuntimeError("Format not understood.")
@@ -575,12 +575,12 @@ def _create_scales(hist: HistogramBase, vega: dict, kwargs: dict):
     xlim = kwargs.pop("xlim", "auto")
     ylim = kwargs.pop("ylim", "auto")
 
-    if xlim is "auto":
+    if xlim == "auto":
         nice_x = True
     else:
         nice_x = False
 
-    if ylim is "auto":
+    if ylim == "auto":
         nice_y = True
     else:
         nice_y = False
