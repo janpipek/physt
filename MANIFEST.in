@@ -1,5 +1,8 @@
+include HISTORY.txt
 include LICENSE
 include MANIFEST.in
 include README.md
-include HISTORY.txt
-include physt/example/*.csv
+include requirements.txt
+
+recursive-include physt *.*
+grafts tests
