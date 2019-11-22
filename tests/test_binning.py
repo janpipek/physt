@@ -141,6 +141,15 @@ class TestHumanBins:
         the_binning = binnings.human_binning(data, 11)
         assert np.allclose(the_binning.numpy_bins, np.linspace(0, 1, 11))
 
+    def test_min_max_bin_width(self):
+        data = np.random.rand(1000)
+
+        the_binning = binnings.human_binning(data, min_bin_width=0.3)
+        assert the_binning.bin_width == 0.3
+        
+        the_binning = binnings.human_binning(data, max_bin_width=0.001)
+        assert the_binning.bin_width == 0.001              
+
 
 class TestIntegerBins:
     def test_dice(self):

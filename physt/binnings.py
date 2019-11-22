@@ -632,6 +632,8 @@ def human_binning(
     *,
     kind: Optional[str] = None,
     range: Optional[Tuple[float, float]] = None,
+    min_bin_width: Optional[float] = None,
+    max_bin_width: Optional[float] = None,
     **kwargs) -> FixedWidthBinning:
     """Construct fixed-width ninning schema with bins automatically optimized to human-friendly widths.
 
@@ -642,6 +644,8 @@ def human_binning(
     bin_count: Number of bins
     kind: Optional value "time" works in h,m,s scale instead of seconds
     range: Tuple of (min, max)
+    min_bin_width: If present, the bin cannot be narrower than this.
+    max_bin_width: If present, the bin cannot be wider than this.
     """
     # TODO: remove colliding kwargs
     if data is None and range is None:
@@ -652,6 +656,12 @@ def human_binning(
     max_ = range[1] if range else data.max()
     raw_width = (max_ - min_) / bin_count
     bin_width = find_human_width(raw_width, kind=kind)
+
+    if min_bin_width:
+        bin_width = max(bin_width, min_bin_width)
+    if max_bin_width:
+        bin_width = min(bin_width, max_bin_width)
+
     return fixed_width_binning(bin_width=bin_width, data=data, range=range, **kwargs)
 
 
@@ -880,7 +890,7 @@ try:
 
     from astropy.stats.histogram import histogram as _astropy_histogram   # Just check
     import warnings
-    warnings.filterwarnings("ignore", module="astropy\..*")
+    warnings.filterwarnings("ignore", module="astropy\\..*")
 
     def bayesian_blocks_binning(data, range=None, **kwargs) -> NumpyBinning:
         """Binning schema based on Bayesian blocks (from astropy).
