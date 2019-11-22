@@ -11,13 +11,14 @@ time provides nice integration into IPython notebook and various plotting option
 
 In short, whatever you want to do with histograms, physt aims to be on your side.
 
-P.S. I am looking for anyone interested in using / developing physt. You can contribute by reporting errors, implementing missing features and suggest new one.
+P.S. I am looking for anyone interested in using / developing physt. You can contribute by reporting errors,
+implementing missing features and suggest new one.
 """
 
 import itertools
 from setuptools import setup, find_packages
 
-VERSION = "0.4.7"
+VERSION = "0.4.8"
 
 options = dict(
     name='physt',

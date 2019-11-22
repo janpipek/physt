@@ -1,5 +1,5 @@
-0.4.8 ()
---------
+0.4.8 (22nd November 2019)
+--------------------------
 - Added: Binning "human" accepts kind="time"
 - Added: find_human_width and related methods in bin_utils
 - Fix: No labels and color cycling in scatter plots for collections
