@@ -198,4 +198,4 @@ def find_human_width(raw_width: float, kind: Optional[str] = None) -> float:
         else:
             return find_human_width_decimal(raw_width / 86400) * 86400
     else:
-        raise ValueError(f"Value of 'kind' not understood: '{kind}'.")
+        raise ValueError("Value of 'kind' not understood: '{0}'.".format(kind)
