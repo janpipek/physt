@@ -5,7 +5,8 @@ from typing import Optional, Tuple, List, Union
 import numpy as np
 
 from .bin_utils import (is_bin_subset, is_consecutive, is_rising,
-                        make_bin_array, to_numpy_bins, to_numpy_bins_with_mask)
+                        make_bin_array, to_numpy_bins, to_numpy_bins_with_mask,
+                        find_human_width)
 from .util import find_subclass
 
 # TODO: Locking and edit operations (like numpy read-only)
@@ -625,7 +626,13 @@ def numpy_binning(data, bins=10, range=None, *args, **kwargs) -> NumpyBinning:
     return NumpyBinning(bins)
 
 
-def human_binning(data=None, bin_count: Optional[int] = None, *, range=None, **kwargs) -> FixedWidthBinning:
+def human_binning(
+    data=None,
+    bin_count: Optional[int] = None,
+    *,
+    kind: Optional[str] = None,
+    range: Optional[Tuple[float, float]] = None,
+    **kwargs) -> FixedWidthBinning:
     """Construct fixed-width ninning schema with bins automatically optimized to human-friendly widths.
 
     Typical widths are: 1.0, 25,0, 0.02, 500, 2.5e-7, ...
@@ -633,11 +640,9 @@ def human_binning(data=None, bin_count: Optional[int] = None, *, range=None, **k
     Parameters
     ----------
     bin_count: Number of bins
-    range: Optional[tuple]
-        (min, max)
+    kind: Optional value "time" works in h,m,s scale instead of seconds
+    range: Tuple of (min, max)
     """
-    subscales = np.array([0.5, 1, 2, 2.5, 5, 10])
-
     # TODO: remove colliding kwargs
     if data is None and range is None:
         raise RuntimeError("Cannot guess optimum bin width without data.")
@@ -645,11 +650,8 @@ def human_binning(data=None, bin_count: Optional[int] = None, *, range=None, **k
         bin_count = ideal_bin_count(data)
     min_ = range[0] if range else data.min()
     max_ = range[1] if range else data.max()
-    bw = (max_ - min_) / bin_count
-
-    power = np.floor(np.log10(bw)).astype(int)
-    best_index = np.argmin(np.abs(np.log(subscales * (10.0 ** power) / bw)))
-    bin_width = (10.0 ** power) * subscales[best_index]
+    raw_width = (max_ - min_) / bin_count
+    bin_width = find_human_width(raw_width, kind=kind)
     return fixed_width_binning(bin_width=bin_width, data=data, range=range, **kwargs)
 
 

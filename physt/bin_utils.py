@@ -1,5 +1,5 @@
 """Methods for investigation and manipulation of bin arrays."""
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -162,3 +162,40 @@ def is_bin_subset(sub, sup) -> bool:
 def is_bin_superset(sup, sub) -> bool:
     """Inverse of is_bin_subset"""
     return is_bin_subset(sub=sub, sup=sup)
+
+
+def find_human_width_decimal(raw_width: float) -> float:
+    subscales = np.array([0.5, 1, 2, 2.5, 5, 10])
+    power = np.floor(np.log10(raw_width)).astype(int)
+    best_index = np.argmin(np.abs(np.log(subscales * (10.0 ** power) / raw_width)))
+    return (10.0 ** power) * subscales[best_index]
+
+
+def find_human_width_60(raw_width: float) -> int:
+    subscales = np.array([1, 2, 5, 10, 15, 20, 30])
+    best_index = np.argmin(np.abs(np.log(subscales / raw_width)))
+    return subscales[best_index]
+
+
+def find_human_width_24(raw_width: float) -> int:
+    subscales = np.array([1, 2, 3, 4, 6, 12])
+    best_index = np.argmin(np.abs(np.log(subscales / raw_width)))
+    return subscales[best_index]
+
+
+def find_human_width(raw_width: float, kind: Optional[str] = None) -> float:
+    if not kind:
+        return find_human_width_decimal(raw_width)
+    elif kind == "time":
+        if raw_width < 0.8:
+            return find_human_width_decimal(raw_width)
+        elif raw_width < 50:
+            return find_human_width_60(raw_width)
+        elif raw_width < 3000:
+            return find_human_width_60(raw_width / 60) * 60
+        elif raw_width < 70000:
+            return find_human_width_24(raw_width / 3600) * 3600
+        else:
+            return find_human_width_decimal(raw_width / 86400) * 86400
+    else:
+        raise ValueError(f"Value of 'kind' not understood: '{kind}'.")
