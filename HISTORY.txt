@@ -1,3 +1,9 @@
+0.4.8 ()
+--------
+- Added: Binning "human" accepts kind="time"
+- Added: find_human_width and related methods in bin_utils
+- Fix: No labels and color cycling in scatter plots for collections
+
 0.4.7 (31th October 2019)
 -------------------------
 - Changed: Small improvements in histogram collections and time tick handler

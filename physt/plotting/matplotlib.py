@@ -90,7 +90,7 @@ def register(*dim: List[int], use_3d: bool = False, use_polar: bool = False, col
                     raise ValueError("Cannot plot empty histogram collection")
                 for i, h in enumerate(hist):
                     # TODO: Add some mechanism for argument maps (like sklearn?)
-                    function(h, ax=ax,  **kwargs)
+                    function(h, ax=ax, **kwargs)
                 ax.legend()
                 ax.set_title(title)
             else:
@@ -154,6 +154,7 @@ def scatter(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
     cumulative = kwargs.pop("cumulative", False)
     value_format = kwargs.pop("value_format", None)
     text_kwargs = pop_kwargs_with_prefix("text_", kwargs)
+    label = kwargs.pop("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density)
 
@@ -161,8 +162,8 @@ def scatter(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
         cmap = _get_cmap(kwargs)
         _, cmap_data = _get_cmap_data(data, kwargs)
         kwargs["color"] = cmap(cmap_data)
-    else:
-        kwargs["color"] = kwargs.pop("color", kwargs.pop("c", "blue"))
+    elif "color" in kwargs or "c" in kwargs:
+        kwargs["color"] = kwargs.pop("color", kwargs["c"])
 
     _apply_xy_lims(ax, h1, data, kwargs)
     _add_ticks(ax, h1, kwargs)
@@ -172,7 +173,7 @@ def scatter(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
         err_data = get_err_data(h1, cumulative=cumulative, density=density)
         ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.pop("fmt", "o"),
                     ecolor=kwargs.pop("ecolor", "black"), ms=0)
-    ax.scatter(h1.bin_centers, data, **kwargs)
+    ax.scatter(h1.bin_centers, data, label=label, **kwargs)
 
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
