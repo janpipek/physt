@@ -18,7 +18,7 @@ implementing missing features and suggest new one.
 import itertools
 from setuptools import setup, find_packages
 
-VERSION = "0.4.8.2"
+VERSION = "0.4.8.3"
 
 options = dict(
     name='physt',
