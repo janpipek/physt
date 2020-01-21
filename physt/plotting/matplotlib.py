@@ -163,7 +163,7 @@ def scatter(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
         _, cmap_data = _get_cmap_data(data, kwargs)
         kwargs["color"] = cmap(cmap_data)
     elif "color" in kwargs or "c" in kwargs:
-        kwargs["color"] = kwargs.pop("color", kwargs["c"])
+        kwargs["color"] = kwargs.pop("color", kwargs.get("c", None))
 
     _apply_xy_lims(ax, h1, data, kwargs)
     _add_ticks(ax, h1, kwargs)
