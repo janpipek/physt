@@ -59,16 +59,19 @@ def get_err_data(histogram: HistogramBase, density: bool = False, cumulative: bo
 
 
 def get_value_format(value_format: Union[Callable, str] = str) -> Callable[[float], str]:
-    """Create a formatting function from a generic value_format argument.
-    """
-    if value_format is None:
-        value_format = ""
+    """Create a formatting function from a generic value_format argument."""
     if isinstance(value_format, str):
         format_str = "{0:" + value_format + "}"
 
-        def value_format_(x): return format_str.format(x)
+        def value_format_(x):
+            return format_str.format(x)
 
-    return value_format_
+        return value_format_
+    
+    if callable(value_format):
+        return value_format
+    
+    raise TypeError("`value_format` must be a string or a callable.")
 
 
 def pop_kwargs_with_prefix(prefix: str, kwargs: dict) -> dict:
