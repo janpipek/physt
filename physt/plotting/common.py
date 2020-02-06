@@ -58,8 +58,11 @@ def get_err_data(histogram: HistogramBase, density: bool = False, cumulative: bo
     return data
 
 
-def get_value_format(value_format: Union[Callable, str] = str) -> Callable[[float], str]:
+def get_value_format(value_format: Union[Callable, str, None]) -> Callable[[float], str]:
     """Create a formatting function from a generic value_format argument."""
+    if not value_format:
+        return str
+
     if isinstance(value_format, str):
         format_str = "{0:" + value_format + "}"
 
