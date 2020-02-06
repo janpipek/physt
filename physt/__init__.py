@@ -9,8 +9,7 @@ but designed for humans(TM) on steroids(TM).
 See https://github.com/janpipek/physt
 """
 from . import binnings
-
-__version__ = '0.4.8.3'
+from .version import __version__, __author__, __author_email__, __url__
 
 
 def histogram(data, bins=None, *args, **kwargs):

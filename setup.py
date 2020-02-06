@@ -16,32 +16,57 @@ implementing missing features and suggest new one.
 """
 
 import itertools
+import os
 from setuptools import setup, find_packages
 
-VERSION = "0.4.8.3"
+THIS_DIR = os.path.dirname(__file__)
+
+
+def read_info():
+    """Single source of version number and other info.
+
+    Inspiration:
+    - https://packaging.python.org/guides/single-sourcing-package-version/
+    - https://github.com/psf/requests/blob/master/setup.py
+    """
+    scope = {}
+    version_file = os.path.join(THIS_DIR, "physt", "version.py")
+    with open(version_file, "r") as f:
+        exec(f.read(), scope)  # pylint: disable=exec-used
+    return scope
+
+
+INFO = read_info()
 
 options = dict(
-    name='physt',
-    version=VERSION,
+    name="physt",
+    version=INFO["__version__"],
     packages=find_packages(),
     # package_data={'': ['LICENSE', 'MANIFEST.in', 'README.md', 'HISTORY.txt']},
-    license='MIT',
-    description='P(i/y)thon h(i/y)stograms.',
+    license="MIT",
+    description="P(i/y)thon h(i/y)stograms.",
     long_description=__doc__.strip(),
-    author='Jan Pipek',
-    author_email='jan.pipek@gmail.com',
-    url='https://github.com/janpipek/physt',
-    package_data={"physt" : ["examples/*.csv"]},
-    install_requires = ['numpy', 'packaging'],
+    author=INFO["__author__"],
+    author_email=INFO["__author_email__"],
+    url=INFO["__url__"],
+    package_data={"physt": ["examples/*.csv"]},
+    install_requires=["numpy", "packaging"],
     python_requires="~=3.5",
-    extras_require = {
-        'all' : ['dask', 'pandas', 'matplotlib', 'folium', 'vega3', 'xarray',
-                 'protobuf', 'uproot', 'asciiplotlib', 'xtermcolor']
-    },
-    entry_points = {
-        'console_scripts' : [
+    extras_require={
+        "all": [
+            "dask",
+            "pandas",
+            "matplotlib",
+            "folium",
+            "vega3",
+            "xarray",
+            "protobuf",
+            "uproot",
+            "asciiplotlib",
+            "xtermcolor",
         ]
     },
+    entry_points={"console_scripts": []},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
@@ -50,10 +75,10 @@ options = dict(
         "Intended Audience :: Information Technology",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering",
-        "Topic :: Software Development :: Libraries :: Python Modules"
-    ]
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
 )
 
-extras = options['extras_require']
-extras['full'] = list(set(itertools.chain.from_iterable(extras.values())))
+extras = options["extras_require"]
+extras["full"] = list(set(itertools.chain.from_iterable(extras.values())))
 setup(**options)
