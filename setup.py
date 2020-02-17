@@ -47,10 +47,11 @@ options = dict(
     url=INFO["__url__"],
     package_data={"physt": ["examples/*.csv"]},
     install_requires=["numpy", "packaging"],
-    python_requires="~=3.5",
+    python_requires="~=3.6",
     extras_require={
         "all": [
-            "dask",
+            "dask[array]",
+            "toolz",
             "pandas",
             "matplotlib",
             "folium",

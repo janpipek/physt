@@ -21,8 +21,9 @@ nice integration into IPython notebook and various plotting options. In short, w
 ### Versioning
 
 * Versions 0.3.x support Python 2.7 (no new releases in 2019)
-* Versions 0.4.x support only Python 3.5+ while continuing the 0.3 API
-* Versions 0.5.x will contain reworked API and will require Python 3.6
+* Versions 0.4.x support Python 3.5+ while continuing the 0.3 API
+* Versions 0.4.9+ support only Python 3.6+ while continuing the 0.3 API
+* Versions 0.5.x will contain reworked API
 
 ## Simple example
 
