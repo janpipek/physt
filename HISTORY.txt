@@ -1,3 +1,8 @@
+0.4.9 (17th February 2020)
+--------------------------
+- Fix: Histograms on dask arrays
+- Fix: Several other small bugs
+
 0.4.8 (22nd November 2019)
 --------------------------
 - Added: Binning "human" accepts kind="time"

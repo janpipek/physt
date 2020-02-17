@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 physt
 =====
@@ -16,21 +15,37 @@ implementing missing features and suggest new one.
 """
 
 import itertools
+import os
 from setuptools import setup, find_packages
 
-VERSION = "0.4.8.3"
+
+def read_info():
+    """Single source of version number and other info.
+
+    Inspiration:
+    - https://packaging.python.org/guides/single-sourcing-package-version/
+    - https://github.com/psf/requests/blob/master/setup.py
+    """
+    scope = {}
+    version_file = os.path.join(THIS_DIR, "physt", "version.py")
+    with open(version_file, "r") as f:
+        exec(f.read(), scope)  # pylint: disable=exec-used
+    return scope
+
+THIS_DIR = os.path.dirname(__file__)
+INFO = read_info()
+
 
 options = dict(
     name='physt',
-    version=VERSION,
+    version=INFO["__version__"],
     packages=find_packages(),
-    # package_data={'': ['LICENSE', 'MANIFEST.in', 'README.md', 'HISTORY.txt']},
     license='MIT',
     description='P(i/y)thon h(i/y)stograms.',
     long_description=__doc__.strip(),
-    author='Jan Pipek',
-    author_email='jan.pipek@gmail.com',
-    url='https://github.com/janpipek/physt',
+    author=INFO["__author__"],
+    author_email=INFO["__author_email__"],
+    url=INFO["__url__"],
     package_data={"physt" : ["examples/*.csv"]},
     install_requires = ['numpy', 'packaging'],
     python_requires="~=3.5",
@@ -43,7 +58,7 @@ options = dict(
         ]
     },
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Intended Audience :: Developers",
