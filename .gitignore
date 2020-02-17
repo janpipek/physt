@@ -70,3 +70,6 @@ target/
 
 # Profiling
 tests/profile/mprofile*
+
+# Mypy
+/.mypy_cache
