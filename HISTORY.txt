@@ -2,7 +2,9 @@
 --------------------------
 - Fix: Histograms on dask arrays
 - Fix: Several other small bugs
+- Support: Tested against Python 3.5-3.8
 - Removed: protobuf I/O support
+- Removed: some of the examples
 
 0.4.8 (22nd November 2019)
 --------------------------
