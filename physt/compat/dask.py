@@ -7,7 +7,7 @@ options = {
 }
 
 
-def _run_dask(name: str, data: "dask.array.Array", compute: bool, method, func):
+def _run_dask(name: str, data: "dask.array.Array", compute: bool, method, func, expand_arg: bool = False):
     """Construct the computation graph and optionally compute it.
     
     :param name: Name of the method (for graph naming purposes).
@@ -18,8 +18,12 @@ def _run_dask(name: str, data: "dask.array.Array", compute: bool, method, func):
         to apply when computing.
     """
     import dask
-    graph = dict(("{0}-{1}-{2}".format(name, data.name, index), (func, item))
-                  for index, item in enumerate(data.__dask_keys__()))
+    if expand_arg:
+        graph = dict(("{0}-{1}-{2}".format(name, data.name, index), (func, *item))
+                    for index, item in enumerate(data.__dask_keys__()))
+    else:
+        graph = dict(("{0}-{1}-{2}".format(name, data.name, index), (func, item))
+                    for index, item in enumerate(data.__dask_keys__()))
     items = list(graph.keys())
     result_name = "{0}-{1}-result".format(name, data.name)
     graph.update(data.dask)
@@ -71,6 +75,10 @@ def histogramdd(data, bins=None, *args, **kwargs):
     """Facade function to create multi-dimensional histogram using dask."""
     import dask
     from dask.array.rechunk import rechunk
+
+    if isinstance(data, (list, tuple)):
+        data = dask.array.stack(data, axis=1)
+
     if not hasattr(data, "dask"):
         data = dask.array.from_array(data, chunks=
                                      (int(data.shape[0] / options["chunk_split"]),
@@ -90,7 +98,8 @@ def histogramdd(data, bins=None, *args, **kwargs):
         data=data,
         compute=kwargs.pop("compute", True),
         method=kwargs.pop("dask_method", "threaded"),
-        func=block_hist)
+        func=block_hist,
+        expand_arg=True)
 
 
 def histogram2d(data1, data2, bins=None, *args, **kwargs):

@@ -73,7 +73,7 @@ def histogram(data, bins=None, *args, **kwargs):
     if isinstance(data, tuple) and isinstance(data[0], str):    # Works for groupby DataSeries
         return histogram(data[1], bins, *args, name=data[0], **kwargs)
     elif type(data).__name__ == "DataFrame":
-        raise RuntimeError("Cannot create histogram from a pandas DataFrame. Use Series.")
+        raise ValueError("Cannot create histogram from a pandas DataFrame. Use Series.")
 
     # Collect arguments (not to send them to binning algorithms)
     dropna = kwargs.pop("dropna", True)
@@ -216,16 +216,16 @@ def histogramdd(data, bins=10, *args, **kwargs):
     if data is not None:
         data = np.asarray(data)
         if data.ndim != 2:
-            raise RuntimeError("Array must have shape (n, d)")
+            raise ValueError("Array must have shape (n, d), {0} encountered".format(data.shape))
         if dim is not None and dim != data.shape[1]:
-            raise RuntimeError("Dimension mismatch: {0}!={1}".format(dim, data.shape[1]))
+            raise ValueError("Dimension mismatch: {0}!={1}".format(dim, data.shape[1]))
         _, dim = data.shape
         if dropna:
             data = data[~np.isnan(data).any(axis=1)]
         check_nan = not dropna
     else:
         if dim is None:
-            raise RuntimeError("You have to specify either data or its dimension.")
+            raise ValueError("You have to specify either data or its dimension.")
         data = np.zeros((0, dim))
         check_nan = False
 
@@ -236,7 +236,7 @@ def histogramdd(data, bins=10, *args, **kwargs):
 
     # Prepare remaining data
     weights = kwargs.pop("weights", None)
-    frequencies, errors2, missed = histogram_nd.calculate_frequencies(data, ndim=dim,
+    frequencies, errors2, _ = histogram_nd.calculate_frequencies(data, ndim=dim,
                                                                       binnings=bin_schemas,
                                                                       weights=weights)
 
