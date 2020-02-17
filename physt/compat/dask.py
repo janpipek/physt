@@ -44,7 +44,7 @@ def histogram1d(data, bins=None, *args, **kwargs):
 
     Parameters
     ----------
-    data: dask.DaskArray or array-like
+    data: dask.DaskArray or array-like (can have more than one dimension)
 
     See also
     --------
@@ -72,7 +72,10 @@ h1 = histogram1d  # Alias for convenience
 
 
 def histogramdd(data, bins=None, *args, **kwargs):
-    """Facade function to create multi-dimensional histogram using dask."""
+    """Facade function to create multi-dimensional histogram using dask.
+    
+    Each "column" must be one-dimensional.
+    """
     import dask
     from dask.array.rechunk import rechunk
 
@@ -86,15 +89,19 @@ def histogramdd(data, bins=None, *args, **kwargs):
     else:
         data = rechunk(data, {1: data.shape[1]})
 
+    if isinstance(data, dask.array.Array):
+        if data.ndim != 2:
+            raise ValueError(f"Only (n, dim) data allowed for histogramdd, {data.shape} encountered.")
+
     if not kwargs.get("adaptive", True):
-        raise RuntimeError("Only adaptive histograms supported for dask (currently).")
+        raise ValueError("Only adaptive histograms supported for dask (currently).")
     kwargs["adaptive"] = True
 
     def block_hist(array):
         return original_hdd(array, bins, *args, **kwargs)
 
     return _run_dask(
-        name="dask_adaptive2d",
+        name="dask_adaptive_dd",
         data=data,
         compute=kwargs.pop("compute", True),
         method=kwargs.pop("dask_method", "threaded"),
