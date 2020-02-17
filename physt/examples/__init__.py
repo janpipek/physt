@@ -109,37 +109,6 @@ try:
 
     ALL_EXAMPLES.append(munros)
 
-    import seaborn as sns
-
-
-    def iris_h1(x: str = "sepal_length") -> Histogram1D:
-        """One-dimensional histogram of classical iris data.
-
-        Parameters
-        ----------
-        x : str
-            Name of the property to be histogrammed
-            (sepal_length, sepal_width, petal_length, petal_width)
-        """
-        iris = load_dataset("iris")
-        return h1(iris[x], "human", 20, name="iris")
-
-
-    def iris_h2(x: str = "sepal_length", y: str = "sepal_width") -> Histogram2D:
-        """Two-dimensional histogram of classical iris data.
-
-        Parameters
-        ----------
-        x, y : str
-            Names of the properties to be histogrammed
-            (sepal_length, sepal_width, petal_length, petal_width)
-        """
-        iris = load_dataset("iris")
-        return h2(iris[x], iris[y], "human", 20, name="iris")
-
-
-    ALL_EXAMPLES += [iris_h1, iris_h2]
-
 except ImportError:
     # Either pandas or seaborn not present
     pass
