@@ -1,4 +1,5 @@
 """HistogramBase - base for all histogram classes."""
+import abc
 from collections import OrderedDict
 from typing import List, Optional, Iterable, Mapping, Any, Tuple, Union
 
@@ -10,7 +11,7 @@ from .binnings import as_binning
 AxisIdentifier = Union[int, str]
 
 
-class HistogramBase:
+class HistogramBase(abc.ABC):
     """Histogram base class.
 
     Behaviour shared by all histogram classes.
@@ -128,10 +129,6 @@ class HistogramBase:
 
         It contains several pre-defined ones, but you can add any other.
         These are preserved when saving and also in operations.
-
-        Returns
-        -------
-        dict
         """
         return self._meta_data
 
@@ -196,7 +193,7 @@ class HistogramBase:
 
         Returns
         -------
-        One-element tuple with the number of bins along each axis.
+        Tuple with the number of bins along each axis.
         """
         return tuple(bins.bin_count for bins in self._binnings)
 
@@ -209,12 +206,7 @@ class HistogramBase:
         return len(self._binnings)
 
     def _get_dtype(self) -> np.dtype:
-        """Data type of the bin contents.
-
-        Returns
-        -------
-        np.dtype
-        """
+        """Data type of the bin contents."""
         return self._dtype
 
     @classmethod
@@ -241,7 +233,7 @@ class HistogramBase:
 
         return value, type_info
 
-    def set_dtype(self, value, check: bool = True):
+    def set_dtype(self, value, check: bool = True) -> None:
         """Change data type of the bin contents.
 
         Allowed conversions:
@@ -252,8 +244,7 @@ class HistogramBase:
         Parameters
         ----------
         value: np.dtype or something convertible to it.
-        check: bool
-            If True (default), all values are checked against the limits
+        check: If True (default), all values are checked against the limits
         """
         # TODO? Deal with unsigned types
         value, type_info = self._eval_dtype(value)
@@ -321,7 +312,7 @@ class HistogramBase:
 
         Returns
         -------
-        HistogramBase : either modified copy or self
+        either modified copy or self
 
         See also
         --------
@@ -350,13 +341,8 @@ class HistogramBase:
         return self._frequencies.sum()
 
     @property
-    def missed(self):
-        """Total number (weight) of entries that missed the bins.
-
-        Returns
-        -------
-        float
-        """
+    def missed(self) -> float:
+        """Total number (weight) of entries that missed the bins."""
         return self._missed.sum()
 
     def is_adaptive(self) -> bool:
@@ -559,7 +545,13 @@ class HistogramBase:
         a_copy._stats = stats
         return a_copy
 
-    def fill(self, value, weight=1, **kwargs):
+    @property
+    @abc.abstractmethod
+    def bins(self):
+        ...
+
+    @abc.abstractmethod
+    def fill(self, value, weight: float = 1, **kwargs):
         """Add a value.
 
         Abstract method - to be implemented in daughter classes.
@@ -575,7 +567,7 @@ class HistogramBase:
         ----
         May change the dtype if weight is set
         """
-        raise NotImplementedError("You have to define the `fill` method in Histogram class.")
+        ...
 
     def fill_n(self, values, weights=None, **kwargs):
         """Add more values at once.

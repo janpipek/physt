@@ -15,6 +15,7 @@ And of course, it is possible to re-use the general transforming functionality
 by adding `TransformedHistogramMixin` among the custom histogram
 class superclasses.
 """
+import abc
 from functools import reduce
 
 import numpy as np
@@ -24,7 +25,7 @@ from .histogram1d import Histogram1D
 from . import binnings, histogram_nd
 
 
-class TransformedHistogramMixin:
+class TransformedHistogramMixin(abc.ABC):
     """Histogram with non-cartesian (or otherwise transformed) axes.
 
     This is a mixin, providing transform-aware find_bin, fill and fill_n.
@@ -39,6 +40,7 @@ class TransformedHistogramMixin:
     """
 
     @classmethod
+    # @abc.abstractmethod
     def transform(cls, value):
         """Convert cartesian (general) coordinates into internal ones.
 
@@ -53,7 +55,7 @@ class TransformedHistogramMixin:
         -------
         float or array_like
         """
-        raise NotImplementedError("TransformedHistogramMixin descendant must implement transform method.")
+        ...
 
     def find_bin(self, value, axis=None, transformed=False):
         """
@@ -70,8 +72,8 @@ class TransformedHistogramMixin:
         return HistogramND.find_bin(self, value, axis=axis)
 
     @property
-    def bin_sizes(self):
-        raise NotImplementedError("TransformedHistogramMixin descendant must implement bin_sizes property.")
+    # @abc.abstractmethod
+    def bin_sizes(self): ...
 
     def fill(self, value, weight=1, transformed=False):
         return HistogramND.fill(self, value=value, weight=weight, transformed=transformed)

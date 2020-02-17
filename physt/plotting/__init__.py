@@ -85,13 +85,12 @@ lw (or linewidth) : int
     Width of the lines
 """
 
-from collections import OrderedDict
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from physt.histogram_base import HistogramBase
 from physt.histogram_collection import HistogramCollection
 
-backends = OrderedDict()
+backends: Dict[str, Any] = {}
 
 # Use variant without exception catching if you want to debug import of backends.
 # from . import matplotlib as mpl_backend
@@ -130,10 +129,10 @@ except:
 from . import ascii as ascii_backend
 backends["ascii"] = ascii_backend
 
+_default_backend: Optional[str] = None
+
 if backends:
     _default_backend = list(backends.keys())[0]
-else:
-    _default_backend = None
 
 
 def set_default_backend(name: str):

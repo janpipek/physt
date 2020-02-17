@@ -1,6 +1,6 @@
 """Different binning algorithms/schemas for the histograms."""
 from collections import OrderedDict
-from typing import Optional, Tuple, List, Union
+from typing import Any, Dict, Optional, Tuple, List, Union
 
 import numpy as np
 
@@ -75,14 +75,15 @@ class BinningBase:
     inconsecutive_allowed = False
     # TODO: adding allowed?
 
-    def to_dict(self) -> OrderedDict:
+    def to_dict(self) -> Dict[str, Any]:
         """Dictionary representation of the binning schema.
 
         This serves as template method, please implement _update_dict
         """
-        result = OrderedDict()
-        result["adaptive"] = self._adaptive
-        result["binning_type"] = type(self).__name__
+        result: Dict[str, Any] = {
+            "adaptive": self._adaptive,
+            "binning_type": type(self).__name__,
+        }
         self._update_dict(result)
         return result
 
@@ -232,7 +233,7 @@ class BinningBase:
     @property
     def first_edge(self) -> float:
         """The left edge of the first bin."""
-        if self._numpy_bins is None:
+        if self._numpy_bins is not None:
             return self._numpy_bins[0]
         else:
             return self.bins[0][0]
@@ -240,12 +241,12 @@ class BinningBase:
     @property
     def last_edge(self) -> float:
         """The right edge of the last bin."""
-        if self._numpy_bins is None:
+        if self._numpy_bins is not None:
             return self._numpy_bins[-1]
         else:
             return self.bins[-1][1]
 
-    def as_static(self, copy: bool = True) -> 'StaticBinning':
+    def as_static(self, copy: bool = True) -> "StaticBinning":
         """Convert binning to a static form.
 
         Parameters
@@ -260,17 +261,12 @@ class BinningBase:
         """
         return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
 
-    def as_fixed_width(self, copy=True):
+    def as_fixed_width(self, copy: bool = True) -> "FixedWidthBinning":
         """Convert binning to recipe with fixed width (if possible.)
 
         Parameters
         ----------
-        copy: bool
-            Ensure that we receive another object
-
-        Returns
-        -------
-        FixedWidthBinning
+        copy: If True, ensure that we receive another object.
         """
         if self.bin_count == 0:
             raise RuntimeError("Cannot guess binning width with zero bins")
@@ -544,13 +540,13 @@ class FixedWidthBinning(BinningBase):
         bin_map2 = other._force_new_min_max(new_min, new_max)
         return bin_map1, bin_map2
 
-    def as_fixed_width(self, copy=True):
+    def as_fixed_width(self, copy: bool = True) -> "FixedWidthBinning":
         if copy:
             return self.copy()
         else:
             return self
 
-    def _update_dict(self, a_dict):
+    def _update_dict(self, a_dict: Dict[str, Any]) -> None:
         # TODO: Fix to be instantiable from JSON
         a_dict["bin_count"] = self.bin_count
         a_dict["bin_width"] = self.bin_width
