@@ -1,20 +1,28 @@
 """Dask-based and dask oriented variants of physt histogram facade functions."""
-from .. import h1 as original_h1
-from .. import histogramdd as original_hdd
+from physt import h1 as original_h1
+from physt import histogramdd as original_hdd
 
 options = {
     "chunk_split": 16
 }
 
 
-def _run_dask(name, data, compute, method, func):
+def _run_dask(name: str, data: "dask.array.Array", compute: bool, method, func):
+    """Construct the computation graph and optionally compute it.
+    
+    :param name: Name of the method (for graph naming purposes).
+    :param data: Dask array data
+    :param func: Function running of each array chunk.
+    :param compute: If True, compute immediately
+    :param method: None (linear execution), "threaded" or callable
+        to apply when computing.
+    """
     import dask
-    data_hash = str(id(data))[-6:]
-    graph = dict(("{0}-{1}-{2}".format(name, data_hash, i), (func, k))
-                 for i, k in enumerate(dask.core.flatten(data._keys())))
+    graph = dict(("{0}-{1}-{2}".format(name, data.name, index), (func, item))
+                  for index, item in enumerate(data.__dask_keys__()))
     items = list(graph.keys())
+    result_name = "{0}-{1}-result".format(name, data.name)
     graph.update(data.dask)
-    result_name = "{0}-{1}-result".format(name, data_hash)
     graph[result_name] = (sum, items)
     if compute:
         if not method:
