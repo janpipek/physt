@@ -1,4 +1,5 @@
-__version__ = '0.4.9'
+"""Package information."""
+__version__ = "0.4.10"
 __author__ = "Jan Pipek"
 __author_email__ = "jan.pipek@gmail.com"
 __url__ = "https://github.com/janpipek/physt"

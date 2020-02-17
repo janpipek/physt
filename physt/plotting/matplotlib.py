@@ -804,7 +804,7 @@ def _add_labels(ax: Axes, h: Union[Histogram1D, Histogram2D], kwargs: dict):
     ax.get_figure().tight_layout()
 
 
-def _add_values(ax: Axes, h1: Histogram1D, data, *, value_format=lambda x: x, **kwargs):
+def _add_values(ax: Axes, h1: Histogram1D, data, *, value_format=str, **kwargs):
     """Show values next to each bin in a 1D plot.
 
     Parameters
@@ -813,6 +813,7 @@ def _add_values(ax: Axes, h1: Histogram1D, data, *, value_format=lambda x: x, **
     h1 : physt.histogram1d.Histogram1D
     data : array_like
         The values to be displayed
+    value_format : foratting string or callable to create the value representation
     kwargs : dict
         Parameters to be passed to matplotlib to override standard text params.
     """

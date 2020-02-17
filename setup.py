@@ -35,28 +35,34 @@ def read_info():
 THIS_DIR = os.path.dirname(__file__)
 INFO = read_info()
 
-
 options = dict(
-    name='physt',
+    name="physt",
     version=INFO["__version__"],
     packages=find_packages(),
-    license='MIT',
-    description='P(i/y)thon h(i/y)stograms.',
+    license="MIT",
+    description="P(i/y)thon h(i/y)stograms.",
     long_description=__doc__.strip(),
     author=INFO["__author__"],
     author_email=INFO["__author_email__"],
     url=INFO["__url__"],
-    package_data={"physt" : ["examples/*.csv"]},
-    install_requires = ['numpy', 'packaging'],
+    package_data={"physt": ["examples/*.csv"]},
+    install_requires=["numpy", "packaging"],
     python_requires="~=3.5",
-    extras_require = {
-        'all' : ['dask', 'pandas', 'matplotlib', 'folium', 'vega3', 'xarray',
-                 'protobuf', 'uproot', 'asciiplotlib', 'xtermcolor']
-    },
-    entry_points = {
-        'console_scripts' : [
+    extras_require={
+        "all": [
+            "dask",
+            "pandas",
+            "matplotlib",
+            "folium",
+            "vega3",
+            "xarray",
+            "protobuf",
+            "uproot",
+            "asciiplotlib",
+            "xtermcolor",
         ]
     },
+    entry_points={"console_scripts": []},
     classifiers=[
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: MIT License",
@@ -65,10 +71,10 @@ options = dict(
         "Intended Audience :: Information Technology",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering",
-        "Topic :: Software Development :: Libraries :: Python Modules"
-    ]
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
 )
 
-extras = options['extras_require']
-extras['full'] = list(set(itertools.chain.from_iterable(extras.values())))
+extras = options["extras_require"]
+extras["full"] = list(set(itertools.chain.from_iterable(extras.values())))
 setup(**options)
