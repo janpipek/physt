@@ -2,6 +2,7 @@
 --------------------------
 - Fix: Histograms on dask arrays
 - Fix: Several other small bugs
+- Removed: protobuf I/O support
 
 0.4.8 (22nd November 2019)
 --------------------------

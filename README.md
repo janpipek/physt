@@ -125,7 +125,6 @@ Using pip:
 * IO, conversions
   - I/O JSON 
   - I/O xarray.DataSet (experimental)
-  - I/O protobuf (experimental)
   - O ROOT file (experimental)
   - O pandas.DataFrame (basic)
 
