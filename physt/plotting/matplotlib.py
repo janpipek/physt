@@ -48,7 +48,7 @@ from physt.histogram1d import Histogram1D
 from physt.histogram_nd import Histogram2D
 from physt.plotting.common import (get_data, get_err_data,
                                    pop_kwargs_with_prefix)
-from physt.special import CylinderSurfaceHistogram, DirectionalHistogram
+from physt.special import CylindricalSurfaceHistogram, SphericalSurfaceHistogram
 
 # To be filled by register function
 types = []
@@ -489,7 +489,7 @@ def polar_map(hist: Histogram2D, ax: Axes, *, show_zero: bool = True, show_color
 
 
 @register(2, use_3d=True)
-def globe_map(hist: Union[Histogram2D, DirectionalHistogram], ax: Axes3D, *, show_zero: bool = True, **kwargs):
+def globe_map(hist: Union[Histogram2D, SphericalSurfaceHistogram], ax: Axes3D, *, show_zero: bool = True, **kwargs):
     """Heat map plotted on the surface of a sphere."""
     data = get_data(hist, cumulative=False, flatten=False,
                     density=kwargs.pop("density", False))
@@ -531,7 +531,7 @@ def globe_map(hist: Union[Histogram2D, DirectionalHistogram], ax: Axes3D, *, sho
 
 
 @register(2, use_3d=True)
-def cylinder_map(hist: Union[Histogram2D, CylinderSurfaceHistogram], ax: Axes3D, *, show_zero: bool = True, **kwargs):
+def cylinder_map(hist: Union[Histogram2D, CylindricalSurfaceHistogram], ax: Axes3D, *, show_zero: bool = True, **kwargs):
     """Heat map plotted on the surface of a cylinder."""
     data = get_data(hist, cumulative=False, flatten=False,
                     density=kwargs.pop("density", False))

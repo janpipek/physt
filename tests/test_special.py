@@ -50,8 +50,39 @@ class TestSpherical:
 
     def test_projection_types(self):
         h = special.spherical_histogram([[1, 2, 3], [2, 3, 4]])
-        assert special.DirectionalHistogram == type(h.projection("phi", "theta"))
-        assert special.DirectionalHistogram == type(h.projection("theta", "phi"))
+        assert special.SphericalSurfaceHistogram == type(h.projection("phi", "theta"))
+        assert special.SphericalSurfaceHistogram == type(h.projection("theta", "phi"))
+
+    def test_equal_radius(self):
+        """Issue #62"""
+        n = 1000
+        data = np.empty((n, 3))
+        np.random.seed(42)
+        data[:,0] = np.random.normal(0, 1, n)
+        data[:,1] = np.random.normal(0, 1, n)
+        data[:,2] = np.random.normal(0, 1, n)
+        for i in range(n):
+            scale = np.sqrt(data[i,0] ** 2 + data[i,1] ** 2 + data[i,2] ** 2)
+            data[i,0] = data[i,0] / scale
+            data[i,1] = data[i,1] / scale
+            data[i,2] = data[i,2] / scale
+
+        with pytest.raises(ValueError) as exc:
+            special.spherical_histogram(data, theta_bins=20, phi_bins=20)
+        assert "All radii seem to be the same: 1.0000. Perhaps you wanted to use `spherical_surface_histogram` instead or set radius bins explicitly?" in str(exc)
+
+
+class TestSphericalSurface:
+    def test_simple_sphere_data(self):
+        n = 100
+        data = np.empty((n, 3))
+        np.random.seed(42)
+        data[:, 0] = np.random.normal(0, 1, n)
+        data[:, 1] = np.random.normal(0, 1, n)
+        data[:, 2] = np.random.normal(0, 1, n)
+
+        h = special.spherical_surface_histogram(data, theta_bins=10, phi_bins=20)
+
 
 
 class TestCylindricalSurface:
@@ -80,8 +111,8 @@ class TestCylindrical:
 
     def test_projection_types(self):
         h = special.cylindrical_histogram([[1, 2, 3], [2, 3, 4]])
-        assert special.CylinderSurfaceHistogram == type(h.projection("phi", "z"))
-        assert special.CylinderSurfaceHistogram == type(h.projection("z", "phi"))
+        assert special.CylindricalSurfaceHistogram == type(h.projection("phi", "z"))
+        assert special.CylindricalSurfaceHistogram == type(h.projection("z", "phi"))
         assert special.PolarHistogram == type(h.projection("rho", "phi"))
         assert special.PolarHistogram == type(h.projection("phi", "rho"))
 
