@@ -72,8 +72,8 @@ class BinningBase:
         klass = find_subclass(BinningBase, binning_type)
         return klass(**a_dict)
 
-    adaptive_allowed = False
-    inconsecutive_allowed = False
+    adaptive_allowed: bool = False
+    inconsecutive_allowed: bool = False
     # TODO: adding allowed?
 
     def to_dict(self) -> Dict[str, Any]:
@@ -685,6 +685,7 @@ def quantile_binning(data=None, bins=10, *, qrange: RangeTuple = (0.0, 1.0), **k
 
     if np.isscalar(bins):
         bins = np.linspace(qrange[0] * 100, qrange[1] * 100, bins + 1)
+    # TODO: Warn / exception about qrange not being used
     bins = np.percentile(data, bins)
     return static_binning(bins=make_bin_array(bins), includes_right_edge=True)
 
@@ -741,6 +742,7 @@ def exponential_binning(data=None, bin_count: Optional[int] = None, *, range: Op
     Parameters
     ----------
     bin_count: Number of bins
+    range: (min, max)
 
     See also
     --------

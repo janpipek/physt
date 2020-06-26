@@ -1,3 +1,10 @@
+0.4.11 (26th June 2020)
+-----------------------
+- Renamed: CylinderSurfaceHistogram -> CylindricalSurfaceHistogram
+- Renamed: DirectionalHistogram -> SphericalSurfaceHistogram
+- Changed: The range arguments for the special histograms have been changed to more explicit.
+- Added: Helper functions cylindrical_surface_histogram and spherical_surface_histogram.
+
 0.4.10 (17th February 2020)
 --------------------------
 - Fix: Histograms on dask arrays
