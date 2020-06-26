@@ -7,6 +7,7 @@ import numpy as np
 from .bin_utils import (is_bin_subset, is_consecutive, is_rising,
                         make_bin_array, to_numpy_bins, to_numpy_bins_with_mask,
                         find_human_width)
+from .typing_aliases import RangeTuple
 from .util import find_subclass
 
 # TODO: Locking and edit operations (like numpy read-only)
@@ -590,7 +591,7 @@ class ExponentialBinning(BinningBase):
         a_dict["bin_count"] = self._bin_count        
 
 
-def numpy_binning(data, bins=10, range=None, *args, **kwargs) -> NumpyBinning:
+def numpy_binning(data, bins=10, range: Optional[RangeTuple] = None, **kwargs) -> NumpyBinning:
     """Construct binning schema compatible with numpy.histogram
 
     Parameters
@@ -627,7 +628,7 @@ def human_binning(
     bin_count: Optional[int] = None,
     *,
     kind: Optional[str] = None,
-    range: Optional[Tuple[float, float]] = None,
+    range: Optional[RangeTuple] = None,
     min_bin_width: Optional[float] = None,
     max_bin_width: Optional[float] = None,
     **kwargs) -> FixedWidthBinning:
@@ -661,7 +662,7 @@ def human_binning(
     return fixed_width_binning(bin_width=bin_width, data=data, range=range, **kwargs)
 
 
-def quantile_binning(data=None, bins=10, *, qrange=(0.0, 1.0), **kwargs) -> StaticBinning:
+def quantile_binning(data=None, bins=10, *, qrange: RangeTuple = (0.0, 1.0), **kwargs) -> StaticBinning:
     """Binning schema based on quantile ranges.
 
     This binning finds equally spaced quantiles. This should lead to
@@ -709,7 +710,7 @@ def integer_binning(data=None, **kwargs) -> FixedWidthBinning:
                                align=True, bin_shift=0.5, **kwargs)
 
 
-def fixed_width_binning(data=None, bin_width: Union[float, int] = 1, *, range=None, includes_right_edge=False, **kwargs) -> FixedWidthBinning:
+def fixed_width_binning(data=None, bin_width: Union[float, int] = 1, *, range: Optional[RangeTuple] = None, includes_right_edge: bool = False, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width binning schema.
 
     Parameters
@@ -734,15 +735,12 @@ def fixed_width_binning(data=None, bin_width: Union[float, int] = 1, *, range=No
     return result
 
 
-def exponential_binning(data=None, bin_count: Optional[int] = None, *, range=None, **kwargs) -> ExponentialBinning:
+def exponential_binning(data=None, bin_count: Optional[int] = None, *, range: Optional[RangeTuple] = None, **kwargs) -> ExponentialBinning:
     """Construct exponential binning schema.
 
     Parameters
     ----------
-    bin_count: Optional[int]
-        Number of bins
-    range: Optional[tuple]
-        (min, max)
+    bin_count: Number of bins
 
     See also
     --------
