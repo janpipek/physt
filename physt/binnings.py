@@ -806,13 +806,13 @@ def calculate_bins(array, _=None, *args, **kwargs) -> BinningBase:
     elif callable(_):
         binning = _(array, *args, **kwargs)
     elif np.iterable(_):
-        binning = static_binning(array, _, *args, **kwargs)
+        binning = static_binning(array, _, **kwargs)
     else:
         raise RuntimeError("Binning {0} not understood.".format(_))
     return binning
 
 
-def calculate_bins_nd(array, bins=None, *args, **kwargs):
+def calculate_bins_nd(array, bins=None, *args, dim: Optional[int] = None, check_nan=True, **kwargs):
     """Find optimal binning from arguments (n-dimensional variant)
 
     Usage similar to `calculate_bins`.
@@ -821,11 +821,13 @@ def calculate_bins_nd(array, bins=None, *args, **kwargs):
     -------
     List[BinningBase]
     """
-    if kwargs.pop("check_nan", True):
+    if check_nan:
         if np.any(np.isnan(array)):
             raise RuntimeError("Cannot calculate bins in presence of NaN's.")
 
     if array is not None:
+        if dim and array.shape[-1] != dim:
+            raise ValueError(f"The array must be of shape (N, {dim}), {array.shape} found.")
         _, dim = array.shape
 
     # Prepare bins
