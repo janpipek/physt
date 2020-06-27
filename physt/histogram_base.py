@@ -1,14 +1,12 @@
 """HistogramBase - base for all histogram classes."""
 import abc
 from collections import OrderedDict
-from typing import List, Optional, Iterable, Mapping, Any, Tuple, Union
+from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, Union
 
 import numpy as np
 
 from .binnings import as_binning
-
-
-AxisIdentifier = Union[int, str]
+from .typing_aliases import Axis
 
 
 class HistogramBase(abc.ABC):
@@ -62,7 +60,7 @@ class HistogramBase(abc.ABC):
 
     """
 
-    def __init__(self, binnings, frequencies=None, errors2=None, **kwargs):
+    def __init__(self, binnings, frequencies=None, errors2=None, *, axis_names: Optional[Iterable[str]] = None, dtype=None, keep_missed=True, **kwargs):
         """Constructor
 
         All keyword arguments not listed below become items in the _meta_data
@@ -79,12 +77,15 @@ class HistogramBase(abc.ABC):
         """
         self._binnings = [as_binning(binning) for binning in binnings]
 
+        new_kwargs = self.default_init_values.copy()
+        new_kwargs.update(kwargs)
+        kwargs = new_kwargs
+
         # Frequencies + appropriate dtypes
         if frequencies is None:
-            dtype = kwargs.pop("dtype", None) or np.int64
+            dtype = dtype or np.int64
             self._frequencies = np.zeros(self.shape, dtype=dtype)
         else:
-            dtype = kwargs.pop("dtype", None)
             if dtype is not None:
                 frequencies = np.asarray(frequencies, dtype=dtype)
             else:
@@ -114,14 +115,17 @@ class HistogramBase(abc.ABC):
         if self._errors2.shape != self._frequencies.shape:
             raise RuntimeError("Errors must have same dimension as frequencies.")
 
-        self.keep_missed = kwargs.pop("keep_missed", True)
+        self.keep_missed = keep_missed
         # Note: missed are dealt differently in 1D/ND cases
 
-        if "axis_names" not in kwargs:
-            kwargs["axis_names"] = ["axis{0}".format(i) for i in range(self.ndim)]
-
-        # Meta data
         self._meta_data = kwargs.copy()
+        self.axis_names = axis_names or self.default_axis_names
+
+    @property
+    def default_axis_names(self) -> List[str]:
+        return ["axis{0}".format(i) for i in range(self.ndim)]
+
+    default_init_values: Dict[str, Any] = {}
 
     @property
     def meta_data(self) -> dict:
@@ -171,7 +175,7 @@ class HistogramBase(abc.ABC):
     def axis_names(self, value: Iterable[str]):
         self._meta_data["axis_names"] = tuple(str(name) for name in value)
 
-    def _get_axis(self, name_or_index: AxisIdentifier) -> int:
+    def _get_axis(self, name_or_index: Axis) -> int:
         """Get a zero-based index of an axis and check its existence."""
         # TODO: Add unit test
         if isinstance(name_or_index, int):
@@ -390,7 +394,7 @@ class HistogramBase(abc.ABC):
         self._binnings[axis] = new_binning
 
     def merge_bins(self, amount: Optional[int] = None, *, min_frequency: Optional[float] = None,
-                   axis: Optional[AxisIdentifier] = None, inplace: bool = False) -> 'HistogramBase':
+                   axis: Optional[Axis] = None, inplace: bool = False) -> 'HistogramBase':
         """Reduce the number of bins and add their content:
 
         Parameters

@@ -25,7 +25,9 @@ class Histogram1D(HistogramBase):
     These are the basic attributes that can be used in the constructor (see there)
     Other attributes are dynamic.
     """
-    def __init__(self, binning, frequencies=None, errors2=None, *, stats=None, **kwargs):
+
+    def __init__(self, binning, frequencies=None, errors2=None, *, stats=None, overflow=0,
+                 underflow=0, inner_missed=0, axis_name: Optional[str] = None, **kwargs):
         """Constructor
 
         Parameters
@@ -50,12 +52,12 @@ class Histogram1D(HistogramBase):
             Dictionary of various statistics ("sum", "sum2")
         """
         missed = [
-            kwargs.pop("underflow", 0),
-            kwargs.pop("overflow", 0),
-            kwargs.pop("inner_missed", 0)
+            underflow,
+            overflow,
+            inner_missed,
         ]
-        if "axis_name" in kwargs:
-            kwargs["axis_names"] = [kwargs.pop("axis_name")]
+        if axis_name:
+            kwargs["axis_names"] = [axis_name]
 
         HistogramBase.__init__(self, [binning], frequencies, errors2, **kwargs)
 
@@ -270,94 +272,62 @@ class Histogram1D(HistogramBase):
     #         return None
 
     @property
-    def bin_left_edges(self):
-        """Left edges of all bins.
-
-        Returns
-        -------
-        numpy.ndarray
-        """
+    def bin_left_edges(self) -> np.ndarray:
+        """Left edges of all bins."""
         return self.bins[..., 0]
 
     @property
-    def bin_right_edges(self):
-        """Right edges of all bins.
-
-        Returns
-        -------
-        numpy.ndarray
-        """
+    def bin_right_edges(self) -> np.ndarray:
+        """Right edges of all bins."""
         return self.bins[..., 1]
 
-    @property
-    def min_edge(self):
-        """Left edge of the first bin.
+    def get_bin_left_edges(self, i):
+        assert i == 0
+        return self.bin_left_edges
 
-        Returns
-        -------
-        float
-        """
+    def get_bin_right_edges(self, i):
+        assert i == 0
+        return self.bin_right_edges
+
+    @property
+    def min_edge(self) -> float:
+        """Left edge of the first bin."""
         return self.bin_left_edges[0]
 
     @property
-    def max_edge(self):
-        """Right edge of the last bin.
-
-        Returns
-        -------
-        float
-        """
+    def max_edge(self) -> float:
+        """Right edge of the last bin."""
         # TODO: Perh
         return self.bin_right_edges[-1]
 
     @property
-    def bin_centers(self):
-        """Centers of all bins.
-
-        Returns
-        -------
-        numpy.ndarray
-        """
+    def bin_centers(self) -> np.ndarray:
+        """Centers of all bins."""
         return (self.bin_left_edges + self.bin_right_edges) / 2
 
     @property
-    def bin_widths(self):
-        """Widths of all bins.
-
-        Returns
-        -------
-        numpy.ndarray
-        """
+    def bin_widths(self) -> np.ndarray:
+        """Widths of all bins."""
         return self.bin_right_edges - self.bin_left_edges
 
     @property
-    def total_width(self):
+    def total_width(self) -> float:
         """Total width of all bins.
 
         In inconsecutive histograms, the missing intervals are not counted in.
-
-        Returns
-        -------
-        float
         """
         return self.bin_widths.sum()
 
     @property
-    def bin_sizes(self):
+    def bin_sizes(self) -> np.ndarray:
         return self.bin_widths
 
-    def find_bin(self, value):
+    def find_bin(self, value: float) -> Optional[int]:
         """Index of bin corresponding to a value.
-
-        Parameters
-        ----------
-        value: float
-            Value to be searched for.
 
         Returns
         -------
-        int
-            index of bin to which value belongs
+        index of bin to which value belongs
             (-1=underflow, N=overflow, None=not found - inconsecutive)
         """
         ixbin = np.searchsorted(self.bin_left_edges, value, side="right")
@@ -375,20 +345,17 @@ class Histogram1D(HistogramBase):
         else:
             return None
 
-    def fill(self, value: float, weight: float = 1) -> int:
+    def fill(self, value: float, weight: float = 1, **kwargs) -> Optional[int]:
         """Update histogram with a new value.
 
         Parameters
         ----------
-        value: float
-            Value to be added.
-        weight: float, optional
-            Weight assigned to the value.
+        value: Value to be added.
+        weight: Weight assigned to the value.
 
         Returns
         -------
-        int
-            index of bin which was incremented (-1=underflow, N=overflow, None=not found)
+        index of bin which was incremented (-1=underflow, N=overflow, None=not found)
 
         Note: If a gap in unconsecutive bins is matched, underflow & overflow are not valid anymore.
         Note: Name was selected because of the eponymous method in ROOT
@@ -414,7 +381,7 @@ class Histogram1D(HistogramBase):
                 self._stats["sum2"] += weight * value ** 2
         return ixbin
 
-    def fill_n(self, values, weights=None, dropna: bool = True):
+    def fill_n(self, values, weights=None, dropna: bool = True, **kwargs):
         """Update histograms with a set of values.
 
         Parameters
@@ -527,6 +494,22 @@ class Histogram1D(HistogramBase):
         # TODO: Add stats
         return cls(**kwargs)
 
+    @classmethod
+    def from_calculate_frequencies(cls, data, binning, weights=None, *, validate_bins=True,
+                          already_sorted: bool = False, dtype=None, **kwargs):
+        frequencies, errors2, underflow, overflow, stats = calculate_frequencies(
+            data=data, binning=binning, weights=weights, validate_bins=validate_bins,
+            already_sorted=already_sorted, dtype=dtype
+        )
+        return cls(
+            binning=binning,
+            frequencies=frequencies,
+            errors2=errors2,
+            stats=stats,
+            overflow=overflow,
+            **kwargs,
+        )
+
 
 def calculate_frequencies(data, binning, weights=None, *, validate_bins=True,
                           already_sorted: bool = False, dtype=None):
@@ -574,6 +557,8 @@ def calculate_frequencies(data, binning, weights=None, *, validate_bins=True,
     # Statistics
     sum = 0.0
     sum2 = 0.0
+    underflow = np.nan
+    overflow = np.nan
 
     # Ensure correct binning
     bins = binning.bins  # bin_utils.make_bin_array(bins)

@@ -1,12 +1,9 @@
 from typing import Optional, Container, Tuple, Dict, Any
-import sys
 
 import numpy as np
 
-from .histogram1d import Histogram1D
-from .binnings import BinningBase
-
-from . import h1
+from physt.histogram1d import Histogram1D
+from physt.binnings import BinningBase
 
 
 class HistogramCollection(Container[Histogram1D]):
@@ -77,13 +74,13 @@ class HistogramCollection(Container[Histogram1D]):
     def axis_names(self) -> Tuple[str]:
         return self.axis_name,
 
-    def add(self, histogram: Histogram1D):
+    def add(self, histogram: Histogram1D) -> None:
         """Add a histogram to the collection."""
         if self.binning and not self.binning == histogram.binning:
             raise ValueError("Cannot add histogram with different binning.")
         self.histograms.append(histogram)
 
-    def create(self, name: str, values, *, weights=None, dropna: bool = True, **kwargs):
+    def create(self, name: str, values, *, weights=None, dropna: bool = True, **kwargs) ->Histogram1D:
         # TODO: Rename!
         init_kwargs = {
             "axis_name": self.axis_name
@@ -146,11 +143,11 @@ class HistogramCollection(Container[Histogram1D]):
         return PlottingProxy(self)
 
     @classmethod
-    def multi_h1(cls, a_dict: Dict[str, Any], bins=None, **kwargs) -> "HistogramCollection":
+    def multi_h1(cls, a_dict: Dict[str, Any], bins=None, *args, **kwargs) -> "HistogramCollection":
         """Create a collection from multiple datasets."""
         from physt.binnings import calculate_bins
         mega_values = np.concatenate(list(a_dict.values()))
-        binning = calculate_bins(mega_values, bins, **kwargs)
+        binning = calculate_bins(mega_values, bins, *args, **kwargs)
 
         title = kwargs.pop("title", None)
         name = kwargs.pop("name", None)
