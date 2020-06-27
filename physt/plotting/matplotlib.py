@@ -48,7 +48,7 @@ from physt.histogram1d import Histogram1D
 from physt.histogram_nd import Histogram2D
 from physt.plotting.common import (get_data, get_err_data,
                                    pop_kwargs_with_prefix)
-from physt.special import CylindricalSurfaceHistogram, SphericalSurfaceHistogram
+from physt.special_histograms import CylindricalSurfaceHistogram, SphericalSurfaceHistogram
 
 # To be filled by register function
 types = []

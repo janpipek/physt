@@ -60,7 +60,7 @@ iris_hist.plot(show_zero=False, cmap="gray_r", show_values=True);
 
 ```python
 import numpy as np
-from physt import special
+from physt import special_histograms
 
 # Generate some sample data
 data = np.empty((1000, 3))
@@ -69,7 +69,7 @@ data[:,1] = np.random.normal(0, 1.3, 1000)
 data[:,2] = np.random.normal(1, .6, 1000)
 
 # Get histogram data (in spherical coordinates)
-h = special.spherical_histogram(data)                 
+h = special_histograms.spherical(data)                 
 
 # And plot its projection on a globe
 h.projection("theta", "phi").plot.globe_map(density=True, figsize=(7, 7), cmap="rainbow")   

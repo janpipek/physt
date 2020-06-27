@@ -3,6 +3,8 @@
 These functions are mostly general Python functions, not specific
 for numerical computing, histogramming, etc.
 """
+import warnings
+from functools import wraps
 from typing import Any, Dict, Tuple
 
 
@@ -54,3 +56,26 @@ def pop_many(a_dict: Dict[str, Any], *args: str,  **kwargs) -> Dict[str, Any]:
     for key, value in kwargs.items():
         result[key] = a_dict.pop(key, value)
     return result
+
+
+def deprecation_alias(f, deprecated_name: str):
+    """Provide a deprecated copy of a function.
+
+    Parameters
+    ----------
+    f : The correct function
+    deprecated_name : The name the function will be given
+
+    Examples
+    --------
+    >>> def new(x): return 1
+    >>> old = deprecated_name(new, "old")
+    """
+    @wraps(f)
+    def inner(*args, **kwargs):
+        warnings.warn(
+            f"{deprecated_name} is deprecated, use {f.__name__} instead",
+            DeprecationWarning
+        )
+        return f(*args, **kwargs)
+    return inner
