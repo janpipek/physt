@@ -79,14 +79,14 @@ h.projection("theta", "phi").plot.globe_map(density=True, figsize=(7, 7), cmap="
 
 See more in docstring's and notebooks:
 
-- Basic tutorial: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/tutorial.ipynb>
-- Binning: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/binning.ipynb>
-- 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/2d_histograms.ipynb>
-- Special histograms (polar, spherical, cylindrical - *beta*): <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/special_histograms.ipynb>
-- Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/adaptive_histogram.ipynb>
-- Use dask for large (not "big") data - *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/dask.ipynb>
-- Geographical bins . *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/geospatial.ipynb>
-- Plotting with vega backend: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/master/doc/vega-examples.ipynb>
+- Basic tutorial: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/tutorial.ipynb>
+- Binning: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/binning.ipynb>
+- 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/2d_histograms.ipynb>
+- Special histograms (polar, spherical, cylindrical - *beta*): <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/special_histograms.ipynb>
+- Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/adaptive_histogram.ipynb>
+- Use dask for large (not "big") data - *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/dask.ipynb>
+- Geographical bins . *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/geospatial.ipynb>
+- Plotting with vega backend: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/vega-examples.ipynb>
 
 ## Installation
 
