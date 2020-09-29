@@ -24,7 +24,7 @@ import numpy as np
 from .histogram_nd import HistogramND
 from .histogram1d import Histogram1D
 from .util import deprecation_alias
-from .typing_aliases import RangeTuple
+from .typing_aliases import Axis, RangeTuple
 from . import binnings, histogram_nd, histogram1d
 
 
@@ -54,7 +54,7 @@ class TransformedHistogramMixin(abc.ABC):
     def _transform_correct_dimension(cls, value: np.ndarray):
         ...
 
-    def find_bin(self, value, axis=None, transformed=False):
+    def find_bin(self, value, axis: Optional[Axis] = None, transformed: bool = False):
         """
 
         Parameters
@@ -635,9 +635,8 @@ def cylindrical_surface(
     )
 
 
-
-
-
+azimuthal_histogram = deprecation_alias(azimuthal, "azimuthal_histogram")
+radial_histogram = deprecation_alias(radial, "radial_histogram")
 polar_histogram = deprecation_alias(polar, "polar_histogram")
 spherical_histogram = deprecation_alias(polar, "spherical_histogram")
 spherical_surface_histogram = deprecation_alias(polar, "spherical_surface_histogram")

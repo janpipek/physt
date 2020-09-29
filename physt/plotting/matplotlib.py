@@ -60,7 +60,7 @@ default_figsize = matplotlib.rcParams["figure.figsize"]
 default_cmap = "Greys"  # matplotlib.rcParams['image.cmap']
 
 
-def register(*dim: List[int], use_3d: bool = False, use_polar: bool = False, collection: bool = False):
+def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collection: bool = False):
     """Decorator to wrap common plotting functionality.
 
     Parameters

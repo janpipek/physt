@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+pytest.importorskip("dask")
 import dask.array as da
 
 from physt.compat.dask import h1, h2, h3
