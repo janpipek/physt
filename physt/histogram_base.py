@@ -6,10 +6,11 @@ from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, Union
 import numpy as np
 
 from .binnings import as_binning
+from .binned_quantity import BinnedQuantity
 from .typing_aliases import Axis
 
 
-class HistogramBase(abc.ABC):
+class HistogramBase(abc.ABC, BinnedQuantity):
     """Histogram base class.
 
     Behaviour shared by all histogram classes.
@@ -164,50 +165,6 @@ class HistogramBase(abc.ABC):
         In plotting, this will be used as plot title.
         """
         self._meta_data["title"] = str(value)
-
-    @property
-    def axis_names(self) -> Tuple[str, ...]:
-        """Names of axes (stored in meta-data)."""
-        default = ["axis{0}".format(i) for i in range(self.ndim)]
-        return tuple(self._meta_data.get("axis_names", None) or default)
-
-    @axis_names.setter
-    def axis_names(self, value: Iterable[str]):
-        self._meta_data["axis_names"] = tuple(str(name) for name in value)
-
-    def _get_axis(self, name_or_index: Axis) -> int:
-        """Get a zero-based index of an axis and check its existence."""
-        # TODO: Add unit test
-        if isinstance(name_or_index, int):
-            if name_or_index < 0 or name_or_index >= self.ndim:
-                raise ValueError("No such axis, must be from 0 to {0}".format(self.ndim-1))
-            return name_or_index
-        elif isinstance(name_or_index, str):
-            if name_or_index not in self.axis_names:
-                named_axes = [name for name in self.axis_names if name]
-                raise ValueError("No axis with such name: {0}, available names: {1}. In most places, you can also use numbers."
-                                   .format(name_or_index, ", ".join(named_axes)))
-            return self.axis_names.index(name_or_index)
-        else:
-            raise TypeError("Argument of type {0} not understood, int or str expected.".format(type(name_or_index)))
-
-    @property
-    def shape(self) -> Tuple[int, ...]:
-        """Shape of histogram's data.
-
-        Returns
-        -------
-        Tuple with the number of bins along each axis.
-        """
-        return tuple(bins.bin_count for bins in self._binnings)
-
-    @property
-    def ndim(self) -> int:
-        """Dimensionality of histogram's data.
-
-        i.e. the number of axes along which we bin the values.
-        """
-        return len(self._binnings)
 
     def _get_dtype(self) -> np.dtype:
         """Data type of the bin contents."""
@@ -511,15 +468,7 @@ class HistogramBase(abc.ABC):
 
     def has_same_bins(self, other: "HistogramBase") -> bool:
         """Whether two histograms share the same binning."""
-        if self.shape != other.shape:
-            return False
-        elif self.ndim == 1:
-            return np.allclose(self.bins, other.bins)
-        elif self.ndim > 1:
-            for i in range(self.ndim):
-                if not np.allclose(self.bins[i], other.bins[i]):
-                    return False
-            return True
+
 
     def copy(self, include_frequencies: bool = True) -> "HistogramBase":
         """Copy the histogram.
@@ -548,11 +497,6 @@ class HistogramBase(abc.ABC):
         a_copy._missed = missed
         a_copy._stats = stats
         return a_copy
-
-    @property
-    @abc.abstractmethod
-    def bins(self):
-        ...
 
     @abc.abstractmethod
     def fill(self, value, weight: float = 1, **kwargs):
@@ -807,28 +751,3 @@ class HistogramBase(abc.ABC):
         Because of the limit to argument count, weight is not supported.
         """
         self.fill(value)
-
-    @classmethod
-    def _merge_meta_data(cls, first: "HistogramBase", second: "HistogramBase") -> dict:
-        """Merge meta data of two histograms leaving only the equal values.
-
-        (Used in addition and subtraction)
-        """
-        keys = set(first._meta_data.keys())
-        keys = keys.union(set(second._meta_data.keys()))
-        return {key:
-                (first._meta_data.get(key, None) if first._meta_data.get(key, None) == second._meta_data.get(key, None) else None)
-                for key in keys}
-
-    def __array__(self) -> np.ndarray:
-        """Convert to numpy array.
-
-        Returns
-        -------
-        The array of frequencies
-
-        See also
-        --------
-        frequencies
-        """
-        return self.frequencies

@@ -50,36 +50,6 @@ class HistogramND(HistogramBase):
     # Not supported yet
     _stats = None
 
-    @property
-    def bins(self) -> List[np.ndarray]:
-        """List of bin matrices."""
-        return [binning.bins for binning in self._binnings]
-
-    @property
-    def binnings(self) -> List[BinningBase]:
-        """The binnings.
-
-        Note: Please, do not try to update the objects themselves.
-        """
-        return self._binnings
-
-    @property
-    def numpy_bins(self) -> List[np.ndarray]:
-        """Numpy-like bins (if available).
-
-        TODO: Deprecate.
-        """
-        return [binning.numpy_bins for binning in self._binnings]
-
-    @property
-    def edges(self) -> List[np.ndarray]:
-        return self.numpy_bins
-
-    @property
-    def numpy_like(self) -> Tuple[np.ndarray, np.ndarray]:
-        """Same result as would the numpy.histogram function return."""
-        return self.frequencies, self.numpy_bins
-
     def select(self, axis: Axis, index, force_copy: bool = False) -> HistogramBase:
         """Select in an axis.
 

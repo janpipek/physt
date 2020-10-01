@@ -430,7 +430,7 @@ def image(h2: Histogram2D, ax: Axes, *, show_colorbar: bool = True, interpolatio
     norm, cmap_data = _get_cmap_data(data, kwargs)
     # zorder = kwargs.pop("zorder", None)
 
-    for binning in h2._binnings:
+    for binning in h2.binnings:
         if not binning.is_regular():
             raise RuntimeError(
                 "Histograms with irregular bins cannot be plotted using image method.")

@@ -1,5 +1,4 @@
 """Different binning algorithms/schemas for the histograms."""
-from collections import OrderedDict
 from typing import Any, Dict, Optional, Tuple, List, Union
 
 import numpy as np

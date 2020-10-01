@@ -3,6 +3,7 @@ from typing import Optional
 import numpy as np
 
 from physt.util import deprecation_alias
+from physt.binned_quantity import BinnedQuantity
 from physt.histogram1d import Histogram1D
 from physt.histogram_nd import HistogramND, Histogram2D
 from physt.binnings import calculate_bins_nd
@@ -279,6 +280,10 @@ def h(data, bins=10, *args, adaptive = False,
     )
 
 
+# Alias for the BinnedQuantity
+q = BinnedQuantity
+
+
 # Aliases
 histogram = deprecation_alias(h1, "histogram")
 histogram2d = deprecation_alias(h2, "histogram2d")
@@ -300,6 +305,7 @@ __all__ = [
     "histogram2d",
     "histogramdd",
     "collection",
+    "q",
     "polar",
     "azimuthal",
     "radial",
