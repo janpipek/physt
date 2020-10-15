@@ -189,11 +189,11 @@ class TestIndexing:
 
 class TestArithmetic:
     def test_add_number(self):
-        with pytest.raises(RuntimeError):
+        with pytest.raises(TypeError):
             example + 4
 
     def test_add_wrong_histograms(self):
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             wrong_bins = [
                  [],                              # No bins
                  [1.2, 1.5, 1.7, 1.8 ],           # Too few
@@ -228,18 +228,16 @@ class TestArithmetic:
         assert (e1 + e4).name == None
 
     def test_subtract_wrong_histograms(self):
-        with pytest.raises(RuntimeError):
-            wrong_bins = [
-                 [],                              # No bins
-                 [1.2, 1.5, 1.7, 1.8 ],           # Too few
-                 [1.2, 1.44, 1.5, 1.7, 1.8],      # Different
-                 [1.2, 1.4, 1.5, 1.7, 1.8, 1.]    # Too many
-            ]
-            values = [1, 1, 0, 2.2, 3, 4, 4]
-            for binset in wrong_bins:
-                other = Histogram1D(binset, values[:len(binset) - 1])
-                with pytest.raises(RuntimeError):
-                    example - other
+        wrong_bins = [
+             [1.2, 1.5, 1.7, 1.8 ],           # Too few
+             [1.2, 1.44, 1.5, 1.7, 1.8],      # Different
+             [1.2, 1.4, 1.5, 1.7, 1.8, 2.]    # Too many
+        ]
+        values = [1, 1, 0, 2.2, 3, 4, 4]
+        for binset in wrong_bins:
+            other = Histogram1D(binset, values[:len(binset) - 1])
+            with pytest.raises(ValueError):
+                example - other
 
     def test_subtract_correct_histogram(self):
         bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
