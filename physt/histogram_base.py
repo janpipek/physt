@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, Union
 import numpy as np
 
 from .binnings import as_binning
+from .config import FREE_ARITHMETICS
 from .typing_aliases import Axis
 
 
@@ -711,45 +712,47 @@ class HistogramBase(abc.ABC):
             return self + other
 
     def __iadd__(self, other):
-        if np.isscalar(other):
-            raise RuntimeError("Cannot add constant to histograms.")
-        if other.ndim != self.ndim:
-            raise RuntimeError("Cannot add histograms with different dimensions.")
-        elif self.has_same_bins(other):
-            # print("Has same!!!!!!!!!!")
-            self._coerce_dtype(other.dtype)
-            self._frequencies += other.frequencies
-            self._errors2 += other.errors2
-            self._missed += other._missed
-        elif self.is_adaptive():
-            if other.missed > 0:
-                raise RuntimeError("Cannot adapt histogram with missed values.")
-            try:
-                other = other.copy()
-                other.set_adaptive(True)
-
+        if isinstance(other, HistogramBase):
+            if other.ndim != self.ndim:
+                raise RuntimeError("Cannot add histograms with different dimensions.")
+            elif self.has_same_bins(other):
+                # print("Has same!!!!!!!!!!")
                 self._coerce_dtype(other.dtype)
-
-                # TODO: Fix state after exception
-                # maps1 = []
-                maps2 = []
-                for i in range(self.ndim):
-                    new_bins = self._binnings[i].copy()
-
-                    map1, map2 = new_bins.adapt(other._binnings[i])
-                    self._change_binning(new_bins, map1, axis=i)
-                    other._change_binning(new_bins, map2, axis=i)
                 self._frequencies += other.frequencies
                 self._errors2 += other.errors2
+                self._missed += other._missed
+            elif self.is_adaptive():
+                if other.missed > 0:
+                    raise RuntimeError("Cannot adapt histogram with missed values.")
+                try:
+                    other = other.copy()
+                    other.set_adaptive(True)
 
-            except:
-                raise  # RuntimeError("Cannot find common binning for added histograms.")
+                    self._coerce_dtype(other.dtype)
+
+                    for i in range(self.ndim):
+                        new_bins = self._binnings[i].copy()
+
+                        map1, map2 = new_bins.adapt(other._binnings[i])
+                        self._change_binning(new_bins, map1, axis=i)
+                        other._change_binning(new_bins, map2, axis=i)
+                    self._frequencies += other.frequencies
+                    self._errors2 += other.errors2
+
+                except:
+                    raise  # RuntimeError("Cannot find common binning for added histograms.")
+            else:
+                raise RuntimeError("Incompatible binning")
+
+            if self._stats and other._stats:
+                for key in self._stats:
+                    self._stats[key] += other._stats[key]
+        elif FREE_ARITHMETICS:
+            array = np.asarray(other)
+            self._frequencies += array
+            self._errors2 += array
         else:
-            raise RuntimeError("Incompatible binning")
-
-        if self._stats and other._stats:
-            for key in self._stats:
-                self._stats[key] += other._stats[key]
+            raise TypeError(f"Only histograms can be added together. {type(other)} found instead.")
         return self
 
     def __sub__(self, other):
