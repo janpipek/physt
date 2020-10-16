@@ -514,7 +514,7 @@ class TestDtype:
         hist = h1(values, dtype=np.int32)
 
         assert (hist / 3).dtype == np.float
-        assert (hist * 3).dtype == np.int32
+        assert (hist * 3).dtype in (np.int32, np.int64)  # Different platforms :-/
         assert (hist * 3.1).dtype == np.float
 
         with pytest.raises(TypeError):
