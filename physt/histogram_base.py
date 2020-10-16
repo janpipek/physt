@@ -35,9 +35,9 @@ class HistogramBase(abc.ABC):
     ----------
     _binnings : Iterable[BinningBase]
         Schema for binning(s)
-    _frequencies : array_like
+    frequencies : np.ndarray
         Bin contents
-    _errors2 : array_like
+    errors2 : np.ndarray
         Square errors associated with the bin contents
     _meta_data : dict
         All meta-data (names, user-custom values, ...). Anything can be put in.
@@ -111,25 +111,15 @@ class HistogramBase(abc.ABC):
                     raise RuntimeError("Frequencies of type {0} not understood"
                                        .format(frequencies.dtype))
             dtype = frequencies.dtype
-            if frequencies.shape != self.shape:
-                raise ValueError("Values must have same dimension as bins.")
-            if np.any(frequencies < 0):
-                if config.free_arithmetics:
-                    warnings.warn("Negative frequencies in the histogram.")
-                else:
-                    raise ValueError("Cannot have negative frequencies.")
-            self._frequencies = frequencies
+            self.frequencies = frequencies
         self._dtype, _ = self._eval_dtype(dtype)
 
         # Errors
         if errors2 is None:
-            self._errors2 = abs(self._frequencies.copy())
+            errors2 = abs(self._frequencies.copy())
         else:
-            self._errors2 = np.asarray(errors2, dtype=self.dtype)
-        if np.any(self._errors2 < 0):
-            raise RuntimeError("Cannot have negative squared errors.")
-        if self._errors2.shape != self._frequencies.shape:
-            raise RuntimeError("Errors must have same dimension as frequencies.")
+            errors2 = np.asarray(errors2, dtype=self.dtype)
+        self.errors2 = errors2
 
         self.keep_missed = keep_missed
         # Note: missed are dealt differently in 1D/ND cases
@@ -314,6 +304,17 @@ class HistogramBase(abc.ABC):
         """Frequencies (values, contents) of the histogram bins."""
         return self._frequencies
 
+    @frequencies.setter
+    def frequencies(self, frequencies: np.ndarray) -> None:
+        if frequencies.shape != self.shape:
+            raise ValueError("Values must have same dimension as bins.")
+        if np.any(frequencies < 0):
+            if config.free_arithmetics:
+                warnings.warn("Negative frequencies in the histogram.")
+            else:
+                raise ValueError("Cannot have negative frequencies.")
+        self._frequencies = frequencies
+
     @property
     def densities(self) -> np.ndarray:
         """Frequencies normalized by bin sizes.
@@ -349,6 +350,14 @@ class HistogramBase(abc.ABC):
     def errors2(self) -> np.ndarray:
         """Squares of the bin errors."""
         return self._errors2
+
+    @errors2.setter
+    def errors2(self, values) -> None:
+        if values.shape != self.shape:
+            raise ValueError("Square errors must have same dimension as bins.")
+        if np.any(values < 0):
+            raise ValueError("Cannot have negative square errors.")
+        self._errors2 = values
 
     @property
     def errors(self) -> np.ndarray:
@@ -734,8 +743,8 @@ class HistogramBase(abc.ABC):
             elif self.has_same_bins(other):
                 # print("Has same!!!!!!!!!!")
                 self._coerce_dtype(other.dtype)
-                self._frequencies += other.frequencies
-                self._errors2 += other.errors2
+                self.frequencies = self.frequencies + other.frequencies
+                self.errors2 = self.errors2 + other.errors2
                 self._missed += other._missed
             elif self.is_adaptive():
                 if other.missed > 0:
@@ -752,8 +761,8 @@ class HistogramBase(abc.ABC):
                     map1, map2 = new_bins.adapt(other._binnings[i])
                     self._change_binning(new_bins, map1, axis=i)
                     other._change_binning(new_bins, map2, axis=i)
-                self._frequencies += other.frequencies
-                self._errors2 += other.errors2
+                self.frequencies = self.frequencies + other.frequencies
+                self.errors2 = self.errors2 + other.errors2
             else:
                 raise ValueError("Incompatible binning")
 
@@ -763,8 +772,8 @@ class HistogramBase(abc.ABC):
         elif config.free_arithmetics:
             array = np.asarray(other)
             self._coerce_dtype(array.dtype)
-            self._frequencies = self._frequencies + array
-            self._errors2 = self._errors2 + abs(array)
+            self.frequencies = self.frequencies + array
+            self.errors2 = self.errors2 + abs(array)
             self._missed = self._missed * np.nan  # TODO: Any reasonable interpretation?
             self._stats = None  # TODO: Any reasonable interpretation?
         else:
@@ -781,7 +790,16 @@ class HistogramBase(abc.ABC):
     def __isub__(self, other):
         warnings.warn("Subtracting histograms is considered to be a bad idea.")
         if isinstance(other, HistogramBase):
-            return self.__iadd__(other * (-1))
+            if config.free_arithmetics:
+                self += other * (-1)
+            else:
+                adapted_self = self + 0 * other
+                adapted_other = 0 * self + other
+                self.frequencies = adapted_self.frequencies - adapted_other.frequencies
+                self.errors2 = adapted_self.errors2 + adapted_other.errors2
+                self._missed -= other._missed
+            self._stats = None
+            return self
         else:
             array = np.asarray(other)
             return self.__iadd__(array * (-1))
@@ -800,8 +818,8 @@ class HistogramBase(abc.ABC):
                 self._coerce_dtype(array.dtype)
             except ValueError as v:
                 raise TypeError(str(v))
-            self._frequencies = self._frequencies * other
-            self._errors2 = self._errors2 * other ** 2
+            self.frequencies = self.frequencies * other
+            self.errors2 = self.errors2 * other ** 2
             self._missed = self._missed * other
             if self._stats:
                 self._stats["sum"] *= other
@@ -809,8 +827,8 @@ class HistogramBase(abc.ABC):
         elif config.free_arithmetics:  # Treat other as array-like
             array = np.asarray(other)
             self._coerce_dtype(array.dtype)
-            self._frequencies = self._frequencies * array
-            self._errors2 = self._errors2 * array ** 2
+            self.frequencies = self.frequencies * array
+            self.errors2 = self.errors2 * array ** 2
             self._stats = None
             self._missed = self._missed * np.nan
         else:
@@ -830,8 +848,8 @@ class HistogramBase(abc.ABC):
             raise TypeError("Division of two histograms is not supported.")
         elif np.isscalar(other):
             self._coerce_dtype(np.float64)
-            self._frequencies = self._frequencies / other
-            self._errors2 = self._errors2 / other ** 2
+            self.frequencies = self.frequencies / other
+            self.errors2 = self.errors2 / other ** 2
             self._missed /= other
             if self._stats:
                 self._stats["sum"] *= other
@@ -839,8 +857,8 @@ class HistogramBase(abc.ABC):
         elif config.free_arithmetics:  # Treat other as array-like
             self._coerce_dtype(np.float64)
             array = np.asarray(other)
-            self._frequencies = self._frequencies / array
-            self._errors2 = self._errors2 / array ** 2
+            self.frequencies = self.frequencies / array
+            self.errors2 = self.errors2 / array ** 2
             self._stats = None
             self._missed /= np.nan
         else:

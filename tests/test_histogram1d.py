@@ -45,6 +45,29 @@ class TestBins:
         assert np.allclose(example.bin_widths, [0.2, 0.1, 0.2, 0.1])
 
 
+class TestConstructor:
+    @pytest.mark.parametrize("free_arithmetics", [True, False])
+    def test_negative_values(self, free_arithmetics):
+        bins = [[0, 1], [1, 2]]
+        values = [-1, 2]
+        with config.enable_free_arithmetics(free_arithmetics):
+            if free_arithmetics:
+                hist = Histogram1D(bins, values)
+                assert np.array_equal(hist.frequencies, values)
+            else:
+                with pytest.raises(ValueError) as ex:
+                    _ = Histogram1D(bins, values)
+                ex.match("Cannot have negative frequencies.")
+
+    @pytest.mark.parametrize("free_arithmetics", [True, False])
+    def test_negative_errors2(self, free_arithmetics):
+        bins = [[0, 1], [1, 2]]
+        values = [1, 2]
+        errors2 = [-1, 1]
+        with pytest.raises(ValueError) as ex:
+            _ = Histogram1D(bins, values, errors2=errors2)
+
+
 class TestValues:
     def test_values(self, example):
         assert np.allclose(example.frequencies, [4, 0, 3, 7.2])
