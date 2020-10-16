@@ -751,13 +751,11 @@ class HistogramBase(abc.ABC):
                 for key in self._stats:
                     self._stats[key] += other._stats[key]
         elif config.free_arithmetics:
-            #if np.isscalar(other) and np.issubdtype(self.dtype, np.integer) and np.issubdtype(type(other), np.floating):
-            #    self.dtype = float
             array = np.asarray(other)
-            self._coerce_dtype(other.dtype)
+            self._coerce_dtype(array.dtype)
             self._frequencies = self._frequencies + array
             self._errors2 = self._errors2 + abs(array)
-            self._missed = None  # TODO: Any reasonable interpretation?
+            self._missed = self._missed * np.nan  # TODO: Any reasonable interpretation?
             self._stats = None  # TODO: Any reasonable interpretation?
         else:
             raise TypeError(f"Only histograms can be added together. {type(other)} found instead.")
@@ -772,7 +770,11 @@ class HistogramBase(abc.ABC):
 
     def __isub__(self, other):
         warnings.warn("Subtracting histograms is considered to be a bad idea.")
-        return self.__iadd__(other * (-1))
+        if isinstance(other, HistogramBase):
+            return self.__iadd__(other * (-1))
+        else:
+            array = np.asarray(other)
+            return self.__iadd__(array * (-1))
 
     def __mul__(self, other: Any):
         new = self.copy()
@@ -797,8 +799,8 @@ class HistogramBase(abc.ABC):
         elif config.free_arithmetics:  # Treat other as array-like
             array = np.asarray(other)
             self._coerce_dtype(array.dtype)
-            self._frequencies = self._frequencies * other
-            self._errors2 = self._errors2 * other ** 2
+            self._frequencies = self._frequencies * array
+            self._errors2 = self._errors2 * array ** 2
             self._stats = None
             self._missed = self._missed * np.nan
         else:
@@ -826,8 +828,9 @@ class HistogramBase(abc.ABC):
                 self._stats["sum2"] *= other ** 2
         elif config.free_arithmetics:  # Treat other as array-like
             self._coerce_dtype(np.float64)
-            self._frequencies = self._frequencies / other
-            self._errors2 = self._errors2 / other ** 2
+            array = np.asarray(other)
+            self._frequencies = self._frequencies / array
+            self._errors2 = self._errors2 / array ** 2
             self._stats = None
             self._missed /= np.nan
         else:

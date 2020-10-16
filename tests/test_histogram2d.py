@@ -82,6 +82,7 @@ freqs = np.array([[ 1.,  0.],
 
 
 class TestArithmetics:
+    # TODO: Add free arithmetics checks
     def test_multiply_by_constant(self):
         xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
         yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
