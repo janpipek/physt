@@ -1,6 +1,7 @@
-0.4.12 (???)
+0.4.12 (16th October 2020)
 --------------------------
 - Added: Optionally allow arithmetic operations with any array-like objects (see HistogramBase docs.)
+- Added: Public setters for frequencies and errors2 (were "private")
 - Fix: A few small bugs
 
 0.4.11 (26th June 2020)
