@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, Union
 import numpy as np
 
 from .binnings import as_binning
-from .config import FREE_ARITHMETICS
+from .config import config
 from .typing_aliases import Axis
 
 
@@ -103,8 +103,8 @@ class HistogramBase(abc.ABC):
             if frequencies.shape != self.shape:
                 raise ValueError("Values must have same dimension as bins.")
             if np.any(frequencies < 0):
-                if FREE_ARITHMETICS:
-                    warnings.warn("Megative frequencies in the histogram.")
+                if config.free_arithmetics:
+                    warnings.warn("Negative frequencies in the histogram.")
                 else:
                     raise ValueError("Cannot have negative frequencies.")
             self._frequencies = frequencies
@@ -750,7 +750,7 @@ class HistogramBase(abc.ABC):
             if self._stats and other._stats:
                 for key in self._stats:
                     self._stats[key] += other._stats[key]
-        elif FREE_ARITHMETICS:
+        elif config.free_arithmetics:
             #if np.isscalar(other) and np.issubdtype(self.dtype, np.integer) and np.issubdtype(type(other), np.floating):
             #    self.dtype = float
             array = np.asarray(other)
@@ -794,7 +794,7 @@ class HistogramBase(abc.ABC):
             if self._stats:
                 self._stats["sum"] *= other
                 self._stats["sum2"] *= other ** 2
-        elif FREE_ARITHMETICS:  # Treat other as array-like
+        elif config.free_arithmetics:  # Treat other as array-like
             array = np.asarray(other)
             self._coerce_dtype(array.dtype)
             self._frequencies = self._frequencies * other
@@ -824,7 +824,7 @@ class HistogramBase(abc.ABC):
             if self._stats:
                 self._stats["sum"] *= other
                 self._stats["sum2"] *= other ** 2
-        elif FREE_ARITHMETICS:  # Treat other as array-like
+        elif config.free_arithmetics:  # Treat other as array-like
             self._coerce_dtype(np.float64)
             self._frequencies = self._frequencies / other
             self._errors2 = self._errors2 / other ** 2
