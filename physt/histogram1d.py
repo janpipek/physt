@@ -418,17 +418,20 @@ class Histogram1D(HistogramBase):
         if not isinstance(other, self.__class__):
             return False
         # TODO: Change to something in binning itself
-        if not np.allclose(other.bins, self.bins):
+        if not np.allclose(other.bins, self.bins, equal_nan=True):
             return False
-        if not np.allclose(other.frequencies, self.frequencies):
+        if not np.allclose(other.frequencies, self.frequencies, equal_nan=True):
             return False
-        if not np.allclose(other.errors2, self.errors2):
+        if other.keep_missed != self.keep_missed:
             return False
-        if not other.overflow == self.overflow:
-            return False
-        if not other.underflow == self.underflow:
-            return False
-        if not other.inner_missed == self.inner_missed:
+        if self.keep_missed:
+            if not np.allclose(other.overflow, self.overflow, equal_nan=True):
+                return False
+            if not np.allclose(other.underflow, self.underflow, equal_nan=True):
+                return False
+            if not np.allclose(other.inner_missed, self.inner_missed, equal_nan=True):
+                return False
+        if not np.allclose(other.errors2, self.errors2, equal_nan=True):
             return False
         if not other.name == self.name:
             return False
