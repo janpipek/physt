@@ -1,3 +1,8 @@
+0.4.12 (???)
+--------------------------
+- Added: Optionally allow arithmetic operations with any array-like objects (see HistogramBase docs.)
+- Fix: A few small bugs
+
 0.4.11 (26th June 2020)
 -----------------------
 - Renamed: CylinderSurfaceHistogram -> CylindricalSurfaceHistogram

@@ -52,7 +52,18 @@ class HistogramBase(abc.ABC):
     ----------
     - Frequencies in the histogram should always be non-negative.
     Many operations rely on that, but it is not always enforced.
-    (TODO: Fix this?)
+    (if you set config.free_arithmetics (see below), negative frequencies are also
+    allowed.
+
+    Arithmetics
+    -----------
+    Histograms offer standard arithmetic operators that by default allow only
+    meaningful application (i.e. addition / subtraction of two histograms
+    with matching or mutually adaptable bin sets, multiplication and division by a constant).
+
+    If you relax the criteria by setting `config.free_aritmetics` or inside
+    the config.enable_free_arithmetics() context manager, you are in addition
+    allowed to use any array-like with matching shape.
 
     See Also
     --------
@@ -112,8 +123,7 @@ class HistogramBase(abc.ABC):
 
         # Errors
         if errors2 is None:
-            self._errors2 = self._frequencies.copy()
-            # self._errors2[self._errors2 < 0] = np.nan
+            self._errors2 = abs(self._frequencies.copy())
         else:
             self._errors2 = np.asarray(errors2, dtype=self.dtype)
         if np.any(self._errors2 < 0):
