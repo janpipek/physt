@@ -2,14 +2,15 @@
 --------------------------
 - Added: Optionally allow arithmetic operations with any array-like objects (see HistogramBase docs.)
 - Added: Public setters for frequencies and errors2 (were "private")
-- Fix: A few small bugs
-
-0.4.11 (26th June 2020)
------------------------
 - Renamed: CylinderSurfaceHistogram -> CylindricalSurfaceHistogram
 - Renamed: DirectionalHistogram -> SphericalSurfaceHistogram
 - Changed: The range arguments for the special histograms have been changed to more explicit.
 - Added: Helper functions cylindrical_surface_histogram and spherical_surface_histogram.
+- Fix: A few small bugs
+
+0.4.11
+------
+(Unintentionally skipped)
 
 0.4.10 (17th February 2020)
 --------------------------
