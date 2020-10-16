@@ -82,6 +82,7 @@ freqs = np.array([[ 1.,  0.],
 
 
 class TestArithmetics:
+    # TODO: Add free arithmetics checks
     def test_multiply_by_constant(self):
         xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
         yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
@@ -100,15 +101,15 @@ class TestArithmetics:
         xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
         yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
         h = physt.h2(xx, yy, "fixed_width", 1)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(TypeError):
             h * h
 
     def test_divide_by_other(self):
         xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
         yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
         h = physt.h2(xx, yy, "fixed_width", 1)
-        with pytest.raises(RuntimeError):
-            h * h
+        with pytest.raises(TypeError):
+            h / h
 
     def test_divide_by_constant(self):
         xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
@@ -122,7 +123,7 @@ class TestArithmetics:
         xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
         yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
         h = physt.h2(xx, yy, "fixed_width", 1)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(TypeError):
             h + 4
 
     def test_addition_with_another(self):
@@ -154,7 +155,7 @@ class TestArithmetics:
         xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
         yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
         h = physt.h2(xx, yy, "fixed_width", 1)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(TypeError):
             h - 4
 
 
