@@ -5,6 +5,8 @@ import sys
 if sys.version_info >= (3, 7):
     _USES_CONTEXT_VARS = True
     import contextvars
+else:
+    _USES_CONTEXT_VARS = False
 
 
 class _Config:
