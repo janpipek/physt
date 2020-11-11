@@ -50,6 +50,13 @@ class TestPolar:
         t = special_histograms.PolarHistogram.transform(data)
         assert np.allclose(t, [[1, 0], [2, np.pi / 2]])
 
+    def test_densities(self):
+        h = special_histograms.PolarHistogram(
+            binnings=[[0, 1, 2], [0, 1, 2]],
+            frequencies=[[1, 2], [3, 4]]
+        )
+        assert np.array_equal(h.densities, [[2, 4], [2, 4 / 1.5]])
+
     def test_projection_types(self):
         data = np.array([[0.01, 0.01], [0.01, 0.99], [-1, .01], [-1, -.01]])
         x = data[:, 0]

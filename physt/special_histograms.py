@@ -186,7 +186,7 @@ class PolarHistogram(TransformedHistogramMixin, HistogramND):
     - phi as azimuthal angle in the (0, 2*pi) range
 
     """
-    default_axis_names =  ("r", "phi")
+    default_axis_names = ("r", "phi")
     source_ndim = 2
 
     @property
