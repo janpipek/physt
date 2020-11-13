@@ -76,12 +76,12 @@ class TransformedHistogramMixin(abc.ABC):
     def fill(self, value, weight=1, transformed=False):
         if not transformed:
             value = self.transform(value)
-        return super().fill(self, value=value, weight=weight)
+        return super().fill(value=value, weight=weight)
 
     def fill_n(self, values, weights=None, dropna=True, transformed=False):
         if not transformed:
             values = self.transform(values)
-        super().fill_n(self, values=values, weights=weights, dropna=dropna)
+        super().fill_n(values=values, weights=weights, dropna=dropna)
 
     _projection_class_map = {}
 

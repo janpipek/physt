@@ -381,7 +381,7 @@ class Histogram1D(HistogramBase):
                 self._stats["sum2"] += weight * value ** 2
         return ixbin
 
-    def fill_n(self, values, weights=None, dropna: bool = True, **kwargs):
+    def fill_n(self, values, weights=None, *, dropna: bool = True, **kwargs):
         """Update histograms with a set of values.
 
         Parameters

@@ -1,5 +1,5 @@
 """Multi-dimensional histograms."""
-from typing import Optional, List, Any, Tuple
+from typing import Optional, List, Any, Tuple, Union
 
 import numpy as np
 
@@ -214,7 +214,7 @@ class HistogramND(HistogramBase):
             return np.meshgrid(*[self.get_bin_centers(i) for i in range(self.ndim)], indexing='ij')
 
     # TODO: Check!
-    def find_bin(self, value, axis: Optional[Axis] = None):
+    def find_bin(self, value, axis: Optional[Axis] = None) -> Union[None, int, Tuple[int, ...]]:
         """Index(indices) of bin corresponding to a value.
 
         Parameters
@@ -237,11 +237,11 @@ class HistogramND(HistogramBase):
                 return None
             elif ixbin == self.shape[axis]:
                 if value <= self.get_bin_right_edges(axis)[-1]:
-                    return ixbin - 1
+                    return int(ixbin - 1)
                 else:
                     return None
             elif value < self.get_bin_right_edges(axis)[ixbin - 1]:
-                return ixbin - 1
+                return int(ixbin - 1)
             elif ixbin == self.shape[axis]:
                 return None
             else:
@@ -267,7 +267,7 @@ class HistogramND(HistogramBase):
             self._errors2[ixbin] += weight ** 2
         return ixbin
 
-    def fill_n(self, values, weights=None, dropna: bool = True, columns: bool = False):
+    def fill_n(self, values, weights=None, *, dropna: bool = True, columns: bool = False):
         """Add more values at once.
 
         Parameters
@@ -302,8 +302,7 @@ class HistogramND(HistogramBase):
             if binning.is_adaptive():
                 map = binning.force_bin_existence(values[:, i])   # TODO: Add to some test
                 self._reshape_data(binning.bin_count, map, i)
-        frequencies, errors2, missed = calculate_frequencies(values, self.ndim,
-                                                             self._binnings, weights=weights)
+        frequencies, errors2, missed = calculate_frequencies(values, self._binnings, weights=weights)
         self._frequencies += frequencies
         self._errors2 += errors2
         self._missed[0] += missed
