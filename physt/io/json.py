@@ -47,7 +47,7 @@ def load_json(path: str, encoding: str = "utf-8") -> HistogramBase:
         return parse_json(text)
 
 
-def parse_json(text: str, encoding: str = "utf-8") -> HistogramBase:
+def parse_json(text: str) -> HistogramBase:
     """Create histogram from a JSON string."""
-    data = json.loads(text, encoding=encoding)
+    data = json.loads(text)
     return create_from_dict(data, format_name="JSON")
