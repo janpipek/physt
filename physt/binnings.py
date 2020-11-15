@@ -16,6 +16,7 @@ from .bin_utils import (
 from .typing_aliases import RangeTuple, ArrayLike
 from .util import find_subclass
 
+
 # TODO: Locking and edit operations (like numpy read-only)
 
 
@@ -919,7 +920,7 @@ def calculate_bins(array, _=None, *args, **kwargs) -> BinningBase:
 
 
 def calculate_bins_nd(
-    array, bins=None, *args, dim: Optional[int] = None, check_nan=True, **kwargs
+    array: Optional[np.ndarray], bins=None, *args, dim: Optional[int] = None, check_nan=True, **kwargs
 ):
     """Find optimal binning from arguments (n-dimensional variant)
 

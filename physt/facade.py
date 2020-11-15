@@ -1,4 +1,4 @@
-from typing import Optional, Iterable
+from typing import Optional, Iterable, cast
 
 import numpy as np
 
@@ -162,7 +162,7 @@ def h2(data1, data2, bins=10, *args, **kwargs) -> Histogram2D:
         data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
     else:
         data = None
-    return histogramdd(data, bins, *args, dim=2, **kwargs)
+    return cast(Histogram2D, h(data, bins, *args, dim=2, **kwargs))
 
 
 def h3(data, *args, **kwargs) -> HistogramND:

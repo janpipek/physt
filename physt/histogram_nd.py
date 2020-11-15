@@ -543,7 +543,7 @@ class Histogram2D(HistogramND):
 
 
 def calculate_frequencies(
-    data, binnings, weights=None, dtype=None
+    data: Optional[ArrayLike], binnings: Iterable[BinningBase], weights=None, dtype=None
 ) -> Tuple[np.ndarray, np.ndarray, float]:
     """ "Get frequencies and bin errors from the data (n-dimensional variant).
 
