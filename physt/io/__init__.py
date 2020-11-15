@@ -22,9 +22,11 @@ class VersionError(Exception):
     pass
 
 
-def create_from_dict(data: dict, format_name: str, check_version: bool = True) -> Union[HistogramBase, HistogramCollection]:
+def create_from_dict(
+    data: dict, format_name: str, check_version: bool = True
+) -> Union[HistogramBase, HistogramCollection]:
     """Once dict from source data is created, turn this into histogram.
-    
+
     Parameters
     ----------
     data : dict
@@ -55,12 +57,14 @@ def require_compatible_version(compatible_version, word="File"):
         compatible_version = parse_version(compatible_version)
     elif not isinstance(compatible_version, Version):
         raise ValueError("Type of `compatible_version` not understood.")
-    
+
     current_version = parse_version(CURRENT_VERSION)
     if current_version < compatible_version:
-        raise VersionError("{0} written for version >= {1}, this is {2}.".format(
-            word, str(compatible_version), CURRENT_VERSION
-        ))
+        raise VersionError(
+            "{0} written for version >= {1}, this is {2}.".format(
+                word, str(compatible_version), CURRENT_VERSION
+            )
+        )
 
 
 from .json import save_json, load_json, parse_json

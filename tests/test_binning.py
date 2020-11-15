@@ -5,9 +5,6 @@ from physt import binnings
 import numpy as np
 import pytest
 
-# TODO: Enable in Python < 3.3
-#
-
 
 class TestCalculateBinsNd:
     def test_range(self):

@@ -29,8 +29,7 @@ def create_h1(cursor, *args, **kwargs) -> Histogram1D:
 def create_h2(cursor, *args, **kwargs) -> Histogram2D:
     axis_names = _get_axis_names(cursor)
     if len(axis_names) != 2:
-        raise RuntimeError(
-            "Invalid number of columns: {0}".format(len(axis_names)))
+        raise RuntimeError("Invalid number of columns: {0}".format(len(axis_names)))
     kwargs["axis_names"] = kwargs.get("axis_names", axis_names)
     if kwargs.get("adaptive", False):
         h = h2(None, None, *args, **kwargs)
@@ -45,8 +44,7 @@ def create_h3(cursor, *args, **kwargs) -> HistogramND:
     # TODO: Refactor
     axis_names = _get_axis_names(cursor)
     if len(axis_names) != 3:
-        raise RuntimeError(
-            "Invalid number of columns: {0}".format(len(axis_names)))
+        raise RuntimeError("Invalid number of columns: {0}".format(len(axis_names)))
     kwargs["axis_names"] = kwargs.get("axis_names", axis_names)
     if kwargs.get("adaptive", False):
         h = h3(None, *args, **kwargs)

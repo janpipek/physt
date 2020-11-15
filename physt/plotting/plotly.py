@@ -70,6 +70,7 @@ def wrap(*, mpl_function: Optional[Any] = None):
                     return mpl_variant(*args, **kwargs)
                 else:
                     return normal_variant(*args, **kwargs)
+
             return new_f
         else:
             return normal_variant
@@ -79,13 +80,16 @@ def wrap(*, mpl_function: Optional[Any] = None):
 
 def enable_collection(f):
     """Call the wrapped function with a HistogramCollection as argument."""
+
     @wraps(f)
     def new_f(h: AbstractHistogram1D, **kwargs):
         from physt.histogram_collection import HistogramCollection
+
         if isinstance(h, HistogramCollection):
             return f(h, **kwargs)
         else:
             return f(HistogramCollection(h), **kwargs)
+
     return new_f
 
 
@@ -113,12 +117,15 @@ def _add_ticks(xaxis: go.layout.XAxis, histogram: HistogramBase, kwargs: dict):
 @enable_collection
 def _line_or_scatter(h: AbstractHistogram1D, *, mode: str, **kwargs):
     get_data_kwargs = pop_many(kwargs, "density", "cumulative", "flatten")
-    data = [go.Scatter(
-        x=histogram.bin_centers,
-        y=get_data(histogram, **get_data_kwargs),
-        mode=mode,
-        name=histogram.name
-    ) for histogram in h]
+    data = [
+        go.Scatter(
+            x=histogram.bin_centers,
+            y=get_data(histogram, **get_data_kwargs),
+            mode=mode,
+            name=histogram.name,
+        )
+        for histogram in h
+    ]
 
     layout = go.Layout()
 
@@ -140,10 +147,13 @@ def line(h: AbstractHistogram1D, **kwargs):
 
 @wrap(mpl_function=mpl_backend.bar)
 @enable_collection
-def bar(h: Histogram2D, *,
-        barmode: str = DEFAULT_BARMODE,
-        alpha: float = DEFAULT_ALPHA,
-        **kwargs):
+def bar(
+    h: Histogram2D,
+    *,
+    barmode: str = DEFAULT_BARMODE,
+    alpha: float = DEFAULT_ALPHA,
+    **kwargs
+):
     """Bar plot.
 
     Parameters
@@ -152,14 +162,17 @@ def bar(h: Histogram2D, *,
     barmode : "overlay" | "group" | "stack"
     """
     get_data_kwargs = pop_many(kwargs, "density", "cumulative", "flatten")
-    data = [go.Bar(
-        x=histogram.bin_centers,
-        y=get_data(histogram, **get_data_kwargs),
-        width=histogram.bin_widths,
-        name=histogram.name,
-        opacity=alpha,
-        **kwargs
-    ) for histogram in h]
+    data = [
+        go.Bar(
+            x=histogram.bin_centers,
+            y=get_data(histogram, **get_data_kwargs),
+            width=histogram.bin_widths,
+            name=histogram.name,
+            opacity=alpha,
+            **kwargs
+        )
+        for histogram in h
+    ]
 
     layout = go.Layout(barmode=barmode)
 
@@ -170,11 +183,8 @@ def bar(h: Histogram2D, *,
 
 
 @wrap()
-def map(h2: Histogram2D,
-        **kwargs):
-    """Heatmap.
-
-    """
+def map(h2: Histogram2D, **kwargs):
+    """Heatmap."""
     data = [go.Heatmap(z=h2.frequencies, **kwargs)]
     layout = go.Layout()
     figure = go.Figure(data=data, layout=layout)
@@ -182,7 +192,7 @@ def map(h2: Histogram2D,
 
 
 types = ["bar", "scatter", "line"]
-dims = {x:[1] for x in types}
+dims = {x: [1] for x in types}
 
 types.append("map")
 dims["map"] = [2]
@@ -190,5 +200,3 @@ dims["map"] = [2]
 # for plot_type in types:
 #     if plot_type not in globals():
 #         globals()[plot_type] = _wrap_matplotlib_f(mpl_backend.__dict__[plot_type])
-    
-

@@ -6,9 +6,9 @@ from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, Union
 
 import numpy as np
 
-from .binnings import as_binning
+from .binnings import as_binning, BinningLike, BinningBase
 from .config import config
-from .typing_aliases import Axis
+from .typing_aliases import Axis, ArrayLike, DtypeLike
 
 
 class HistogramBase(abc.ABC):
@@ -33,8 +33,7 @@ class HistogramBase(abc.ABC):
 
     Attributes
     ----------
-    _binnings : Iterable[BinningBase]
-        Schema for binning(s)
+    _binnings : Schema for binning(s)
     frequencies : np.ndarray
         Bin contents
     errors2 : np.ndarray
@@ -73,7 +72,17 @@ class HistogramBase(abc.ABC):
 
     """
 
-    def __init__(self, binnings, frequencies=None, errors2=None, *, axis_names: Optional[Iterable[str]] = None, dtype=None, keep_missed=True, **kwargs):
+    def __init__(
+        self,
+        binnings: Iterable[BinningLike],
+        frequencies: Optional[ArrayLike] = None,
+        errors2: Optional[ArrayLike] = None,
+        *,
+        axis_names: Optional[Iterable[str]] = None,
+        dtype: Optional[DtypeLike] = None,
+        keep_missed=True,
+        **kwargs,
+    ):
         """Constructor
 
         All keyword arguments not listed below become items in the _meta_data
@@ -108,8 +117,11 @@ class HistogramBase(abc.ABC):
                 elif np.issubdtype(frequencies.dtype, np.floating):
                     frequencies = frequencies.astype(np.float64)
                 else:
-                    raise RuntimeError("Frequencies of type {0} not understood"
-                                       .format(frequencies.dtype))
+                    raise RuntimeError(
+                        "Frequencies of type {0} not understood".format(
+                            frequencies.dtype
+                        )
+                    )
             dtype = frequencies.dtype
             self.frequencies = frequencies
         self._dtype, _ = self._eval_dtype(dtype)
@@ -158,7 +170,7 @@ class HistogramBase(abc.ABC):
     @property
     def title(self) -> Optional[str]:
         """Title of the histogram to be displayed when plotted (stored in meta-data).
-        
+
         If not specified, defaults to `name`.
         """
         return self._meta_data.get("title", self.name)
@@ -186,16 +198,25 @@ class HistogramBase(abc.ABC):
         # TODO: Add unit test
         if isinstance(name_or_index, int):
             if name_or_index < 0 or name_or_index >= self.ndim:
-                raise ValueError("No such axis, must be from 0 to {0}".format(self.ndim-1))
+                raise ValueError(
+                    "No such axis, must be from 0 to {0}".format(self.ndim - 1)
+                )
             return name_or_index
         elif isinstance(name_or_index, str):
             if name_or_index not in self.axis_names:
                 named_axes = [name for name in self.axis_names if name]
-                raise ValueError("No axis with such name: {0}, available names: {1}. In most places, you can also use numbers."
-                                   .format(name_or_index, ", ".join(named_axes)))
+                raise ValueError(
+                    "No axis with such name: {0}, available names: {1}. In most places, you can also use numbers.".format(
+                        name_or_index, ", ".join(named_axes)
+                    )
+                )
             return self.axis_names.index(name_or_index)
         else:
-            raise TypeError("Argument of type {0} not understood, int or str expected.".format(type(name_or_index)))
+            raise TypeError(
+                "Argument of type {0} not understood, int or str expected.".format(
+                    type(name_or_index)
+                )
+            )
 
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -220,18 +241,17 @@ class HistogramBase(abc.ABC):
         return self._dtype
 
     @classmethod
-    def _eval_dtype(cls, value):
+    def _eval_dtype(cls, value: DtypeLike) -> Tuple[np.dtype, np.iinfo]:
         """Convert dtype into canonical form, check its applicability and return info.
-        
+
         Parameters
         ----------
-        value: np.dtype or something convertible to it.
+        value: Anything convertible to dtype
 
         Returns
         -------
-        value: np.dtype
-        type_info: 
-            Information about the dtype
+        value: Numpy dtype
+        type_info: Information about the dtype
         """
         value = np.dtype(value)
         if value.kind in "iu":
@@ -239,11 +259,13 @@ class HistogramBase(abc.ABC):
         elif value.kind == "f":
             type_info = np.finfo(value)
         else:
-            raise ValueError("Unsupported dtype. Only integer/floating-point types are supported.")
+            raise ValueError(
+                "Unsupported dtype. Only integer/floating-point types are supported."
+            )
 
         return value, type_info
 
-    def set_dtype(self, value, check: bool = True) -> None:
+    def set_dtype(self, value: DtypeLike, check: bool = True) -> None:
         """Change data type of the bin contents.
 
         Allowed conversions:
@@ -262,7 +284,7 @@ class HistogramBase(abc.ABC):
             return
 
         if self.dtype is None or np.can_cast(self.dtype, value):
-            pass    # Ok
+            pass  # Ok
         elif check:
             if np.issubdtype(value, np.integer):
                 if self.dtype.kind == "f":
@@ -271,7 +293,9 @@ class HistogramBase(abc.ABC):
                             raise RuntimeError("Data contain non-integer values.")
             for array in (self._frequencies, self._errors2):
                 if np.any((array > type_info.max) | (array < type_info.min)):
-                    raise RuntimeError("Data contain values outside the specified range.")
+                    raise RuntimeError(
+                        "Data contain values outside the specified range."
+                    )
 
         self._dtype = value
         self._frequencies = self._frequencies.astype(value)
@@ -280,13 +304,14 @@ class HistogramBase(abc.ABC):
 
     dtype = property(_get_dtype, set_dtype)
 
-    def _coerce_dtype(self, other_dtype):
+    def _coerce_dtype(self, other_dtype: DtypeLike) -> None:
         """Possibly change the bin content type to allow correct operations with other operand.
 
         Parameters
         ----------
         other_dtype : np.dtype or type
         """
+        other_dtype = self._eval_dtype(other_dtype)
         if self._dtype is None:
             new_dtype = np.dtype(other_dtype)
         else:
@@ -323,7 +348,9 @@ class HistogramBase(abc.ABC):
         """
         return self._frequencies / self.bin_sizes
 
-    def normalize(self, inplace: bool = False, percent: bool = False) -> "HistogramBase":
+    def normalize(
+        self, inplace: bool = False, percent: bool = False
+    ) -> "HistogramBase":
         """Normalize the histogram, so that the total weight is equal to 1.
 
         Parameters
@@ -341,7 +368,7 @@ class HistogramBase(abc.ABC):
         HistogramND.partial_normalize
         """
         if inplace:
-            self /= self.total * (.01 if percent else 1)
+            self /= self.total * (0.01 if percent else 1)
             return self
         else:
             return self / self.total * (100 if percent else 1)
@@ -398,7 +425,12 @@ class HistogramBase(abc.ABC):
     def adaptive(self, value: bool):
         self.set_adaptive(value)
 
-    def _change_binning(self, new_binning, bin_map: Iterable[Tuple[int, int]], axis: int = 0):
+    def _change_binning(
+        self,
+        new_binning: BinningBase,
+        bin_map: Iterable[Tuple[int, int]],
+        axis: Axis = 0,
+    ):
         """Set new binnning and update the bin contents according to a map.
 
         Fills frequencies and errors with 0.
@@ -407,19 +439,21 @@ class HistogramBase(abc.ABC):
         Parameters
         ----------
         new_binning: physt.binnings.BinningBase
-        bin_map: Iterable[tuple]
-            tuples contain bin indices (old, new)
-        axis: int
-            What axis does the binning describe(0..ndim-1)
+        bin_map: Tuples containing bin indices (old, new)
+        axis: What axis does the binning describe(0..ndim-1)
         """
-        axis = int(axis)
-        if axis < 0 or axis >= self.ndim:
-            raise RuntimeError("Axis must be in range 0..(ndim-1)")
+        axis = self._get_axis(axis)
         self._reshape_data(new_binning.bin_count, bin_map, axis)
         self._binnings[axis] = new_binning
 
-    def merge_bins(self, amount: Optional[int] = None, *, min_frequency: Optional[float] = None,
-                   axis: Optional[Axis] = None, inplace: bool = False) -> 'HistogramBase':
+    def merge_bins(
+        self,
+        amount: Optional[int] = None,
+        *,
+        min_frequency: Optional[float] = None,
+        axis: Optional[Axis] = None,
+        inplace: bool = False,
+    ) -> "HistogramBase":
         """Reduce the number of bins and add their content:
 
         Parameters
@@ -433,11 +467,15 @@ class HistogramBase(abc.ABC):
         """
         if not inplace:
             histogram = self.copy()
-            histogram.merge_bins(amount, min_frequency=min_frequency, axis=axis, inplace=True)
+            histogram.merge_bins(
+                amount, min_frequency=min_frequency, axis=axis, inplace=True
+            )
             return histogram
         elif axis is None:
             for i in range(self.ndim):
-                self.merge_bins(amount=amount, min_frequency=min_frequency, axis=i, inplace=True)
+                self.merge_bins(
+                    amount=amount, min_frequency=min_frequency, axis=i, inplace=True
+                )
         else:
             axis = self._get_axis(axis)
             if amount is not None:
@@ -490,14 +528,25 @@ class HistogramBase(abc.ABC):
             new_frequencies = np.zeros(new_shape, dtype=self._frequencies.dtype)
             new_errors2 = np.zeros(new_shape, dtype=self._frequencies.dtype)
             self._apply_bin_map(
-                old_frequencies=self._frequencies, new_frequencies=new_frequencies,
-                old_errors2=self._errors2, new_errors2=new_errors2,
-                bin_map=bin_map, axis=axis)
+                old_frequencies=self._frequencies,
+                new_frequencies=new_frequencies,
+                old_errors2=self._errors2,
+                new_errors2=new_errors2,
+                bin_map=bin_map,
+                axis=axis,
+            )
             self._frequencies = new_frequencies
             self._errors2 = new_errors2
 
-    def _apply_bin_map(self, old_frequencies, new_frequencies, old_errors2,
-                       new_errors2, bin_map, axis=0):
+    def _apply_bin_map(
+        self,
+        old_frequencies,
+        new_frequencies,
+        old_errors2,
+        new_errors2,
+        bin_map,
+        axis=0,
+    ):
         """Fill new data arrays using a map.
 
         Parameters
@@ -526,12 +575,14 @@ class HistogramBase(abc.ABC):
                 new_frequencies[tuple(new_index)] += old_frequencies
                 new_errors2[tuple(new_index)] += old_errors2
             else:
-                for (old, new) in bin_map:      # Generic enough
+                for (old, new) in bin_map:  # Generic enough
                     new_index = [slice(None) for i in range(self.ndim)]
                     new_index[axis] = new
                     old_index = [slice(None) for i in range(self.ndim)]
                     old_index[axis] = old
-                    new_frequencies[tuple(new_index)] += old_frequencies[tuple(old_index)]
+                    new_frequencies[tuple(new_index)] += old_frequencies[
+                        tuple(old_index)
+                    ]
                     new_errors2[tuple(new_index)] += old_errors2[tuple(old_index)]
 
     def has_same_bins(self, other: "HistogramBase") -> bool:
@@ -635,16 +686,17 @@ class HistogramBase(abc.ABC):
         use, see the documentation for physt.plotting package.
         """
         from .plotting import PlottingProxy
+
         return PlottingProxy(self)
 
-    def to_dict(self) -> OrderedDict:
+    def to_dict(self) -> Dict[str, Any]:
         """Dictionary with all data in the histogram.
 
         This is used for export into various formats (e.g. JSON)
         If a descendant class needs to update the dictionary in some way
         (put some more information), override the _update_dict method.
         """
-        result = OrderedDict()
+        result = dict()
         result["histogram_type"] = type(self).__name__
         result["binnings"] = [binning.to_dict() for binning in self._binnings]
         result["frequencies"] = self.frequencies.tolist()
@@ -658,7 +710,7 @@ class HistogramBase(abc.ABC):
         self._update_dict(result)
         return result
 
-    def _update_dict(self, a_dict: dict) -> None:
+    def _update_dict(self, a_dict: Dict[str, Any]) -> None:
         """Update the dictionary for export.
 
         Override if you want to customize the process.
@@ -670,15 +722,19 @@ class HistogramBase(abc.ABC):
         pass
 
     @classmethod
-    def _kwargs_from_dict(cls, a_dict: dict) -> dict:
+    def _kwargs_from_dict(cls, a_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Modify __init__ arguments from an external dictionary.
 
         Template method for from dict.
         Override if necessary (like it's done in Histogram1D).
         """
         from .binnings import BinningBase
+
         kwargs = {
-            "binnings": [BinningBase.from_dict(binning_data) for binning_data in a_dict["binnings"]],
+            "binnings": [
+                BinningBase.from_dict(binning_data)
+                for binning_data in a_dict["binnings"]
+            ],
             "dtype": np.dtype(a_dict["dtype"]),
             "frequencies": a_dict.get("frequencies"),
             "errors2": a_dict.get("errors2"),
@@ -712,15 +768,18 @@ class HistogramBase(abc.ABC):
         The JSON representation.
         """
         from .io import save_json
+
         return save_json(self, path, **kwargs)
 
     def __repr__(self):
         if self.name:
             result = "{0}('{4}', bins={1}, total={2}, dtype={3})".format(
-                self.__class__.__name__, self.shape, self.total, self.dtype, self.name)
+                self.__class__.__name__, self.shape, self.total, self.dtype, self.name
+            )
         else:
             result = "{0}(bins={1}, total={2}, dtype={3})".format(
-                self.__class__.__name__, self.shape, self.total, self.dtype)
+                self.__class__.__name__, self.shape, self.total, self.dtype
+            )
         return result
 
     def __add__(self, other):
@@ -731,7 +790,7 @@ class HistogramBase(abc.ABC):
         return new
 
     def __radd__(self, other):
-        if other == 0:    # Enable sum()
+        if other == 0:  # Enable sum()
             return self
         else:
             return self + other
@@ -777,7 +836,9 @@ class HistogramBase(abc.ABC):
             self._missed = self._missed * np.nan  # TODO: Any reasonable interpretation?
             self._stats = None  # TODO: Any reasonable interpretation?
         else:
-            raise TypeError(f"Only histograms can be added together. {type(other)} found instead.")
+            raise TypeError(
+                f"Only histograms can be added together. {type(other)} found instead."
+            )
         return self
 
     def __sub__(self, other):
@@ -880,9 +941,14 @@ class HistogramBase(abc.ABC):
         """
         keys = set(first._meta_data.keys())
         keys = keys.union(set(second._meta_data.keys()))
-        return {key:
-                (first._meta_data.get(key, None) if first._meta_data.get(key, None) == second._meta_data.get(key, None) else None)
-                for key in keys}
+        return {
+            key: (
+                first._meta_data.get(key, None)
+                if first._meta_data.get(key, None) == second._meta_data.get(key, None)
+                else None
+            )
+            for key in keys
+        }
 
     def __array__(self) -> np.ndarray:
         """Convert to numpy array.

@@ -1,11 +1,11 @@
-from typing import Optional
+from typing import Optional, Iterable
 
 import numpy as np
 
 from physt.util import deprecation_alias
-from physt.histogram1d import Histogram1D
+from physt.histogram1d import Histogram1D, calculate_frequencies
 from physt.histogram_nd import HistogramND, Histogram2D
-from physt.binnings import calculate_bins_nd
+from physt.binnings import calculate_bins, calculate_bins_nd
 from physt.histogram_collection import HistogramCollection
 from physt.special_histograms import (
     polar,
@@ -16,9 +16,23 @@ from physt.special_histograms import (
     spherical,
     spherical_surface,
 )
+from physt.typing_aliases import ArrayLike, DtypeLike
 
 
-def h1(data, bins=None, *args, **kwargs) -> Histogram1D:
+def h1(
+    data: Optional[ArrayLike],
+    bins=None,
+    *args,
+    adaptive: bool = False,
+    dropna: bool = True,
+    dtype: Optional[DtypeLike] = None,
+    weights: Optional[ArrayLike] = None,
+    keep_missed: bool = True,
+    name: Optional[str] = None,
+    title: Optional[str] = None,
+    axis_name: Optional[str] = None,
+    **kwargs
+) -> Histogram1D:
     """Facade function to create 1D histograms.
 
     This proceeds in three steps:
@@ -42,20 +56,15 @@ def h1(data, bins=None, *args, **kwargs) -> Histogram1D:
         If string => use named binning method (+ args, kwargs)
     weights: array_like, optional
         (as numpy.histogram)
-    keep_missed: Optional[bool]
-        store statistics about how many values were lower than limits
+    keep_missed: Store statistics about how many values were lower than limits
         and how many higher than limits (default: True)
-    dropna: bool
-        whether to clear data from nan's before histogramming
-    name: str
-        name of the histogram
-    axis_name: str
-        name of the variable on x axis
-    adaptive: bool
-        whether we want the bins to be modifiable
+    dropna: Whether to clear data from nan's before histogramming
+    name: Name of the histogram
+    title: What will be displayed in the title of the plot
+    axis_name: Name of the variable on x axis
+    adaptive: Whether we want the bins to be modifiable
         (useful for continuous filling of a priori unknown data)
-    dtype: type
-        customize underlying data type: default int64 (without weight) or float (with weights)
+    dtype: Customize underlying data type: default int64 (without weight) or float (with weights)
 
     Other numpy.histogram parameters are excluded, see the methods of the Histogram1D class itself.
 
@@ -63,12 +72,6 @@ def h1(data, bins=None, *args, **kwargs) -> Histogram1D:
     --------
     numpy.histogram
     """
-    import numpy as np
-    from .histogram1d import Histogram1D, calculate_frequencies
-    from .binnings import calculate_bins
-
-    adaptive = kwargs.pop("adaptive", False)
-    dtype = kwargs.pop("dtype", None)
 
     if isinstance(data, tuple) and isinstance(
         data[0], str
@@ -76,14 +79,6 @@ def h1(data, bins=None, *args, **kwargs) -> Histogram1D:
         return histogram(data[1], bins, *args, name=data[0], **kwargs)
     elif type(data).__name__ == "DataFrame":
         raise ValueError("Cannot create histogram from a pandas DataFrame. Use Series.")
-
-    # Collect arguments (not to send them to binning algorithms)
-    dropna = kwargs.pop("dropna", True)
-    weights = kwargs.pop("weights", None)
-    keep_missed = kwargs.pop("keep_missed", True)
-    name = kwargs.pop("name", None)
-    axis_name = kwargs.pop("axis_name", None)
-    title = kwargs.pop("title", None)
 
     # Convert to array
     if data is not None:
@@ -194,14 +189,19 @@ def h3(data, *args, **kwargs) -> HistogramND:
     return h(data, *args, **kwargs)
 
 
-def h(data, bins=10, *args, adaptive = False,
-    dropna = True,
+def h(
+    data: Optional[ArrayLike],
+    bins=10,
+    *args,
+    adaptive=False,
+    dropna: bool = True,
     name: Optional[str] = None,
     title: Optional[str] = None,
-    axis_names = None,
+    axis_names: Optional[Iterable[str]] = None,
     dim: Optional[int] = None,
-    weights = None,
-    **kwargs) -> HistogramND:
+    weights: Optional[ArrayLike] = None,
+    **kwargs
+) -> HistogramND:
     """Facade function to create n-dimensional histograms.
 
     3D variant of this function is also aliased as "h3".
@@ -213,19 +213,15 @@ def h(data, bins=10, *args, adaptive = False,
     bins: Any
     weights: array_like, optional
         (as numpy.histogram)
-    dropna: bool
-        whether to clear data from nan's before histogramming
-    name: str
-        name of the histogram
-    axis_names: Iterable[str]
-        names of the variable on x axis
-    adaptive:
-        whether the bins should be updated when new non-fitting value are filled
+    dropna: Whether to clear data from nan's before histogramming
+    name: Name of the histogram
+    axis_names: Names of the variable on x axis
+    adaptive: Whether the bins should be updated when new non-fitting value are filled
     dtype: Optional[type]
         Underlying type for the histogram.
         If weights are specified, default is float. Otherwise int64
-    dim: int
-        Dimension - necessary if you are creating an empty adaptive histogram
+    title: What will be displayed in the title of the plot
+    dim: Dimension - necessary if you are creating an empty adaptive histogram
 
     See Also
     --------

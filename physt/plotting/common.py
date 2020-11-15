@@ -8,12 +8,21 @@ from datetime import timedelta, time
 
 import numpy as np
 
-from physt.bin_utils import find_human_width_24, find_human_width_60, find_human_width_decimal
+from physt.bin_utils import (
+    find_human_width_24,
+    find_human_width_60,
+    find_human_width_decimal,
+)
 from physt.histogram_base import HistogramBase
 from physt.histogram1d import Histogram1D
 
 
-def get_data(histogram: HistogramBase, density: bool = False, cumulative: bool = False, flatten: bool = False) -> np.ndarray:
+def get_data(
+    histogram: HistogramBase,
+    density: bool = False,
+    cumulative: bool = False,
+    flatten: bool = False,
+) -> np.ndarray:
     """Get histogram data based on plotting parameters.
 
     Parameters
@@ -38,7 +47,12 @@ def get_data(histogram: HistogramBase, density: bool = False, cumulative: bool =
     return data
 
 
-def get_err_data(histogram: HistogramBase, density: bool = False, cumulative: bool = False, flatten: bool = False) -> np.ndarray:
+def get_err_data(
+    histogram: HistogramBase,
+    density: bool = False,
+    cumulative: bool = False,
+    flatten: bool = False,
+) -> np.ndarray:
     """Get histogram error data based on plotting parameters.
 
     Parameters
@@ -58,7 +72,9 @@ def get_err_data(histogram: HistogramBase, density: bool = False, cumulative: bo
     return data
 
 
-def get_value_format(value_format: Union[Callable, str, None]) -> Callable[[float], str]:
+def get_value_format(
+    value_format: Union[Callable, str, None]
+) -> Callable[[float], str]:
     """Create a formatting function from a generic value_format argument."""
     if not value_format:
         return str
@@ -70,10 +86,10 @@ def get_value_format(value_format: Union[Callable, str, None]) -> Callable[[floa
             return format_str.format(x)
 
         return value_format_
-    
+
     if callable(value_format):
         return value_format
-    
+
     raise TypeError("`value_format` must be a string or a callable.")
 
 
@@ -91,7 +107,7 @@ def pop_kwargs_with_prefix(prefix: str, kwargs: dict) -> dict:
         Items popped from the original directory, with prefix removed.
     """
     keys = [key for key in kwargs if key.startswith(prefix)]
-    return {key[len(prefix):]: kwargs.pop(key) for key in keys}
+    return {key[len(prefix) :]: kwargs.pop(key) for key in keys}
 
 
 TickCollection = Tuple[List[float], List[str]]
@@ -103,7 +119,7 @@ class TimeTickHandler:
     Note: This class is very experimental and subject to change or disappear.
     """
 
-    def __init__(self, level: str = None): #, format=None):
+    def __init__(self, level: str = None):  # , format=None):
         self.level = self.parse_level(level) if level else None
         # self.format = format  # TODO: Really?
 
@@ -117,7 +133,9 @@ class TimeTickHandler:
     LevelType = Tuple[str, Union[float, int]]
 
     @classmethod
-    def parse_level(cls, value: Union[LevelType, float, str, timedelta]) -> "TimeTickHandler.LevelType":
+    def parse_level(
+        cls, value: Union[LevelType, float, str, timedelta]
+    ) -> "TimeTickHandler.LevelType":
         if isinstance(value, tuple):
             if len(value) != 2:
                 raise ValueError("Invalid level: {0}".format(value))
@@ -129,15 +147,17 @@ class TimeTickHandler:
         elif isinstance(value, (float, int)):
             return cls.parse_level(timedelta(seconds=value))
         elif isinstance(value, timedelta):
-            ... # TODO: Implement
+            ...  # TODO: Implement
         elif isinstance(value, str):
             matchers = (
                 ("^(center|edge)s?$", lambda m: (m[1], 0)),
                 ("^([0-9\\.]+)?d(ay(s)?)?$", lambda m: ("day", float(m[1] or 1))),
                 ("^([0-9]+)?h(our(s)?)?$", lambda m: ("hour", int(m[1] or 1))),
                 ("^([0-9]+)?m(in(s)?)?$", lambda m: ("min", int(m[1] or 1))),
-                ("^([0-9\\.]+)?(\\.[0-9]+)?s(ec(s)?)?$", lambda m: ("sec",
-                                                                  float(m[1] or 1) + float("0." + (m[2] or "0")))),
+                (
+                    "^([0-9\\.]+)?(\\.[0-9]+)?s(ec(s)?)?$",
+                    lambda m: ("sec", float(m[1] or 1) + float("0." + (m[2] or "0"))),
+                ),
             )
             for matcher in matchers:
                 match = re.match(matcher[0], value)
@@ -147,9 +167,10 @@ class TimeTickHandler:
         else:
             raise ValueError("Invalid level: {0}".format(value))
 
-
     @classmethod
-    def deduce_level(cls, h1: Histogram1D, min_: float, max_: float) -> "TimeTickHandler.LevelType":
+    def deduce_level(
+        cls, h1: Histogram1D, min_: float, max_: float
+    ) -> "TimeTickHandler.LevelType":
         ideal_width = (max_ - min_) / 6
         if ideal_width < 0.8:
             return ("sec", find_human_width_decimal(ideal_width))
@@ -162,7 +183,9 @@ class TimeTickHandler:
         else:
             return ("day", find_human_width_decimal(ideal_width / 86400))
 
-    def get_time_ticks(self, h1: Histogram1D, level: LevelType, min_: float, max_: float) -> List[float]:
+    def get_time_ticks(
+        self, h1: Histogram1D, level: LevelType, min_: float, max_: float
+    ) -> List[float]:
         # TODO: Change to class method?
         if level[0] == "edge":
             return h1.numpy_bins.tolist()
@@ -189,7 +212,10 @@ class TimeTickHandler:
             tick_days = [tick / 86400 for tick in ticks]
             if not any(tick % 1 for tick in tick_days):
                 tick_days = [int(tick) for tick in tick_days]
-            return ["{0} day{1}".format(tick, "" if tick == 1 else "s") for tick in tick_days]
+            return [
+                "{0} day{1}".format(tick, "" if tick == 1 else "s")
+                for tick in tick_days
+            ]
         else:
             hms = [self.split_hms(tick) for tick in ticks]
             include_hours = any(h for _, h, _, _ in hms)
@@ -204,13 +230,14 @@ class TimeTickHandler:
             format += "{2}" if include_secs else ""
 
             return [
-                (("-" if neg else "+") if sign else "") +
-                format.format(
+                (("-" if neg else "+") if sign else "")
+                + format.format(
                     h,
                     m if not include_hours else str(m).zfill(2),
-                    s if not include_mins else str(s).zfill(2)
+                    s if not include_mins else str(s).zfill(2),
                 )
-                for neg, h, m, s in hms]
+                for neg, h, m, s in hms
+            ]
 
     def __call__(self, h1: Histogram1D, min_: float, max_: float) -> TickCollection:
         level = self.level or self.deduce_level(h1, min_, max_)

@@ -4,19 +4,23 @@ import numpy as np
 
 from physt.histogram1d import Histogram1D
 from physt.binnings import BinningBase
+from physt.typing_aliases import ArrayLike
 
 
 class HistogramCollection(Container[Histogram1D]):
     """Experimental collection of histograms.
-    
+
     It contains (potentially name-addressable) histograms
     with a shared binning.
     """
-    def __init__(self,
-                 *histograms: Histogram1D,
-                 binning: Optional[BinningBase] = None,
-                 title: Optional[str] = None,
-                 name: Optional[str] = None):
+
+    def __init__(
+        self,
+        *histograms: Histogram1D,
+        binning: Optional[BinningBase] = None,
+        title: Optional[str] = None,
+        name: Optional[str] = None
+    ):
         self.histograms = list(histograms)
         if histograms:
             if binning:
@@ -52,11 +56,7 @@ class HistogramCollection(Container[Histogram1D]):
         histograms = [h.copy() for h in self.histograms]
         for h in histograms:
             h._binning = copy_binning
-        return HistogramCollection(
-            *histograms,
-            title=self.title,
-            name=self.name
-        )
+        return HistogramCollection(*histograms, title=self.title, name=self.name)
 
     @property
     def binning(self) -> BinningBase:
@@ -72,7 +72,7 @@ class HistogramCollection(Container[Histogram1D]):
 
     @property
     def axis_names(self) -> Tuple[str]:
-        return self.axis_name,
+        return (self.axis_name,)
 
     def add(self, histogram: Histogram1D) -> None:
         """Add a histogram to the collection."""
@@ -80,11 +80,11 @@ class HistogramCollection(Container[Histogram1D]):
             raise ValueError("Cannot add histogram with different binning.")
         self.histograms.append(histogram)
 
-    def create(self, name: str, values, *, weights=None, dropna: bool = True, **kwargs) ->Histogram1D:
+    def create(
+        self, name: str, values, *, weights=None, dropna: bool = True, **kwargs
+    ) -> Histogram1D:
         # TODO: Rename!
-        init_kwargs = {
-            "axis_name": self.axis_name
-        }
+        init_kwargs = {"axis_name": self.axis_name}
         init_kwargs.update(kwargs)
         histogram = Histogram1D(binning=self.binning, name=name, **init_kwargs)
         histogram.fill_n(values, weights=weights, dropna=dropna)
@@ -95,16 +95,18 @@ class HistogramCollection(Container[Histogram1D]):
         if isinstance(item, str):
             candidates = [h for h in self.histograms if h.name == item]
             if len(candidates) == 0:
-                raise KeyError("Collection does not contain histogram named {0}".format(item))
+                raise KeyError(
+                    "Collection does not contain histogram named {0}".format(item)
+                )
             return candidates[0]
         else:
             return self.histograms[item]
 
     def __eq__(self, other) -> bool:
         return (
-            (type(other) == HistogramCollection) and
-            (len(other) == len(self)) and
-            all((h1 == h2) for h1, h2 in zip(self.histograms, other.histograms))
+            (type(other) == HistogramCollection)
+            and (len(other) == len(self))
+            and all((h1 == h2) for h1, h2 in zip(self.histograms, other.histograms))
         )
 
     def normalize_bins(self, inplace: bool = False) -> "HistogramCollection":
@@ -140,12 +142,16 @@ class HistogramCollection(Container[Histogram1D]):
         use, see the documentation for physt.plotting package.
         """
         from .plotting import PlottingProxy
+
         return PlottingProxy(self)
 
     @classmethod
-    def multi_h1(cls, a_dict: Dict[str, Any], bins=None, *args, **kwargs) -> "HistogramCollection":
+    def multi_h1(
+        cls, a_dict: Dict[str, ArrayLike], bins=None, *args, **kwargs
+    ) -> "HistogramCollection":
         """Create a collection from multiple datasets."""
         from physt.binnings import calculate_bins
+
         mega_values = np.concatenate(list(a_dict.values()))
         binning = calculate_bins(mega_values, bins, *args, **kwargs)
 
@@ -158,18 +164,19 @@ class HistogramCollection(Container[Histogram1D]):
         return collection
 
     @classmethod
-    def from_dict(cls, a_dict: dict) -> "HistogramCollection":
+    def from_dict(cls, a_dict: Dict[str, Any]) -> "HistogramCollection":
         from physt.io import create_from_dict
+
         col = HistogramCollection()
         for item in a_dict["histograms"]:
             h = create_from_dict(item, "HistogramCollection", check_version=False)
             col.add(h)
         return col
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "histogram_type": "histogram_collection",
-            "histograms": [h.to_dict() for h in self.histograms]
+            "histograms": [h.to_dict() for h in self.histograms],
         }
 
     def to_json(self, path: Optional[str] = None, **kwargs) -> str:
@@ -184,4 +191,5 @@ class HistogramCollection(Container[Histogram1D]):
         The JSON representation.
         """
         from .io import save_json
+
         return save_json(self, path, **kwargs)

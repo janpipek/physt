@@ -2,14 +2,19 @@
 from physt import h1 as original_h1
 from physt import histogramdd as original_hdd
 
-options = {
-    "chunk_split": 16
-}
+options = {"chunk_split": 16}
 
 
-def _run_dask(name: str, data: "dask.array.Array", compute: bool, method, func, expand_arg: bool = False):
+def _run_dask(
+    name: str,
+    data: "dask.array.Array",
+    compute: bool,
+    method,
+    func,
+    expand_arg: bool = False,
+):
     """Construct the computation graph and optionally compute it.
-    
+
     :param name: Name of the method (for graph naming purposes).
     :param data: Dask array data
     :param func: Function running of each array chunk.
@@ -18,12 +23,17 @@ def _run_dask(name: str, data: "dask.array.Array", compute: bool, method, func, 
         to apply when computing.
     """
     import dask
+
     if expand_arg:
-        graph = dict(("{0}-{1}-{2}".format(name, data.name, index), (func, *item))
-                    for index, item in enumerate(data.__dask_keys__()))
+        graph = dict(
+            ("{0}-{1}-{2}".format(name, data.name, index), (func, *item))
+            for index, item in enumerate(data.__dask_keys__())
+        )
     else:
-        graph = dict(("{0}-{1}-{2}".format(name, data.name, index), (func, item))
-                    for index, item in enumerate(data.__dask_keys__()))
+        graph = dict(
+            ("{0}-{1}-{2}".format(name, data.name, index), (func, item))
+            for index, item in enumerate(data.__dask_keys__())
+        )
     items = list(graph.keys())
     result_name = "{0}-{1}-result".format(name, data.name)
     graph.update(data.dask)
@@ -51,8 +61,11 @@ def histogram1d(data, bins=None, *args, **kwargs):
     physt.histogram
     """
     import dask
+
     if not hasattr(data, "dask"):
-        data = dask.array.from_array(data, chunks=int(data.shape[0] / options["chunk_split"]))
+        data = dask.array.from_array(
+            data, chunks=int(data.shape[0] / options["chunk_split"])
+        )
 
     if not kwargs.get("adaptive", True):
         raise RuntimeError("Only adaptive histograms supported for dask (currently).")
@@ -66,14 +79,16 @@ def histogram1d(data, bins=None, *args, **kwargs):
         data=data,
         compute=kwargs.pop("compute", True),
         method=kwargs.pop("dask_method", "threaded"),
-        func=block_hist)
+        func=block_hist,
+    )
+
 
 h1 = histogram1d  # Alias for convenience
 
 
 def histogramdd(data, bins=None, *args, **kwargs):
     """Facade function to create multi-dimensional histogram using dask.
-    
+
     Each "column" must be one-dimensional.
     """
     import dask
@@ -83,15 +98,17 @@ def histogramdd(data, bins=None, *args, **kwargs):
         data = dask.array.stack(data, axis=1)
 
     if not hasattr(data, "dask"):
-        data = dask.array.from_array(data, chunks=
-                                     (int(data.shape[0] / options["chunk_split"]),
-                                      data.shape[1]))
+        data = dask.array.from_array(
+            data, chunks=(int(data.shape[0] / options["chunk_split"]), data.shape[1])
+        )
     else:
         data = rechunk(data, {1: data.shape[1]})
 
     if isinstance(data, dask.array.Array):
         if data.ndim != 2:
-            raise ValueError(f"Only (n, dim) data allowed for histogramdd, {data.shape} encountered.")
+            raise ValueError(
+                f"Only (n, dim) data allowed for histogramdd, {data.shape} encountered."
+            )
 
     if not kwargs.get("adaptive", True):
         raise ValueError("Only adaptive histograms supported for dask (currently).")
@@ -106,13 +123,15 @@ def histogramdd(data, bins=None, *args, **kwargs):
         compute=kwargs.pop("compute", True),
         method=kwargs.pop("dask_method", "threaded"),
         func=block_hist,
-        expand_arg=True)
+        expand_arg=True,
+    )
 
 
 def histogram2d(data1, data2, bins=None, *args, **kwargs):
     """Facade function to create 2D histogram using dask."""
     # TODO: currently very unoptimized! for non-dasks
     import dask
+
     if "axis_names" not in kwargs:
         if hasattr(data1, "name") and hasattr(data2, "name"):
             kwargs["axis_names"] = [data1.name, data2.name]
@@ -126,7 +145,7 @@ def histogram2d(data1, data2, bins=None, *args, **kwargs):
     return histogramdd(data, bins, *args, **kwargs)
 
 
-h2 = histogram2d    # Alias for convenience
+h2 = histogram2d  # Alias for convenience
 
 
 def h3(data, *args, **kwargs):

@@ -4,7 +4,8 @@ from typing import Optional, Tuple
 import numpy as np
 from . import bin_utils
 from .histogram_base import HistogramBase
-from .binnings import BinningBase
+from .binnings import BinningBase, BinningLike
+from .typing_aliases import ArrayLike, DtypeLike
 
 # TODO: Fix I/O with binning
 
@@ -26,8 +27,19 @@ class Histogram1D(HistogramBase):
     Other attributes are dynamic.
     """
 
-    def __init__(self, binning, frequencies=None, errors2=None, *, stats=None, overflow=0,
-                 underflow=0, inner_missed=0, axis_name: Optional[str] = None, **kwargs):
+    def __init__(
+        self,
+        binning: BinningLike,
+        frequencies: Optional[ArrayLike] = None,
+        errors2: Optional[ArrayLike] = None,
+        *,
+        stats=None,
+        overflow=0,
+        underflow=0,
+        inner_missed=0,
+        axis_name: Optional[str] = None,
+        **kwargs
+    ):
         """Constructor
 
         Parameters
@@ -112,7 +124,9 @@ class Histogram1D(HistogramBase):
         elif isinstance(i, np.ndarray):
             if i.dtype == bool:
                 if i.shape != (self.bin_count,):
-                    raise IndexError("Cannot index with masked array of a wrong dimension")
+                    raise IndexError(
+                        "Cannot index with masked array of a wrong dimension"
+                    )
         elif isinstance(i, slice):
             keep_missed = self.keep_missed
             # TODO: Fix this
@@ -122,14 +136,21 @@ class Histogram1D(HistogramBase):
                 underflow = self.underflow
                 overflow = self.overflow
                 if i.start:
-                    underflow += self.frequencies[0:i.start].sum()
+                    underflow += self.frequencies[0 : i.start].sum()
                 if i.stop:
-                    overflow += self.frequencies[i.stop:].sum()
+                    overflow += self.frequencies[i.stop :].sum()
         # Masked arrays or item list or ...
-        return self.__class__(self._binning.as_static(copy=False)[i], self.frequencies[i],
-                              self.errors2[i], overflow=overflow, keep_missed=keep_missed,
-                              underflow=underflow, dtype=self.dtype,
-                              name=self.name, axis_name=self.axis_name)
+        return self.__class__(
+            self._binning.as_static(copy=False)[i],
+            self.frequencies[i],
+            self.errors2[i],
+            overflow=overflow,
+            keep_missed=keep_missed,
+            underflow=underflow,
+            dtype=self.dtype,
+            name=self.name,
+            axis_name=self.axis_name,
+        )
 
     @property
     def _binning(self) -> BinningBase:
@@ -161,8 +182,7 @@ class Histogram1D(HistogramBase):
 
     @property
     def numpy_bins(self) -> np.ndarray:
-        """Bins in the format of numpy.
-        """
+        """Bins in the format of numpy."""
         # TODO: If not consecutive, does not make sense
         # TODO: Deprecate
         return self._binning.numpy_bins
@@ -220,15 +240,15 @@ class Histogram1D(HistogramBase):
         This number is precise, because we keep the necessary data
         separate from bin contents.
         """
-        if self._stats:    # TODO: should be true always?
+        if self._stats:  # TODO: should be true always?
             if self.total > 0:
                 return self._stats["sum"] / self.total
             else:
                 return np.nan
         else:
-            return None    # TODO: or error
+            return None  # TODO: or error
 
-    def std(self) -> Optional[float]:  #, ddof=0):
+    def std(self) -> Optional[float]:  # , ddof=0):
         """Standard deviation of all values entered into histogram.
 
         This number is precise, because we keep the necessary data
@@ -242,9 +262,9 @@ class Histogram1D(HistogramBase):
         if self._stats:
             return np.sqrt(self.variance())
         else:
-            return None    # TODO: or error
+            return None  # TODO: or error
 
-    def variance(self) -> Optional[float]:  #, ddof: int = 0) -> float:
+    def variance(self) -> Optional[float]:  # , ddof: int = 0) -> float:
         """Statistical variance of all values entered into histogram.
 
         This number is precise, because we keep the necessary data
@@ -258,7 +278,9 @@ class Histogram1D(HistogramBase):
         # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
         if self._stats:
             if self.total > 0:
-                return (self._stats["sum2"] - self._stats["sum"] ** 2 / self.total) / self.total
+                return (
+                    self._stats["sum2"] - self._stats["sum"] ** 2 / self.total
+                ) / self.total
             else:
                 return np.nan
         else:
@@ -401,9 +423,13 @@ class Histogram1D(HistogramBase):
         if weights is not None:
             weights = np.asarray(weights)
             self._coerce_dtype(weights.dtype)
-        (frequencies, errors2, underflow, overflow, stats) = \
-            calculate_frequencies(values, self._binning, dtype=self.dtype,
-                                  weights=weights, validate_bins=False)
+        (frequencies, errors2, underflow, overflow, stats) = calculate_frequencies(
+            values,
+            self._binning,
+            dtype=self.dtype,
+            weights=weights,
+            validate_bins=False,
+        )
         self._frequencies += frequencies
         self._errors2 += errors2
         # TODO: check that adaptive does not produce under-/over-flows?
@@ -445,6 +471,7 @@ class Histogram1D(HistogramBase):
         This is not a lossless conversion - (under/over)flow info is lost.
         """
         import pandas as pd
+
         df = pd.DataFrame(
             {
                 "left": self.bin_left_edges,
@@ -452,7 +479,8 @@ class Histogram1D(HistogramBase):
                 "frequency": self.frequencies,
                 "error": self.errors,
             },
-            columns=["left", "right", "frequency", "error"])
+            columns=["left", "right", "frequency", "error"],
+        )
         return df
 
     @classmethod
@@ -464,17 +492,18 @@ class Histogram1D(HistogramBase):
     def to_xarray(self) -> "xarray.Dataset":
         """Convert to xarray.Dataset"""
         import xarray as xr
+
         data_vars = {
             "frequencies": xr.DataArray(self.frequencies, dims="bin"),
             "errors2": xr.DataArray(self.errors2, dims="bin"),
-            "bins": xr.DataArray(self.bins, dims=("bin", "x01"))
+            "bins": xr.DataArray(self.bins, dims=("bin", "x01")),
         }
         coords = {}
         attrs = {
             "underflow": self.underflow,
             "overflow": self.overflow,
             "inner_missed": self.inner_missed,
-            "keep_missed": self.keep_missed
+            "keep_missed": self.keep_missed,
         }
         attrs.update(self._meta_data)
         # TODO: Add stats
@@ -488,21 +517,36 @@ class Histogram1D(HistogramBase):
         ----------
         arr: The data in xarray representation
         """
-        kwargs = {'frequencies': arr["frequencies"],
-                  'binning': arr["bins"],
-                  'errors2': arr["errors2"],
-                  'overflow': arr.attrs["overflow"],
-                  'underflow': arr.attrs["underflow"],
-                  'keep_missed': arr.attrs["keep_missed"]}
+        kwargs = {
+            "frequencies": arr["frequencies"],
+            "binning": arr["bins"],
+            "errors2": arr["errors2"],
+            "overflow": arr.attrs["overflow"],
+            "underflow": arr.attrs["underflow"],
+            "keep_missed": arr.attrs["keep_missed"],
+        }
         # TODO: Add stats
         return cls(**kwargs)
 
     @classmethod
-    def from_calculate_frequencies(cls, data, binning, weights=None, *, validate_bins=True,
-                          already_sorted: bool = False, dtype=None, **kwargs):
+    def from_calculate_frequencies(
+        cls,
+        data,
+        binning,
+        weights=None,
+        *,
+        validate_bins=True,
+        already_sorted: bool = False,
+        dtype=None,
+        **kwargs
+    ):
         frequencies, errors2, underflow, overflow, stats = calculate_frequencies(
-            data=data, binning=binning, weights=weights, validate_bins=validate_bins,
-            already_sorted=already_sorted, dtype=dtype
+            data=data,
+            binning=binning,
+            weights=weights,
+            validate_bins=validate_bins,
+            already_sorted=already_sorted,
+            dtype=dtype,
         )
         return cls(
             binning=binning,
@@ -514,8 +558,15 @@ class Histogram1D(HistogramBase):
         )
 
 
-def calculate_frequencies(data, binning, weights=None, *, validate_bins=True,
-                          already_sorted: bool = False, dtype=None):
+def calculate_frequencies(
+    data,
+    binning,
+    weights=None,
+    *,
+    validate_bins=True,
+    already_sorted: bool = False,
+    dtype=None
+):
     """Get frequencies and bin errors from the data.
 
     Parameters
@@ -598,8 +649,8 @@ def calculate_frequencies(data, binning, weights=None, *, validate_bins=True,
 
     # Data sorting
     if not already_sorted:
-        args = np.argsort(data)     # Memory: another copy
-        data = data[args]           # Memory: another copy
+        args = np.argsort(data)  # Memory: another copy
+        data = data[args]  # Memory: another copy
         if weights is not None:
             weights = weights[args]
         del args
@@ -617,7 +668,9 @@ def calculate_frequencies(data, binning, weights=None, *, validate_bins=True,
             else:
                 underflow = start
         if xbin == len(bins) - 1:
-            stop = np.searchsorted(data, bin[1], side="right")   # TODO: Understand and explain
+            stop = np.searchsorted(
+                data, bin[1], side="right"
+            )  # TODO: Understand and explain
             if weights is not None:
                 overflow = weights[stop:].sum()
             else:

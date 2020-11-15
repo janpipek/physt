@@ -46,9 +46,11 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 from physt.histogram1d import Histogram1D
 from physt.histogram_nd import Histogram2D
-from physt.plotting.common import (get_data, get_err_data,
-                                   pop_kwargs_with_prefix)
-from physt.special_histograms import CylindricalSurfaceHistogram, SphericalSurfaceHistogram
+from physt.plotting.common import get_data, get_err_data, pop_kwargs_with_prefix
+from physt.special_histograms import (
+    CylindricalSurfaceHistogram,
+    SphericalSurfaceHistogram,
+)
 
 # To be filled by register function
 types = []
@@ -60,7 +62,9 @@ default_figsize = matplotlib.rcParams["figure.figsize"]
 default_cmap = "Greys"  # matplotlib.rcParams['image.cmap']
 
 
-def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collection: bool = False):
+def register(
+    *dim: int, use_3d: bool = False, use_polar: bool = False, collection: bool = False
+):
     """Decorator to wrap common plotting functionality.
 
     Parameters
@@ -69,10 +73,10 @@ def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collectio
     use_3d : If True, the figure will be 3D.
     use_polar : If True, the figure will be in polar coordinates.
     collection : Whether to allow histogram collections to be used
-    """   
+    """
     if use_3d and use_polar:
         raise RuntimeError("Cannot have polar and 3d coordinates simultaneously.")
-    
+
     # TODO: Add some kind of class parameter
 
     def decorate(function):
@@ -80,10 +84,13 @@ def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collectio
         dims[function.__name__] = dim
 
         @wraps(function)
-        def f(hist, write_to: Optional[str] = None, dpi:Optional[float] = None, **kwargs):
+        def f(
+            hist, write_to: Optional[str] = None, dpi: Optional[float] = None, **kwargs
+        ):
             fig, ax = _get_axes(kwargs, use_3d=use_3d, use_polar=use_polar)
 
             from physt.histogram_collection import HistogramCollection
+
             if collection and isinstance(hist, HistogramCollection):
                 title = kwargs.pop("title", hist.title)
                 if not hist:
@@ -101,7 +108,9 @@ def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collectio
                 fig.tight_layout()
                 fig.savefig(write_to, dpi=dpi or default_dpi)
             return ax
+
         return f
+
     return decorate
 
 
@@ -136,8 +145,16 @@ def bar(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
             kwargs["ecolor"] = "black"
 
     _add_labels(ax, h1, kwargs)
-    ax.bar(h1.bin_left_edges, data, h1.bin_widths, align="edge",
-           label=label, color=colors, linewidth=lw, **kwargs)
+    ax.bar(
+        h1.bin_left_edges,
+        data,
+        h1.bin_widths,
+        align="edge",
+        label=label,
+        color=colors,
+        linewidth=lw,
+        **kwargs
+    )
 
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
@@ -171,8 +188,14 @@ def scatter(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
 
     if errors:
         err_data = get_err_data(h1, cumulative=cumulative, density=density)
-        ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.pop("fmt", "o"),
-                    ecolor=kwargs.pop("ecolor", "black"), ms=0)
+        ax.errorbar(
+            h1.bin_centers,
+            data,
+            yerr=err_data,
+            fmt=kwargs.pop("fmt", "o"),
+            ecolor=kwargs.pop("ecolor", "black"),
+            ms=0,
+        )
     ax.scatter(h1.bin_centers, data, label=label, **kwargs)
 
     if show_values:
@@ -182,9 +205,14 @@ def scatter(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
 
 
 @register(1, collection=True)
-def line(h1: Union[Histogram1D, "HistogramCollection"], ax: Axes, *, errors: bool = False, **kwargs):
+def line(
+    h1: Union[Histogram1D, "HistogramCollection"],
+    ax: Axes,
+    *,
+    errors: bool = False,
+    **kwargs
+):
     """Line plot of 1D histogram."""
-
 
     show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
@@ -201,8 +229,14 @@ def line(h1: Union[Histogram1D, "HistogramCollection"], ax: Axes, *, errors: boo
 
     if errors:
         err_data = get_err_data(h1, cumulative=cumulative, density=density)
-        ax.errorbar(h1.bin_centers, data, yerr=err_data, fmt=kwargs.pop(
-            "fmt", "-"), ecolor=kwargs.pop("ecolor", "black"), **kwargs)
+        ax.errorbar(
+            h1.bin_centers,
+            data,
+            yerr=err_data,
+            fmt=kwargs.pop("fmt", "-"),
+            ecolor=kwargs.pop("ecolor", "black"),
+            **kwargs
+        )
     else:
         ax.plot(h1.bin_centers, data, **kwargs)
 
@@ -260,7 +294,17 @@ def step(h1: Histogram1D, ax: Axes, **kwargs):
 
 
 @register(2)
-def map(h2: Histogram2D, ax: Axes, *, show_zero: bool = True, show_values: bool = False, show_colorbar: bool = True, x=None, y=None, **kwargs):
+def map(
+    h2: Histogram2D,
+    ax: Axes,
+    *,
+    show_zero: bool = True,
+    show_values: bool = False,
+    show_colorbar: bool = True,
+    x=None,
+    y=None,
+    **kwargs
+):
     """Coloured-rectangle plot of 2D histogram.
 
     Parameters
@@ -310,8 +354,9 @@ def map(h2: Histogram2D, ax: Axes, *, show_zero: bool = True, show_values: bool 
     if "zorder" in kwargs:
         rect_args["zorder"] = kwargs.pop("zorder")
 
-    data = get_data(h2, cumulative=False, flatten=True,
-                    density=kwargs.pop("density", False))
+    data = get_data(
+        h2, cumulative=False, flatten=True, density=kwargs.pop("density", False)
+    )
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -336,10 +381,16 @@ def map(h2: Histogram2D, ax: Axes, *, show_zero: bool = True, show_values: bool 
 
         if data[i] != 0 or show_zero:
             if not transformed:
-                rect = plt.Rectangle([xpos[i], ypos[i]], dx[i], dy[i],
-                                     facecolor=bin_color, edgecolor=kwargs.get(
-                                         "grid_color", cmap(0.5)),
-                                     lw=kwargs.get("lw", 0.5), alpha=alpha, **rect_args)
+                rect = plt.Rectangle(
+                    [xpos[i], ypos[i]],
+                    dx[i],
+                    dy[i],
+                    facecolor=bin_color,
+                    edgecolor=kwargs.get("grid_color", cmap(0.5)),
+                    lw=kwargs.get("lw", 0.5),
+                    alpha=alpha,
+                    **rect_args
+                )
                 tx, ty = text_x[i], text_y[i]
 
             else:
@@ -349,23 +400,28 @@ def map(h2: Histogram2D, ax: Axes, *, show_zero: bool = True, show_values: bool 
                     (xpos[i] + dx[i], ypos[i]),
                     (xpos[i] + dx[i], ypos[i] + dy[i]),
                     (xpos[i], ypos[i] + dy[i]),
-                    (xpos[i], ypos[i])
+                    (xpos[i], ypos[i]),
                 )
 
                 verts = [(x(*p), y(*p)) for p in points]
 
-                codes = [path.Path.MOVETO,
-                         path.Path.LINETO,
-                         path.Path.LINETO,
-                         path.Path.LINETO,
-                         path.Path.CLOSEPOLY,
-                         ]
+                codes = [
+                    path.Path.MOVETO,
+                    path.Path.LINETO,
+                    path.Path.LINETO,
+                    path.Path.LINETO,
+                    path.Path.CLOSEPOLY,
+                ]
 
                 rect_path = path.Path(verts, codes)
-                rect = patches.PathPatch(rect_path, facecolor=bin_color,
-                                         edgecolor=kwargs.get("grid_color", cmap(0.5)),
-                                         lw=kwargs.get("lw", 0.5), alpha=alpha,
-                                         **rect_args)
+                rect = patches.PathPatch(
+                    rect_path,
+                    facecolor=bin_color,
+                    edgecolor=kwargs.get("grid_color", cmap(0.5)),
+                    lw=kwargs.get("lw", 0.5),
+                    alpha=alpha,
+                    **rect_args
+                )
 
                 tx = x(text_x[i], text_y[i])
                 ty = y(text_x[i], text_y[i])
@@ -378,13 +434,19 @@ def map(h2: Histogram2D, ax: Axes, *, show_zero: bool = True, show_values: bool 
                 text_color = kwargs.get("text_color", None)
                 if not text_color:
                     if yiq_y > 0.5:
-                        text_color = (0.0, 0.0, 0.0, kwargs.get(
-                            "text_alpha", alpha))
+                        text_color = (0.0, 0.0, 0.0, kwargs.get("text_alpha", alpha))
                     else:
-                        text_color = (1.0, 1.0, 1.0, kwargs.get(
-                            "text_alpha", alpha))
-                ax.text(tx, ty, text, horizontalalignment='center',
-                        verticalalignment='center', color=text_color, clip_on=True, **rect_args)
+                        text_color = (1.0, 1.0, 1.0, kwargs.get("text_alpha", alpha))
+                ax.text(
+                    tx,
+                    ty,
+                    text,
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                    color=text_color,
+                    clip_on=True,
+                    **rect_args
+                )
 
     if show_colorbar:
         _add_colorbar(ax, cmap, cmap_data, norm)
@@ -413,7 +475,14 @@ def bar3d(h2: Histogram2D, ax: Axes3D, **kwargs):
 
 
 @register(2)
-def image(h2: Histogram2D, ax: Axes, *, show_colorbar: bool = True, interpolation: str = "nearest", **kwargs):
+def image(
+    h2: Histogram2D,
+    ax: Axes,
+    *,
+    show_colorbar: bool = True,
+    interpolation: str = "nearest",
+    **kwargs
+):
     """Plot of 2D histograms based on pixmaps.
 
     Similar to map, but it:
@@ -425,7 +494,7 @@ def image(h2: Histogram2D, ax: Axes, *, show_colorbar: bool = True, interpolatio
     ----------
     interpolation: interpolation parameter passed to imshow, default: "nearest" (creates rectangles)
     """
-    cmap = _get_cmap(kwargs)   # h2 as well?
+    cmap = _get_cmap(kwargs)  # h2 as well?
     data = get_data(h2, cumulative=False, density=kwargs.pop("density", False))
     norm, cmap_data = _get_cmap_data(data, kwargs)
     # zorder = kwargs.pop("zorder", None)
@@ -433,7 +502,8 @@ def image(h2: Histogram2D, ax: Axes, *, show_colorbar: bool = True, interpolatio
     for binning in h2._binnings:
         if not binning.is_regular():
             raise RuntimeError(
-                "Histograms with irregular bins cannot be plotted using image method.")
+                "Histograms with irregular bins cannot be plotted using image method."
+            )
 
     kwargs["interpolation"] = interpolation
     if kwargs.get("xscale") == "log" or kwargs.get("yscale") == "log":
@@ -442,22 +512,39 @@ def image(h2: Histogram2D, ax: Axes, *, show_colorbar: bool = True, interpolatio
     _apply_xy_lims(ax, h2, data=data, kwargs=kwargs)
 
     _add_labels(ax, h2, kwargs)
-    ax.imshow(data.T[::-1, :], cmap=cmap, norm=norm,
-              extent=(h2.bins[0][0, 0], h2.bins[0][-1, 1],
-                      h2.bins[1][0, 0], h2.bins[1][-1, 1]),
-              aspect="auto", **kwargs)
+    ax.imshow(
+        data.T[::-1, :],
+        cmap=cmap,
+        norm=norm,
+        extent=(
+            h2.bins[0][0, 0],
+            h2.bins[0][-1, 1],
+            h2.bins[1][0, 0],
+            h2.bins[1][-1, 1],
+        ),
+        aspect="auto",
+        **kwargs
+    )
 
     if show_colorbar:
         _add_colorbar(ax, cmap, cmap_data, norm)
 
 
 @register(2, use_polar=True)
-def polar_map(hist: Histogram2D, ax: Axes, *, show_zero: bool = True, show_colorbar: bool = True, **kwargs):
+def polar_map(
+    hist: Histogram2D,
+    ax: Axes,
+    *,
+    show_zero: bool = True,
+    show_colorbar: bool = True,
+    **kwargs
+):
     """Polar map of polar histograms.
 
     Similar to map, but supports less parameters."""
-    data = get_data(hist, cumulative=False, flatten=True,
-                    density=kwargs.pop("density", False))
+    data = get_data(
+        hist, cumulative=False, flatten=True, density=kwargs.pop("density", False)
+    )
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -479,9 +566,18 @@ def polar_map(hist: Histogram2D, ax: Axes, *, show_zero: bool = True, show_color
         if data[i] > 0 or show_zero:
             bin_color = colors[i]
             # TODO: align = "edge"
-            bars = ax.bar(phipos[i], dr[i], width=dphi[i], bottom=rpos[i], align='edge', color=bin_color,
-                          edgecolor=kwargs.get("grid_color", cmap(0.5)), lw=kwargs.get("lw", 0.5),
-                          alpha=alphas[i], **bar_args)
+            bars = ax.bar(
+                phipos[i],
+                dr[i],
+                width=dphi[i],
+                bottom=rpos[i],
+                align="edge",
+                color=bin_color,
+                edgecolor=kwargs.get("grid_color", cmap(0.5)),
+                lw=kwargs.get("lw", 0.5),
+                alpha=alphas[i],
+                **bar_args
+            )
 
     ax.set_rmax(rmax.max())
     if show_colorbar:
@@ -489,10 +585,17 @@ def polar_map(hist: Histogram2D, ax: Axes, *, show_zero: bool = True, show_color
 
 
 @register(2, use_3d=True)
-def globe_map(hist: Union[Histogram2D, SphericalSurfaceHistogram], ax: Axes3D, *, show_zero: bool = True, **kwargs):
+def globe_map(
+    hist: Union[Histogram2D, SphericalSurfaceHistogram],
+    ax: Axes3D,
+    *,
+    show_zero: bool = True,
+    **kwargs
+):
     """Heat map plotted on the surface of a sphere."""
-    data = get_data(hist, cumulative=False, flatten=False,
-                    density=kwargs.pop("density", False))
+    data = get_data(
+        hist, cumulative=False, flatten=False, density=kwargs.pop("density", False)
+    )
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -531,10 +634,17 @@ def globe_map(hist: Union[Histogram2D, SphericalSurfaceHistogram], ax: Axes3D, *
 
 
 @register(2, use_3d=True)
-def cylinder_map(hist: Union[Histogram2D, CylindricalSurfaceHistogram], ax: Axes3D, *, show_zero: bool = True, **kwargs):
+def cylinder_map(
+    hist: Union[Histogram2D, CylindricalSurfaceHistogram],
+    ax: Axes3D,
+    *,
+    show_zero: bool = True,
+    **kwargs
+):
     """Heat map plotted on the surface of a cylinder."""
-    data = get_data(hist, cumulative=False, flatten=False,
-                    density=kwargs.pop("density", False))
+    data = get_data(
+        hist, cumulative=False, flatten=False, density=kwargs.pop("density", False)
+    )
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -573,8 +683,16 @@ def cylinder_map(hist: Union[Histogram2D, CylindricalSurfaceHistogram], ax: Axes
 
 
 @register(2, use_3d=True)
-def surface_map(hist, ax: Axes3D, *, show_zero: bool = True, x=(lambda x, y: x),
-                y=(lambda x, y: y), z=(lambda x, y: 0), **kwargs):
+def surface_map(
+    hist,
+    ax: Axes3D,
+    *,
+    show_zero: bool = True,
+    x=(lambda x, y: x),
+    y=(lambda x, y: y),
+    z=(lambda x, y: 0),
+    **kwargs
+):
     """Coloured-rectangle plot of 2D histogram, placed on an arbitrary surface.
 
     Each bin is mapped to a rectangle in 3D space using the x,y,z functions.
@@ -599,8 +717,9 @@ def surface_map(hist, ax: Axes3D, *, show_zero: bool = True, x=(lambda x, y: x),
     --------
     map, cylinder_map, globe_map
     """
-    data = get_data(hist, cumulative=False, flatten=False,
-                    density=kwargs.pop("density", False))
+    data = get_data(
+        hist, cumulative=False, flatten=False, density=kwargs.pop("density", False)
+    )
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -636,7 +755,7 @@ def surface_map(hist, ax: Axes3D, *, show_zero: bool = True, x=(lambda x, y: x),
     ax.set_zlabel("z")
 
     if matplotlib.__version__ < "2":
-        ax.plot_surface([], [], [], color="b")   # Dummy plot
+        ax.plot_surface([], [], [], color="b")  # Dummy plot
     ax.set_xlim(xs.min(), xs.max())
     ax.set_ylim(ys.min(), ys.max())
     ax.set_zlim(zs.min(), zs.max())
@@ -646,12 +765,19 @@ def surface_map(hist, ax: Axes3D, *, show_zero: bool = True, x=(lambda x, y: x),
     return ax
 
 
-def pair_bars(first: Histogram1D, second: Histogram2D, *, orientation: str = "vertical", kind: str = "bar", **kwargs) -> Axes:
+def pair_bars(
+    first: Histogram1D,
+    second: Histogram2D,
+    *,
+    orientation: str = "vertical",
+    kind: str = "bar",
+    **kwargs
+) -> Axes:
     """Draw two different histograms mirrored in one figure.
 
     Parameters
     ----------
-    first: 
+    first:
     second:
     color1:
     color2:
@@ -662,8 +788,13 @@ def pair_bars(first: Histogram1D, second: Histogram2D, *, orientation: str = "ve
     color1 = kwargs.pop("color1", "red")
     color2 = kwargs.pop("color2", "blue")
     title = kwargs.pop("title", "{0} - {1}".format(first.name, second.name))
-    xlim = kwargs.pop("xlim", (min(first.bin_left_edges[0], first.bin_left_edges[
-                      0]), max(first.bin_right_edges[-1], second.bin_right_edges[-1])))
+    xlim = kwargs.pop(
+        "xlim",
+        (
+            min(first.bin_left_edges[0], first.bin_left_edges[0]),
+            max(first.bin_right_edges[-1], second.bin_right_edges[-1]),
+        ),
+    )
 
     bar(first * (-1), color=color1, ax=ax, ylim="keep", **kwargs)
     bar(second, color=color2, ax=ax, ylim="keep", **kwargs)
@@ -678,7 +809,9 @@ def pair_bars(first: Histogram1D, second: Histogram2D, *, orientation: str = "ve
     return ax
 
 
-def _get_axes(kwargs: Dict[str, Any], *, use_3d: bool = False, use_polar: bool = False) -> Tuple[Figure, Union[Axes, Axes3D]]:
+def _get_axes(
+    kwargs: Dict[str, Any], *, use_3d: bool = False, use_polar: bool = False
+) -> Tuple[Figure, Union[Axes, Axes3D]]:
     """Prepare the axis to draw into.
 
     Parameters
@@ -704,10 +837,10 @@ def _get_axes(kwargs: Dict[str, Any], *, use_3d: bool = False, use_polar: bool =
         fig = ax.get_figure()
     elif use_3d:
         fig = plt.figure(figsize=figsize)
-        ax = fig.add_subplot(111, projection='3d')
+        ax = fig.add_subplot(111, projection="3d")
     elif use_polar:
         fig = plt.figure(figsize=figsize)
-        ax = fig.add_subplot(111, projection='polar')
+        ax = fig.add_subplot(111, projection="polar")
     else:
         fig, ax = plt.subplots(figsize=figsize)
     return fig, ax
@@ -734,6 +867,7 @@ def _get_cmap(kwargs: dict) -> colors.Colormap:
             try:
                 # Try to use seaborn palette
                 import seaborn as sns
+
                 sns_palette = sns.color_palette(cmap, n_colors=256)
                 cmap = ListedColormap(sns_palette, name=cmap)
             except ImportError:
@@ -788,7 +922,7 @@ def _get_alpha_data(data: np.ndarray, kwargs) -> Union[float, np.ndarray]:
 
 def _add_labels(ax: Axes, h: Union[Histogram1D, Histogram2D], kwargs: dict):
     """Add axis and plot labels.
-    
+
     TODO: Document kwargs
     """
     title = kwargs.pop("title", h.title)
@@ -818,19 +952,22 @@ def _add_values(ax: Axes, h1: Histogram1D, data, *, value_format=str, **kwargs):
         Parameters to be passed to matplotlib to override standard text params.
     """
     from .common import get_value_format
+
     value_format = get_value_format(value_format)
-    text_kwargs = {"ha": "center", "va": "bottom", "clip_on" : True}
+    text_kwargs = {"ha": "center", "va": "bottom", "clip_on": True}
     text_kwargs.update(kwargs)
 
     for x, y in zip(h1.bin_centers, data):
         ax.text(x, y, str(value_format(y)), **text_kwargs)
 
 
-def _add_colorbar(ax: Axes, cmap: colors.Colormap, cmap_data: np.ndarray, norm: colors.Normalize):
+def _add_colorbar(
+    ax: Axes, cmap: colors.Colormap, cmap_data: np.ndarray, norm: colors.Normalize
+):
     """Show a colorbar right of the plot."""
     fig = ax.get_figure()
     mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
-    mappable.set_array(cmap_data)   # TODO: Or what???
+    mappable.set_array(cmap_data)  # TODO: Or what???
     fig.colorbar(mappable, ax=ax)
 
 
@@ -850,17 +987,26 @@ def _add_stats_box(h1: Histogram1D, ax: Axes, stats: Union[str, bool] = "all"):
     # place a text box in upper left in axes coords
     if stats in ["all", True]:
         text = "Total: {0}\nMean: {1:.2f}\nStd.dev: {2:.2f}".format(
-            h1.total, h1.mean(), h1.std())
+            h1.total, h1.mean(), h1.std()
+        )
     elif stats == "total":
         text = "Total: {0}".format(h1.total)
     else:
         raise ValueError("Invalid stats specification")
-        
-    ax.text(0.05, 0.95, text, transform=ax.transAxes,
-            verticalalignment='top', horizontalalignment='left')
+
+    ax.text(
+        0.05,
+        0.95,
+        text,
+        transform=ax.transAxes,
+        verticalalignment="top",
+        horizontalalignment="left",
+    )
 
 
-def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarray, kwargs: dict):
+def _apply_xy_lims(
+    ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarray, kwargs: dict
+):
     """Apply axis limits and scales from kwargs.
 
     Note: if exponential binning is used, the scale defaults to "log"
@@ -899,11 +1045,17 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
 
     # First, get the axis scaling
     if h.ndim == 1:
-        xscale = kwargs.pop("xscale", "log" if isinstance(h.binning, ExponentialBinning) else None)
+        xscale = kwargs.pop(
+            "xscale", "log" if isinstance(h.binning, ExponentialBinning) else None
+        )
         yscale = kwargs.pop("yscale", None)
     elif h.ndim == 2:
-        xscale = kwargs.pop("xscale", "log" if isinstance(h.binnings[0], ExponentialBinning) else None)
-        yscale = kwargs.pop("yscale", "log" if isinstance(h.binnings[1], ExponentialBinning) else None)
+        xscale = kwargs.pop(
+            "xscale", "log" if isinstance(h.binnings[0], ExponentialBinning) else None
+        )
+        yscale = kwargs.pop(
+            "yscale", "log" if isinstance(h.binnings[1], ExponentialBinning) else None
+        )
     else:
         raise ValueError("Invalid histogram dimension: {0}".format(h.ndim))
 
@@ -912,20 +1064,19 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
             pass
         elif ylim:
             ylim = ax.get_ylim()
-            if h.ndim == 1:  
+            if h.ndim == 1:
                 if data.size > 0 and data.max() > 0:
-                    ylim = (0, max(ylim[1], data.max() +
-                                   (data.max() - ylim[0]) * 0.1))
+                    ylim = (0, max(ylim[1], data.max() + (data.max() - ylim[0]) * 0.1))
                 if yscale == "log":
                     ylim = (abs(data[data > 0].min()) * 0.9, ylim[1] * 1.1)
             elif h.ndim == 2:
                 if h.shape[1] >= 2:
-                    ylim = (h.get_bin_left_edges(1)[0],
-                            h.get_bin_right_edges(1)[-1])
+                    ylim = (h.get_bin_left_edges(1)[0], h.get_bin_right_edges(1)[-1])
                     if yscale == "log":
                         if ylim[0] <= 0:
                             raise ValueError(
-                                "Cannot use logarithmic scale for non-positive bins.")
+                                "Cannot use logarithmic scale for non-positive bins."
+                            )
             if invert_y:
                 ylim = ylim[::-1]
                 # ax.xaxis.tick_top()
@@ -941,15 +1092,14 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
                 if h.ndim == 1:
                     xlim = (h.bin_left_edges[0], h.bin_right_edges[-1])
                 elif h.ndim == 2:
-                    xlim = (h.get_bin_left_edges(0)[
-                            0], h.get_bin_right_edges(0)[-1])
+                    xlim = (h.get_bin_left_edges(0)[0], h.get_bin_right_edges(0)[-1])
                 else:
-                    raise ValueError(
-                        "Invalid dimension: {0}".format(h.ndim))
+                    raise ValueError("Invalid dimension: {0}".format(h.ndim))
                 if xscale == "log":
                     if xlim[0] <= 0:
                         raise ValueError(
-                            "Cannot use xscale='log' for non-positive bins.")
+                            "Cannot use xscale='log' for non-positive bins."
+                        )
         ax.set_xlim(*xlim)
 
     if xscale:

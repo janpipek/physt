@@ -26,7 +26,7 @@ def load_csv(path):
         for line in in_file:
             if line.startswith("#"):
                 key, value = line[1:].strip().split(" ", 1)
-                meta.append((key, value))   # TODO: There are duplicit entries :-()
+                meta.append((key, value))  # TODO: There are duplicit entries :-()
             else:
                 try:
                     data.append([float(frag) for frag in line.split(",")])
@@ -54,16 +54,15 @@ def _create_h1(data, meta):
     bin_count = int(bin_count)
     min_ = float(min_)
     max_ = float(max_)
-    binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_))
+    binning = fixed_width_binning(
+        None, bin_width=(max_ - min_) / bin_count, range=(min_, max_)
+    )
     hist = Histogram1D(binning, name=_get(meta, "title"))
     hist._frequencies = data[1:-1, 1]
     hist._errors2 = data[1:-1, 2]
     hist.underflow = data[0, 1]
     hist.overflow = data[-1, 1]
-    hist._stats = {
-        "sum" : data[1:-1, 3].sum(),
-        "sum2" : data[1:-1, 4].sum()
-    }
+    hist._stats = {"sum": data[1:-1, 3].sum(), "sum2": data[1:-1, 4].sum()}
     return hist
 
 
@@ -75,7 +74,9 @@ def _create_h2(data, meta):
         bin_count = int(bin_count)
         min_ = float(min_)
         max_ = float(max_)
-        binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_))
+        binning = fixed_width_binning(
+            None, bin_width=(max_ - min_) / bin_count, range=(min_, max_)
+        )
         binnings.append(binning)
 
     hist = Histogram2D(binnings, name=_get(meta, "title"))

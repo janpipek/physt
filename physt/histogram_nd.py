@@ -1,10 +1,11 @@
 """Multi-dimensional histograms."""
-from typing import Optional, List, Any, Tuple, Union
+from typing import Optional, List, Any, Tuple, Union, Iterable
 
 import numpy as np
 
 from .histogram_base import HistogramBase, Axis
-from .binnings import BinningBase
+from .binnings import BinningBase, BinningLike
+from .typing_aliases import ArrayLike
 
 
 class HistogramND(HistogramBase):
@@ -15,7 +16,15 @@ class HistogramND(HistogramBase):
 
     """
 
-    def __init__(self, binnings, frequencies=None, *, dimension: Optional[int] = None, missed=0, **kwargs):
+    def __init__(
+        self,
+        binnings: Iterable[BinningLike],
+        frequencies: Optional[ArrayLike] = None,
+        *,
+        dimension: Optional[int] = None,
+        missed=0,
+        **kwargs
+    ):
         """Constructor
 
         Parameters
@@ -35,14 +44,19 @@ class HistogramND(HistogramBase):
         """
 
         # Bins + checks
+        binnings = list(binnings)
         if dimension:
             if len(binnings) != dimension:
-                raise ValueError("bins must be a sequence of {0} schemas".format(dimension))
+                raise ValueError(
+                    "bins must be a sequence of {0} schemas".format(dimension)
+                )
 
         HistogramBase.__init__(self, binnings, frequencies, **kwargs)
 
         if len(self.axis_names) != self.ndim:
-            raise RuntimeError("The length of axis names must be equal to histogram dimension.")
+            raise RuntimeError(
+                "The length of axis names must be equal to histogram dimension."
+            )
 
         # Missed values
         self._missed = np.array([missed], dtype=self.dtype)
@@ -103,7 +117,9 @@ class HistogramND(HistogramBase):
         errors2 = self._errors2[tuple(array_index)].copy()
 
         if isinstance(index, int):
-            return self._reduce_dimension([ax for ax in range(self.ndim) if ax != axis_id], frequencies, errors2)
+            return self._reduce_dimension(
+                [ax for ax in range(self.ndim) if ax != axis_id], frequencies, errors2
+            )
         elif isinstance(index, slice):
             if index.step is not None and index.step < 0:
                 raise IndexError("Cannot change the order of bins")
@@ -117,7 +133,7 @@ class HistogramND(HistogramBase):
 
     def __getitem__(self, index):
         """Select subset of histogram.
-        
+
         Parameters
         ----------
         index: int or slice or iterable
@@ -137,18 +153,26 @@ class HistogramND(HistogramBase):
             return self.select(0, index)
         elif isinstance(index, tuple):
             if len(index) > self.ndim:
-                raise IndexError("Too many indices ({0}) to select from {1}D histogram".
-                                 format(len(index), self.ndim))
+                raise IndexError(
+                    "Too many indices ({0}) to select from {1}D histogram".format(
+                        len(index), self.ndim
+                    )
+                )
 
             # Scalar case => return (bin edges), (frequency)
             if len(index) == self.ndim and all((isinstance(i, int) for i in index)):
                 return (
-                    tuple((self.get_bin_left_edges(i)[j], self.get_bin_right_edges(i)[j]) for i, j in enumerate(index)),
-                    self._frequencies[index]
+                    tuple(
+                        (self.get_bin_left_edges(i)[j], self.get_bin_right_edges(i)[j])
+                        for i, j in enumerate(index)
+                    ),
+                    self._frequencies[index],
                 )
             current = self
-            for i, subindex in enumerate(index):              
-                current = current.select(i + current.ndim - self.ndim, subindex, force_copy=False)
+            for i, subindex in enumerate(index):
+                current = current.select(
+                    i + current.ndim - self.ndim, subindex, force_copy=False
+                )
             if current is self:
                 current = current.copy()
             return current
@@ -157,12 +181,16 @@ class HistogramND(HistogramBase):
 
     # Missing: cumulative_frequencies - does it make sense?
 
-    def get_bin_widths(self, axis: Optional[Axis] = None) -> np.ndarray:  # TODO: -> Base ?
+    def get_bin_widths(
+        self, axis: Optional[Axis] = None
+    ) -> np.ndarray:  # TODO: -> Base ?
         if axis is not None:
             axis = self._get_axis(axis)
             return self.get_bin_right_edges(axis) - self.get_bin_left_edges(axis)
         else:
-            return np.meshgrid(*[self.get_bin_widths(i) for i in range(self.ndim)], indexing='ij')
+            return np.meshgrid(
+                *[self.get_bin_widths(i) for i in range(self.ndim)], indexing="ij"
+            )
 
     @property
     def bin_sizes(self) -> np.ndarray:
@@ -180,15 +208,15 @@ class HistogramND(HistogramBase):
         ----
         Perhaps not optimized, but should work also with transformed axes
         """
-        return np.sum(self.bin_sizes)
+        return float(np.sum(self.bin_sizes))
 
-    def get_bin_edges(self, axis: Optional[Axis] = None) -> np.ndarray:
+    def get_bin_edges(self, axis: Optional[Axis] = None) -> Tuple[np.ndarray, ...]:
         if axis is not None:
             axis = self._get_axis(axis)
             return self.numpy_bins[self._get_axis(axis)]
         else:
             edges = [self.get_bin_edges(i) for i in range(self.ndim)]
-            return np.meshgrid(*edges, indexing='ij')
+            return np.meshgrid(*edges, indexing="ij")
 
     def get_bin_left_edges(self, axis: Optional[Axis] = None) -> np.ndarray:
         if axis is not None:
@@ -196,7 +224,7 @@ class HistogramND(HistogramBase):
             return self.bins[axis][:, 0]
         else:
             edges = [self.get_bin_left_edges(i) for i in range(self.ndim)]
-            return np.meshgrid(*edges, indexing='ij')
+            return np.meshgrid(*edges, indexing="ij")
 
     def get_bin_right_edges(self, axis: Optional[Axis] = None) -> np.ndarray:
         if axis is not None:
@@ -204,17 +232,21 @@ class HistogramND(HistogramBase):
             return self.bins[axis][:, 1]
         else:
             edges = [self.get_bin_right_edges(i) for i in range(self.ndim)]
-            return np.meshgrid(*edges, indexing='ij')
+            return np.meshgrid(*edges, indexing="ij")
 
     def get_bin_centers(self, axis: Optional[Axis] = None) -> np.ndarray:
         if axis is not None:
             axis = self._get_axis(axis)
             return (self.get_bin_right_edges(axis) + self.get_bin_left_edges(axis)) / 2
         else:
-            return np.meshgrid(*[self.get_bin_centers(i) for i in range(self.ndim)], indexing='ij')
+            return np.meshgrid(
+                *[self.get_bin_centers(i) for i in range(self.ndim)], indexing="ij"
+            )
 
     # TODO: Check!
-    def find_bin(self, value, axis: Optional[Axis] = None) -> Union[None, int, Tuple[int, ...]]:
+    def find_bin(
+        self, value, axis: Optional[Axis] = None
+    ) -> Union[None, int, Tuple[int, ...]]:
         """Index(indices) of bin corresponding to a value.
 
         Parameters
@@ -267,7 +299,9 @@ class HistogramND(HistogramBase):
             self._errors2[ixbin] += weight ** 2
         return ixbin
 
-    def fill_n(self, values, weights=None, *, dropna: bool = True, columns: bool = False):
+    def fill_n(
+        self, values, weights=None, *, dropna: bool = True, columns: bool = False
+    ):
         """Add more values at once.
 
         Parameters
@@ -300,16 +334,22 @@ class HistogramND(HistogramBase):
             self._coerce_dtype(weights.dtype)
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
-                map = binning.force_bin_existence(values[:, i])   # TODO: Add to some test
+                map = binning.force_bin_existence(
+                    values[:, i]
+                )  # TODO: Add to some test
                 self._reshape_data(binning.bin_count, map, i)
-        frequencies, errors2, missed = calculate_frequencies(values, self._binnings, weights=weights)
+        frequencies, errors2, missed = calculate_frequencies(
+            values, self._binnings, weights=weights
+        )
         self._frequencies += frequencies
         self._errors2 += errors2
         self._missed[0] += missed
 
-    def _get_projection_axes(self, *axes: Axis) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
+    def _get_projection_axes(
+        self, *axes: Axis
+    ) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
         """Find axis identifiers for projection and all the remaining ones.
-        
+
         Returns
         -------
         axes: axes to include in the projection
@@ -334,17 +374,34 @@ class HistogramND(HistogramBase):
         bins = [bins for i, bins in enumerate(self._binnings) if i in axes]
         if len(axes) == 1:
             from .histogram1d import Histogram1D
+
             klass = kwargs.get("type", Histogram1D)
-            return klass(binning=bins[0], frequencies=frequencies, errors2=errors2,
-                         axis_name=axis_names[0], name=name)
+            return klass(
+                binning=bins[0],
+                frequencies=frequencies,
+                errors2=errors2,
+                axis_name=axis_names[0],
+                name=name,
+            )
         elif len(axes) == 2:
             klass = kwargs.get("type", Histogram2D)
-            return klass(binnings=bins, frequencies=frequencies, errors2=errors2,
-                         axis_names=axis_names, name=name)
+            return klass(
+                binnings=bins,
+                frequencies=frequencies,
+                errors2=errors2,
+                axis_names=axis_names,
+                name=name,
+            )
         else:
             klass = kwargs.get("type", HistogramND)
-            return klass(dimension=len(axes), binnings=bins, frequencies=frequencies,
-                         errors2=errors2, axis_names=axis_names, name=name)
+            return klass(
+                dimension=len(axes),
+                binnings=bins,
+                frequencies=frequencies,
+                errors2=errors2,
+                axis_names=axis_names,
+                name=name,
+            )
 
     def accumulate(self, axis: Axis) -> HistogramBase:
         """Calculate cumulative frequencies along a certain axis.
@@ -385,9 +442,7 @@ class HistogramND(HistogramBase):
         return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
 
     def __eq__(self, other: Any):
-        """Equality comparison
-
-        """
+        """Equality comparison"""
         # TODO: Describe allclose
         # TODO: Think about softer alternatives (like compare method)
         if not isinstance(other, self.__class__):
@@ -410,7 +465,9 @@ class HistogramND(HistogramBase):
         return True
 
     @classmethod
-    def from_calculate_frequencies(cls, data, binnings, weights=None, *, dtype=None, **kwargs):
+    def from_calculate_frequencies(
+        cls, data, binnings, weights=None, *, dtype=None, **kwargs
+    ):
         frequencies, errors2, missing = calculate_frequencies(
             data=data, binnings=binnings, weights=weights, dtype=dtype
         )
@@ -430,8 +487,9 @@ class Histogram2D(HistogramND):
 
     def __init__(self, binnings, frequencies=None, **kwargs):
         kwargs.pop("dimension", None)
-        super(Histogram2D, self).__init__(dimension=2, binnings=binnings,
-                                          frequencies=frequencies, **kwargs)
+        super(Histogram2D, self).__init__(
+            dimension=2, binnings=binnings, frequencies=frequencies, **kwargs
+        )
 
     @property
     def T(self) -> "Histogram2D":
@@ -474,9 +532,9 @@ class Histogram2D(HistogramND):
                 divisor = self._frequencies.sum(axis=0)
             else:
                 divisor = self._frequencies.sum(axis=1)[:, np.newaxis]
-            divisor[divisor == 0] = 1             # Prevent division errors
+            divisor[divisor == 0] = 1  # Prevent division errors
             self._frequencies /= divisor
-            self._errors2 /= (divisor * divisor)  # Has its limitations
+            self._errors2 /= divisor * divisor  # Has its limitations
             return self
 
     def numpy_like(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -484,8 +542,10 @@ class Histogram2D(HistogramND):
         return self.frequencies, self.numpy_bins[0], self.numpy_bins[1]
 
 
-def calculate_frequencies(data, binnings, weights=None, dtype=None) -> Tuple[np.ndarray, np.ndarray, float]:
-    """"Get frequencies and bin errors from the data (n-dimensional variant).
+def calculate_frequencies(
+    data, binnings, weights=None, dtype=None
+) -> Tuple[np.ndarray, np.ndarray, float]:
+    """ "Get frequencies and bin errors from the data (n-dimensional variant).
 
     Parameters
     ----------
@@ -516,7 +576,9 @@ def calculate_frequencies(data, binnings, weights=None, dtype=None) -> Tuple[np.
     if data is not None:
         data = np.asarray(data)
         if data.ndim != 2:
-            raise RuntimeError("histogram_nd.calculate_frequencies requires 2D input data.")
+            raise RuntimeError(
+                "histogram_nd.calculate_frequencies requires 2D input data."
+            )
             # TODO: If somewhere, here we would check ndim
 
     # Guess correct dtype and apply to weights
@@ -535,7 +597,9 @@ def calculate_frequencies(data, binnings, weights=None, dtype=None) -> Tuple[np.
         if dtype:
             dtype = np.dtype(dtype)
             if dtype.kind in "iu" and weights.dtype.kind == "f":
-                raise RuntimeError("Integer histogram requested but float weights entered.")
+                raise RuntimeError(
+                    "Integer histogram requested but float weights entered."
+                )
         else:
             dtype = weights.dtype
 
@@ -549,7 +613,7 @@ def calculate_frequencies(data, binnings, weights=None, dtype=None) -> Tuple[np.
 
     if data.shape[0]:
         frequencies, _ = np.histogramdd(data, edges, weights=weights)
-        frequencies = frequencies.astype(dtype)      # Automatically copy
+        frequencies = frequencies.astype(dtype)  # Automatically copy
         frequencies = frequencies[ixgrid]
         missing = weights.sum() - frequencies.sum()
         err_freq, _ = np.histogramdd(data, edges, weights=weights ** 2)
