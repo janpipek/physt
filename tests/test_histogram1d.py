@@ -521,7 +521,7 @@ class TestDtype:
             hist * complex(4, 5)
 
     def test_empty(self):
-        hist = h1(None, "fixed_width", 10, adaptive=True)
+        hist = h1(None, "fixed_width", bin_width=10, adaptive=True)
         assert hist.dtype == np.int64
 
 if __name__ == "__main__":
