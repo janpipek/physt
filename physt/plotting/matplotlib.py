@@ -46,6 +46,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 from physt.histogram1d import Histogram1D
 from physt.histogram_nd import Histogram2D
+from physt.config import config
 from physt.plotting.common import get_data, get_err_data, pop_kwargs_with_prefix
 from physt.special_histograms import (
     CylindricalSurfaceHistogram,
@@ -767,7 +768,7 @@ def surface_map(
 
 def pair_bars(
     first: Histogram1D,
-    second: Histogram2D,
+    second: Histogram1D,
     *,
     orientation: str = "vertical",
     kind: str = "bar",
@@ -779,8 +780,8 @@ def pair_bars(
     ----------
     first:
     second:
-    color1:
-    color2:
+    color1: Color for the first histogram
+    color2: Color for the second histogram
     orientation: vertical (not enabled yet) or horizontal
     """
     # TODO: enable vertical as well as horizontal
@@ -796,7 +797,8 @@ def pair_bars(
         ),
     )
 
-    bar(first * (-1), color=color1, ax=ax, ylim="keep", **kwargs)
+    with config.enable_free_arithmetics():
+        bar(first * (-1), color=color1, ax=ax, ylim="keep", **kwargs)
     bar(second, color=color2, ax=ax, ylim="keep", **kwargs)
     ax.set_title(title)
     ticks = np.abs(ax.get_yticks())
