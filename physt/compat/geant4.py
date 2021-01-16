@@ -1,4 +1,7 @@
-"""Support for Geant4 histograms saved in CSV format."""
+"""Support for Geant4 histograms saved in CSV format.
+
+See https://geant4.web.cern.ch/ for the project pages.
+"""
 import codecs
 
 import numpy as np

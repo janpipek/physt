@@ -22,7 +22,6 @@ from physt.typing_aliases import ArrayLike, DtypeLike
 def h1(
     data: Optional[ArrayLike],
     bins=None,
-    *args,
     adaptive: bool = False,
     dropna: bool = True,
     dtype: Optional[DtypeLike] = None,
@@ -76,7 +75,7 @@ def h1(
     if isinstance(data, tuple) and isinstance(
         data[0], str
     ):  # Works for groupby DataSeries
-        return histogram(data[1], bins, *args, name=data[0], **kwargs)
+        return h1(data[1], bins, name=data[0], **kwargs)
     elif type(data).__name__ == "DataFrame":
         raise ValueError("Cannot create histogram from a pandas DataFrame. Use Series.")
 
@@ -92,7 +91,6 @@ def h1(
     binning = calculate_bins(
         array,
         bins,
-        *args,
         check_nan=not dropna and array is not None,
         adaptive=adaptive,
         **kwargs
@@ -140,7 +138,7 @@ def h1(
     )
 
 
-def h2(data1, data2, bins=10, *args, **kwargs) -> Histogram2D:
+def h2(data1, data2, bins=10, **kwargs) -> Histogram2D:
     """Facade function to create 2D histograms.
 
     For implementation and parameters, see histogramdd.
@@ -162,10 +160,10 @@ def h2(data1, data2, bins=10, *args, **kwargs) -> Histogram2D:
         data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
     else:
         data = None
-    return cast(Histogram2D, h(data, bins, *args, dim=2, **kwargs))
+    return cast(Histogram2D, h(data, bins, dim=2, **kwargs))
 
 
-def h3(data, *args, **kwargs) -> HistogramND:
+def h3(data, bins=None, **kwargs) -> HistogramND:
     """Facade function to create 3D histograms.
 
     Parameters
@@ -186,13 +184,13 @@ def h3(data, *args, **kwargs) -> HistogramND:
         data = np.concatenate([item[:, np.newaxis] for item in data], axis=1)
     else:
         kwargs["dim"] = 3
-    return h(data, *args, **kwargs)
+    return h(data, bins, **kwargs)
 
 
 def h(
     data: Optional[ArrayLike],
     bins=10,
-    *args,
+    *,
     adaptive=False,
     dropna: bool = True,
     name: Optional[str] = None,
@@ -257,7 +255,7 @@ def h(
 
     # Prepare bins
     bin_schemas = calculate_bins_nd(
-        data, bins, *args, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs
+        data, bins, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs
     )
 
     # Prepare remaining data
@@ -281,11 +279,11 @@ histogram2d = deprecation_alias(h2, "histogram2d")
 histogramdd = deprecation_alias(h, "histogramdd")
 
 
-def collection(data, bins=10, *args, **kwargs) -> HistogramCollection:
+def collection(data, bins=10, **kwargs) -> HistogramCollection:
     """Create histogram collection with shared binnning."""
     if hasattr(data, "columns"):
         data = {column: data[column] for column in data.columns}
-    return HistogramCollection.multi_h1(data, bins, *args, **kwargs)
+    return HistogramCollection.multi_h1(data, bins, **kwargs)
 
 
 __all__ = [

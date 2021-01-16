@@ -122,7 +122,7 @@ try:
             data["lat"],
             data["long"],
             "fixed_width",
-            edge_length / 60,
+            bin_width=edge_length / 60,
             name="munros",
             title="Munros of Scotland",
         )

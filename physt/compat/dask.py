@@ -49,7 +49,7 @@ def _run_dask(
         return graph, result_name
 
 
-def histogram1d(data, bins=None, *args, **kwargs):
+def histogram1d(data, bins=None, **kwargs):
     """Facade function to create one-dimensional histogram using dask.
 
     Parameters
@@ -72,7 +72,7 @@ def histogram1d(data, bins=None, *args, **kwargs):
     kwargs["adaptive"] = True
 
     def block_hist(array):
-        return original_h1(array, bins, *args, **kwargs)
+        return original_h1(array, bins, **kwargs)
 
     return _run_dask(
         name="dask_adaptive1d",
@@ -86,7 +86,7 @@ def histogram1d(data, bins=None, *args, **kwargs):
 h1 = histogram1d  # Alias for convenience
 
 
-def histogramdd(data, bins=None, *args, **kwargs):
+def histogramdd(data, bins=None, **kwargs):
     """Facade function to create multi-dimensional histogram using dask.
 
     Each "column" must be one-dimensional.
@@ -115,7 +115,7 @@ def histogramdd(data, bins=None, *args, **kwargs):
     kwargs["adaptive"] = True
 
     def block_hist(array):
-        return original_hdd(array, bins, *args, **kwargs)
+        return original_hdd(array, bins, **kwargs)
 
     return _run_dask(
         name="dask_adaptive_dd",
@@ -127,7 +127,7 @@ def histogramdd(data, bins=None, *args, **kwargs):
     )
 
 
-def histogram2d(data1, data2, bins=None, *args, **kwargs):
+def histogram2d(data1, data2, bins=None, **kwargs):
     """Facade function to create 2D histogram using dask."""
     # TODO: currently very unoptimized! for non-dasks
     import dask
@@ -142,12 +142,12 @@ def histogram2d(data1, data2, bins=None, *args, **kwargs):
 
     data = dask.array.stack([data1, data2], axis=1)
     kwargs["dim"] = 2
-    return histogramdd(data, bins, *args, **kwargs)
+    return histogramdd(data, bins, **kwargs)
 
 
 h2 = histogram2d  # Alias for convenience
 
 
-def h3(data, *args, **kwargs):
+def h3(data, bins=None, **kwargs):
     """Facade function to create 3D histogram using dask."""
-    return histogramdd(data, dim=3, *args, **kwargs)
+    return histogramdd(data, bins, **kwargs)

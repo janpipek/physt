@@ -425,6 +425,7 @@ class FixedWidthBinning(BinningBase):
 
     def __init__(
         self,
+        *,
         bin_width,
         bin_count=0,
         bin_times_min=None,
@@ -440,11 +441,13 @@ class FixedWidthBinning(BinningBase):
         )
         # TODO: Check edge cases for min/shift/align
         if bin_width <= 0:
-            raise RuntimeError("Bin width must be > 0.")
+            raise ValueError("Bin width must be > 0.")
         if bin_count < 0:
-            raise RuntimeError("Bin count must be >= 0.")
+            raise ValueError("Bin count must be >= 0.")
         if (bin_times_min is not None or bin_shift is not None) and (min is not None):
-            raise RuntimeError("Cannot specify both min and (times_min or shift)")
+            raise ValueError("Cannot specify both min and (times_min or shift)")
+        if (bin_count == 0) and ((bin_times_min is not None) or (min is not None)):
+            raise ValueError("Cannot set min for an empty binning.")
         self._bin_width = float(bin_width)
         self._align = align
         self._bin_count = int(bin_count)
@@ -465,7 +468,7 @@ class FixedWidthBinning(BinningBase):
             result += ", adaptive=True"
         return result + ")"
 
-    def is_regular(self, *args, **kwargs) -> bool:
+    def is_regular(self, **kwargs) -> bool:
         return True
 
     def _force_bin_existence_single(self, value, includes_right_edge=None):
@@ -646,7 +649,7 @@ class ExponentialBinning(BinningBase):
         self._log_width = log_width
         self._bin_count = bin_count
 
-    def is_regular(self, *args, **kwargs) -> bool:
+    def is_regular(self, **kwargs) -> bool:
         return False
 
     @property
@@ -670,7 +673,7 @@ class ExponentialBinning(BinningBase):
 
 
 def numpy_binning(
-    data, bins=10, range: Optional[RangeTuple] = None, **kwargs
+    data: Optional[np.ndarray], bins: Union[int, ArrayLike] = 10, range: Optional[RangeTuple] = None, **kwargs
 ) -> NumpyBinning:
     """Construct binning schema compatible with numpy.histogram
 
@@ -704,7 +707,7 @@ def numpy_binning(
 
 
 def human_binning(
-    data=None,
+    data: Optional[np.ndarray] = None,
     bin_count: Optional[int] = None,
     *,
     kind: Optional[str] = None,
@@ -744,7 +747,7 @@ def human_binning(
 
 
 def quantile_binning(
-    data=None, bins=10, *, qrange: RangeTuple = (0.0, 1.0), **kwargs
+    data: Optional[ArrayLike] = None, bins=10, *, qrange: RangeTuple = (0.0, 1.0), **kwargs
 ) -> StaticBinning:
     """Binning schema based on quantile ranges.
 
@@ -864,7 +867,7 @@ def exponential_binning(
     )
 
 
-def calculate_bins(array, _=None, *args, **kwargs) -> BinningBase:
+def calculate_bins(array, _=None, **kwargs) -> BinningBase:
     """Find optimal binning from arguments.
 
     Parameters
@@ -895,23 +898,23 @@ def calculate_bins(array, _=None, *args, **kwargs) -> BinningBase:
         bin_count = (
             10  # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
         )
-        binning = numpy_binning(array, bin_count, *args, **kwargs)
+        binning = numpy_binning(array, bin_count, **kwargs)
     elif isinstance(_, BinningBase):
         binning = _
     elif isinstance(_, int):
-        binning = numpy_binning(array, _, *args, **kwargs)
+        binning = numpy_binning(array, _, **kwargs)
     elif isinstance(_, str):
         # What about the ranges???
         if _ in bincount_methods:
             bin_count = ideal_bin_count(array, method=_)
-            binning = numpy_binning(array, bin_count, *args, **kwargs)
+            binning = numpy_binning(array, bin_count, **kwargs)
         elif _ in binning_methods:
             method = binning_methods[_]
-            binning = method(array, *args, **kwargs)
+            binning = method(array, **kwargs)
         else:
             raise RuntimeError("No binning method {0} available.".format(_))
     elif callable(_):
-        binning = _(array, *args, **kwargs)
+        binning = _(array, **kwargs)
     elif np.iterable(_):
         binning = static_binning(array, _, **kwargs)
     else:
@@ -920,7 +923,7 @@ def calculate_bins(array, _=None, *args, **kwargs) -> BinningBase:
 
 
 def calculate_bins_nd(
-    array: Optional[np.ndarray], bins=None, *args, dim: Optional[int] = None, check_nan=True, **kwargs
+    array: Optional[np.ndarray], bins=None, dim: Optional[int] = None, check_nan=True, **kwargs
 ):
     """Find optimal binning from arguments (n-dimensional variant)
 
@@ -953,19 +956,12 @@ def calculate_bins_nd(
         bins = [bins] * dim
 
     # Prepare arguments
-    args = list(args)
     range_ = kwargs.pop("range", None)
     if range_:
         if len(range_) == 2 and all(np.isscalar(i) for i in range_):
             range_ = dim * [range_]
         elif len(range_) != dim:
             raise RuntimeError("Wrong dimensionality of range")
-    for i in range(len(args)):
-        if isinstance(args[i], (list, tuple)):
-            if len(args[i]) != dim:
-                raise RuntimeError("Argument not understood.")
-        else:
-            args[i] = dim * [args[i]]
     for key in list(kwargs.keys()):
         if isinstance(kwargs[key], (list, tuple)):
             if len(kwargs[key]) != dim:
@@ -980,7 +976,6 @@ def calculate_bins_nd(
         calculate_bins(
             array[:, i],
             bins[i],
-            *(arg[i] for arg in args if arg[i] is not None),
             **{k: kwarg[i] for k, kwarg in kwargs.items() if kwarg[i] is not None},
         )
         for i in range(dim)

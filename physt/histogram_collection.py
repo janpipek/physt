@@ -147,13 +147,13 @@ class HistogramCollection(Container[Histogram1D]):
 
     @classmethod
     def multi_h1(
-        cls, a_dict: Dict[str, ArrayLike], bins=None, *args, **kwargs
+        cls, a_dict: Dict[str, ArrayLike], bins=None, **kwargs
     ) -> "HistogramCollection":
         """Create a collection from multiple datasets."""
         from physt.binnings import calculate_bins
 
         mega_values = np.concatenate(list(a_dict.values()))
-        binning = calculate_bins(mega_values, bins, *args, **kwargs)
+        binning = calculate_bins(mega_values, bins, **kwargs)
 
         title = kwargs.pop("title", None)
         name = kwargs.pop("name", None)

@@ -322,7 +322,7 @@ class HistogramBase(abc.ABC):
     @property
     def bin_count(self) -> int:
         """Total number of bins."""
-        return np.product(self.shape)
+        return int(np.product(self.shape))
 
     @property
     def frequencies(self) -> Optional[np.ndarray]:
