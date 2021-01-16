@@ -1,3 +1,8 @@
+0.5.0 (???)
+-----------
+- Removed: *args in method definition whenever possible (prefering explicit keyword-only arguments)
+- Fix: A few small bugs
+
 0.4.12 (16th October 2020)
 --------------------------
 - Added: Optionally allow arithmetic operations with any array-like objects (see HistogramBase docs.)

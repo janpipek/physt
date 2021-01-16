@@ -17,6 +17,24 @@ from .typing_aliases import RangeTuple, ArrayLike
 from .util import find_subclass
 
 
+
+binning_methods = {}
+"""Dictionary of available binnnings."""
+
+
+def register_binning(f = None, *, name: Optional[str] = None):
+    """Decorator to register among available binning methods."""
+    def decorator(f):
+        key = name or f.__name__[:-8]
+        binning_methods[key] = f
+        return f
+
+    if f:
+        return decorator(f)
+    else:
+        return decorator
+
+
 # TODO: Locking and edit operations (like numpy read-only)
 
 
@@ -672,6 +690,7 @@ class ExponentialBinning(BinningBase):
         a_dict["bin_count"] = self._bin_count
 
 
+@register_binning
 def numpy_binning(
     data: Optional[np.ndarray], bin_count: int = 10, range: Optional[RangeTuple] = None, **kwargs
 ) -> NumpyBinning:
@@ -703,6 +722,7 @@ def numpy_binning(
     return NumpyBinning(bins)
 
 
+@register_binning
 def human_binning(
     data: Optional[np.ndarray] = None,
     bin_count: Optional[int] = None,
@@ -743,6 +763,7 @@ def human_binning(
     return fixed_width_binning(bin_width=bin_width, data=data, range=range, **kwargs)
 
 
+@register_binning
 def quantile_binning(
     data: Optional[ArrayLike] = None, *, bin_count: Optional[int] = None, q: Optional[Sequence[int]] = None, qrange: Optional[RangeTuple] = None, **kwargs
 ) -> StaticBinning:
@@ -778,11 +799,13 @@ def quantile_binning(
     return static_binning(bins=make_bin_array(bins), includes_right_edge=True)
 
 
+@register_binning
 def static_binning(data=None, bins=None, **kwargs) -> StaticBinning:
     """Construct static binning with whatever bins."""
     return StaticBinning(bins=make_bin_array(bins), **kwargs)
 
 
+@register_binning
 def integer_binning(data=None, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width binning schema with bins centered around integers.
 
@@ -804,6 +827,7 @@ def integer_binning(data=None, **kwargs) -> FixedWidthBinning:
     )
 
 
+@register_binning
 def fixed_width_binning(
     data=None,
     bin_width: Union[float, int] = 1,
@@ -838,6 +862,7 @@ def fixed_width_binning(
     return result
 
 
+@register_binning
 def exponential_binning(
     data=None,
     bin_count: Optional[int] = None,
@@ -985,17 +1010,6 @@ def calculate_bins_nd(
     return bins
 
 
-# TODO: Rename
-binning_methods = {
-    "numpy": numpy_binning,
-    "exponential": exponential_binning,
-    "quantile": quantile_binning,
-    "fixed_width": fixed_width_binning,
-    "integer": integer_binning,
-    "human": human_binning,
-}
-
-
 try:
     # If possible, import astropy's binning methods
     # See: http://docs.astropy.org/en/stable/visualization/histogram.html
@@ -1005,7 +1019,9 @@ try:
 
     warnings.filterwarnings("ignore", module="astropy\\..*")
 
-    def bayesian_blocks_binning(data, range=None, **kwargs) -> NumpyBinning:
+
+    @register_binning(name="blocks")
+    def bayesian_blocks_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Bayesian blocks (from astropy).
 
         Computationally expensive for large data sets.
@@ -1024,8 +1040,10 @@ try:
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         edges = bayesian_blocks(data)
-        return NumpyBinning(edges, **kwargs)
+        return StaticBinning(edges, **kwargs)
 
+
+    @register_binning
     def knuth_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Knuth's rule (from astropy).
 
@@ -1047,8 +1065,10 @@ try:
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         _, edges = knuth_bin_width(data, True)
-        return NumpyBinning(edges, **kwargs)
+        return StaticBinning(edges, **kwargs)
 
+
+    @register_binning
     def scott_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Scott's rule (from astropy).
 
@@ -1067,8 +1087,10 @@ try:
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         _, edges = scott_bin_width(data, True)
-        return NumpyBinning(edges, **kwargs)
+        return StaticBinning(edges, **kwargs)
 
+
+    @register_binning
     def freedman_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Freedman-Diaconis rule (from astropy).
 
@@ -1088,12 +1110,7 @@ try:
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         _, edges = freedman_bin_width(data, True)
-        return NumpyBinning(edges, **kwargs)
-
-    binning_methods["blocks"] = bayesian_blocks_binning
-    binning_methods["knuth"] = knuth_binning
-    binning_methods["scott"] = scott_binning
-    binning_methods["freedman"] = freedman_binning
+        return StaticBinning(edges, **kwargs)
 except:
     pass  # astropy is not required
 
