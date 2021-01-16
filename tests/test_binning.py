@@ -39,9 +39,8 @@ class TestNumpyBins:
     def test_bin_list_behaviour(self):
         data = np.random.rand(100)
         edges = [0.3, 4.5, 5.3, 8.6]
-        the_binning = binnings.numpy_binning(data, edges)
-        assert np.allclose(the_binning.numpy_bins, edges)
-        assert np.allclose(the_binning.numpy_bins, np.histogram(data, edges)[1])
+        with pytest.raises(TypeError) as exc:
+            the_binning = binnings.numpy_binning(data, edges)
 
 
 class TestFixedWidthBins:

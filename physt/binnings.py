@@ -673,15 +673,15 @@ class ExponentialBinning(BinningBase):
 
 
 def numpy_binning(
-    data: Optional[np.ndarray], bins: Union[int, ArrayLike] = 10, range: Optional[RangeTuple] = None, **kwargs
+    data: Optional[np.ndarray], bin_count: int = 10, range: Optional[RangeTuple] = None, **kwargs
 ) -> NumpyBinning:
-    """Construct binning schema compatible with numpy.histogram
+    """Construct binning schema compatible with numpy.histogram together with int argument
 
     Parameters
     ----------
     data: array_like, optional
         This is optional if both bins and range are set
-    bins: int or array_like
+    bin_count: int
     range: Optional[tuple]
         (min, max)
     includes_right_edge: Optional[bool]
@@ -690,19 +690,16 @@ def numpy_binning(
     See Also
     --------
     numpy.histogram
+    static_binning
     """
-    if isinstance(bins, int):
-        if range:
-            bins = np.linspace(range[0], range[1], bins + 1)
-        else:
-            start = data.min()
-            stop = data.max()
-            bins = np.linspace(start, stop, bins + 1)
-    elif np.iterable(bins):
-        bins = np.asarray(bins)
+    if not isinstance(bin_count, int):
+        raise TypeError("bin_count must be a number.")
+    if range:
+        bins = np.linspace(range[0], range[1], bin_count + 1)
     else:
-        # Some numpy edge case
-        _, bins = np.histogram(data, bins, **kwargs)
+        start = data.min()
+        stop = data.max()
+        bins = np.linspace(start, stop, bin_count + 1)
     return NumpyBinning(bins)
 
 
