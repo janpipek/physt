@@ -1,8 +1,16 @@
+from __future__ import annotations
+
 """ASCII plots (experimental).
 
 The plots are printed directly to standard output.
 
 """
+import typing
+if typing.TYPE_CHECKING:
+    from physt.histogram1d import Histogram1D
+    from physt.histogram_nd import Histogram2D
+
+
 try:
     import asciiplotlib
 

@@ -63,15 +63,12 @@ def to_numpy_bins_with_mask(bins: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
 
     Parameters
     ----------
-    bins: array_like
-        1-D (n) or 2-D (n, 2) array of edges
+    bins: 1-D (n) or 2-D (n, 2) array of edges
 
     Returns
     -------
-    edges: np.ndarray
-        all edges
-    mask: np.ndarray
-        List of indices that correspond to bins that have to be included
+    edges: All edges
+    mask: List of indices that correspond to bins that have to be included
 
     Examples
     --------
@@ -83,31 +80,32 @@ def to_numpy_bins_with_mask(bins: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
     """
     bins = np.asarray(bins)
     if bins.ndim == 1:
-        edges = bins
+        edges_ = bins
         if bins.shape[0] > 1:
-            mask = np.arange(bins.shape[0] - 1)
+            mask_ = np.arange(bins.shape[0] - 1)
         else:
-            mask = []
+            mask_ = []
     elif bins.ndim == 2:
-        edges = []
-        mask = []
+        edges_ = []
+        mask_ = []
         j = 0
         if bins.shape[0] > 0:
-            edges.append(bins[0, 0])
+            edges_.append(bins[0, 0])
             for i in range(bins.shape[0] - 1):
-                mask.append(j)
-                edges.append(bins[i, 1])
+                mask_.append(j)
+                edges_.append(bins[i, 1])
                 if bins[i, 1] != bins[i + 1, 0]:
-                    edges.append(bins[i + 1, 0])
+                    edges_.append(bins[i + 1, 0])
                     j += 1
                 j += 1
-            mask.append(j)
-            edges.append(bins[-1, 1])
+            mask_.append(j)
+            edges_.append(bins[-1, 1])
+        edges_
     else:
         raise RuntimeError("to_numpy_bins_with_mask: array with dim=1 or 2 expected")
-    if not np.all(np.diff(edges) > 0):
+    if not np.all(np.diff(edges_) > 0):
         raise RuntimeError("to_numpy_bins_with_mask: edges array not monotone.")
-    return edges, mask
+    return np.asarray(edges_), np.asarray(mask_)
 
 
 def is_rising(bins: ArrayLike) -> bool:

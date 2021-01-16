@@ -377,8 +377,8 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
         (1, 2): CylindricalSurfaceHistogram,
     }
 
-    def projection(self, *args, **kwargs):
-        result = TransformedHistogramMixin.projection(self, *args, **kwargs)
+    def projection(self, *axes, **kwargs):
+        result = TransformedHistogramMixin.projection(self, *axes, **kwargs)
         if isinstance(result, CylindricalSurfaceHistogram):
             result.radius = self.get_bin_right_edges(0)[-1]
         return result

@@ -90,7 +90,7 @@ class HistogramND(HistogramBase):
         return self.numpy_bins
 
     @property
-    def numpy_like(self) -> Tuple[np.ndarray, np.ndarray]:
+    def numpy_like(self) -> Tuple[np.ndarray, List[np.ndarray]]:
         """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins
 
@@ -355,17 +355,13 @@ class HistogramND(HistogramBase):
         axes: axes to include in the projection
         invert: axes along which to reduce
         """
-        axes = [self._get_axis(ax) for ax in axes]
-        if not axes:
+        axes_: List[int] = [self._get_axis(ax) for ax in axes]
+        if not axes_:
             raise ValueError("No axis selected for projection")
-        if len(axes) != len(set(axes)):
+        if len(axes_) != len(set(axes_)):
             raise ValueError("Duplicate axes in projection")
-        invert = list(range(self.ndim))
-        for axis in axes:
-            invert.remove(axis)
-        axes = tuple(axes)
-        invert = tuple(invert)
-        return axes, invert
+        invert = (i for i in range(self.ndim) if not i in axes_)
+        return tuple(axes_), tuple(invert)
 
     def _reduce_dimension(self, axes, frequencies, errors2, **kwargs) -> HistogramBase:
         # TODO: document

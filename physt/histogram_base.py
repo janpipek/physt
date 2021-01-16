@@ -253,17 +253,16 @@ class HistogramBase(abc.ABC):
         value: Numpy dtype
         type_info: Information about the dtype
         """
-        value = np.dtype(value)
-        if value.kind in "iu":
-            type_info = np.iinfo(value)
-        elif value.kind == "f":
-            type_info = np.finfo(value)
+        dtype: np.dtype = np.dtype(value)
+        if dtype.kind in "iu":
+            type_info = np.iinfo(dtype)
+        elif dtype.kind == "f":
+            type_info = np.finfo(dtype)
         else:
             raise ValueError(
                 "Unsupported dtype. Only integer/floating-point types are supported."
             )
-
-        return value, type_info
+        return dtype, type_info
 
     def set_dtype(self, value: DtypeLike, check: bool = True) -> None:
         """Change data type of the bin contents.
@@ -330,7 +329,8 @@ class HistogramBase(abc.ABC):
         return self._frequencies
 
     @frequencies.setter
-    def frequencies(self, frequencies: np.ndarray) -> None:
+    def frequencies(self, values: ArrayLike) -> None:
+        frequencies = np.asarray(values)
         if frequencies.shape != self.shape:
             raise ValueError("Values must have same dimension as bins.")
         if np.any(frequencies < 0):
@@ -379,12 +379,13 @@ class HistogramBase(abc.ABC):
         return self._errors2
 
     @errors2.setter
-    def errors2(self, values) -> None:
-        if values.shape != self.shape:
+    def errors2(self, values: ArrayLike) -> None:
+        array: np.ndarray = np.asarray(values)
+        if array.shape != self.shape:
             raise ValueError("Square errors must have same dimension as bins.")
-        if np.any(values < 0):
+        if np.any(array < 0):
             raise ValueError("Cannot have negative square errors.")
-        self._errors2 = values
+        self._errors2 = array
 
     @property
     def errors(self) -> np.ndarray:
@@ -591,11 +592,10 @@ class HistogramBase(abc.ABC):
             return False
         elif self.ndim == 1:
             return np.allclose(self.bins, other.bins)
-        elif self.ndim > 1:
-            for i in range(self.ndim):
-                if not np.allclose(self.bins[i], other.bins[i]):
-                    return False
-            return True
+        for i in range(self.ndim):
+            if not np.allclose(self.bins[i], other.bins[i]):
+                return False
+        return True
 
     def copy(self, *, include_frequencies: bool = True) -> "HistogramBase":
         """Copy the histogram.
@@ -631,7 +631,7 @@ class HistogramBase(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def fill(self, value, weight: float = 1, **kwargs):
+    def fill(self, value: float, weight: float = 1, **kwargs):
         """Add a value.
 
         Abstract method - to be implemented in daughter classes.
@@ -649,7 +649,7 @@ class HistogramBase(abc.ABC):
         """
         ...
 
-    def fill_n(self, values, weights=None, **kwargs):
+    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None, **kwargs):
         """Add more values at once.
 
         This (default) implementation uses a simple loop to add values using `fill` method.
@@ -668,6 +668,7 @@ class HistogramBase(abc.ABC):
 
         May change the dtype if weight is set.
         """
+        values = np.asarray(values)
         if weights is not None:
             if weights.shape != values.shape[0]:
                 raise RuntimeError("Wrong shape of weights")
@@ -722,7 +723,7 @@ class HistogramBase(abc.ABC):
         pass
 
     @classmethod
-    def _kwargs_from_dict(cls, a_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def _kwargs_from_dict(cls, a_dict: Mapping[str, Any]) -> Dict[str, Any]:
         """Modify __init__ arguments from an external dictionary.
 
         Template method for from dict.

@@ -1,6 +1,5 @@
 """Different binning algorithms/schemas for the histograms."""
-from collections import OrderedDict
-from typing import Any, Dict, Optional, Tuple, List, Union, Sequence
+from typing import cast, Any, Dict, Optional, Tuple, List, Union, Sequence
 
 import numpy as np
 
@@ -138,7 +137,7 @@ class BinningBase:
         # TODO: Document and explain
         return self._includes_right_edge
 
-    def is_regular(self, rtol: float = 1.0e-5, atol: float = 1.0e-8) -> bool:
+    def is_regular(self, *, rtol: float = 1.0e-5, atol: float = 1.0e-8) -> bool:
         """Whether all bins have the same width.
 
         Parameters
@@ -269,10 +268,10 @@ class BinningBase:
         --------
         bin_utils.to_numpy_bins_with_mask
         """
-        bwm = to_numpy_bins_with_mask(self.bins)
+        edges, mask = to_numpy_bins_with_mask(self.bins)
         if not self.includes_right_edge:
-            bwm[0].append(np.inf)
-        return bwm
+            edges = np.concatenate([edges, [np.inf]])
+        return edges, mask
 
     @property
     def first_edge(self) -> float:
@@ -615,7 +614,7 @@ class FixedWidthBinning(BinningBase):
                 )
             )
         # Following operations modify schemas
-        other = other.copy()
+        other = cast(FixedWidthBinning, other.copy())
         if other.bin_count == 0:
             return None, ()
         if self.bin_count == 0:
@@ -716,6 +715,8 @@ def numpy_binning(
     if range:
         bins = np.linspace(range[0], range[1], bin_count + 1)
     else:
+        if data is None:
+            raise ValueError("Either `range` or `data` must be set.")
         start = data.min()
         stop = data.max()
         bins = np.linspace(start, stop, bin_count + 1)
@@ -746,12 +747,18 @@ def human_binning(
     max_bin_width: If present, the bin cannot be wider than this.
     """
     # TODO: remove colliding kwargs
-    if data is None and range is None:
-        raise RuntimeError("Cannot guess optimum bin width without data.")
+    if range is None:
+        if data is None:
+            raise ValueError("Cannot guess optimum bin width without data.")
+        min_ = data.min()
+        max_ = data.max()
+    else:
+        min_, max_ = range 
     if bin_count is None:
+        if data is None:
+            raise ValueError("Cannot guess optimum bin count without data.")
         bin_count = ideal_bin_count(data)
-    min_ = range[0] if range else data.min()
-    max_ = range[1] if range else data.max()
+
     raw_width = (max_ - min_) / bin_count
     bin_width = find_human_width(raw_width, kind=kind)
 
@@ -974,7 +981,7 @@ def calculate_bins_nd(
     # Prepare bins
     if isinstance(bins, (list, tuple)):
         if len(bins) != dim:
-            raise RuntimeError(
+            raise ValueError(
                 "List of bins not understood, expected {0} items, got {1}.".format(
                     dim, len(bins)
                 )
@@ -983,16 +990,17 @@ def calculate_bins_nd(
         bins = [bins] * dim
 
     # Prepare arguments
+    # TODO: Lists = argument for multiple axes, tuples = array argument 
     range_ = kwargs.pop("range", None)
     if range_:
         if len(range_) == 2 and all(np.isscalar(i) for i in range_):
             range_ = dim * [range_]
         elif len(range_) != dim:
-            raise RuntimeError("Wrong dimensionality of range")
+            raise ValueError("Wrong dimensionality of range")
     for key in list(kwargs.keys()):
         if isinstance(kwargs[key], (list, tuple)):
             if len(kwargs[key]) != dim:
-                raise RuntimeError("Argument not understood.")
+                raise ValueError("Argument not understood.")
         else:
             kwargs[key] = dim * [kwargs[key]]
 
@@ -1115,13 +1123,12 @@ except:
     pass  # astropy is not required
 
 
-def ideal_bin_count(data, method: str = "default") -> int:
+def ideal_bin_count(data: np.ndarray, method: str = "default") -> int:
     """A theoretically ideal bin count.
 
     Parameters
     ----------
-    data: array_likes
-        Data to work on. Most methods don't use this.
+    data: Data to work on. Most methods don't use this.
     method: str
         Name of the method to apply, available values:
           - default (~sturges)
@@ -1152,6 +1159,8 @@ def ideal_bin_count(data, method: str = "default") -> int:
         return int(np.ceil(1 + np.log2(n) + np.log2(1 + np.abs(skew(data)) / sigma)))
     elif method == "rice":
         return int(np.ceil(2 * np.power(n, 1 / 3)))
+    else:
+        raise ValueError(f"Unknown bin count method: {method}")
 
 
 bincount_methods = ["default", "sturges", "rice", "sqrt", "doane"]

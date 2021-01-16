@@ -1,11 +1,15 @@
 """One-dimensional histograms."""
-from typing import Optional, Tuple
+from typing import Any, Dict, Hashable, Mapping, Optional, Tuple, TYPE_CHECKING
 
 import numpy as np
 from . import bin_utils
 from .histogram_base import HistogramBase
 from .binnings import BinningBase, BinningLike
 from .typing_aliases import ArrayLike, DtypeLike
+
+if TYPE_CHECKING:
+    import xarray
+    import pandas
 
 # TODO: Fix I/O with binning
 
@@ -403,7 +407,7 @@ class Histogram1D(HistogramBase):
                 self._stats["sum2"] += weight * value ** 2
         return ixbin
 
-    def fill_n(self, values, weights=None, *, dropna: bool = True, **kwargs):
+    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True, **kwargs):
         """Update histograms with a set of values.
 
         Parameters
@@ -484,7 +488,7 @@ class Histogram1D(HistogramBase):
         return df
 
     @classmethod
-    def _kwargs_from_dict(cls, a_dict: dict) -> dict:
+    def _kwargs_from_dict(cls, a_dict: Mapping[str, Any]) -> Dict[str, Any]:
         kwargs = HistogramBase._kwargs_from_dict.__func__(cls, a_dict)
         kwargs["binning"] = kwargs.pop("binnings")[0]
         return kwargs
@@ -493,13 +497,13 @@ class Histogram1D(HistogramBase):
         """Convert to xarray.Dataset"""
         import xarray as xr
 
-        data_vars = {
+        data_vars: Dict[str, Any] = {
             "frequencies": xr.DataArray(self.frequencies, dims="bin"),
             "errors2": xr.DataArray(self.errors2, dims="bin"),
             "bins": xr.DataArray(self.bins, dims=("bin", "x01")),
         }
-        coords = {}
-        attrs = {
+        coords: Dict[str, Any] = {}
+        attrs: Dict[str, Any] = {
             "underflow": self.underflow,
             "overflow": self.overflow,
             "inner_missed": self.inner_missed,
@@ -507,7 +511,7 @@ class Histogram1D(HistogramBase):
         }
         attrs.update(self._meta_data)
         # TODO: Add stats
-        return xr.Dataset(data_vars, coords, attrs)
+        return xr.Dataset(data_vars, coords, attrs)  # type: ignore
 
     @classmethod
     def from_xarray(cls, arr: "xarray.Dataset") -> "Histogram1D":

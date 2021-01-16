@@ -1,4 +1,4 @@
-from typing import Optional, Iterable, cast
+from typing import Optional, Iterable, Type, cast
 
 import numpy as np
 
@@ -116,14 +116,14 @@ def h1(
         overflow = 0
     if not axis_name:
         if hasattr(data, "name"):
-            axis_name = data.name
+            axis_name = str(data.name)  # type: ignore
         elif (
             hasattr(data, "fields")
-            and len(data.fields) == 1
-            and isinstance(data.fields[0], str)
+            and len(data.fields) == 1  # type: ignore
+            and isinstance(data.fields[0], str)  # type: ignore
         ):
             # Case of dask fields (examples)
-            axis_name = data.fields[0]
+            axis_name = str(data.fields[0])  # type: ignore
     return Histogram1D(
         binning=binning,
         frequencies=frequencies,
@@ -139,7 +139,7 @@ def h1(
     )
 
 
-def h2(data1, data2, bins=10, **kwargs) -> Histogram2D:
+def h2(data1: Optional[ArrayLike], data2: Optional[ArrayLike], bins=10, **kwargs) -> Histogram2D:
     """Facade function to create 2D histograms.
 
     For implementation and parameters, see histogramdd.
@@ -154,7 +154,7 @@ def h2(data1, data2, bins=10, **kwargs) -> Histogram2D:
     # guess axis names
     if "axis_names" not in kwargs:
         if hasattr(data1, "name") and hasattr(data2, "name"):
-            kwargs["axis_names"] = [data1.name, data2.name]
+            kwargs["axis_names"] = [str(data1.name), str(data2.name)]  # type: ignore
     if data1 is not None and data2 is not None:
         data1 = np.asarray(data1)
         data2 = np.asarray(data2)
@@ -164,7 +164,7 @@ def h2(data1, data2, bins=10, **kwargs) -> Histogram2D:
     return cast(Histogram2D, h(data, bins, dim=2, **kwargs))
 
 
-def h3(data, bins=None, **kwargs) -> HistogramND:
+def h3(data: Optional[ArrayLike], bins=None, **kwargs) -> HistogramND:
     """Facade function to create 3D histograms.
 
     Parameters
@@ -230,7 +230,7 @@ def h(
     if not axis_names:
         if hasattr(data, "columns"):
             try:
-                axis_names = tuple(data.columns)
+                axis_names = tuple(str(c) for c in data.columns)  # type: ignore
             except:
                 pass  # Perhaps columns has different meaning here.
 
@@ -260,7 +260,7 @@ def h(
     )
 
     # Prepare remaining data
-    klass = Histogram2D if dim == 2 else HistogramND
+    klass: Type[HistogramND] = Histogram2D if dim == 2 else HistogramND # type: ignore
 
     if name:
         kwargs["name"] = name
