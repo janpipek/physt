@@ -1,6 +1,6 @@
 """Different binning algorithms/schemas for the histograms."""
 from collections import OrderedDict
-from typing import Any, Dict, Optional, Tuple, List, Union
+from typing import Any, Dict, Optional, Tuple, List, Union, Sequence
 
 import numpy as np
 
@@ -747,7 +747,7 @@ def human_binning(
 
 
 def quantile_binning(
-    data: Optional[ArrayLike] = None, bins=10, *, qrange: RangeTuple = (0.0, 1.0), **kwargs
+    data: Optional[ArrayLike] = None, *, bin_count: Optional[int] = None, q: Optional[Sequence[int]] = None, qrange: Optional[RangeTuple] = None, **kwargs
 ) -> StaticBinning:
     """Binning schema based on quantile ranges.
 
@@ -759,20 +759,25 @@ def quantile_binning(
 
     Parameters
     ----------
-    bins: sequence or Optional[int]
-        Number of bins
-    qrange: Optional[tuple]
-        Two floats as minimum and maximum quantile (default: 0.0, 1.0)
+    bin_count: Number of bins
+    q: Sequence of quantiles to be used as edges (a la numpy)
+    qrange: Two floats as minimum and maximum quantile (default: 0.0, 1.0)
 
     Returns
     -------
     StaticBinning
     """
-
-    if np.isscalar(bins):
-        bins = np.linspace(qrange[0] * 100, qrange[1] * 100, bins + 1)
-    # TODO: Warn / exception about qrange not being used
-    bins = np.percentile(data, bins)
+    if (bin_count is not None and q is not None) or (bin_count is None and q is None):
+        raise ValueError("Exactly one of `bin_count` and `q` must be set.")
+    if bin_count:
+        if qrange is None:
+            qrange = (0.0, 1.0)
+        percentiles = np.linspace(qrange[0] * 100, qrange[1] * 100, bin_count + 1)
+    elif qrange is not None:
+        raise ValueError("Cannot set both `q` and `qrange`")
+    else:
+        percentiles = np.asarray(q) * 100
+    bins = np.percentile(data, percentiles)
     return static_binning(bins=make_bin_array(bins), includes_right_edge=True)
 
 

@@ -22,6 +22,7 @@ from physt.typing_aliases import ArrayLike, DtypeLike
 def h1(
     data: Optional[ArrayLike],
     bins=None,
+    *,
     adaptive: bool = False,
     dropna: bool = True,
     dtype: Optional[DtypeLike] = None,

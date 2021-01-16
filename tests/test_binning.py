@@ -171,41 +171,22 @@ class TestExponentialBins:
 class TestQuantileBins:
     def test_simple(self):
         data = np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])
-        the_binning = binnings.quantile_binning(data, 2)
+        the_binning = binnings.quantile_binning(data, bin_count=2)
         assert np.allclose(the_binning.numpy_bins, [0.1, 1.0, 10.0])
 
-        the_binning = binnings.quantile_binning(data, 3)
+        the_binning = binnings.quantile_binning(data, bin_count=3)
         assert np.allclose(the_binning.numpy_bins, [0.1, 0.6, 2.2, 10.0])
 
     def test_qrange(self):
         data = np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])
-        the_binning = binnings.quantile_binning(data, 3, qrange=(0.4, 1.0))
+        the_binning = binnings.quantile_binning(data, bin_count=3, qrange=(0.4, 1.0))
         assert np.allclose(the_binning.numpy_bins, [0.76, 1.8, 2.96, 10.])
 
-
-        # TODO: Rework the binning
-# if sys.version_info >= (3, 3):
-#     from unittest import mock
-# else:
-#     try:
-#         import mock
-#     except:
-#         raise RuntimeError("You need to have 'mock' package installed in Python < 3.3")
-#
-#
-# class TestCalculateBins:
-#     def test_proper_forwarding(self):
-#         for key in list(binning.binning_methods.keys()):
-#             binning.binning_methods[key] = mock.MagicMock()
-#         array = np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])
-#
-#         for key in list(binning.binning_methods.keys()):
-#             binning.calculate_bins(array, key)
-#             binning.binning_methods[key].assert_called_once_with(array)
-#
-#     def test_implicit_numpy_calls(self):
-#         # TODO: Write this
-#         pass
+    def test_q(self):
+        data = np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])
+        the_binning = binnings.quantile_binning(data, q=[0.1, 0.7, 1.0])
+        assert np.allclose(the_binning.numpy_bins, [0.26, 2.36, 10.0])
+        # TODO: Implement
 
 
 if __name__ == "__main__":
