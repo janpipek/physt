@@ -950,6 +950,8 @@ def calculate_bins(array, _=None, **kwargs) -> BinningBase:
     elif callable(_):
         binning = _(array, **kwargs)
     elif np.iterable(_):
+        if isinstance(_, list):
+            warnings.warn("Using `list` for bins not recommended, it has different meaning with N-D histograms.")
         binning = static_binning(array, _, **kwargs)
     else:
         raise RuntimeError("Binning {0} not understood.".format(_))
@@ -958,14 +960,10 @@ def calculate_bins(array, _=None, **kwargs) -> BinningBase:
 
 def calculate_bins_nd(
     array: Optional[np.ndarray], bins=None, dim: Optional[int] = None, check_nan=True, **kwargs
-):
+) -> List[BinningBase]:
     """Find optimal binning from arguments (n-dimensional variant)
 
     Usage similar to `calculate_bins`.
-
-    Returns
-    -------
-    List[BinningBase]
     """
     if check_nan:
         if np.any(np.isnan(array)):
@@ -979,14 +977,19 @@ def calculate_bins_nd(
         _, dim = array.shape
 
     # Prepare bins
-    if isinstance(bins, (list, tuple)):
-        if len(bins) != dim:
-            raise ValueError(
-                "List of bins not understood, expected {0} items, got {1}.".format(
-                    dim, len(bins)
+    if isinstance(bins, list):
+        if dim:
+            if len(bins) != dim:
+                raise ValueError(
+                    "List of bins not understood, expected {0} items, got {1}.".format(
+                        dim, len(bins)
+                    )
                 )
-            )
+        else:
+            dim = len(bins)
     else:
+        if not dim:
+            raise ValueError("Unknown dimension.")
         bins = [bins] * dim
 
     # Prepare arguments
@@ -998,7 +1001,7 @@ def calculate_bins_nd(
         elif len(range_) != dim:
             raise ValueError("Wrong dimensionality of range")
     for key in list(kwargs.keys()):
-        if isinstance(kwargs[key], (list, tuple)):
+        if isinstance(kwargs[key], list):
             if len(kwargs[key]) != dim:
                 raise ValueError("Argument not understood.")
         else:

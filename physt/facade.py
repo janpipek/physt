@@ -222,6 +222,9 @@ def h(
     title: What will be displayed in the title of the plot
     dim: Dimension - necessary if you are creating an empty adaptive histogram
 
+    Note: For most arguments, if a list is passed, its values are used as values for
+    individual axes.
+
     See Also
     --------
     numpy.histogramdd
