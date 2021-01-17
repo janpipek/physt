@@ -58,7 +58,7 @@ options = dict(
             "vega3",
             "xarray",
             "protobuf",
-            "uproot",
+            "uproot3",  # TODO: Update to uproot4
             "asciiplotlib",
             "xtermcolor",
         ]
