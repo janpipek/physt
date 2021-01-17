@@ -71,7 +71,7 @@ class HistogramCollection(Container[Histogram1D]):
 
     @property
     def axis_name(self) -> Optional[str]:
-        return self.histograms and self.histograms[0].axis_name or None
+        return self.histograms[0].axis_name if self.histograms else None
 
     @property
     def axis_names(self) -> Tuple[str]:
@@ -83,9 +83,7 @@ class HistogramCollection(Container[Histogram1D]):
             raise ValueError("Cannot add histogram with different binning.")
         self.histograms.append(histogram)
 
-    def create(
-        self, name: str, values, *, weights=None, dropna: bool = True, **kwargs
-    ) -> Histogram1D:
+    def create(self, name: str, values, *, weights=None, dropna: bool = True, **kwargs) -> Histogram1D:
         # TODO: Rename!
         init_kwargs = {"axis_name": self.axis_name}
         init_kwargs.update(kwargs)
@@ -98,9 +96,7 @@ class HistogramCollection(Container[Histogram1D]):
         if isinstance(item, str):
             candidates = [h for h in self.histograms if h.name == item]
             if len(candidates) == 0:
-                raise KeyError(
-                    "Collection does not contain histogram named {0}".format(item)
-                )
+                raise KeyError("Collection does not contain histogram named {0}".format(item))
             return candidates[0]
         else:
             return self.histograms[item]
@@ -149,9 +145,7 @@ class HistogramCollection(Container[Histogram1D]):
         return PlottingProxy(self)
 
     @classmethod
-    def multi_h1(
-        cls, a_dict: Dict[str, ArrayLike], bins=None, **kwargs
-    ) -> "HistogramCollection":
+    def multi_h1(cls, a_dict: Dict[str, ArrayLike], bins=None, **kwargs) -> "HistogramCollection":
         """Create a collection from multiple datasets."""
         from physt.binnings import calculate_bins
 

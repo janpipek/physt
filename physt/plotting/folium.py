@@ -60,6 +60,7 @@ def _bins_to_json(h2: Histogram2D) -> Dict[str, Any]:
 
 def geo_map(
     h2: Histogram2D,
+    *,
     map: Optional[folium.folium.Map] = None,
     tiles: str = "stamenterrain",
     cmap="wk",
@@ -93,9 +94,7 @@ def geo_map(
 
     from branca.colormap import LinearColormap
 
-    color_map = LinearColormap(
-        cmap, vmin=h2.frequencies.min(), vmax=h2.frequencies.max()
-    )
+    color_map = LinearColormap(cmap, vmin=h2.frequencies.min(), vmax=h2.frequencies.max())
 
     # legend = folium.Html("<div>Legend</div>")
     # legend_div = folium.Div("20%", "20%", "75%", "5%")

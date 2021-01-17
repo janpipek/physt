@@ -73,9 +73,7 @@ def h1(
     numpy.histogram
     """
 
-    if isinstance(data, tuple) and isinstance(
-        data[0], str
-    ):  # Works for groupby DataSeries
+    if isinstance(data, tuple) and isinstance(data[0], str):  # Works for groupby DataSeries
         return h1(data[1], bins, name=data[0], **kwargs)
     elif type(data).__name__ == "DataFrame":
         raise ValueError("Cannot create histogram from a pandas DataFrame. Use Series.")
@@ -89,13 +87,7 @@ def h1(
         array = None
 
     # Get binning
-    binning = calculate_bins(
-        array,
-        bins,
-        check_nan=not dropna and array is not None,
-        adaptive=adaptive,
-        **kwargs
-    )
+    binning = calculate_bins(array, bins, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs)
     # bins = binning.bins
 
     # Get frequencies
@@ -149,8 +141,6 @@ def h2(data1: Optional[ArrayLike], data2: Optional[ArrayLike], bins=10, **kwargs
     numpy.histogram2d
     histogramdd
     """
-    import numpy as np
-
     # guess axis names
     if "axis_names" not in kwargs:
         if hasattr(data1, "name") and hasattr(data2, "name"):
@@ -173,15 +163,9 @@ def h3(data: Optional[ArrayLike], bins=None, **kwargs) -> HistogramND:
         Can be a single array (with three columns) or three different arrays
         (for each component)
     """
-    if (
-        data is not None
-        and isinstance(data, (list, tuple))
-        and not np.isscalar(data[0])
-    ):
+    if data is not None and isinstance(data, (list, tuple)) and not np.isscalar(data[0]):
         if "axis_names" not in kwargs:
-            kwargs["axis_names"] = [
-                (column.name if hasattr(column, "name") else None) for column in data
-            ]
+            kwargs["axis_names"] = [(column.name if hasattr(column, "name") else None) for column in data]
         data = np.concatenate([item[:, np.newaxis] for item in data], axis=1)
     else:
         kwargs["dim"] = 3
@@ -242,9 +226,7 @@ def h(
     if data is not None:
         data = np.asarray(data)
         if data.ndim != 2:
-            raise ValueError(
-                "Array must have shape (n, d), {0} encountered".format(data.shape)
-            )
+            raise ValueError("Array must have shape (n, d), {0} encountered".format(data.shape))
         if dim is not None and dim != data.shape[1]:
             raise ValueError("Dimension mismatch: {0}!={1}".format(dim, data.shape[1]))
         _, dim = data.shape
@@ -258,12 +240,10 @@ def h(
         check_nan = False
 
     # Prepare bins
-    bin_schemas = calculate_bins_nd(
-        data, bins, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs
-    )
+    bin_schemas = calculate_bins_nd(data, bins, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs)
 
     # Prepare remaining data
-    klass: Type[HistogramND] = Histogram2D if dim == 2 else HistogramND # type: ignore
+    klass: Type[HistogramND] = Histogram2D if dim == 2 else HistogramND  # type: ignore
     if name:
         kwargs["name"] = name
     if title:

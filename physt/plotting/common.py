@@ -75,9 +75,7 @@ def get_err_data(
     return data
 
 
-def get_value_format(
-    value_format: Union[Callable, str, None]
-) -> Callable[[float], str]:
+def get_value_format(value_format: Union[Callable[[float], str], str, None]) -> Callable[[float], str]:
     """Create a formatting function from a generic value_format argument."""
     if not value_format:
         return str
@@ -136,9 +134,7 @@ class TimeTickHandler:
     LevelType = Tuple[str, Union[float, int]]
 
     @classmethod
-    def parse_level(
-        cls, value: Union[LevelType, float, str, timedelta]
-    ) -> "TimeTickHandler.LevelType":
+    def parse_level(cls, value: Union[LevelType, float, str, timedelta]) -> "TimeTickHandler.LevelType":
         if isinstance(value, tuple):
             if len(value) != 2:
                 raise ValueError("Invalid level: {0}".format(value))
@@ -172,9 +168,7 @@ class TimeTickHandler:
             raise ValueError("Invalid level: {0}".format(value))
 
     @classmethod
-    def deduce_level(
-        cls, h1: Histogram1D, min_: float, max_: float
-    ) -> "TimeTickHandler.LevelType":
+    def deduce_level(cls, h1: Histogram1D, min_: float, max_: float) -> "TimeTickHandler.LevelType":
         ideal_width = (max_ - min_) / 6
         if ideal_width < 0.8:
             return ("sec", find_human_width_decimal(ideal_width))
@@ -187,9 +181,7 @@ class TimeTickHandler:
         else:
             return ("day", find_human_width_decimal(ideal_width / 86400))
 
-    def get_time_ticks(
-        self, h1: Histogram1D, level: LevelType, min_: float, max_: float
-    ) -> List[float]:
+    def get_time_ticks(self, h1: Histogram1D, level: LevelType, min_: float, max_: float) -> List[float]:
         # TODO: Change to class method?
         if level[0] == "edge":
             return h1.numpy_bins.tolist()
@@ -216,10 +208,7 @@ class TimeTickHandler:
             tick_days = [tick / 86400 for tick in ticks]
             if not any(tick % 1 for tick in tick_days):
                 tick_days = [int(tick) for tick in tick_days]
-            return [
-                "{0} day{1}".format(tick, "" if tick == 1 else "s")
-                for tick in tick_days
-            ]
+            return ["{0} day{1}".format(tick, "" if tick == 1 else "s") for tick in tick_days]
         else:
             hms = [self.split_hms(tick) for tick in ticks]
             include_hours = any(h for _, h, _, _ in hms)

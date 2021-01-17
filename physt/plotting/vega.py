@@ -119,9 +119,7 @@ def enable_inline_view(f):
     """
 
     @wraps(f)
-    def wrapper(
-        hist, write_to=None, write_format="auto", display="auto", indent=2, **kwargs
-    ):
+    def wrapper(hist, write_to=None, write_format="auto", display="auto", indent=2, **kwargs):
 
         vega_data = f(hist, **kwargs)
 
@@ -145,14 +143,7 @@ def enable_inline_view(f):
     return wrapper
 
 
-def write_vega(
-    vega_data,
-    *,
-    title: Optional[str],
-    write_to: str,
-    write_format: str = "auto",
-    indent: int = 2
-):
+def write_vega(vega_data, *, title: Optional[str], write_to: str, write_format: str = "auto", indent: int = 2):
     """Write vega dictionary to an external file.
 
     Parameters
@@ -165,12 +156,8 @@ def write_vega(
     """
     spec = json.dumps(vega_data, indent=indent)
     if write_format == "html" or write_format == "auto" and write_to.endswith(".html"):
-        output = HTML_TEMPLATE.replace("{{ title }}", title or "Histogram").replace(
-            "{{ spec }}", spec
-        )
-    elif (
-        write_format == "json" or write_format == "auto" and write_to.endswith(".json")
-    ):
+        output = HTML_TEMPLATE.replace("{{ title }}", title or "Histogram").replace("{{ spec }}", spec)
+    elif write_format == "json" or write_format == "auto" and write_to.endswith(".json"):
         output = spec
     else:
         raise RuntimeError("Format not understood.")
@@ -195,7 +182,7 @@ def display_vega(vega_data: dict, display: bool = True) -> Union["Vega", dict]:
 
 
 @enable_inline_view
-def bar(h1: Histogram1D, **kwargs) -> dict:
+def bar(h1: "Histogram1D", **kwargs) -> dict:
     """Bar plot of 1D histogram.
 
     Parameters
@@ -215,9 +202,7 @@ def bar(h1: Histogram1D, **kwargs) -> dict:
     _create_scales(h1, vega, kwargs)
     _create_axes(h1, vega, kwargs)
 
-    data = get_data(
-        h1, kwargs.pop("density", None), kwargs.pop("cumulative", None)
-    ).tolist()
+    data = get_data(h1, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
     lefts = h1.bin_left_edges.astype(float).tolist()
     rights = h1.bin_right_edges.astype(float).tolist()
 
@@ -337,15 +322,11 @@ def line(h1: Histogram1D, **kwargs) -> dict:
 
 
 @enable_inline_view
-def map(
-    h2: Histogram2D, *, show_zero: bool = True, show_values: bool = False, **kwargs
-) -> dict:
+def map(h2: "Histogram2D", *, show_zero: bool = True, show_values: bool = False, **kwargs) -> dict:
     """Heat-map of two-dimensional histogram."""
     vega = _create_figure(kwargs)
 
-    values_arr = get_data(
-        h2, kwargs.pop("density", None), kwargs.pop("cumulative", None)
-    )
+    values_arr = get_data(h2, kwargs.pop("density", None), kwargs.pop("cumulative", None))
     values = values_arr.tolist()
     value_format = get_value_format(kwargs.pop("value_format", None))
 
@@ -428,9 +409,7 @@ def map(
 
 
 @enable_inline_view
-def map_with_slider(
-    h3: HistogramND, *, show_zero: bool = True, show_values: bool = False, **kwargs
-) -> dict:
+def map_with_slider(h3: "HistogramND", *, show_zero: bool = True, show_values: bool = False, **kwargs) -> dict:
     """Heatmap showing slice in first two dimensions, third dimension represented as a slider.
 
     Parameters
@@ -438,9 +417,7 @@ def map_with_slider(
     """
     vega = _create_figure(kwargs)
 
-    values_arr = get_data(
-        h3, kwargs.pop("density", None), kwargs.pop("cumulative", None)
-    )
+    values_arr = get_data(h3, kwargs.pop("density", None), kwargs.pop("cumulative", None))
     values = values_arr.tolist()
     value_format = get_value_format(kwargs.pop("value_format", None))
 
@@ -463,7 +440,7 @@ def map_with_slider(
             for k in range(h3.shape[2]):
                 if not show_zero and values[i][j][k] == 0:
                     continue
-                item = {
+                item: Dict[str, Any] = {
                     "x": float(x[i]),
                     "x1": float(x1[i]),
                     "x2": float(x2[i]),
@@ -572,13 +549,8 @@ def _scatter_or_line(h1: Histogram1D, mark_template: list, kwargs: dict) -> dict
 
     for hist_i, histogram in enumerate(collection):
         centers = histogram.bin_centers.tolist()
-        data = get_data(
-            histogram, kwargs.pop("density", None), kwargs.pop("cumulative", None)
-        ).tolist()
-        vega["data"][0]["values"] += [
-            {"x": centers[i], "y": data[i], "c": hist_i}
-            for i in range(histogram.bin_count)
-        ]
+        data = get_data(histogram, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
+        vega["data"][0]["values"] += [{"x": centers[i], "y": data[i], "c": hist_i} for i in range(histogram.bin_count)]
 
     _add_title(collection, vega, kwargs)
     _create_scales(collection, vega, kwargs)
@@ -637,9 +609,7 @@ def _create_scales(hist: HistogramCollection, vega: dict, kwargs: dict):
             "range": "width",
             "nice": nice_x,
             "zero": None,
-            "domain": [bins0[0, 0], bins0[-1, 1]]
-            if xlim == "auto"
-            else [float(xlim[0]), float(xlim[1])],
+            "domain": [bins0[0, 0], bins0[-1, 1]] if xlim == "auto" else [float(xlim[0]), float(xlim[1])],
             # "domain": {"data": "table", "field": "x"}
         },
         {
@@ -648,9 +618,7 @@ def _create_scales(hist: HistogramCollection, vega: dict, kwargs: dict):
             "range": "height",
             "nice": nice_y,
             "zero": True if hist.ndim == 1 else None,
-            "domain": {"data": "table", "field": "y"}
-            if ylim == "auto"
-            else [float(ylim[0]), float(ylim[1])],
+            "domain": {"data": "table", "field": "y"} if ylim == "auto" else [float(ylim[0]), float(ylim[1])],
         },
     ]
 
@@ -719,9 +687,7 @@ def _create_cmap_scale(values_arr: np.ndarray, vega: dict, kwargs: dict):
 def _create_axes(hist: HistogramCollection, vega: dict, kwargs: dict):
     """Create axes in the figure."""
     xlabel = kwargs.pop("xlabel", hist.axis_names[0])
-    ylabel = kwargs.pop(
-        "ylabel", hist.axis_names[1] if len(hist.axis_names) >= 2 else None
-    )
+    ylabel = kwargs.pop("ylabel", hist.axis_names[1] if len(hist.axis_names) >= 2 else None)
     vega["axes"] = [
         {"orient": "bottom", "scale": "xscale", "title": xlabel},
         {"orient": "left", "scale": "yscale", "title": ylabel},

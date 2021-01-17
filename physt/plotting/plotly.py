@@ -146,13 +146,7 @@ def line(h: AbstractHistogram1D, **kwargs):
 
 @wrap(mpl_function=mpl_backend.bar)
 @enable_collection
-def bar(
-    h: HistogramCollection,
-    *,
-    barmode: str = DEFAULT_BARMODE,
-    alpha: float = DEFAULT_ALPHA,
-    **kwargs
-):
+def bar(h: HistogramCollection, *, barmode: str = DEFAULT_BARMODE, alpha: float = DEFAULT_ALPHA, **kwargs):
     """Bar plot.
 
     Parameters

@@ -60,9 +60,7 @@ class _Config:
                 setattr(self, name, original_value)
 
     def __init__(self):
-        self._make_var(
-            "_free_arithmetics", os.environ.get("PHYST_FREE_ARITHMETICS", "0") == "1"
-        )
+        self._make_var("_free_arithmetics", os.environ.get("PHYST_FREE_ARITHMETICS", "0") == "1")
 
     @property
     def free_arithmetics(self) -> bool:

@@ -127,9 +127,7 @@ class Histogram1D(HistogramBase):
         elif isinstance(i, np.ndarray):
             if i.dtype == bool:
                 if i.shape != (self.bin_count,):
-                    raise IndexError(
-                        "Cannot index with masked array of a wrong dimension"
-                    )
+                    raise IndexError("Cannot index with masked array of a wrong dimension")
         elif isinstance(i, slice):
             keep_missed = self.keep_missed
             # TODO: Fix this
@@ -281,9 +279,7 @@ class Histogram1D(HistogramBase):
         # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
         if self._stats:
             if self.total > 0:
-                return (
-                    self._stats["sum2"] - self._stats["sum"] ** 2 / self.total
-                ) / self.total
+                return (self._stats["sum2"] - self._stats["sum"] ** 2 / self.total) / self.total
             else:
                 return np.nan
         else:
@@ -358,17 +354,16 @@ class Histogram1D(HistogramBase):
         ixbin = np.searchsorted(self.bin_left_edges, value, side="right")
         if ixbin == 0:
             return -1
-        elif ixbin == self.bin_count:
+        if ixbin == self.bin_count:
             if value <= self.bin_right_edges[-1]:
                 return ixbin - 1
             else:
                 return self.bin_count
-        elif value < self.bin_right_edges[ixbin - 1]:
+        if value < self.bin_right_edges[ixbin - 1]:
             return ixbin - 1
-        elif ixbin == self.bin_count:
+        if ixbin == self.bin_count:
             return self.bin_count
-        else:
-            return None
+        return None
 
     def fill(self, value: float, weight: float = 1, **kwargs) -> Optional[int]:
         """Update histogram with a new value.
@@ -400,7 +395,7 @@ class Histogram1D(HistogramBase):
             self.overflow += weight
         else:
             self._frequencies[ixbin] += weight
-            self._errors2[ixbin] +=  weight ** 2
+            self._errors2[ixbin] += weight ** 2
             if self._stats:
                 self._stats["sum"] += weight * value
                 self._stats["sum2"] += weight * value ** 2
@@ -538,7 +533,7 @@ class Histogram1D(HistogramBase):
         binning: BinningBase,
         weights: Optional[ArrayLike] = None,
         *,
-        validate_bins: bool =True,
+        validate_bins: bool = True,
         already_sorted: bool = False,
         dtype: Optional[DtypeLike] = None,
         **kwargs
@@ -661,9 +656,7 @@ def calculate_frequencies(
             else:
                 underflow = start
         if xbin == len(bins) - 1:
-            stop = np.searchsorted(
-                data, bin[1], side="right"
-            )  # TODO: Understand and explain
+            stop = np.searchsorted(data, bin[1], side="right")  # TODO: Understand and explain
             if weights is not None:
                 overflow = weights[stop:].sum()
             else:

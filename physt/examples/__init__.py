@@ -6,7 +6,7 @@ import numpy as np
 
 from physt.histogram1d import Histogram1D
 from physt.histogram_nd import Histogram2D, HistogramND
-from .. import h1, h2, h3
+from physt.facade import h1, h2, h3
 
 
 def normal_h1(size: int = 10000, mean: float = 0, sigma: float = 1) -> Histogram1D:
@@ -60,15 +60,10 @@ def normal_h3(size: int = 10000) -> HistogramND:
 
 def fist() -> Histogram1D:
     """A simple histogram in the shape of a fist."""
-    import numpy as np
-    from physt.histogram1d import Histogram1D
-
     widths = [0, 1.2, 0.2, 1, 0.1, 1, 0.1, 0.9, 0.1, 0.8]
     edges = np.cumsum(widths)
     heights = np.asarray([4, 1, 7.5, 6, 7.6, 6, 7.5, 6, 7.2]) + 5
-    return Histogram1D(
-        edges, heights, axis_name="Is this a fist?", title='Physt "logo"'
-    )
+    return Histogram1D(edges, heights, axis_name="Is this a fist?", title='Physt "logo"')
 
 
 ALL_EXAMPLES = [normal_h1, normal_h2, normal_h3, fist]

@@ -1,17 +1,19 @@
 """Dask-based and dask oriented variants of physt histogram facade functions."""
 from typing import TYPE_CHECKING
 
+import dask
+
 from physt import h1 as original_h1
 from physt import histogramdd as original_hdd
 
 if TYPE_CHECKING:
-    import dask
     import dask.array
 
 options = {"chunk_split": 16}
 
 
 def _run_dask(
+    *,
     name: str,
     data: "dask.array.Array",
     compute: bool,
@@ -28,8 +30,6 @@ def _run_dask(
     :param method: None (linear execution), "threaded" or callable
         to apply when computing.
     """
-    import dask
-
     if expand_arg:
         graph = dict(
             ("{0}-{1}-{2}".format(name, data.name, index), (func, *item))
@@ -69,9 +69,7 @@ def histogram1d(data, bins=None, **kwargs):
     import dask
 
     if not hasattr(data, "dask"):
-        data = dask.array.from_array(
-            data, chunks=int(data.shape[0] / options["chunk_split"])
-        )
+        data = dask.array.from_array(data, chunks=int(data.shape[0] / options["chunk_split"]))
 
     if not kwargs.get("adaptive", True):
         raise RuntimeError("Only adaptive histograms supported for dask (currently).")
@@ -104,17 +102,13 @@ def histogramdd(data, bins=None, **kwargs):
         data = dask.array.stack(data, axis=1)
 
     if not hasattr(data, "dask"):
-        data = dask.array.from_array(
-            data, chunks=(int(data.shape[0] / options["chunk_split"]), data.shape[1])
-        )
+        data = dask.array.from_array(data, chunks=(int(data.shape[0] / options["chunk_split"]), data.shape[1]))
     else:
         data = rechunk(data, {1: data.shape[1]})
 
     if isinstance(data, dask.array.Array):
         if data.ndim != 2:
-            raise ValueError(
-                f"Only (n, dim) data allowed for histogramdd, {data.shape} encountered."
-            )
+            raise ValueError(f"Only (n, dim) data allowed for histogramdd, {data.shape} encountered.")
 
     if not kwargs.get("adaptive", True):
         raise ValueError("Only adaptive histograms supported for dask (currently).")
