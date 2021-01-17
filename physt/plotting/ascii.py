@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """ASCII plots (experimental).
 
 The plots are printed directly to standard output.
@@ -7,9 +5,7 @@ The plots are printed directly to standard output.
 """
 import typing
 if typing.TYPE_CHECKING:
-    from physt.histogram1d import Histogram1D
     from physt.histogram_nd import Histogram2D
-
 
 try:
     import asciiplotlib
@@ -19,7 +15,7 @@ except ImportError:
     asciiplotlib = None
     ENABLE_ASCIIPLOTLIB = False
 
-types = ("hbar",)
+types: typing.Tuple[str, ...] = ("hbar",)
 
 dims = {
     "hbar": [1],
@@ -83,11 +79,11 @@ try:
         )
         print("+" + "-" * h2.shape[1] + "+")
         for i in range(h2.shape[0] - 1, -1, -1):
-            line = [
+            line_frags = [
                 xtermcolor.colorize("█", bg=0, rgb=colors[i, j])
                 for j in range(h2.shape[1])
             ]
-            line = "|" + "".join(line) + "|"
+            line = "|" + "".join(line_frags) + "|"
             if i == h2.shape[0] - 1:
                 line += value_format(h2.get_bin_right_edges(1)[-1]) + " ↑"
             if i == 0:
@@ -95,13 +91,13 @@ try:
             print(line)
         print("+" + "-" * h2.shape[1] + "+")
         print("←", value_format(h2.get_bin_left_edges(0)[0]))
-        colorbar = [
+        colorbar_frags = [
             xtermcolor.colorize(
                 "█", bg=0, rgb=(65536 + 256 + 1) * int(j * 255 / (h2.shape[1] + 2))
             )
             for j in colorbar_range
         ]
-        colorbar = "".join(colorbar)
+        colorbar = "".join(colorbar_frags)
         print()
         print("↓", 0)
         print(colorbar)

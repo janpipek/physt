@@ -264,16 +264,12 @@ def h(
 
     # Prepare remaining data
     klass: Type[HistogramND] = Histogram2D if dim == 2 else HistogramND # type: ignore
-
     if name:
         kwargs["name"] = name
     if title:
         kwargs["title"] = title
-    if axis_names:
-        kwargs["axis_names"] = axis_names
-
     return klass.from_calculate_frequencies(
-        data, binnings=bin_schemas, weights=weights, **kwargs
+        data, binnings=bin_schemas, weights=weights, axis_names=axis_names, **kwargs
     )
 
 

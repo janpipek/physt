@@ -3,9 +3,9 @@ from typing import Optional, List, Any, Tuple, Union, Iterable
 
 import numpy as np
 
-from .histogram_base import HistogramBase, Axis
-from .binnings import BinningBase, BinningLike
-from .typing_aliases import ArrayLike
+from physt.histogram_base import HistogramBase, Axis
+from physt.binnings import BinningBase, BinningLike
+from physt.typing_aliases import ArrayLike
 
 
 class HistogramND(HistogramBase):
@@ -68,14 +68,6 @@ class HistogramND(HistogramBase):
     def bins(self) -> List[np.ndarray]:
         """List of bin matrices."""
         return [binning.bins for binning in self._binnings]
-
-    @property
-    def binnings(self) -> List[BinningBase]:
-        """The binnings.
-
-        Note: Please, do not try to update the objects themselves.
-        """
-        return self._binnings
 
     @property
     def numpy_bins(self) -> List[np.ndarray]:
@@ -369,7 +361,7 @@ class HistogramND(HistogramBase):
         axis_names = [name for i, name in enumerate(self.axis_names) if i in axes]
         bins = [bins for i, bins in enumerate(self._binnings) if i in axes]
         if len(axes) == 1:
-            from .histogram1d import Histogram1D
+            from physt.histogram1d import Histogram1D
 
             klass = kwargs.get("type", Histogram1D)
             return klass(
@@ -411,7 +403,7 @@ class HistogramND(HistogramBase):
         # TODO: inplace
         new_one = self.copy()
         axis_id = self._get_axis(axis)
-        new_one._frequencies = np.cumsum(new_one.frequencies, axis_id[0])
+        new_one._frequencies = np.cumsum(new_one.frequencies, axis_id)
         return new_one
 
     def projection(self, *axes: Axis, **kwargs) -> HistogramBase:
@@ -547,8 +539,6 @@ def calculate_frequencies(
     ----------
     data : array_like
         2D array with ndim columns and row for each entry.
-    ndim : int
-        Dimensionality od the data.
     binnings:
         Binnings to apply in all axes.
     weights : Optional[array_like]

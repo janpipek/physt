@@ -1,14 +1,18 @@
 """HistogramBase - base for all histogram classes."""
 import abc
 import warnings
-from collections import OrderedDict
-from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, Union
+from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, TYPE_CHECKING, TypeVar
 
 import numpy as np
 
-from .binnings import as_binning, BinningLike, BinningBase
-from .config import config
-from .typing_aliases import Axis, ArrayLike, DtypeLike
+from physt.binnings import as_binning, BinningLike, BinningBase
+from physt.config import config
+from physt.typing_aliases import Axis, ArrayLike, DtypeLike
+
+if TYPE_CHECKING:
+    import physt
+
+HistogramType = TypeVar('HistogramType', bound='HistogramBase')
 
 
 class HistogramBase(abc.ABC):
@@ -80,7 +84,7 @@ class HistogramBase(abc.ABC):
         *,
         axis_names: Optional[Iterable[str]] = None,
         dtype: Optional[DtypeLike] = None,
-        keep_missed=True,
+        keep_missed: bool = True,
         **kwargs,
     ):
         """Constructor
@@ -327,7 +331,7 @@ class HistogramBase(abc.ABC):
         return int(np.product(self.shape))
 
     @property
-    def frequencies(self) -> Optional[np.ndarray]:
+    def frequencies(self) -> np.ndarray:
         """Frequencies (values, contents) of the histogram bins."""
         return self._frequencies
 
@@ -507,7 +511,7 @@ class HistogramBase(abc.ABC):
                 raise NotImplementedError("Not yet implemented.")
             new_binning = self._binnings[axis].apply_bin_map(bin_map)
             self._change_binning(new_binning, bin_map, axis=axis)
-            return self
+        return self
 
     def _reshape_data(self, new_size, bin_map, axis=0):
         """Reshape data to match new binning schema.
@@ -600,7 +604,7 @@ class HistogramBase(abc.ABC):
                 return False
         return True
 
-    def copy(self, *, include_frequencies: bool = True) -> "HistogramBase":
+    def copy(self: HistogramType, *, include_frequencies: bool = True) -> HistogramType:
         """Copy the histogram.
 
         Parameters
@@ -627,6 +631,14 @@ class HistogramBase(abc.ABC):
         a_copy._missed = missed
         a_copy._stats = stats
         return a_copy
+
+    @property
+    def binnings(self) -> List[BinningBase]:
+        """The binnings.
+
+        Note: Please, do not try to update the objects themselves.
+        """
+        return self._binnings
 
     @property
     @abc.abstractmethod
@@ -660,10 +672,8 @@ class HistogramBase(abc.ABC):
 
         Parameters
         ----------
-        values: Iterable
-            Values to add
-        weights: Optional[Iterable]
-            Optional values to assign to each value
+        values: Values to add
+        weights: Optional weights to assign to each value
 
         Note
         ----
@@ -703,7 +713,10 @@ class HistogramBase(abc.ABC):
         result = dict()
         result["histogram_type"] = type(self).__name__
         result["binnings"] = [binning.to_dict() for binning in self._binnings]
-        result["frequencies"] = self.frequencies.tolist()
+        if self.frequencies is not None:
+            result["frequencies"] = self.frequencies.tolist()
+        else:
+            result["frequencies"] = None
         result["dtype"] = str(np.dtype(self.dtype))
 
         # TODO: Optimize for _errors == _frequencies

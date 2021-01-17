@@ -15,7 +15,6 @@
 
 import sys
 import os
-import shlex
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -57,9 +56,6 @@ project = 'Physt'
 copyright = '2016, Jan Pipek'
 author = 'Jan Pipek'
 
-import physt
-import physt.histogram1d
-import physt.bin_utils
 import physt.binnings
 
 # The version info for the project you're documenting, acts as replacement for

@@ -10,20 +10,19 @@ TODO: More elaborate output planned
 from functools import wraps
 from typing import Any, Optional, Union
 
+import plotly.graph_objs as go
 import plotly.offline as pyo
 import plotly.plotly as pyp
-import plotly.graph_objs as go
 
-from physt.histogram1d import Histogram1D, HistogramBase
-from physt.histogram_nd import Histogram2D
+from physt.histogram1d import Histogram1D
 from physt.histogram_collection import HistogramCollection
+from physt.histogram_nd import Histogram2D
 from physt.util import pop_many
 from . import matplotlib as mpl_backend
 from .common import get_data
 
-
 AbstractHistogram1D = Union[HistogramCollection, Histogram1D]
-
+# TODO: Move this to the typing itself
 
 DEFAULT_BARMODE = "overlay"
 DEFAULT_ALPHA = 1.0
@@ -93,7 +92,7 @@ def enable_collection(f):
     return new_f
 
 
-def _add_ticks(xaxis: go.layout.XAxis, histogram: HistogramBase, kwargs: dict):
+def _add_ticks(xaxis: go.layout.XAxis, histogram: AbstractHistogram1D, kwargs: dict):
     """Customize ticks for an axis (1D histogram)."""
     ticks = kwargs.pop("ticks", None)
     tick_handler = kwargs.pop("tick_handler", None)
@@ -148,7 +147,7 @@ def line(h: AbstractHistogram1D, **kwargs):
 @wrap(mpl_function=mpl_backend.bar)
 @enable_collection
 def bar(
-    h: Histogram2D,
+    h: HistogramCollection,
     *,
     barmode: str = DEFAULT_BARMODE,
     alpha: float = DEFAULT_ALPHA,

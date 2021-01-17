@@ -5,7 +5,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import numpy as np
 import pytest
 import physt
-from physt.histogram1d import calculate_frequencies
 
 values = [1, 2, 3, 4]
 weights = [1, 1, 1, 2]

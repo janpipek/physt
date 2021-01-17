@@ -37,7 +37,7 @@ def save_root(histogram: HistogramBase, path: str, name: Optional[str] = None):
     name : The name of the histogram inside the file
     """
     if name is None:
-        name = histogram.name
+        name = histogram.name or histogram.title or repr(histogram)
     if os.path.isfile(path):
         # TODO: Not supported currently
         hfile = uproot.write.TFile.TFileUpdate(path)

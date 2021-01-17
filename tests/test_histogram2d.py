@@ -2,8 +2,8 @@ import sys
 import os
 sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 import physt
-from physt import histogram_nd, h2, binnings
-from physt.binnings import as_binning, BinningBase, FixedWidthBinning
+from physt import h2, histogram_nd, binnings
+from physt.binnings import as_binning, BinningBase
 from physt.histogram_nd import Histogram2D
 import numpy as np
 import pytest

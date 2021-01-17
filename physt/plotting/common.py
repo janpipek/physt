@@ -4,7 +4,7 @@ Functions that are shared by several (all) plotting backends.
 """
 import re
 from typing import Tuple, List, Union, Callable
-from datetime import timedelta, time
+from datetime import timedelta
 
 import numpy as np
 
@@ -147,7 +147,8 @@ class TimeTickHandler:
         elif isinstance(value, (float, int)):
             return cls.parse_level(timedelta(seconds=value))
         elif isinstance(value, timedelta):
-            ...  # TODO: Implement
+            # TODO: Implement
+            raise NotImplementedError
         elif isinstance(value, str):
             matchers = (
                 ("^(center|edge)s?$", lambda m: (m[1], 0)),

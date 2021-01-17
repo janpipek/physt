@@ -1,10 +1,13 @@
-from typing import Optional, Container, Tuple, Dict, Any
+from typing import Optional, Container, Tuple, Dict, Any, TYPE_CHECKING
 
 import numpy as np
 
 from physt.histogram1d import Histogram1D
 from physt.binnings import BinningBase
 from physt.typing_aliases import ArrayLike
+
+if TYPE_CHECKING:
+    import physt
 
 
 class HistogramCollection(Container[Histogram1D]):
@@ -24,7 +27,7 @@ class HistogramCollection(Container[Histogram1D]):
         self.histograms = list(histograms)
         if histograms:
             if binning:
-                raise ValueError("")
+                raise ValueError("When creating collection from histograms, binning is deduced from them.")
             self._binning = histograms[0].binning
             if not all(h.binning == self._binning for h in histograms):
                 raise ValueError("All histogram should share the same binning.")
@@ -141,7 +144,7 @@ class HistogramCollection(Container[Histogram1D]):
         simple cases, it can be used as a method. For more sophisticated
         use, see the documentation for physt.plotting package.
         """
-        from .plotting import PlottingProxy
+        from physt.plotting import PlottingProxy
 
         return PlottingProxy(self)
 

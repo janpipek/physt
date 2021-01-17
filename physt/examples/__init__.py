@@ -61,7 +61,7 @@ def normal_h3(size: int = 10000) -> HistogramND:
 def fist() -> Histogram1D:
     """A simple histogram in the shape of a fist."""
     import numpy as np
-    from ..histogram1d import Histogram1D
+    from physt.histogram1d import Histogram1D
 
     widths = [0, 1.2, 0.2, 1, 0.1, 1, 0.1, 0.9, 0.1, 0.8]
     edges = np.cumsum(widths)
@@ -86,7 +86,8 @@ try:
         # Our custom datasets:
         try:
             binary_data = pkgutil.get_data("physt", "examples/{0}.csv".format(name))
-            return pd.read_csv(io.BytesIO(binary_data))
+            if binary_data:
+                return pd.read_csv(io.BytesIO(binary_data))
         except FileNotFoundError:
             pass
 

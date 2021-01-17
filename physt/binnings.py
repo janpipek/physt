@@ -3,7 +3,7 @@ from typing import cast, Any, Dict, Optional, Tuple, List, Union, Sequence
 
 import numpy as np
 
-from .bin_utils import (
+from physt.bin_utils import (
     is_bin_subset,
     is_consecutive,
     is_rising,
@@ -12,8 +12,8 @@ from .bin_utils import (
     to_numpy_bins_with_mask,
     find_human_width,
 )
-from .typing_aliases import RangeTuple, ArrayLike
-from .util import find_subclass
+from physt.typing_aliases import RangeTuple, ArrayLike
+from physt.util import find_subclass
 
 
 

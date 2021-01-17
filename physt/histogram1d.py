@@ -1,11 +1,12 @@
 """One-dimensional histograms."""
-from typing import Any, Dict, Hashable, Mapping, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Dict, Mapping, Optional, Tuple, TYPE_CHECKING
 
 import numpy as np
-from . import bin_utils
-from .histogram_base import HistogramBase
-from .binnings import BinningBase, BinningLike
-from .typing_aliases import ArrayLike, DtypeLike
+
+from physt import bin_utils
+from physt.histogram_base import HistogramBase
+from physt.binnings import BinningBase, BinningLike
+from physt.typing_aliases import ArrayLike
 
 if TYPE_CHECKING:
     import xarray

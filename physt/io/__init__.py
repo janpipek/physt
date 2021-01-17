@@ -8,7 +8,7 @@ Note: When implementing, try to work with a JSON-like
 """
 from packaging.version import Version
 from pkg_resources import parse_version
-from typing import Union
+from typing import Union, Type
 
 from physt import __version__
 from physt.util import find_subclass
@@ -45,9 +45,8 @@ def create_from_dict(
     # Construction
     histogram_type = data["histogram_type"]
     if histogram_type == "histogram_collection":
-        klass = HistogramCollection
-    else:
-        klass = find_subclass(HistogramBase, histogram_type)
+        return HistogramCollection.from_dict(data)
+    klass: Type[HistogramBase] = find_subclass(HistogramBase, histogram_type)
     return klass.from_dict(data)
 
 

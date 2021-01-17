@@ -85,7 +85,7 @@ lw (or linewidth) : int
     Width of the lines
 """
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, Tuple
 
 from physt.histogram_base import HistogramBase
 from physt.histogram_collection import HistogramCollection
@@ -140,7 +140,7 @@ if backends:
     _default_backend = list(backends.keys())[0]
 
 
-def set_default_backend(name: str):
+def set_default_backend(name: str) -> None:
     """Choose a default backend."""
     global _default_backend
     if name == "bokeh":
@@ -154,7 +154,7 @@ def set_default_backend(name: str):
     _default_backend = name
 
 
-def _get_backend(name: str = None):
+def _get_backend(name: str = None) -> Tuple[str, Any]:
     """Get a plotting backend.
 
     Tries to get it using the name - or the default one.
@@ -165,6 +165,8 @@ def _get_backend(name: str = None):
         )
     if not name:
         name = _default_backend
+        if not name:
+            raise RuntimeError("No backend for physt plotting.")
     if name == "bokeh":
         raise RuntimeError(
             "Support for bokeh has been discontinued. At some point, we may return to support holoviews."
@@ -176,7 +178,7 @@ def _get_backend(name: str = None):
                 name, ", ".join(backends.keys())
             )
         )
-    return name, backends[name]
+    return name, backend
 
 
 def plot(

@@ -16,13 +16,15 @@ See the `enable_inline_view` wrapper.
 import codecs
 import json
 from functools import wraps
-from typing import Any, Mapping, Optional, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from physt.histogram1d import Histogram1D
-from physt.histogram_base import HistogramBase
-from physt.histogram_nd import Histogram2D, HistogramND
+if TYPE_CHECKING:
+    from typing import Any, Optional, Union, Dict
+    from physt.histogram_collection import HistogramCollection
+    from physt.histogram1d import Histogram1D
+    from physt.histogram_nd import Histogram2D, HistogramND
 
 from .common import get_data, get_value_format
 
@@ -590,7 +592,7 @@ def _scatter_or_line(h1: Histogram1D, mark_template: list, kwargs: dict) -> dict
     return vega
 
 
-def _create_figure(kwargs: Mapping[str, Any]) -> dict:
+def _create_figure(kwargs: Dict[str, Any]) -> dict:
     """Create basic dictionary object with figure properties."""
     return {
         "$schema": "https://vega.github.io/schema/vega/v3.json",
@@ -605,7 +607,7 @@ def _create_colorbar(vega: dict, kwargs: dict):
         vega["legends"] = [{"fill": "color", "type": "gradient"}]
 
 
-def _create_scales(hist: HistogramBase, vega: dict, kwargs: dict):
+def _create_scales(hist: HistogramCollection, vega: dict, kwargs: dict):
     """Find proper scales for axes."""
     if hist.ndim == 1:
         bins0 = hist.bins.astype(float)
@@ -714,7 +716,7 @@ def _create_cmap_scale(values_arr: np.ndarray, vega: dict, kwargs: dict):
     )
 
 
-def _create_axes(hist: HistogramBase, vega: dict, kwargs: dict):
+def _create_axes(hist: HistogramCollection, vega: dict, kwargs: dict):
     """Create axes in the figure."""
     xlabel = kwargs.pop("xlabel", hist.axis_names[0])
     ylabel = kwargs.pop(
@@ -772,7 +774,7 @@ def _create_tooltips(hist: Histogram1D, vega: dict, kwargs: dict):
         )
 
 
-def _add_title(hist: HistogramBase, vega: dict, kwargs: dict):
+def _add_title(hist: HistogramCollection, vega: dict, kwargs: dict):
     """Display plot title if available."""
     title = kwargs.pop("title", hist.title)
     if title:

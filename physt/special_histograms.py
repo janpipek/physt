@@ -21,12 +21,11 @@ from typing import Optional, Type, Union, Tuple
 
 import numpy as np
 
-from .histogram_nd import HistogramND
-from .histogram1d import Histogram1D
-from .util import deprecation_alias
-from .typing_aliases import Axis, RangeTuple
-from . import binnings, histogram_nd, histogram1d
-
+from physt.histogram_nd import HistogramND
+from physt.histogram1d import Histogram1D
+from physt.util import deprecation_alias
+from physt.typing_aliases import Axis, RangeTuple
+from . import histogram_nd, binnings
 
 FULL_PHI_RANGE: RangeTuple = (0, 2 * np.pi)
 FULL_THETA_RANGE: RangeTuple = (0, np.pi)
@@ -193,7 +192,7 @@ class PolarHistogram(TransformedHistogramMixin, HistogramND):
 
     """
 
-    default_axis_names = ("r", "phi")
+    default_axis_names = ["r", "phi"]
     source_ndim = 2
 
     @property
@@ -230,7 +229,7 @@ class SphericalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         sizes2 = self.get_bin_widths(1)
         return reduce(np.multiply, np.ix_(sizes1, sizes2))
 
-    default_axis_names = ("theta", "phi")
+    default_axis_names = ["theta", "phi"]
     default_init_values = {"radius": 1}
     source_ndim = 3
 
@@ -265,7 +264,7 @@ class SphericalHistogram(TransformedHistogramMixin, HistogramND):
     - phi as azimuthal angle  (in the xy projection) in the (0, 2*pi) range
     """
 
-    default_axis_names = ("r", "theta", "phi")
+    default_axis_names = ["r", "theta", "phi"]
     source_ndim = 3
 
     @classmethod
@@ -349,7 +348,7 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
     - z as the last direction without modification, in (-inf, +inf) range
     """
 
-    default_axis_names = ("rho", "phi", "z")
+    default_axis_names = ["rho", "phi", "z"]
     source_ndim = 3
 
     @classmethod
@@ -674,7 +673,7 @@ def cylindrical_surface(
         **kwargs,
     )
     frequencies, errors2, missed = histogram_nd.calculate_frequencies(
-        data, ndim=3, binnings=bin_schemas, weights=weights
+        data, binnings=bin_schemas, weights=weights
     )
     return CylindricalSurfaceHistogram(
         binnings=bin_schemas,

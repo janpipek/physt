@@ -1,6 +1,12 @@
 """Dask-based and dask oriented variants of physt histogram facade functions."""
+from typing import TYPE_CHECKING
+
 from physt import h1 as original_h1
 from physt import histogramdd as original_hdd
+
+if TYPE_CHECKING:
+    import dask
+    import dask.array
 
 options = {"chunk_split": 16}
 

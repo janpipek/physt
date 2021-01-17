@@ -30,7 +30,7 @@ Parameters
 
 """
 from functools import wraps
-from typing import Any, Dict, List, Optional, Tuple, Callable, Union, Iterable
+from typing import Any, Dict, Optional, Tuple, Union
 
 import matplotlib
 import matplotlib.cm as cm
@@ -46,6 +46,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 from physt.histogram1d import Histogram1D
 from physt.histogram_nd import Histogram2D
+from physt.histogram_collection import HistogramCollection
 from physt.config import config
 from physt.plotting.common import get_data, get_err_data, pop_kwargs_with_prefix
 from physt.special_histograms import (
@@ -89,8 +90,6 @@ def register(
             hist, write_to: Optional[str] = None, dpi: Optional[float] = None, **kwargs
         ):
             fig, ax = _get_axes(kwargs, use_3d=use_3d, use_polar=use_polar)
-
-            from physt.histogram_collection import HistogramCollection
 
             if collection and isinstance(hist, HistogramCollection):
                 title = kwargs.pop("title", hist.title)
@@ -207,7 +206,7 @@ def scatter(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
 
 @register(1, collection=True)
 def line(
-    h1: Union[Histogram1D, "HistogramCollection"],
+    h1: Histogram1D,
     ax: Axes,
     *,
     errors: bool = False,
@@ -651,10 +650,7 @@ def cylinder_map(
     norm, cmap_data = _get_cmap_data(data, kwargs)
     colors = cmap(cmap_data)
 
-    if hasattr(hist, "radius"):
-        r = kwargs.pop("radius", hist.radius)
-    else:
-        r = kwargs.pop("radius", 1)
+    r = kwargs.pop("radius", getattr(hist, "radius", 1))
 
     xs = r * np.outer(np.cos(hist.numpy_bins[0]), np.ones(hist.shape[1] + 1))
     ys = r * np.outer(np.sin(hist.numpy_bins[0]), np.ones(hist.shape[1] + 1))
@@ -1043,12 +1039,12 @@ def _apply_xy_lims(
     xlim = kwargs.pop("xlim", "auto")
     invert_y = kwargs.pop("invert_y", False)
 
-    from ..binnings import ExponentialBinning
+    from physt.binnings import ExponentialBinning
 
     # First, get the axis scaling
     if h.ndim == 1:
         xscale = kwargs.pop(
-            "xscale", "log" if isinstance(h.binning, ExponentialBinning) else None
+            "xscale", "log" if isinstance(h.binnings[0], ExponentialBinning) else None
         )
         yscale = kwargs.pop("yscale", None)
     elif h.ndim == 2:
