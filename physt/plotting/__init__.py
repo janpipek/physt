@@ -197,7 +197,7 @@ def plot(
     """
     backend_name, backend = _get_backend(backend)
     if kind is None:
-        kinds = [t for t in backend.types if histogram.ndim in backend.dims[t]]
+        kinds = [t for t in backend.types if histogram.ndim in backend.dims[t]]  # type: ignore
         if not kinds:
             raise RuntimeError(
                 "No plot type is supported for {0}".format(histogram.__class__.__name__)

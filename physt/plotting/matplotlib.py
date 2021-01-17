@@ -1087,9 +1087,7 @@ def _apply_xy_lims(
         elif xlim:
             xlim = ax.get_xlim()
             if h.shape[0] >= 1:
-                if h.ndim == 1:
-                    xlim = (h.bin_left_edges[0], h.bin_right_edges[-1])
-                elif h.ndim == 2:
+                if h.ndim <= 2:
                     xlim = (h.get_bin_left_edges(0)[0], h.get_bin_right_edges(0)[-1])
                 else:
                     raise ValueError("Invalid dimension: {0}".format(h.ndim))

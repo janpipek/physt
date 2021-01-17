@@ -141,7 +141,7 @@ class HistogramBase(abc.ABC):
         # Note: missed are dealt differently in 1D/ND cases
 
         self._meta_data = kwargs.copy()
-        self.axis_names = axis_names or self.default_axis_names
+        self.axis_names = tuple(axis_names or self.default_axis_names)
 
     @property
     def default_axis_names(self) -> List[str]:
