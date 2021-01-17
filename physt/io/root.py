@@ -13,9 +13,7 @@ import uproot
 from physt.histogram_base import HistogramBase
 
 
-def write_root(
-    histogram: HistogramBase, hfile: uproot.write.TFile.TFileUpdate, name: str
-):
+def write_root(histogram: HistogramBase, hfile: uproot.write.TFile.TFileUpdate, name: str):
     """Write histogram to an open ROOT file.
 
     Parameters
