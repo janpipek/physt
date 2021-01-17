@@ -124,7 +124,7 @@ class HistogramBase(abc.ABC):
                     )
             dtype = frequencies.dtype
             self.frequencies = frequencies
-        self._dtype, _ = self._eval_dtype(dtype)
+        self._dtype, _ = self._eval_dtype(dtype)  # type: ignore
 
         # Errors
         if errors2 is None:
@@ -236,10 +236,6 @@ class HistogramBase(abc.ABC):
         """
         return len(self._binnings)
 
-    def _get_dtype(self) -> np.dtype:
-        """Data type of the bin contents."""
-        return self._dtype
-
     @classmethod
     def _eval_dtype(cls, value: DtypeLike) -> Tuple[np.dtype, np.iinfo]:
         """Convert dtype into canonical form, check its applicability and return info.
@@ -264,7 +260,12 @@ class HistogramBase(abc.ABC):
             )
         return dtype, type_info
 
-    def set_dtype(self, value: DtypeLike, check: bool = True) -> None:
+    @property
+    def dtype(self) -> np.dtype:
+        """Data type of the bin contents."""
+        return self._dtype
+
+    def set_dtype(self, value: DtypeLike, *, check: bool = True) -> None:
         """Change data type of the bin contents.
 
         Allowed conversions:
@@ -287,10 +288,10 @@ class HistogramBase(abc.ABC):
         elif check:
             if np.issubdtype(value, np.integer):
                 if self.dtype.kind == "f":
-                    for array in (self._frequencies, self._errors2):
+                    for array in (self.frequencies, self.errors2):
                         if np.any(array % 1.0):
                             raise RuntimeError("Data contain non-integer values.")
-            for array in (self._frequencies, self._errors2):
+            for array in (self.frequencies, self.errors2):
                 if np.any((array > type_info.max) | (array < type_info.min)):
                     raise RuntimeError(
                         "Data contain values outside the specified range."
@@ -301,7 +302,9 @@ class HistogramBase(abc.ABC):
         self._errors2 = self._errors2.astype(value)
         self._missed = self._missed.astype(value)
 
-    dtype = property(_get_dtype, set_dtype)
+    @dtype.setter
+    def dtype(self, value: DtypeLike) -> None:
+        self.set_dtype(value)
 
     def _coerce_dtype(self, other_dtype: DtypeLike) -> None:
         """Possibly change the bin content type to allow correct operations with other operand.
@@ -310,7 +313,7 @@ class HistogramBase(abc.ABC):
         ----------
         other_dtype : np.dtype or type
         """
-        other_dtype = self._eval_dtype(other_dtype)
+        other_dtype, _ = self._eval_dtype(other_dtype)
         if self._dtype is None:
             new_dtype = np.dtype(other_dtype)
         else:
