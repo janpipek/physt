@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class HistogramCollection(Container[Histogram1D]):
     """Experimental collection of histograms.
 
-    It contains (potentially name-addressable) histograms
+    It contains (potentially name-addressable) 1-D histograms
     with a shared binning.
     """
 
@@ -70,8 +70,8 @@ class HistogramCollection(Container[Histogram1D]):
         return self.binning.bins
 
     @property
-    def axis_name(self) -> Optional[str]:
-        return self.histograms[0].axis_name if self.histograms else None
+    def axis_name(self) -> str:
+        return self.histograms[0].axis_name if self.histograms else "axis0"
 
     @property
     def axis_names(self) -> Tuple[str]:

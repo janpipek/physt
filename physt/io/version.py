@@ -21,5 +21,5 @@ def require_compatible_version(compatible_version, word="File"):
     current_version = parse_version(CURRENT_VERSION)
     if current_version < compatible_version:
         raise VersionError(
-            "{0} written for version >= {1}, this is {2}.".format(word, str(compatible_version), CURRENT_VERSION)
+            f"{word} written for version >= {compatible_version}, this is {CURRENT_VERSION}."
         )

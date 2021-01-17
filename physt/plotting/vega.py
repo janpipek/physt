@@ -21,6 +21,7 @@ from typing import Any, Optional, Union, Dict
 import numpy as np
 
 from physt.histogram_collection import HistogramCollection
+from physt.histogram_base import HistogramBase
 from physt.histogram1d import Histogram1D
 from physt.histogram_nd import Histogram2D, HistogramND
 from physt.plotting.common import get_data, get_value_format, check_ndim
@@ -78,10 +79,13 @@ try:
     if get_ipython():
         try:
             import vega3
+            from vega3 import Vega
 
             VEGA_IPYTHON_PLUGIN_ENABLED = True
         except ImportError:
             VEGA_ERROR = "Library 'vega3' not present"
+            Vega = dict  # Convert to itself
+
     else:
         VEGA_ERROR = "Not in a an interactive IPython shell."
 except:
@@ -171,8 +175,6 @@ def display_vega(vega_data: dict, display: bool = True) -> Union["Vega", dict]:
     display: Whether to try in-line display in IPython
     """
     if VEGA_IPYTHON_PLUGIN_ENABLED and display:
-        from vega3 import Vega
-
         return Vega(vega_data)
     else:
         return vega_data
@@ -351,7 +353,7 @@ def map(h2: "Histogram2D", *, show_zero: bool = True, show_values: bool = False,
         for j in range(h2.shape[1]):
             if not show_zero and values[i][j] == 0:
                 continue
-            item = {
+            item: Dict[str, Any] = {
                 "x": float(x[i]),
                 "x1": float(x1[i]),
                 "x2": float(x2[i]),
@@ -583,7 +585,7 @@ def _create_colorbar(vega: dict, kwargs: dict):
         vega["legends"] = [{"fill": "color", "type": "gradient"}]
 
 
-def _create_scales(hist: HistogramCollection, vega: dict, kwargs: dict):
+def _create_scales(hist: Union[HistogramCollection, HistogramBase], vega: dict, kwargs: dict):
     """Find proper scales for axes."""
     if hist.ndim == 1:
         bins0 = hist.bins.astype(float)
@@ -688,7 +690,7 @@ def _create_cmap_scale(values_arr: np.ndarray, vega: dict, kwargs: dict):
     )
 
 
-def _create_axes(hist: HistogramCollection, vega: dict, kwargs: dict):
+def _create_axes(hist: Union[HistogramCollection, HistogramBase], vega: dict, kwargs: dict):
     """Create axes in the figure."""
     xlabel = kwargs.pop("xlabel", hist.axis_names[0])
     ylabel = kwargs.pop("ylabel", hist.axis_names[1] if len(hist.axis_names) >= 2 else None)
@@ -744,7 +746,7 @@ def _create_tooltips(hist: Histogram1D, vega: dict, kwargs: dict):
         )
 
 
-def _add_title(hist: HistogramCollection, vega: dict, kwargs: dict):
+def _add_title(hist: Union[HistogramBase, HistogramCollection], vega: dict, kwargs: dict):
     """Display plot title if available."""
     title = kwargs.pop("title", hist.title)
     if title:

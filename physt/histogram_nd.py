@@ -101,7 +101,7 @@ class HistogramND(HistogramBase):
             return self
 
         axis_id = self._get_axis(axis)
-        array_index = [slice(None, None, None) for i in range(self.ndim)]
+        array_index: List[Union[int, slice]] = [slice(None, None, None) for i in range(self.ndim)]
         array_index[axis_id] = index
 
         frequencies = self._frequencies[tuple(array_index)].copy()

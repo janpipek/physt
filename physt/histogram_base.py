@@ -350,6 +350,11 @@ class HistogramBase(abc.ABC):
         """
         return self._frequencies / self.bin_sizes
 
+    @abc.abstractmethod
+    @property
+    def bin_sizes(self) -> np.ndarray:
+        raise NotImplementedError
+
     def normalize(self, inplace: bool = False, percent: bool = False) -> "HistogramBase":
         """Normalize the histogram, so that the total weight is equal to 1.
 
