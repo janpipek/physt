@@ -16,17 +16,14 @@ See the `enable_inline_view` wrapper.
 import codecs
 import json
 from functools import wraps
-from typing import TYPE_CHECKING
+from typing import Any, Optional, Union, Dict
 
 import numpy as np
 
-if TYPE_CHECKING:
-    from typing import Any, Optional, Union, Dict
-    from physt.histogram_collection import HistogramCollection
-    from physt.histogram1d import Histogram1D
-    from physt.histogram_nd import Histogram2D, HistogramND
-
-from .common import get_data, get_value_format
+from physt.histogram_collection import HistogramCollection
+from physt.histogram1d import Histogram1D
+from physt.histogram_nd import Histogram2D, HistogramND
+from physt.plotting.common import get_data, get_value_format, check_ndim
 
 VEGA_IPYTHON_PLUGIN_ENABLED = False
 VEGA_ERROR = None
@@ -182,6 +179,7 @@ def display_vega(vega_data: dict, display: bool = True) -> Union["Vega", dict]:
 
 
 @enable_inline_view
+@check_ndim(1)
 def bar(h1: "Histogram1D", **kwargs) -> dict:
     """Bar plot of 1D histogram.
 
@@ -196,6 +194,8 @@ def bar(h1: "Histogram1D", **kwargs) -> dict:
     """
     # TODO: Enable collections
     # TODO: Enable legend
+    if h1.ndim > 1:
+        raise
 
     vega = _create_figure(kwargs)
     _add_title(h1, vega, kwargs)
@@ -255,6 +255,7 @@ DEFAULT_SCATTER_SHAPE = "circle"
 
 
 @enable_inline_view
+@check_ndim(1)
 def scatter(h1: Histogram1D, **kwargs) -> dict:
     """Scatter plot of 1D histogram values.
 
@@ -290,6 +291,7 @@ DEFAULT_STROKE_WIDTH = 2
 
 
 @enable_inline_view
+@check_ndim(1)
 def line(h1: Histogram1D, **kwargs) -> dict:
     """Line plot of 1D histogram values.
 
@@ -322,6 +324,7 @@ def line(h1: Histogram1D, **kwargs) -> dict:
 
 
 @enable_inline_view
+@check_ndim(2)
 def map(h2: "Histogram2D", *, show_zero: bool = True, show_values: bool = False, **kwargs) -> dict:
     """Heat-map of two-dimensional histogram."""
     vega = _create_figure(kwargs)
@@ -409,6 +412,7 @@ def map(h2: "Histogram2D", *, show_zero: bool = True, show_values: bool = False,
 
 
 @enable_inline_view
+@check_ndim(3)
 def map_with_slider(h3: "HistogramND", *, show_zero: bool = True, show_values: bool = False, **kwargs) -> dict:
     """Heatmap showing slice in first two dimensions, third dimension represented as a slider.
 
