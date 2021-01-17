@@ -35,3 +35,6 @@ class AbstractTest2D(ABC):
     def test_1d_fail(self, simple_h1: "Histogram1D"):
         with pytest.raises(TypeError):
             self.method(simple_h1)
+
+    def test_simple_does_not_fail(self, simple_h2):
+        _ = self.method(simple_h2)

@@ -16,9 +16,6 @@ class _TestBase1D(AbstractTest1D, ABC):
         vega_data = self.method(simple_h1)
         assert vega_data["axes"][0]["title"] == simple_h1.axis_name
 
-    def test_title(self, simple_h1: "Histogram1D"):
-        vega_data = self.method(simple_h1)
-
     # TODO: Add many more shared tests
 
 

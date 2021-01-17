@@ -48,7 +48,7 @@ from physt.histogram1d import Histogram1D
 from physt.histogram_nd import Histogram2D
 from physt.histogram_collection import HistogramCollection
 from physt.config import config
-from physt.plotting.common import get_data, get_err_data, pop_kwargs_with_prefix
+from physt.plotting.common import get_data, get_err_data, pop_kwargs_with_prefix, check_ndim
 from physt.special_histograms import (
     CylindricalSurfaceHistogram,
     SphericalSurfaceHistogram,
@@ -79,12 +79,13 @@ def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collectio
 
     # TODO: Add some kind of class parameter
 
-    def decorate(f):
+    def wrapper(f):
         types.append(f.__name__)
         dims[f.__name__] = dim
 
         @wraps(f)
-        def f(hist, write_to: Optional[str] = None, dpi: Optional[float] = None, **kwargs):
+        @check_ndim(dim)
+        def wrapped(hist, write_to: Optional[str] = None, dpi: Optional[float] = None, **kwargs):
             fig, ax = _get_axes(kwargs, use_3d=use_3d, use_polar=use_polar)
 
             if collection and isinstance(hist, HistogramCollection):
@@ -105,9 +106,9 @@ def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collectio
                 fig.savefig(write_to, dpi=dpi or default_dpi)
             return ax
 
-        return f
+        return wrapped
 
-    return decorate
+    return wrapper
 
 
 @register(1, collection=True)
@@ -998,7 +999,7 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
         xscale = kwargs.pop("xscale", "log" if isinstance(h.binnings[0], ExponentialBinning) else None)
         yscale = kwargs.pop("yscale", "log" if isinstance(h.binnings[1], ExponentialBinning) else None)
     else:
-        raise ValueError("Invalid histogram dimension: {0}".format(h.ndim))
+        raise ValueError(f"Invalid histogram dimension: {h.ndim}")
 
     if ylim != "keep":
         if isinstance(ylim, tuple):
