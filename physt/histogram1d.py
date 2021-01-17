@@ -1,12 +1,12 @@
 """One-dimensional histograms."""
-from typing import Any, Dict, Mapping, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Dict, Mapping, Optional, Tuple, TYPE_CHECKING, Union
 
 import numpy as np
 
 from physt import bin_utils
 from physt.histogram_base import HistogramBase
 from physt.binnings import BinningBase, BinningLike
-from physt.typing_aliases import ArrayLike
+from physt.typing_aliases import ArrayLike, DtypeLike
 
 if TYPE_CHECKING:
     import xarray
@@ -38,6 +38,7 @@ class Histogram1D(HistogramBase):
         frequencies: Optional[ArrayLike] = None,
         errors2: Optional[ArrayLike] = None,
         *,
+        keep_missed: bool = True,
         stats=None,
         overflow=0,
         underflow=0,
@@ -49,12 +50,9 @@ class Histogram1D(HistogramBase):
 
         Parameters
         ----------
-        binning: physt.binnings.BinningBase or array_like
-            The binning
-        frequencies: Optional[array_like]
-            The bin contents.
-        keep_missed: Optional[bool]
-            Whether to keep track of underflow/overflow when filling with new values.
+        binning: The binning
+        frequencies: The bin contents.
+        keep_missed: Whether to keep track of underflow/overflow when filling with new values.
         underflow: Optional[float]
             Weight of observations that were smaller than the minimum bin.
         overflow: Optional[float]
@@ -76,7 +74,7 @@ class Histogram1D(HistogramBase):
         if axis_name:
             kwargs["axis_names"] = [axis_name]
 
-        HistogramBase.__init__(self, [binning], frequencies, errors2, **kwargs)
+        HistogramBase.__init__(self, [binning], frequencies, errors2, keep_missed=keep_missed, **kwargs)
 
         if frequencies is None:
             self._stats = Histogram1D.EMPTY_STATS.copy()
@@ -402,13 +400,13 @@ class Histogram1D(HistogramBase):
             self.overflow += weight
         else:
             self._frequencies[ixbin] += weight
-            self._errors2[ixbin] += weight ** 2
+            self._errors2[ixbin] +=  weight ** 2
             if self._stats:
                 self._stats["sum"] += weight * value
                 self._stats["sum2"] += weight * value ** 2
         return ixbin
 
-    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True, **kwargs):
+    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True, **kwargs) -> None:
         """Update histograms with a set of values.
 
         Parameters
@@ -445,7 +443,7 @@ class Histogram1D(HistogramBase):
             for key in self._stats:
                 self._stats[key] += stats.get(key, 0.0)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):
             return False
         # TODO: Change to something in binning itself
@@ -536,15 +534,15 @@ class Histogram1D(HistogramBase):
     @classmethod
     def from_calculate_frequencies(
         cls,
-        data,
-        binning,
-        weights=None,
+        data: ArrayLike,
+        binning: BinningBase,
+        weights: Optional[ArrayLike] = None,
         *,
-        validate_bins=True,
+        validate_bins: bool =True,
         already_sorted: bool = False,
-        dtype=None,
+        dtype: Optional[DtypeLike] = None,
         **kwargs
-    ):
+    ) -> "Histogram1D":
         frequencies, errors2, underflow, overflow, stats = calculate_frequencies(
             data=data,
             binning=binning,
@@ -564,42 +562,32 @@ class Histogram1D(HistogramBase):
 
 
 def calculate_frequencies(
-    data,
-    binning,
-    weights=None,
+    data: ArrayLike,
+    binning: BinningBase,
+    weights: Optional[ArrayLike] = None,
     *,
-    validate_bins=True,
+    validate_bins: bool = True,
     already_sorted: bool = False,
-    dtype=None
-):
+    dtype: Optional[DtypeLike] = None
+) -> Tuple[np.ndarray, np.ndarray, float, float, dict]:
     """Get frequencies and bin errors from the data.
 
     Parameters
     ----------
-    data : array_like
-        Data items to work on.
-    binning : physt.binnings.BinningBase
-        A set of bins.
-    weights : array_like, optional
-        Weights of the items.
-    validate_bins : bool, optional
-        If True (default), bins are validated to be in ascending order.
-    already_sorted : bool, optional
-        If True, the data being entered are already sorted, no need to sort them once more.
-    dtype: Optional[type]
-        Underlying type for the histogram.
+    data : Data items to work on.
+    binning : A set of bins.
+    weights : Weights of the items.
+    validate_bins : If True (default), bins are validated to be in ascending order.
+    already_sorted : If True, the data being entered are already sorted, no need to sort them once more.
+    dtype: Underlying type for the histogram.
         (If weights are specified, default is float. Otherwise long.)
 
     Returns
     -------
-    frequencies : numpy.ndarray
-        Bin contents
-    errors2 : numpy.ndarray
-        Error squares of the bins
-    underflow : float
-        Weight of items smaller than the first bin
-    overflow : float
-        Weight of items larger than the last bin
+    frequencies : Bin contents
+    errors2 :  Error squares of the bins
+    underflow : Weight of items smaller than the first bin
+    overflow : Weight of items larger than the last bin
     stats: dict
         { sum: ..., sum2: ...}
 

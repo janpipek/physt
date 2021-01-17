@@ -904,7 +904,7 @@ def _get_cmap_data(data, kwargs) -> Tuple[colors.Normalize, np.ndarray]:
     return norm, norm(data)
 
 
-def _get_alpha_data(data: np.ndarray, kwargs) -> Union[float, np.ndarray]:
+def _get_alpha_data(data: np.ndarray, kwargs) -> np.ndarray:
     """Get alpha values for all data points.
 
     Parameters
@@ -915,6 +915,8 @@ def _get_alpha_data(data: np.ndarray, kwargs) -> Union[float, np.ndarray]:
     alpha = kwargs.pop("alpha", 1)
     if hasattr(alpha, "__call__"):
         return np.vectorize(alpha)(data)
+    if np.isscalar(alpha):
+        return np.ones_like(data) * alpha
     return alpha
 
 
@@ -984,11 +986,17 @@ def _add_stats_box(h1: Histogram1D, ax: Axes, stats: Union[str, bool] = "all"):
 
     # place a text box in upper left in axes coords
     if stats in ["all", True]:
-        text = "Total: {0}\nMean: {1:.2f}\nStd.dev: {2:.2f}".format(
-            h1.total, h1.mean(), h1.std()
-        )
+        text_frags = [f"Total: {h1.total}"]
+
+        mean = h1.mean()
+        if mean is not None:
+            text_frags.append(f"Mean: {mean:.2f}")
+        std = h1.std()
+        if std is not None:
+            text_frags.append(f"Std.dev: {std:.2f}")
+        text = "\n".join(text_frags)
     elif stats == "total":
-        text = "Total: {0}".format(h1.total)
+        text = f"Total: {h1.total}"
     else:
         raise ValueError("Invalid stats specification")
 

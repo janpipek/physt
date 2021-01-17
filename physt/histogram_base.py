@@ -1,7 +1,7 @@
 """HistogramBase - base for all histogram classes."""
 import abc
 import warnings
-from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, TYPE_CHECKING, TypeVar
+from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, TYPE_CHECKING, TypeVar, Union
 
 import numpy as np
 
@@ -143,8 +143,15 @@ class HistogramBase(abc.ABC):
         self._meta_data = kwargs.copy()
         self.axis_names = tuple(axis_names or self.default_axis_names)
 
+    # "Protected" attributes
+    _binnings: List[BinningBase]
+    _frequencies: np.ndarray
+    _errors2: np.ndarray
+    _missed: np.ndarray
+
     @property
     def default_axis_names(self) -> List[str]:
+        """Axis names to be used when an instance does not define them."""
         return ["axis{0}".format(i) for i in range(self.ndim)]
 
     default_init_values: Dict[str, Any] = {}
@@ -303,8 +310,10 @@ class HistogramBase(abc.ABC):
 
         self._dtype = value
         self._frequencies = self._frequencies.astype(value)
-        self._errors2 = self._errors2.astype(value)
-        self._missed = self._missed.astype(value)
+        if self._errors2 is not None:
+            self._errors2 = self._errors2.astype(value)
+        if self._missed is not None:
+            self._missed = self._missed.astype(value)
 
     @dtype.setter
     def dtype(self, value: DtypeLike) -> None:
@@ -683,6 +692,7 @@ class HistogramBase(abc.ABC):
         """
         values = np.asarray(values)
         if weights is not None:
+            weights = np.asarray(weights)
             if weights.shape != values.shape[0]:
                 raise RuntimeError("Wrong shape of weights")
         for i, value in enumerate(values):
@@ -710,7 +720,7 @@ class HistogramBase(abc.ABC):
         If a descendant class needs to update the dictionary in some way
         (put some more information), override the _update_dict method.
         """
-        result = dict()
+        result: Dict[str, Any] = dict()
         result["histogram_type"] = type(self).__name__
         result["binnings"] = [binning.to_dict() for binning in self._binnings]
         if self.frequencies is not None:

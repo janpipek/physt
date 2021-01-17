@@ -195,15 +195,15 @@ def plot(
     ----------
     kind: Type of the plot (like "scatter", "line", ...), similar to pandas
     """
-    backend_name, backend = _get_backend(backend)
+    backend_name, backend_impl = _get_backend(backend)
     if kind is None:
-        kinds = [t for t in backend.types if histogram.ndim in backend.dims[t]]  # type: ignore
+        kinds = [t for t in backend_impl.types if histogram.ndim in backend_impl.dims[t]]  # type: ignore
         if not kinds:
             raise RuntimeError(
                 "No plot type is supported for {0}".format(histogram.__class__.__name__)
             )
         kind = kinds[0]
-    if kind in backend.types:
+    if kind in backend_impl.types:
         method = getattr(backend, kind)
         return method(histogram, **kwargs)
     else:

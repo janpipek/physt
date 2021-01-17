@@ -1,4 +1,5 @@
 """Multi-dimensional histograms."""
+import warnings
 from typing import Optional, List, Any, Tuple, Union, Iterable
 
 import numpy as np
@@ -70,34 +71,36 @@ class HistogramND(HistogramBase):
         return [binning.bins for binning in self._binnings]
 
     @property
-    def numpy_bins(self) -> List[np.ndarray]:
-        """Numpy-like bins (if available).
-
-        TODO: Deprecate.
-        """
+    def edges(self) -> List[np.ndarray]:
         return [binning.numpy_bins for binning in self._binnings]
 
     @property
-    def edges(self) -> List[np.ndarray]:
-        return self.numpy_bins
+    def numpy_bins(self) -> List[np.ndarray]:
+        """Numpy-like bins (if available)."""
+        warnings.warn(
+            f"`numpy_bins` is deprecated, use `edges` instead",
+            DeprecationWarning,
+        )
+        return self.edges
 
     @property
     def numpy_like(self) -> Tuple[np.ndarray, List[np.ndarray]]:
         """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins
 
-    def select(self, axis: Axis, index, force_copy: bool = False) -> HistogramBase:
+    def select(self, axis: Axis, index: Union[int, slice], force_copy: bool = False) -> HistogramBase:
         """Select in an axis.
 
         Parameters
         ----------
         axis: int or str
             Axis, in which we select.
-        index: int or slice
-            Index of bin (as in numpy).
+        index: Index of bin (as in numpy).
         force_copy: bool
             If True, identity slice force a copy to be made.
         """
+        # TODO: Implement mask?
+
         if index == slice(None) and not force_copy:
             return self
 
@@ -292,7 +295,7 @@ class HistogramND(HistogramBase):
         return ixbin
 
     def fill_n(
-        self, values, weights=None, *, dropna: bool = True, columns: bool = False
+        self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True, columns: bool = False
     ):
         """Add more values at once.
 
@@ -489,9 +492,10 @@ class Histogram2D(HistogramND):
         """
         a_copy = self.copy()
         a_copy._binnings = list(reversed(a_copy._binnings))
-        a_copy.axis_names = list(reversed(a_copy.axis_names))
+        a_copy.axis_names = tuple(reversed(a_copy.axis_names))
         a_copy._frequencies = a_copy._frequencies.T
-        a_copy._errors2 = a_copy._errors2.T
+        if a_copy.errors2 is not None:
+            a_copy._errors2 = a_copy._errors2.T
         return a_copy
 
     def partial_normalize(self, axis: Axis = 0, inplace: bool = False):

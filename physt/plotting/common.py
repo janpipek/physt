@@ -38,7 +38,10 @@ def get_data(
             data = histogram.densities
     else:
         if cumulative:
-            data = histogram.cumulative_frequencies
+            try:
+                data = histogram.cumulative_frequencies  # type: ignore
+            except AttributeError:
+                raise TypeError(f"Type {type(histogram)} does not support cumulative frequencies.")
         else:
             data = histogram.frequencies
 

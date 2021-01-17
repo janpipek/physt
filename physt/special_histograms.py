@@ -17,14 +17,14 @@ class superclasses.
 """
 import abc
 from functools import reduce
-from typing import Optional, Type, Union, Tuple
+from typing import Optional, Type, Union, Tuple, Dict
 
 import numpy as np
 
 from physt.histogram_nd import HistogramND
 from physt.histogram1d import Histogram1D
 from physt.util import deprecation_alias
-from physt.typing_aliases import Axis, RangeTuple
+from physt.typing_aliases import Axis, RangeTuple, ArrayLike
 from . import histogram_nd, binnings
 
 FULL_PHI_RANGE: RangeTuple = (0, 2 * np.pi)
@@ -72,17 +72,17 @@ class TransformedHistogramMixin(abc.ABC):
     def bin_sizes(self):
         ...
 
-    def fill(self, value, weight=1, transformed=False):
+    def fill(self, value: ArrayLike, weight: Optional[ArrayLike] = 1, *, transformed: bool = False):
         if not transformed:
             value = self.transform(value)
         return super().fill(value=value, weight=weight)
 
-    def fill_n(self, values, weights=None, dropna=True, transformed=False):
+    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True, transformed: bool = False):
         if not transformed:
             values = self.transform(values)
         super().fill_n(values=values, weights=weights, dropna=dropna)
 
-    _projection_class_map = {}
+    _projection_class_map: Dict[Tuple[int, ...], type] = {}
 
     source_ndim: Union[int, Tuple[int]]
 
@@ -156,9 +156,7 @@ class AzimuthalHistogram(TransformedHistogramMixin, Histogram1D):
     This is a special case of a 1D histogram with transformed coordinates.
     """
 
-    default_axis_names = {
-        "phi",
-    }
+    default_axis_names = ["phi"]
     default_init_values = {"radius": 1}
     source_ndim = 2
 
@@ -306,7 +304,7 @@ class CylindricalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         The radius of the surface. Useful for plotting
     """
 
-    default_axis_names = ("rho", "phi", "z")
+    default_axis_names = ["rho", "phi", "z"]
     default_init_values = {"radius": 1}
     source_ndim = 3
 
