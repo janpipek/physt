@@ -1,4 +1,5 @@
 """One-dimensional histograms."""
+from abc import ABC, abstractmethod
 from typing import Any, Dict, Mapping, Optional, Tuple, TYPE_CHECKING, Union
 
 import numpy as np
@@ -15,7 +16,96 @@ if TYPE_CHECKING:
 # TODO: Fix I/O with binning
 
 
-class Histogram1D(HistogramBase):
+class ObjectWithBinning(ABC):
+    """Mixin with shared methods for 1D objects that have a binning.
+
+    Note: Used to share behaviour between Histogram1D and HistogramCollection.
+    """
+
+    @property
+    @abstractmethod
+    def binning(self) -> BinningBase:
+        """The binning itself."""
+
+    @property
+    def ndim(self) -> int:
+        return 1
+
+    @property
+    def bins(self) -> np.ndarray:
+        """Array of all bin edges.
+
+        Returns
+        -------
+        Wide-format [[leftedge1, rightedge1], ... [leftedgeN, rightedgeN]]
+        """
+        # TODO: Read-only copy
+        return self.binning.bins  # TODO: or this should be read-only copy?
+
+    @property
+    def numpy_bins(self) -> np.ndarray:
+        """Bins in the format of numpy."""
+        # TODO: If not consecutive, does not make sense
+        # TODO: Deprecate
+        return self.binning.numpy_bins
+
+    @property
+    def edges(self) -> np.ndarray:
+        return self.numpy_bins
+
+    @property
+    def bin_left_edges(self) -> np.ndarray:
+        """Left edges of all bins."""
+        return self.bins[..., 0]
+
+    @property
+    def bin_right_edges(self) -> np.ndarray:
+        """Right edges of all bins."""
+        return self.bins[..., 1]
+
+    def get_bin_left_edges(self, i):
+        assert i == 0
+        return self.bin_left_edges
+
+    def get_bin_right_edges(self, i):
+        assert i == 0
+        return self.bin_right_edges
+
+    @property
+    def min_edge(self) -> float:
+        """Left edge of the first bin."""
+        return self.bin_left_edges[0]
+
+    @property
+    def max_edge(self) -> float:
+        """Right edge of the last bin."""
+        # TODO: Perh
+        return self.bin_right_edges[-1]
+
+    @property
+    def bin_centers(self) -> np.ndarray:
+        """Centers of all bins."""
+        return (self.bin_left_edges + self.bin_right_edges) / 2
+
+    @property
+    def bin_widths(self) -> np.ndarray:
+        """Widths of all bins."""
+        return self.bin_right_edges - self.bin_left_edges
+
+    @property
+    def total_width(self) -> float:
+        """Total width of all bins.
+
+        In inconsecutive histograms, the missing intervals are not counted in.
+        """
+        return self.bin_widths.sum()
+
+    @property
+    def bin_sizes(self) -> np.ndarray:
+        return self.bin_widths
+
+
+class Histogram1D(ObjectWithBinning, HistogramBase):
     """One-dimensional histogram data.
 
     The bins can be of different widths.
@@ -171,28 +261,6 @@ class Histogram1D(HistogramBase):
         return self._binning
 
     @property
-    def bins(self) -> np.ndarray:
-        """Array of all bin edges.
-
-        Returns
-        -------
-        Wide-format [[leftedge1, rightedge1], ... [leftedgeN, rightedgeN]]
-        """
-        # TODO: Read-only copy
-        return self._binning.bins  # TODO: or this should be read-only copy?
-
-    @property
-    def numpy_bins(self) -> np.ndarray:
-        """Bins in the format of numpy."""
-        # TODO: If not consecutive, does not make sense
-        # TODO: Deprecate
-        return self._binning.numpy_bins
-
-    @property
-    def edges(self) -> np.ndarray:
-        return self.numpy_bins
-
-    @property
     def numpy_like(self) -> Tuple[np.ndarray, np.ndarray]:
         """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins
@@ -291,57 +359,6 @@ class Histogram1D(HistogramBase):
     #         return 1 / total * np.sqrt(self.variance)
     #     else:
     #         return None
-
-    @property
-    def bin_left_edges(self) -> np.ndarray:
-        """Left edges of all bins."""
-        return self.bins[..., 0]
-
-    @property
-    def bin_right_edges(self) -> np.ndarray:
-        """Right edges of all bins."""
-        return self.bins[..., 1]
-
-    def get_bin_left_edges(self, i):
-        assert i == 0
-        return self.bin_left_edges
-
-    def get_bin_right_edges(self, i):
-        assert i == 0
-        return self.bin_right_edges
-
-    @property
-    def min_edge(self) -> float:
-        """Left edge of the first bin."""
-        return self.bin_left_edges[0]
-
-    @property
-    def max_edge(self) -> float:
-        """Right edge of the last bin."""
-        # TODO: Perh
-        return self.bin_right_edges[-1]
-
-    @property
-    def bin_centers(self) -> np.ndarray:
-        """Centers of all bins."""
-        return (self.bin_left_edges + self.bin_right_edges) / 2
-
-    @property
-    def bin_widths(self) -> np.ndarray:
-        """Widths of all bins."""
-        return self.bin_right_edges - self.bin_left_edges
-
-    @property
-    def total_width(self) -> float:
-        """Total width of all bins.
-
-        In inconsecutive histograms, the missing intervals are not counted in.
-        """
-        return self.bin_widths.sum()
-
-    @property
-    def bin_sizes(self) -> np.ndarray:
-        return self.bin_widths
 
     def find_bin(self, value: float) -> Optional[int]:
         """Index of bin corresponding to a value.

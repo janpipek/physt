@@ -224,6 +224,16 @@ class BinningBase:
             self._bins = make_bin_array(self.numpy_bins)
         return self._bins
 
+    def __eq__(self, other):
+        if other.__class__ != self.__class__:
+            return False
+        if self._bins is not None:
+            return np.array_equal(self.bins, other.bins)
+        if self._numpy_bins is not None:
+            return np.array_equal(self.numpy_bins, other.numpy_bins)
+        # TODO: Implement carefully
+        return False
+
     @property
     def bin_count(self) -> int:
         """The total number of bins."""

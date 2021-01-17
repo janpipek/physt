@@ -1,16 +1,16 @@
-from typing import Optional, Container, Tuple, Dict, Any, TYPE_CHECKING
+from typing import Optional, Container, Tuple, Dict, Any, TYPE_CHECKING, cast
 
 import numpy as np
 
-from physt.histogram1d import Histogram1D
-from physt.binnings import BinningBase
+from physt.histogram1d import Histogram1D, ObjectWithBinning
+from physt.binnings import BinningBase, BinningLike, as_binning
 from physt.typing_aliases import ArrayLike
 
 if TYPE_CHECKING:
     import physt
 
 
-class HistogramCollection(Container[Histogram1D]):
+class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
     """Experimental collection of histograms.
 
     It contains (potentially name-addressable) 1-D histograms
@@ -20,7 +20,7 @@ class HistogramCollection(Container[Histogram1D]):
     def __init__(
         self,
         *histograms: Histogram1D,
-        binning: Optional[BinningBase] = None,
+        binning: Optional[BinningLike] = None,
         title: Optional[str] = None,
         name: Optional[str] = None
     ):
@@ -32,7 +32,9 @@ class HistogramCollection(Container[Histogram1D]):
             if not all(h.binning == self._binning for h in histograms):
                 raise ValueError("All histogram should share the same binning.")
         else:
-            self._binning = binning
+            if binning is None:
+                raise ValueError("Either binning or at least one histogram must be provided.")
+            self._binning = as_binning(binning)
         self.name = name
         self.title = title or self.name
 
@@ -43,9 +45,7 @@ class HistogramCollection(Container[Histogram1D]):
         except KeyError:
             return False
 
-    @property
-    def ndim(self) -> int:
-        return 1
+
 
     def __iter__(self):
         return iter(self.histograms)
@@ -64,10 +64,6 @@ class HistogramCollection(Container[Histogram1D]):
     @property
     def binning(self) -> BinningBase:
         return self._binning
-
-    @property
-    def bins(self) -> np.ndarray:
-        return self.binning.bins
 
     @property
     def axis_name(self) -> str:
@@ -163,12 +159,11 @@ class HistogramCollection(Container[Histogram1D]):
     @classmethod
     def from_dict(cls, a_dict: Dict[str, Any]) -> "HistogramCollection":
         from physt.io import create_from_dict
-
-        col = HistogramCollection()
-        for item in a_dict["histograms"]:
-            h = create_from_dict(item, "HistogramCollection", check_version=False)
-            col.add(h)
-        return col
+        histograms = (
+            cast(Histogram1D, create_from_dict(item, "HistogramCollection", check_version=False))
+            for item in a_dict["histograms"]
+        )
+        return HistogramCollection(*histograms)
 
     def to_dict(self) -> Dict[str, Any]:
         return {

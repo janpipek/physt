@@ -350,8 +350,8 @@ class HistogramBase(abc.ABC):
         """
         return self._frequencies / self.bin_sizes
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def bin_sizes(self) -> np.ndarray:
         raise NotImplementedError
 
