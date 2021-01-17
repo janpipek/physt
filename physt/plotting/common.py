@@ -3,6 +3,7 @@ Functions that are shared by several (all) plotting backends.
 
 """
 import re
+from functools import wraps
 from typing import Tuple, List, Union, Callable
 from datetime import timedelta
 
@@ -109,6 +110,19 @@ def pop_kwargs_with_prefix(prefix: str, kwargs: dict) -> dict:
     """
     keys = [key for key in kwargs if key.startswith(prefix)]
     return {key[len(prefix) :]: kwargs.pop(key) for key in keys}
+
+
+def check_ndim(ndim: Union[int, Tuple[int, ...]]):
+    """Decorator checking proper histogram dimension."""
+    def wrapper(f):
+        @wraps(f)
+        def wrapped(h, *args, **kwargs):
+            expected_dim = (ndim,) if isinstance(ndim, int) else ndim
+            if h.ndim not in expected_dim:
+                raise TypeError(f"This type of plot must have dimension in {expected_dim}, {h.ndim} found.")
+            return f(h, *args, **kwargs)
+        return wrapped
+    return wrapper
 
 
 TickCollection = Tuple[List[float], List[str]]
