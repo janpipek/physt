@@ -66,8 +66,6 @@ def histogram1d(data, bins=None, **kwargs):
     --------
     physt.histogram
     """
-    import dask
-
     if not hasattr(data, "dask"):
         data = dask.array.from_array(data, chunks=int(data.shape[0] / options["chunk_split"]))
 
@@ -95,7 +93,6 @@ def histogramdd(data, bins=None, **kwargs):
 
     Each "column" must be one-dimensional.
     """
-    import dask
     from dask.array.rechunk import rechunk
 
     if isinstance(data, (list, tuple)):
@@ -130,8 +127,6 @@ def histogramdd(data, bins=None, **kwargs):
 def histogram2d(data1, data2, bins=None, **kwargs):
     """Facade function to create 2D histogram using dask."""
     # TODO: currently very unoptimized! for non-dasks
-    import dask
-
     if "axis_names" not in kwargs:
         if hasattr(data1, "name") and hasattr(data2, "name"):
             kwargs["axis_names"] = [data1.name, data2.name]

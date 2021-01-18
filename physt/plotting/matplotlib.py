@@ -806,7 +806,7 @@ def _get_cmap(kwargs: dict) -> colors.Colormap:
     if isinstance(cmap, str):
         try:
             return plt.get_cmap(cmap)
-        except BaseException as exc:
+        except BaseException:
             try:
                 # Try to use seaborn palette
                 import seaborn as sns

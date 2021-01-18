@@ -214,7 +214,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         keep_missed = False
         if isinstance(i, int):
             return self.bins[i], self.frequencies[i]
-        elif isinstance(i, np.ndarray):
+        if isinstance(i, np.ndarray):
             if i.dtype == bool:
                 if i.shape != (self.bin_count,):
                     raise IndexError("Cannot index with masked array of a wrong dimension")
@@ -500,7 +500,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
 
     @classmethod
     def _kwargs_from_dict(cls, a_dict: Mapping[str, Any]) -> Dict[str, Any]:
-        kwargs = HistogramBase._kwargs_from_dict.__func__(cls, a_dict)
+        kwargs = HistogramBase._kwargs_from_dict(a_dict)  # type: ignore
         kwargs["binning"] = kwargs.pop("binnings")[0]
         return kwargs
 

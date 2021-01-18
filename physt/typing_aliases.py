@@ -1,6 +1,7 @@
 """Definitions for type hints."""
-from numpy import ndarray, dtype
 from typing import Tuple, Union, Iterable
+
+from numpy import ndarray, dtype
 
 RangeTuple = Tuple[float, float]
 Axis = Union[int, str]

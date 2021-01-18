@@ -1,7 +1,7 @@
 """HistogramBase - base for all histogram classes."""
 import abc
 import warnings
-from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, TYPE_CHECKING, TypeVar
+from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, TYPE_CHECKING, TypeVar, cast
 
 import numpy as np
 
@@ -453,13 +453,13 @@ class HistogramBase(abc.ABC):
         self._binnings[axis] = new_binning
 
     def merge_bins(
-        self,
+        self: HistogramType,
         amount: Optional[int] = None,
         *,
         min_frequency: Optional[float] = None,
         axis: Optional[Axis] = None,
         inplace: bool = False,
-    ) -> "HistogramBase":
+    ) -> HistogramType:
         """Reduce the number of bins and add their content:
 
         Parameters
@@ -488,7 +488,9 @@ class HistogramBase(abc.ABC):
                 if self.ndim == 1:
                     check = self.frequencies
                 else:
-                    check = self.projection(axis).frequencies
+                    # TODO: Check this!
+                    from physt.histogram_nd import HistogramND
+                    check = cast(HistogramND, self).projection(axis).frequencies
                 bin_map = []
                 current_new = 0
                 current_sum = 0
