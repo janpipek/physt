@@ -236,7 +236,6 @@ def h(
     else:
         if dim is None:
             raise ValueError("You have to specify either data or its dimension.")
-        data = np.zeros((0, dim))
         check_nan = False
 
     # Prepare bins

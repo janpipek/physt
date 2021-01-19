@@ -971,7 +971,7 @@ def calculate_bins_nd(
 
     bins = [
         calculate_bins(
-            array[:, i],
+            array[:, i] if array is not None else None,
             bins[i],
             **{k: kwarg[i] for k, kwarg in kwargs.items() if kwarg[i] is not None},
         )

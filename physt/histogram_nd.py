@@ -310,7 +310,7 @@ class HistogramND(HistogramBase):
                 self._reshape_data(binning.bin_count, map, i)
         frequencies, errors2, missed = calculate_frequencies(values, self._binnings, weights=weights)
         self._frequencies += frequencies
-        self._errors2 += errors2
+        self._errors2 += errors2 if errors2 is not None else frequencies
         self._missed[0] += missed
 
     def _get_projection_axes(self, *axes: Axis) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
@@ -503,8 +503,8 @@ class Histogram2D(HistogramND):
 
 
 def calculate_frequencies(
-    data: Optional[ArrayLike], binnings: Iterable[BinningBase], weights: Optional[ArrayLike] = None, dtype: Optional[DtypeLike] = None
-) -> Tuple[np.ndarray, np.ndarray, float]:
+    data: Optional[ArrayLike], binnings: Iterable[BinningBase], weights: Optional[ArrayLike] = None, *, dtype: Optional[DtypeLike] = None
+) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float]:
     """ "Get frequencies and bin errors from the data (n-dimensional variant).
 
     Parameters
@@ -518,37 +518,34 @@ def calculate_frequencies(
 
     Returns
     -------
-    frequencies : array_like
-    errors2 : array_like
+    frequencies : Frequencies (if data supplied)
+    errors2 : Errors squared if different from frequencies
     missing : scalar[dtype]
     """
-
-    # TODO: Remove ndim
-    # TODO: What if data is None
+    if data is None:
+        return None, None, 0
 
     # Prepare numpy array of data
-    if data is not None:
-        data = np.asarray(data)
-        if data.ndim != 2:
-            raise RuntimeError("histogram_nd.calculate_frequencies requires 2D input data.")
-            # TODO: If somewhere, here we would check ndim
+    data = np.asarray(data)
+    if data.ndim != 2:
+        raise ValueError(f"calculate_frequencies requires 2D input data, dim={data.ndim} found.")
 
     # Guess correct dtype and apply to weights
     if weights is None:
         if not dtype:
             dtype = np.int64
-        if data is not None:
-            weights = np.ones(data.shape[0], dtype=dtype)
+        # if data is not None:
+        #    weights = np.ones(data.shape[0], dtype=dtype)
     else:
         weights = np.asarray(weights)
         if data is None:
             raise RuntimeError("Weights specified but data not.")
         if data.shape[0] != weights.shape[0]:
-                raise RuntimeError("Different number of entries in data and weights.")
+                raise ValueError("Different number of entries in data and weights.")
         if dtype:
             dtype = np.dtype(dtype)
             if dtype.kind in "iu" and weights.dtype.kind == "f":
-                raise RuntimeError("Integer histogram requested but float weights entered.")
+                raise ValueError("Integer histogram requested but float weights entered.")
         else:
             dtype = weights.dtype
 
@@ -559,17 +556,15 @@ def calculate_frequencies(
     ixgrid = np.ix_(*masks)  # Indexer to select parts we want
 
     # TODO: Right edges are not taken into account because they fall into inf bin
-
-    if data.shape[0]:
-        frequencies, _ = np.histogramdd(data, edges, weights=weights)
-        frequencies = frequencies.astype(dtype)  # Automatically copy
-        frequencies = frequencies[ixgrid]
+    frequencies, _ = np.histogramdd(data, edges, weights=weights)
+    frequencies = frequencies.astype(dtype)  # Automatically copy
+    frequencies = frequencies[ixgrid]
+    if weights is not None:
         missing = weights.sum() - frequencies.sum()
         err_freq, _ = np.histogramdd(data, edges, weights=weights ** 2)
         errors2 = err_freq[ixgrid].astype(dtype)  # Automatically copy
     else:
-        frequencies = None
-        missing = 0
+        missing = data.shape[0] - frequencies.sum()
         errors2 = None
 
     return frequencies, errors2, missing

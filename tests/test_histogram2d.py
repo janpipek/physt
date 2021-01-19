@@ -48,7 +48,7 @@ class TestCalculateFrequencies:
         frequencies, errors2, missing = histogram_nd.calculate_frequencies(vals, binnings=schemas)
         assert np.array_equal([[1, 3], [0, 1]], frequencies)
         assert missing == 2
-        assert np.array_equal(errors2, frequencies)
+        assert errors2 is None
 
     def test_gap(self):
         bins = [
@@ -59,7 +59,7 @@ class TestCalculateFrequencies:
         frequencies, errors2, missing = histogram_nd.calculate_frequencies(vals, binnings=schemas)
         assert np.array_equal([[0, 0], [0, 1]], frequencies)
         assert missing == 6
-        assert np.array_equal(errors2, frequencies)
+        assert errors2 is None
 
     def test_errors(self):
         bins = [
