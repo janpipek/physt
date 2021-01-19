@@ -114,7 +114,7 @@ def _add_ticks(xaxis: go.layout.XAxis, histogram: AbstractHistogram1D, kwargs: d
 
 
 @enable_collection
-def _line_or_scatter(h: AbstractHistogram1D, *, mode: str, **kwargs):
+def _line_or_scatter(h: HistogramCollection, *, mode: str, **kwargs):
     get_data_kwargs = pop_many(kwargs, "density", "cumulative", "flatten")
     data = [
         go.Scatter(

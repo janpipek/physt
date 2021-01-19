@@ -129,10 +129,10 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         errors2: Optional[ArrayLike] = None,
         *,
         keep_missed: bool = True,
-        stats=None,
-        overflow=0,
-        underflow=0,
-        inner_missed=0,
+        stats: Optional[Dict[str, float]] = None,
+        overflow: Optional[float] = 0.,
+        underflow: Optional[float] = 0.,
+        inner_missed: Optional[float] = 0.,
         axis_name: Optional[str] = None,
         **kwargs
     ):

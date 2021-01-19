@@ -80,7 +80,7 @@ class HistogramND(HistogramBase):
         return self.edges
 
     @property
-    def numpy_like(self) -> Tuple[np.ndarray, List[np.ndarray]]:
+    def numpy_like(self) -> Tuple:
         """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins
 
@@ -497,7 +497,7 @@ class Histogram2D(HistogramND):
             return self
 
     @property
-    def numpy_like(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def numpy_like(self) -> Tuple[np.ndarray, ...]:
         """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins[0], self.numpy_bins[1]
 

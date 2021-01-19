@@ -65,7 +65,7 @@ class TransformedHistogramMixin(abc.ABC):
         """
         if axis is None and not transformed:
             value = self.transform(value)
-        return HistogramND.find_bin(self, value, axis=axis)
+        return super().find_bin(value, axis=axis)
 
     @property
     @abc.abstractmethod
@@ -134,7 +134,7 @@ class RadialHistogram(TransformedHistogramMixin, Histogram1D):
     This is a special case of a 1D histogram with transformed coordinates.
     """
 
-    default_axis_names = ("r",)
+    default_axis_names = ["r",]
     source_ndim = (2, 3)
 
     @property

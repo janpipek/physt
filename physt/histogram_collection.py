@@ -81,7 +81,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
 
     def create(self, name: str, values, *, weights=None, dropna: bool = True, **kwargs) -> Histogram1D:
         # TODO: Rename!
-        init_kwargs = {"axis_name": self.axis_name}
+        init_kwargs: Dict[str, Any] = {"axis_name": self.axis_name}
         init_kwargs.update(kwargs)
         histogram = Histogram1D(binning=self.binning, name=name, **init_kwargs)
         histogram.fill_n(values, weights=weights, dropna=dropna)
@@ -126,7 +126,9 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
 
     def sum(self) -> Histogram1D:
         """Return the sum of all contained histograms."""
-        return sum(self.histograms)
+        if not self.histograms:
+            return Histogram1D(data=np.zeros((self.binning.bin_count)), dtype=np.int64, binning=self.binning)
+        return cast(Histogram1D, sum(self.histograms))
 
     @property
     def plot(self) -> "physt.plotting.PlottingProxy":
