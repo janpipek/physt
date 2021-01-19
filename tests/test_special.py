@@ -1,13 +1,8 @@
-import sys
-import os
-
-from physt.special_histograms import AzimuthalHistogram, azimuthal
-
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 import numpy as np
 import pytest
-from physt import special_histograms
 
+from physt import special_histograms
+from physt.special_histograms import AzimuthalHistogram, azimuthal
 
 @pytest.fixture
 def empty_azimuthal() -> AzimuthalHistogram:
@@ -192,7 +187,3 @@ class TestCylindrical:
         assert special_histograms.CylindricalSurfaceHistogram == type(h.projection("z", "phi"))
         assert special_histograms.PolarHistogram == type(h.projection("rho", "phi"))
         assert special_histograms.PolarHistogram == type(h.projection("phi", "rho"))
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

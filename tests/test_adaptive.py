@@ -1,15 +1,11 @@
-import sys
-import os
-
-from physt.histogram1d import Histogram1D
-
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
-from physt import h1, h2, histogramdd
 import numpy as np
 import pytest
 
+from physt.histogram1d import Histogram1D
+from physt import h1, h2, histogramdd
 
-@pytest.fixture()
+
+@pytest.fixture
 def empty_adaptive1(create_adaptive) -> Histogram1D:
     """One-dimesion adaptive fixed-width histogram with bin_width=1."""
     return create_adaptive((0,))
@@ -161,7 +157,3 @@ class TestAdaptiveArithmetics:
         hb = h2(d1, d2 +10, "fixed_width", bin_width=10, adaptive=True)
         hc = h + hb
         assert np.array_equal(hc.numpy_bins[1], [10, 20, 30, 40])
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

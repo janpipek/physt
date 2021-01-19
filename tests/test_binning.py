@@ -1,6 +1,3 @@
-import sys
-import os
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 from physt import binnings
 import numpy as np
 import pytest
@@ -186,7 +183,3 @@ class TestQuantileBins:
         the_binning = binnings.quantile_binning(data, q=[0.1, 0.7, 1.0])
         assert np.allclose(the_binning.numpy_bins, [0.26, 2.36, 10.0])
         # TODO: Implement
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

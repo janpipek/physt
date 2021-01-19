@@ -1,9 +1,6 @@
-
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import numpy as np
 import pytest
+
 import physt
 
 values = [1, 2, 3, 4]
@@ -31,7 +28,3 @@ class TestStatistics:
     def test_std_weights(self):
         hw = physt.h1(values, weights=weights)
         assert np.allclose(hw.std(), np.sqrt(6.8 / 5))
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

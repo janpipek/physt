@@ -1,13 +1,10 @@
-import sys
-import os
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
+import numpy as np
+import pytest
+
 import physt
 from physt import h2, histogram_nd, binnings
 from physt.binnings import as_binning, BinningBase
 from physt.histogram_nd import Histogram2D
-import numpy as np
-import pytest
-
 
 vals = [
     [0.1, 2.0],
@@ -216,8 +213,3 @@ class TestPartialNormalizing:
         h = Histogram2D(binnings=(range(3), range(3)), frequencies=freqs)
         h1 = h.partial_normalize(1)
         assert np.allclose(h1.frequencies, [[0, 0], [0, 1.0]])
-
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

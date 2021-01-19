@@ -1,10 +1,6 @@
-import sys
-import os
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
-# from physt.histogram1d import Histogram1D
-from physt import h1
 import numpy as np
-import pytest
+
+from physt import h1
 
 
 class TestNumpyBins:
@@ -43,7 +39,3 @@ class TestNumpyBins:
         assert hist.name == "name"
         assert hist.title == "title"
         assert hist.axis_names == ("axis_name",)
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

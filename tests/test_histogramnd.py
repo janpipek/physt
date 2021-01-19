@@ -1,9 +1,7 @@
-import sys
-import os
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
-import physt
 import numpy as np
 import pytest
+
+import physt
 from physt.histogram_nd import Histogram2D, HistogramND
 from physt.histogram1d import Histogram1D
 from physt import h2, h3
@@ -133,7 +131,3 @@ class TestH2:
 class TestH3:
     def test_create_empty_h3(self):
         h3(None, "integer", adaptive=True)
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

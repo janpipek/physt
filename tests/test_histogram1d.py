@@ -1,11 +1,9 @@
-import sys
-import os
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
+import numpy as np
+import pytest
+
 from physt.config import config
 from physt.histogram1d import Histogram1D
 from physt import h1
-import numpy as np
-import pytest
 
 
 @pytest.fixture
@@ -523,6 +521,3 @@ class TestDtype:
     def test_empty(self):
         hist = h1(None, "fixed_width", bin_width=10, adaptive=True)
         assert hist.dtype == np.int64
-
-if __name__ == "__main__":
-    pytest.main(__file__)
