@@ -6,7 +6,7 @@ import numpy as np
 
 from physt.histogram_base import HistogramBase, Axis
 from physt.binnings import BinningBase, BinningLike
-from physt.typing_aliases import ArrayLike
+from physt.typing_aliases import ArrayLike, DtypeLike
 
 
 class HistogramND(HistogramBase):
@@ -503,21 +503,17 @@ class Histogram2D(HistogramND):
 
 
 def calculate_frequencies(
-    data: Optional[ArrayLike], binnings: Iterable[BinningBase], weights=None, dtype=None
+    data: Optional[ArrayLike], binnings: Iterable[BinningBase], weights: Optional[ArrayLike] = None, dtype: Optional[DtypeLike] = None
 ) -> Tuple[np.ndarray, np.ndarray, float]:
     """ "Get frequencies and bin errors from the data (n-dimensional variant).
 
     Parameters
     ----------
-    data : array_like
-        2D array with ndim columns and row for each entry.
-    binnings:
-        Binnings to apply in all axes.
-    weights : Optional[array_like]
-        1D array of weights to assign to values.
+    data : 2D array with ndim columns and row for each entry.
+    binnings: Binnings to apply in all axes.
+    weights : 1D array of weights to assign to values.
         (If present, must have same length as the number of rows.)
-    dtype : Optional[type]
-        Underlying type for the histogram.
+    dtype : Underlying type for the histogram.
         (If weights are specified, default is float. Otherwise int64.)
 
     Returns

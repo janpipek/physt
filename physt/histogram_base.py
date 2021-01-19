@@ -658,11 +658,9 @@ class HistogramBase(abc.ABC):
         """
         ...
 
-    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None, **kwargs):
+    @abc.abstractmethod
+    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None):
         """Add more values at once.
-
-        This (default) implementation uses a simple loop to add values using `fill` method.
-        Actually, it is not used in neither Histogram1D, nor HistogramND.
 
         Parameters
         ----------
@@ -675,16 +673,7 @@ class HistogramBase(abc.ABC):
 
         May change the dtype if weight is set.
         """
-        values = np.asarray(values)
-        if weights is not None:
-            weights = np.asarray(weights)
-            if weights.shape != values.shape[0]:
-                raise RuntimeError("Wrong shape of weights")
-        for i, value in enumerate(values):
-            if weights is not None:
-                self.fill(value, weights[i], **kwargs)
-            else:
-                self.fill(value, **kwargs)
+        ...
 
     @property
     def plot(self) -> "physt.plotting.PlottingProxy":

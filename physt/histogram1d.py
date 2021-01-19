@@ -418,7 +418,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
                 self._stats["sum2"] += weight * value ** 2
         return ixbin
 
-    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True, **kwargs) -> None:
+    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True) -> None:
         """Update histograms with a set of values.
 
         Parameters

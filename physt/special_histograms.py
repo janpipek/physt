@@ -72,17 +72,17 @@ class TransformedHistogramMixin(abc.ABC):
     def bin_sizes(self):
         ...
 
-    def fill(self, value: ArrayLike, weight: Optional[ArrayLike] = 1, *, transformed: bool = False):
+    def fill(self, value: ArrayLike, weight: Optional[ArrayLike] = 1, *, transformed: bool = False, **kwargs):
         if not transformed:
             value = self.transform(value)
-        return super().fill(value=value, weight=weight)
+        return super().fill(value=value, weight=weight, **kwargs)
 
     def fill_n(
-        self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True, transformed: bool = False
+        self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True, transformed: bool = False, **kwargs
     ):
         if not transformed:
             values = self.transform(values)
-        super().fill_n(values=values, weights=weights, dropna=dropna)
+        super().fill_n(values=values, weights=weights, dropna=dropna, **kwargs)
 
     _projection_class_map: Dict[Tuple[int, ...], type] = {}
 
