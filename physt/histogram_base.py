@@ -1,7 +1,7 @@
 """HistogramBase - base for all histogram classes."""
 import abc
 import warnings
-from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, TYPE_CHECKING, TypeVar, cast
+from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, TYPE_CHECKING, TypeVar, cast, Union
 
 import numpy as np
 
@@ -153,7 +153,7 @@ class HistogramBase(abc.ABC):
     default_init_values: Dict[str, Any] = {}
 
     @property
-    def meta_data(self) -> dict:
+    def meta_data(self) -> Dict[str, Any]:
         """A dictionary of non-numerical information about the histogram.
 
         It contains several pre-defined ones, but you can add any other.
@@ -640,32 +640,51 @@ class HistogramBase(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def fill(self, value: float, weight: float = 1, **kwargs):
-        """Add a value.
-
-        Abstract method - to be implemented in daughter classes.
+    def find_bin(self, value, axis: Optional[Axis] = None) -> Union[None, int, Tuple[int, ...]]:
+        """Index(-ices) of bin corresponding to a value.
 
         Parameters
         ----------
-        value:
-            Value to be added. Can be scalar or array depending on the histogram type.
-        weight: Optional
-            Weight of the value
+        value: array_like
+            Value with dimensionality equal to histogram
+        axis: Optional[int]
+            If set, find axis along an axis. Otherwise, find bins along all axes.
+            None = outside the bins
+
+        Returns
+        -------
+        If axis is specified (or the histogram is 1D), a number. Otherwise, a tuple. If not available, None.
+        """
+
+    @abc.abstractmethod
+    def fill(self, value: float, weight: float = 1, **kwargs) -> Union[None, int, Tuple[int, ...]]:
+        """Update histogram with a new value.
+
+        It is an in-place operation.
+
+        Parameters
+        ----------
+        value: Value to be added. Can be scalar or array depending on the histogram type.
+        weight: Weight of the value
 
         Note
         ----
         May change the dtype if weight is set
         """
+        # TODO: Perhaps it should just return None?
         ...
 
     @abc.abstractmethod
-    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None):
-        """Add more values at once.
+    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True):
+        """Update histogram with more values at once.
+
+        It is an in-place operation.
 
         Parameters
         ----------
         values: Values to add
         weights: Optional weights to assign to each value
+        drop_na: If true (default), all nan's are skipped.
 
         Note
         ----

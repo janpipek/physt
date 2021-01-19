@@ -1,10 +1,17 @@
 import sys
 import os
+
+from physt.special_histograms import AzimuthalHistogram, azimuthal
+
 sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
-import physt
 import numpy as np
 import pytest
 from physt import special_histograms
+
+
+@pytest.fixture
+def empty_azimuthal() -> AzimuthalHistogram:
+    return azimuthal(np.zeros(0,), np.zeros(0,))
 
 
 class TestAzimuthal:
@@ -18,15 +25,27 @@ class TestAzimuthal:
         assert np.array_equal([2, 1, 1, 0], h.frequencies)
 
     def test_transform(self):
-        t = special_histograms.AzimuthalHistogram.transform([1, 0])
+        t = AzimuthalHistogram.transform([1, 0])
         assert np.array_equal(t, 0)
 
-        t = special_histograms.AzimuthalHistogram.transform([0, 2])
+        t = AzimuthalHistogram.transform([0, 2])
         assert np.allclose(t, np.pi / 2)
 
         data = np.asarray([[1, 0], [0, 2]])
-        t = special_histograms.AzimuthalHistogram.transform(data)
+        t = AzimuthalHistogram.transform(data)
         assert np.allclose(t, [0, np.pi / 2])
+
+    def test_correct_find_bin(self, empty_azimuthal):
+        assert empty_azimuthal.find_bin(1, transformed=True) == 2
+        assert empty_azimuthal.find_bin((0.5, 0.877)) == 2
+
+    def test_incorrect_find_bin(self, empty_azimuthal):
+        with pytest.raises(ValueError) as exc:
+            empty_azimuthal.find_bin(1)
+        assert exc.match("AzimuthalHistogram can transform only")
+        with pytest.raises(ValueError) as exc:
+            empty_azimuthal.find_bin((1, 2), transformed=True)
+        assert exc.match("Non-scalar value for 1D histogram")
 
 
 class TestPolar:

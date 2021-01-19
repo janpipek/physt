@@ -26,6 +26,7 @@ from physt.histogram1d import Histogram1D
 from physt.util import deprecation_alias
 from physt.typing_aliases import Axis, RangeTuple, ArrayLike
 from . import histogram_nd, binnings
+from .histogram_base import HistogramBase
 
 FULL_PHI_RANGE: RangeTuple = (0, 2 * np.pi)
 FULL_THETA_RANGE: RangeTuple = (0, np.pi)
@@ -65,7 +66,8 @@ class TransformedHistogramMixin(abc.ABC):
         """
         if axis is None and not transformed:
             value = self.transform(value)
-        return super().find_bin(value, axis=axis)
+
+        return super().find_bin(value, axis=axis)  # type: ignore
 
     @property
     @abc.abstractmethod
@@ -75,14 +77,14 @@ class TransformedHistogramMixin(abc.ABC):
     def fill(self, value: ArrayLike, weight: Optional[ArrayLike] = 1, *, transformed: bool = False, **kwargs):
         if not transformed:
             value = self.transform(value)
-        return super().fill(value=value, weight=weight, **kwargs)
+        return super().fill(value=value, weight=weight, **kwargs)  # type: ignore
 
     def fill_n(
         self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True, transformed: bool = False, **kwargs
     ):
         if not transformed:
             values = self.transform(values)
-        super().fill_n(values=values, weights=weights, dropna=dropna, **kwargs)
+        super().fill_n(values=values, weights=weights, dropna=dropna, **kwargs)  # type: ignore
 
     _projection_class_map: Dict[Tuple[int, ...], type] = {}
 
@@ -123,7 +125,7 @@ class TransformedHistogramMixin(abc.ABC):
 
         Note: Implement _
         """
-        value = np.asarray(value, dtype=np.float64)
+        value = np.atleast_1d(np.asarray(value, dtype=np.float64))
         cls._validate_source_dimension(value)
         return cls._transform_correct_dimension(value)
 
@@ -408,7 +410,7 @@ def azimuthal(
     xdata,
     ydata=None,
     *,
-    bins=DEFAULT_PHI_BINS,
+    bins = DEFAULT_PHI_BINS,
     range: RangeTuple = (0, 2 * np.pi),
     dropna: bool = False,
     weights=None,

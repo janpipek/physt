@@ -217,23 +217,7 @@ class HistogramND(HistogramBase):
         else:
             return np.meshgrid(*[self.get_bin_centers(i) for i in range(self.ndim)], indexing="ij")
 
-    # TODO: Check!
     def find_bin(self, value, axis: Optional[Axis] = None) -> Union[None, int, Tuple[int, ...]]:
-        """Index(indices) of bin corresponding to a value.
-
-        Parameters
-        ----------
-        value: array_like
-            Value with dimensionality equal to histogram
-        axis: Optional[int]
-            If set, find axis along an axis. Otherwise, find bins along all axes.
-            None = outside the bins
-
-        Returns
-        -------
-        int or tuple or None
-            If axis is specified, a number. Otherwise, a tuple. If not available, None.
-        """
         if axis is not None:
             axis = self._get_axis(axis)
             ixbin = np.searchsorted(self.get_bin_left_edges(axis), value, side="right")

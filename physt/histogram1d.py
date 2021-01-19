@@ -7,7 +7,7 @@ import numpy as np
 from physt import bin_utils
 from physt.histogram_base import HistogramBase
 from physt.binnings import BinningBase, BinningLike
-from physt.typing_aliases import ArrayLike, DtypeLike
+from physt.typing_aliases import ArrayLike, DtypeLike, Axis
 
 if TYPE_CHECKING:
     import xarray
@@ -360,7 +360,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     #     else:
     #         return None
 
-    def find_bin(self, value: float) -> Optional[int]:
+    def find_bin(self, value: float, axis: Optional[Axis] = None) -> Optional[int]:
         """Index of bin corresponding to a value.
 
         Returns
@@ -368,6 +368,10 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         index of bin to which value belongs
             (-1=underflow, N=overflow, None=not found - inconsecutive)
         """
+        if axis is not None:
+            self._get_axis(axis)  # Check that it is valid
+        if not np.isscalar(value):
+            raise ValueError(f"Non-scalar value for 1D histogram: {value}")
         ixbin = np.searchsorted(self.bin_left_edges, value, side="right")
         if ixbin == 0:
             return -1
@@ -419,15 +423,6 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         return ixbin
 
     def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True) -> None:
-        """Update histograms with a set of values.
-
-        Parameters
-        ----------
-        values: array_like
-        weights: Optional[array_like]
-        drop_na: Optional[bool]
-            If true (default), all nan's are skipped.
-        """
         # TODO: Unify with HistogramBase
         values = np.asarray(values)
         if dropna:
