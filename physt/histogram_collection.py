@@ -27,7 +27,9 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         self.histograms = list(histograms)
         if histograms:
             if binning:
-                raise ValueError("When creating collection from histograms, binning is deduced from them.")
+                raise ValueError(
+                    "When creating collection from histograms, binning is deduced from them."
+                )
             self._binning = histograms[0].binning
             if not all(h.binning == self._binning for h in histograms):
                 raise ValueError("All histogram should share the same binning.")
@@ -45,8 +47,6 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         except KeyError:
             return False
 
-
-
     def __iter__(self):
         return iter(self.histograms)
 
@@ -55,10 +55,10 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
 
     def copy(self) -> "HistogramCollection":
         # TODO: The binnings are probably not consistent in the copies
-        copy_binning = self.binning.copy()
+        binning_copy = self.binning.copy()
         histograms = [h.copy() for h in self.histograms]
-        for h in histograms:
-            h._binning = copy_binning
+        for histogram in histograms:
+            histogram._binning = binning_copy
         return HistogramCollection(*histograms, title=self.title, name=self.name)
 
     @property
@@ -79,7 +79,9 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
             raise ValueError("Cannot add histogram with different binning.")
         self.histograms.append(histogram)
 
-    def create(self, name: str, values, *, weights=None, dropna: bool = True, **kwargs) -> Histogram1D:
+    def create(
+        self, name: str, values, *, weights=None, dropna: bool = True, **kwargs
+    ) -> Histogram1D:
         # TODO: Rename!
         init_kwargs: Dict[str, Any] = {"axis_name": self.axis_name}
         init_kwargs.update(kwargs)
@@ -127,7 +129,9 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
     def sum(self) -> Histogram1D:
         """Return the sum of all contained histograms."""
         if not self.histograms:
-            return Histogram1D(data=np.zeros((self.binning.bin_count)), dtype=np.int64, binning=self.binning)
+            return Histogram1D(
+                data=np.zeros((self.binning.bin_count)), dtype=np.int64, binning=self.binning
+            )
         return cast(Histogram1D, sum(self.histograms))
 
     @property
@@ -161,6 +165,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
     @classmethod
     def from_dict(cls, a_dict: Dict[str, Any]) -> "HistogramCollection":
         from physt.io import create_from_dict
+
         histograms = (
             cast(Histogram1D, create_from_dict(item, "HistogramCollection", check_version=False))
             for item in a_dict["histograms"]

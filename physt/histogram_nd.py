@@ -24,7 +24,7 @@ class HistogramND(HistogramBase):
         *,
         dimension: Optional[int] = None,
         missed=0,
-        **kwargs
+        **kwargs,
     ):
         """Constructor
 
@@ -84,17 +84,10 @@ class HistogramND(HistogramBase):
         """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins
 
-    def select(self, axis: Axis, index: Union[int, slice], force_copy: bool = False) -> HistogramBase:
-        """Select in an axis.
+    def select(
+        self, axis: Axis, index: Union[int, slice], *, force_copy: bool = False
+    ) -> HistogramBase:
 
-        Parameters
-        ----------
-        axis: int or str
-            Axis, in which we select.
-        index: Index of bin (as in numpy).
-        force_copy: bool
-            If True, identity slice force a copy to be made.
-        """
         # TODO: Implement mask?
 
         if index == slice(None) and not force_copy:
@@ -108,8 +101,10 @@ class HistogramND(HistogramBase):
         errors2 = self._errors2[tuple(array_index)].copy()
 
         if isinstance(index, int):
-            return self._reduce_dimension([ax for ax in range(self.ndim) if ax != axis_id], frequencies, errors2)
-        elif isinstance(index, slice):
+            return self._reduce_dimension(
+                [ax for ax in range(self.ndim) if ax != axis_id], frequencies, errors2
+            )
+        if isinstance(index, slice):
             if index.step is not None and index.step < 0:
                 raise IndexError("Cannot change the order of bins")
             copy = self.copy()
@@ -117,16 +112,16 @@ class HistogramND(HistogramBase):
             copy._errors2 = errors2
             copy._binnings[axis_id] = self._binnings[axis_id][index]
             return copy
-        else:
-            raise ValueError("Invalid index.")
+        raise TypeError("Invalid index.")
 
-    def __getitem__(self, index):
+    def __getitem__(
+        self, index: Union[int, slice, Iterable[int]]
+    ) -> Union["HistogramBase", Tuple[Tuple[np.ndarray, ...], float]]:
         """Select subset of histogram.
 
         Parameters
         ----------
-        index: int or slice or iterable
-            One or more indices to select in subsequent axes.
+        index: One or more indices to select in subsequent axes.
 
         Returns
         -------
@@ -140,24 +135,30 @@ class HistogramND(HistogramBase):
         # TODO: Enable views
         if isinstance(index, (int, slice)):
             return self.select(0, index)
-        elif isinstance(index, tuple):
+        if isinstance(index, tuple):
             if len(index) > self.ndim:
-                raise IndexError("Too many indices ({0}) to select from {1}D histogram".format(len(index), self.ndim))
+                raise IndexError(
+                    "Too many indices ({0}) to select from {1}D histogram".format(
+                        len(index), self.ndim
+                    )
+                )
 
             # Scalar case => return (bin edges), (frequency)
             if len(index) == self.ndim and all((isinstance(i, int) for i in index)):
                 return (
-                    tuple((self.get_bin_left_edges(i)[j], self.get_bin_right_edges(i)[j]) for i, j in enumerate(index)),
+                    tuple(
+                        (self.get_bin_left_edges(i)[j], self.get_bin_right_edges(i)[j])
+                        for i, j in enumerate(index)
+                    ),
                     self._frequencies[index],
                 )
-            current = self
+            current: Any = self
             for i, subindex in enumerate(index):
                 current = current.select(i + current.ndim - self.ndim, subindex, force_copy=False)
             if current is self:
                 current = current.copy()
             return current
-        else:
-            raise ValueError("Invalid index.")
+        raise TypeError("Invalid index.")
 
     # Missing: cumulative_frequencies - does it make sense?
 
@@ -198,24 +199,21 @@ class HistogramND(HistogramBase):
         if axis is not None:
             axis = self._get_axis(axis)
             return self.bins[axis][:, 0]
-        else:
-            edges = [self.get_bin_left_edges(i) for i in range(self.ndim)]
-            return np.meshgrid(*edges, indexing="ij")
+        edges = [self.get_bin_left_edges(i) for i in range(self.ndim)]
+        return np.meshgrid(*edges, indexing="ij")
 
     def get_bin_right_edges(self, axis: Optional[Axis] = None) -> np.ndarray:
         if axis is not None:
             axis = self._get_axis(axis)
             return self.bins[axis][:, 1]
-        else:
-            edges = [self.get_bin_right_edges(i) for i in range(self.ndim)]
-            return np.meshgrid(*edges, indexing="ij")
+        edges = [self.get_bin_right_edges(i) for i in range(self.ndim)]
+        return np.meshgrid(*edges, indexing="ij")
 
     def get_bin_centers(self, axis: Optional[Axis] = None) -> np.ndarray:
         if axis is not None:
             axis = self._get_axis(axis)
             return (self.get_bin_right_edges(axis) + self.get_bin_left_edges(axis)) / 2
-        else:
-            return np.meshgrid(*[self.get_bin_centers(i) for i in range(self.ndim)], indexing="ij")
+        return np.meshgrid(*[self.get_bin_centers(i) for i in range(self.ndim)], indexing="ij")
 
     def find_bin(self, value, axis: Optional[Axis] = None) -> Union[None, int, Tuple[int, ...]]:
         if axis is not None:
@@ -256,7 +254,12 @@ class HistogramND(HistogramBase):
         return ixbin
 
     def fill_n(
-        self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True, columns: bool = False
+        self,
+        values: ArrayLike,
+        weights: Optional[ArrayLike] = None,
+        *,
+        dropna: bool = True,
+        columns: bool = False,
     ):
         """Add more values at once.
 
@@ -290,9 +293,11 @@ class HistogramND(HistogramBase):
             self._coerce_dtype(weights.dtype)
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
-                map = binning.force_bin_existence(values[:, i])  # TODO: Add to some test
-                self._reshape_data(binning.bin_count, map, i)
-        frequencies, errors2, missed = calculate_frequencies(values, self._binnings, weights=weights)
+                bin_map = binning.force_bin_existence(values[:, i])  # TODO: Add to some test
+                self._reshape_data(binning.bin_count, bin_map, i)
+        frequencies, errors2, missed = calculate_frequencies(
+            values, self._binnings, weights=weights
+        )
         self._frequencies += frequencies
         self._errors2 += errors2 if errors2 is not None else frequencies
         self._missed[0] += missed
@@ -487,7 +492,11 @@ class Histogram2D(HistogramND):
 
 
 def calculate_frequencies(
-    data: Optional[ArrayLike], binnings: Iterable[BinningBase], weights: Optional[ArrayLike] = None, *, dtype: Optional[DtypeLike] = None
+    data: Optional[ArrayLike],
+    binnings: Iterable[BinningBase],
+    weights: Optional[ArrayLike] = None,
+    *,
+    dtype: Optional[DtypeLike] = None,
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float]:
     """ "Get frequencies and bin errors from the data (n-dimensional variant).
 
@@ -518,14 +527,12 @@ def calculate_frequencies(
     if weights is None:
         if not dtype:
             dtype = np.int64
-        # if data is not None:
-        #    weights = np.ones(data.shape[0], dtype=dtype)
     else:
         weights = np.asarray(weights)
         if data is None:
             raise RuntimeError("Weights specified but data not.")
         if data.shape[0] != weights.shape[0]:
-                raise ValueError("Different number of entries in data and weights.")
+            raise ValueError("Different number of entries in data and weights.")
         if dtype:
             dtype = np.dtype(dtype)
             if dtype.kind in "iu" and weights.dtype.kind == "f":

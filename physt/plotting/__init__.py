@@ -148,7 +148,9 @@ def set_default_backend(name: str) -> None:
             "Support for bokeh has been discontinued. At some point, we may return to support holoviews."
         )
     if not name in backends:
-        raise RuntimeError("Backend {0} is not supported and cannot be set as default.".format(name))
+        raise RuntimeError(
+            "Backend {0} is not supported and cannot be set as default.".format(name)
+        )
     _default_backend = name
 
 
@@ -158,7 +160,9 @@ def _get_backend(name: str = None) -> Tuple[str, Any]:
     Tries to get it using the name - or the default one.
     """
     if not backends:
-        raise RuntimeError("No plotting backend available. Please, install matplotlib (preferred) or bokeh (limited).")
+        raise RuntimeError(
+            "No plotting backend available. Please, install matplotlib (preferred) or bokeh (limited)."
+        )
     if not name:
         name = _default_backend
         if not name:
@@ -170,12 +174,19 @@ def _get_backend(name: str = None) -> Tuple[str, Any]:
     backend = backends.get(name)
     if not backend:
         raise RuntimeError(
-            "Backend {0} does not exist. Use one of the following: {1}".format(name, ", ".join(backends.keys()))
+            "Backend {0} does not exist. Use one of the following: {1}".format(
+                name, ", ".join(backends.keys())
+            )
         )
     return name, backend
 
 
-def plot(histogram: Union[HistogramBase, HistogramCollection], kind: Optional[str] = None, backend: Optional[str] = None, **kwargs):
+def plot(
+    histogram: Union[HistogramBase, HistogramCollection],
+    kind: Optional[str] = None,
+    backend: Optional[str] = None,
+    **kwargs
+):
     """Universal plotting function.
 
     All keyword arguments are passed to the plotting methods.
@@ -188,13 +199,17 @@ def plot(histogram: Union[HistogramBase, HistogramCollection], kind: Optional[st
     if kind is None:
         kinds = [t for t in backend_impl.types if histogram.ndim in backend_impl.dims[t]]  # type: ignore
         if not kinds:
-            raise RuntimeError("No plot type is supported for {0}".format(histogram.__class__.__name__))
+            raise RuntimeError(
+                "No plot type is supported for {0}".format(histogram.__class__.__name__)
+            )
         kind = kinds[0]
     if kind in backend_impl.types:
         method = getattr(backend, kind)
         return method(histogram, **kwargs)
     else:
-        raise RuntimeError("Histogram type error: {0} missing in backend {1}".format(kind, backend_name))
+        raise RuntimeError(
+            "Histogram type error: {0} missing in backend {1}".format(kind, backend_name)
+        )
 
 
 class PlottingProxy:

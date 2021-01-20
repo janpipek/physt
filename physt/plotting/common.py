@@ -76,7 +76,9 @@ def get_err_data(
     return data
 
 
-def get_value_format(value_format: Union[Callable[[float], str], str, None]) -> Callable[[float], str]:
+def get_value_format(
+    value_format: Union[Callable[[float], str], str, None]
+) -> Callable[[float], str]:
     """Create a formatting function from a generic value_format argument."""
     if not value_format:
         return str
@@ -114,14 +116,19 @@ def pop_kwargs_with_prefix(prefix: str, kwargs: dict) -> dict:
 
 def check_ndim(ndim: Union[int, Tuple[int, ...]]):
     """Decorator checking proper histogram dimension."""
+
     def wrapper(f):
         @wraps(f)
         def wrapped(h, *args, **kwargs):
             expected_dim = (ndim,) if isinstance(ndim, int) else ndim
             if h.ndim not in expected_dim:
-                raise TypeError(f"This type of plot must have dimension in {expected_dim}, {h.ndim} found.")
+                raise TypeError(
+                    f"This type of plot must have dimension in {expected_dim}, {h.ndim} found."
+                )
             return f(h, *args, **kwargs)
+
         return wrapped
+
     return wrapper
 
 
@@ -148,21 +155,23 @@ class TimeTickHandler:
     LevelType = Tuple[str, Union[float, int]]
 
     @classmethod
-    def parse_level(cls, value: Union[LevelType, float, str, timedelta]) -> "TimeTickHandler.LevelType":
+    def parse_level(
+        cls, value: Union[LevelType, float, str, timedelta]
+    ) -> "TimeTickHandler.LevelType":
         if isinstance(value, tuple):
             if len(value) != 2:
-                raise ValueError("Invalid level: {0}".format(value))
+                raise ValueError(f"Invalid level: {value}")
             if value[0] not in cls.LEVELS:
-                raise ValueError("Invalid level: {0}".format(value))
+                raise ValueError(f"Invalid level: {value}")
             if not isinstance(value[1], (float, int)):
-                raise ValueError("Invalid level: {0}".format(value))
+                raise ValueError(f"Invalid level: {value}")
             return value
-        elif isinstance(value, (float, int)):
+        if isinstance(value, (float, int)):
             return cls.parse_level(timedelta(seconds=value))
-        elif isinstance(value, timedelta):
+        if isinstance(value, timedelta):
             # TODO: Implement
             raise NotImplementedError
-        elif isinstance(value, str):
+        if isinstance(value, str):
             matchers = (
                 ("^(center|edge)s?$", lambda m: (m[1], 0)),
                 ("^([0-9\\.]+)?d(ay(s)?)?$", lambda m: ("day", float(m[1] or 1))),
@@ -177,9 +186,8 @@ class TimeTickHandler:
                 match = re.match(matcher[0], value)
                 if match:
                     return matcher[1](match)
-            raise ValueError("Cannot parse level: {0}".format(value))
-        else:
-            raise ValueError("Invalid level: {0}".format(value))
+            raise ValueError(f"Cannot parse level: {value}")
+        raise TypeError(f"Invalid level: {value}")
 
     @classmethod
     def deduce_level(cls, h1: Histogram1D, min_: float, max_: float) -> "TimeTickHandler.LevelType":
@@ -195,19 +203,21 @@ class TimeTickHandler:
         else:
             return ("day", find_human_width_decimal(ideal_width / 86400))
 
-    def get_time_ticks(self, h1: Histogram1D, level: LevelType, min_: float, max_: float) -> List[float]:
+    def get_time_ticks(
+        self, h1: Histogram1D, level: LevelType, min_: float, max_: float
+    ) -> List[float]:
         # TODO: Change to class method?
         if level[0] == "edge":
             return h1.numpy_bins.tolist()
-        elif level[0] == "center":
+        if level[0] == "center":
             return h1.bin_centers
-        else:
-            width = level[1] * self.LEVELS[level[0]]
-            min_factor = int(min_ // width)
-            if min_ % width != 0:
-                min_factor += 1
-            max_factor = int(max_ // width)
-            return list(np.arange(min_factor, max_factor + 1) * width)
+
+        width = level[1] * self.LEVELS[level[0]]
+        min_factor = int(min_ // width)
+        if min_ % width != 0:
+            min_factor += 1
+        max_factor = int(max_ // width)
+        return list(np.arange(min_factor, max_factor + 1) * width)
 
     @classmethod
     def split_hms(cls, value) -> Tuple[bool, int, int, Union[int, float]]:

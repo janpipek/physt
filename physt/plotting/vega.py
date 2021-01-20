@@ -144,7 +144,9 @@ def enable_inline_view(f):
     return wrapper
 
 
-def write_vega(vega_data, *, title: Optional[str], write_to: str, write_format: str = "auto", indent: int = 2):
+def write_vega(
+    vega_data, *, title: Optional[str], write_to: str, write_format: str = "auto", indent: int = 2
+):
     """Write vega dictionary to an external file.
 
     Parameters
@@ -157,7 +159,9 @@ def write_vega(vega_data, *, title: Optional[str], write_to: str, write_format: 
     """
     spec = json.dumps(vega_data, indent=indent)
     if write_format == "html" or write_format == "auto" and write_to.endswith(".html"):
-        output = HTML_TEMPLATE.replace("{{ title }}", title or "Histogram").replace("{{ spec }}", spec)
+        output = HTML_TEMPLATE.replace("{{ title }}", title or "Histogram").replace(
+            "{{ spec }}", spec
+        )
     elif write_format == "json" or write_format == "auto" and write_to.endswith(".json"):
         output = spec
     else:
@@ -182,7 +186,7 @@ def display_vega(vega_data: dict, display: bool = True) -> Union["Vega", dict]:
 
 @enable_inline_view
 @check_ndim(1)
-def bar(h1: "Histogram1D", **kwargs) -> dict:
+def bar(h1: "Histogram1D", **kwargs) -> dict:  # pylint: disable=blacklisted-name
     """Bar plot of 1D histogram.
 
     Parameters
@@ -415,7 +419,9 @@ def map(h2: "Histogram2D", *, show_zero: bool = True, show_values: bool = False,
 
 @enable_inline_view
 @check_ndim(3)
-def map_with_slider(h3: "HistogramND", *, show_zero: bool = True, show_values: bool = False, **kwargs) -> dict:
+def map_with_slider(
+    h3: "HistogramND", *, show_zero: bool = True, show_values: bool = False, **kwargs
+) -> dict:
     """Heatmap showing slice in first two dimensions, third dimension represented as a slider.
 
     Parameters
@@ -536,8 +542,6 @@ def map_with_slider(h3: "HistogramND", *, show_zero: bool = True, show_values: b
 
 def _scatter_or_line(h1: Histogram1D, mark_template: list, kwargs: dict) -> dict:
     """Create shared properties for scatter / line plot."""
-    from physt.histogram_collection import HistogramCollection
-
     if isinstance(h1, HistogramCollection):
         collection = h1
         h1 = h1[0]
@@ -555,8 +559,12 @@ def _scatter_or_line(h1: Histogram1D, mark_template: list, kwargs: dict) -> dict
 
     for hist_i, histogram in enumerate(collection):
         centers = histogram.bin_centers.tolist()
-        data = get_data(histogram, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
-        vega["data"][0]["values"] += [{"x": centers[i], "y": data[i], "c": hist_i} for i in range(histogram.bin_count)]
+        data = get_data(
+            histogram, kwargs.pop("density", None), kwargs.pop("cumulative", None)
+        ).tolist()
+        vega["data"][0]["values"] += [
+            {"x": centers[i], "y": data[i], "c": hist_i} for i in range(histogram.bin_count)
+        ]
 
     _add_title(collection, vega, kwargs)
     _create_scales(collection, vega, kwargs)
@@ -595,15 +603,8 @@ def _create_scales(hist: Union[HistogramCollection, HistogramBase], vega: dict, 
     xlim = kwargs.pop("xlim", "auto")
     ylim = kwargs.pop("ylim", "auto")
 
-    if xlim == "auto":
-        nice_x = True
-    else:
-        nice_x = False
-
-    if ylim == "auto":
-        nice_y = True
-    else:
-        nice_y = False
+    nice_x = xlim == "auto"
+    nice_y = ylim == "auto"
 
     # TODO: Unify xlim & ylim parameters with matplotlib
     # TODO: Apply xscale & yscale parameters
@@ -615,7 +616,9 @@ def _create_scales(hist: Union[HistogramCollection, HistogramBase], vega: dict, 
             "range": "width",
             "nice": nice_x,
             "zero": None,
-            "domain": [bins0[0, 0], bins0[-1, 1]] if xlim == "auto" else [float(xlim[0]), float(xlim[1])],
+            "domain": [bins0[0, 0], bins0[-1, 1]]
+            if xlim == "auto"
+            else [float(xlim[0]), float(xlim[1])],
             # "domain": {"data": "table", "field": "x"}
         },
         {
@@ -624,7 +627,9 @@ def _create_scales(hist: Union[HistogramCollection, HistogramBase], vega: dict, 
             "range": "height",
             "nice": nice_y,
             "zero": True if hist.ndim == 1 else None,
-            "domain": {"data": "table", "field": "y"} if ylim == "auto" else [float(ylim[0]), float(ylim[1])],
+            "domain": {"data": "table", "field": "y"}
+            if ylim == "auto"
+            else [float(ylim[0]), float(ylim[1])],
         },
     ]
 

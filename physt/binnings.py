@@ -1,5 +1,5 @@
 """Different binning algorithms/schemas for the histograms."""
-from typing import cast, Any, Dict, Optional, Tuple, List, Union, Sequence
+from typing import cast, Any, Dict, Optional, Tuple, List, Union, Sequence, TYPE_CHECKING
 
 import numpy as np
 
@@ -14,6 +14,11 @@ from physt.bin_utils import (
 )
 from physt.typing_aliases import RangeTuple, ArrayLike
 from physt.util import find_subclass
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+
+    BinningType = TypeVar("BinningType", bound="BinningBase")
 
 
 binning_methods = {}
@@ -120,7 +125,9 @@ class BinningBase:
         return result
 
     def _update_dict(self, a_dict):
-        raise NotImplementedError("Dictionary representation of {0} is not implemented.".format(type(self).__name__))
+        raise NotImplementedError(
+            "Dictionary representation of {0} is not implemented.".format(type(self).__name__)
+        )
 
     @property
     def includes_right_edge(self) -> bool:
@@ -287,7 +294,7 @@ class BinningBase:
         else:
             return self.bins[-1][1]
 
-    def as_static(self, copy: bool = True) -> "StaticBinning":
+    def as_static(self, copy: bool = True) -> "StaticBinning":  # pylint: disable=unused-argument
         """Convert binning to a static form.
 
         Parameters
@@ -302,7 +309,9 @@ class BinningBase:
         """
         return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
 
-    def as_fixed_width(self, copy: bool = True) -> "FixedWidthBinning":
+    def as_fixed_width(
+        self, copy: bool = True
+    ) -> "FixedWidthBinning":  # pylint: disable=unused-argument
         """Convert binning to recipe with fixed width (if possible.)
 
         Parameters
@@ -320,7 +329,7 @@ class BinningBase:
         else:
             raise ValueError("Cannot create fixed-width binning from differing bin widths.")
 
-    def copy(self) -> "BinningBase":
+    def copy(self: "BinningType") -> "BinningType":
         """An identical, independent copy."""
         raise NotImplementedError()
 
@@ -377,7 +386,9 @@ class StaticBinning(BinningBase):
         copy : if True, returns itself (already satisfying conditions).
         """
         if copy:
-            return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
+            return StaticBinning(
+                bins=self.bins.copy(), includes_right_edge=self.includes_right_edge
+            )
         else:
             return self
 
@@ -408,14 +419,16 @@ class NumpyBinning(BinningBase):
     def __init__(self, numpy_bins: ArrayLike, includes_right_edge=True, **kwargs):
         if not is_rising(numpy_bins):
             raise RuntimeError("Bins not in rising order.")
-        super(NumpyBinning, self).__init__(numpy_bins=numpy_bins, includes_right_edge=includes_right_edge, **kwargs)
+        super().__init__(numpy_bins=numpy_bins, includes_right_edge=includes_right_edge, **kwargs)
 
     @property
     def numpy_bins(self):
         return self._numpy_bins
 
     def copy(self) -> "NumpyBinning":
-        return NumpyBinning(numpy_bins=self.numpy_bins, includes_right_edge=self.includes_right_edge)
+        return NumpyBinning(
+            numpy_bins=self.numpy_bins, includes_right_edge=self.includes_right_edge
+        )
 
     def _update_dict(self, a_dict: dict) -> None:
         a_dict["numpy_bins"] = self.numpy_bins.tolist()
@@ -439,7 +452,7 @@ class FixedWidthBinning(BinningBase):
         align=True,
         **kwargs,
     ):
-        super(FixedWidthBinning, self).__init__(adaptive=adaptive, includes_right_edge=includes_right_edge)
+        super().__init__(adaptive=adaptive, includes_right_edge=includes_right_edge)
         # TODO: Check edge cases for min/shift/align
         if bin_width <= 0:
             raise ValueError("Bin width must be > 0.")
@@ -504,13 +517,15 @@ class FixedWidthBinning(BinningBase):
             else:
                 return None
 
-    def _force_bin_existence(self, values, includes_right_edge=None):
+    def _force_bin_existence(self, values, *, includes_right_edge=None):
         if np.isscalar(values):
             return self._force_bin_existence_single(values, includes_right_edge=includes_right_edge)
         else:
-            min, max = np.min(values), np.max(values)
-            result = self._force_bin_existence_single(min)
-            result2 = self._force_bin_existence_single(max, includes_right_edge=includes_right_edge)
+            min_, max_ = np.min(values), np.max(values)
+            result = self._force_bin_existence_single(min_)
+            result2 = self._force_bin_existence_single(
+                max_, includes_right_edge=includes_right_edge
+            )
             if result is None:
                 return result2
             else:
@@ -563,7 +578,9 @@ class FixedWidthBinning(BinningBase):
             add_right = new_max - self._times_min - self._bin_count
         if add_left or add_right:
             bin_map = ((i, i + add_left) for i in range(self._bin_count))
-            self._set_min_and_count(self._times_min - add_left, self._bin_count + add_left + add_right)
+            self._set_min_and_count(
+                self._times_min - add_left, self._bin_count + add_left + add_right
+            )
         return bin_map
 
     def _set_min_and_count(self, times_min, bin_count):
@@ -585,7 +602,9 @@ class FixedWidthBinning(BinningBase):
             raise RuntimeError("Cannot adapt fixed-width histograms with different widths")
         if self._shift != other._shift:
             raise RuntimeError(
-                "Cannot adapt shifted fixed-width histograms: {0} vs {1}".format(self._shift, other._shift)
+                "Cannot adapt shifted fixed-width histograms: {0} vs {1}".format(
+                    self._shift, other._shift
+                )
             )
         # Following operations modify schemas
         other = cast(FixedWidthBinning, other.copy())
@@ -631,7 +650,9 @@ class ExponentialBinning(BinningBase):
         adaptive: bool = False,
         **kwargs,
     ):
-        super(ExponentialBinning, self).__init__(includes_right_edge=includes_right_edge, adaptive=adaptive)
+        super(ExponentialBinning, self).__init__(
+            includes_right_edge=includes_right_edge, adaptive=adaptive
+        )
         self._log_min = log_min
         self._log_width = log_width
         self._bin_count = bin_count
@@ -649,7 +670,9 @@ class ExponentialBinning(BinningBase):
         return self._numpy_bins
 
     def copy(self) -> "ExponentialBinning":
-        return ExponentialBinning(self._log_min, self._log_width, self._bin_count, self.includes_right_edge)
+        return ExponentialBinning(
+            self._log_min, self._log_width, self._bin_count, self.includes_right_edge
+        )
 
     def _update_dict(self, a_dict):
         a_dict["log_min"] = self._log_min
@@ -826,7 +849,9 @@ def fixed_width_binning(
     align: Optional[float]
         Must be multiple of bin_width
     """
-    result = FixedWidthBinning(bin_width=bin_width, includes_right_edge=includes_right_edge, **kwargs)
+    result = FixedWidthBinning(
+        bin_width=bin_width, includes_right_edge=includes_right_edge, **kwargs
+    )
     if range:
         result._force_bin_existence(range[0])
         result._force_bin_existence(range[1], includes_right_edge=True)
@@ -834,7 +859,9 @@ def fixed_width_binning(
             return result  # Otherwise we want to adapt to data
     if data is not None and data.shape[0]:
         # print("Jo, tady")
-        result._force_bin_existence([np.min(data), np.max(data)], includes_right_edge=includes_right_edge)
+        result._force_bin_existence(
+            [np.min(data), np.max(data)], includes_right_edge=includes_right_edge
+        )
     return result
 
 
@@ -916,7 +943,9 @@ def calculate_bins(array, _=None, **kwargs) -> BinningBase:
         binning = _(array, **kwargs)
     elif np.iterable(_):
         if isinstance(_, list):
-            warnings.warn("Using `list` for bins not recommended, it has different meaning with N-D histograms.")
+            warnings.warn(
+                "Using `list` for bins not recommended, it has different meaning with N-D histograms."
+            )
         binning = static_binning(array, _, **kwargs)
     else:
         raise RuntimeError("Binning {0} not understood.".format(_))
@@ -943,7 +972,11 @@ def calculate_bins_nd(
     if isinstance(bins, list):
         if dim:
             if len(bins) != dim:
-                raise ValueError("List of bins not understood, expected {0} items, got {1}.".format(dim, len(bins)))
+                raise ValueError(
+                    "List of bins not understood, expected {0} items, got {1}.".format(
+                        dim, len(bins)
+                    )
+                )
         else:
             dim = len(bins)
     else:
@@ -1098,29 +1131,28 @@ def ideal_bin_count(data: np.ndarray, method: str = "default") -> int:
           - rice
         See https://en.wikipedia.org/wiki/Histogram for the description
     """
-    n = data.size
-    if n < 1:
+    value_count = data.size
+    if value_count < 1:
         return 1
     if method == "default":
-        if n <= 32:
+        if value_count <= 32:
             return 7
         else:
             return ideal_bin_count(data, "sturges")
-    elif method == "sqrt":
-        return int(np.ceil(np.sqrt(n)))
-    elif method == "sturges":
-        return int(np.ceil(np.log2(n)) + 1)
-    elif method == "doane":
-        if n < 3:
+    if method == "sqrt":
+        return int(np.ceil(np.sqrt(value_count)))
+    if method == "sturges":
+        return int(np.ceil(np.log2(value_count)) + 1)
+    if method == "doane":
+        if value_count < 3:
             return 1
         from scipy.stats import skew
 
-        sigma = np.sqrt(6 * (n - 2) / (n + 1) * (n + 3))
-        return int(np.ceil(1 + np.log2(n) + np.log2(1 + np.abs(skew(data)) / sigma)))
-    elif method == "rice":
-        return int(np.ceil(2 * np.power(n, 1 / 3)))
-    else:
-        raise ValueError(f"Unknown bin count method: {method}")
+        sigma = np.sqrt(6 * (value_count - 2) / (value_count + 1) * (value_count + 3))
+        return int(np.ceil(1 + np.log2(value_count) + np.log2(1 + np.abs(skew(data)) / sigma)))
+    if method == "rice":
+        return int(np.ceil(2 * np.power(value_count, 1 / 3)))
+    raise ValueError(f"Unknown bin count method: {method}")
 
 
 bincount_methods = ["default", "sturges", "rice", "sqrt", "doane"]

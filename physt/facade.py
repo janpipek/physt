@@ -75,8 +75,8 @@ def h1(
 
     if isinstance(data, tuple) and isinstance(data[0], str):  # Works for groupby DataSeries
         return h1(data[1], bins, name=data[0], **kwargs)
-    elif type(data).__name__ == "DataFrame":
-        raise ValueError("Cannot create histogram from a pandas DataFrame. Use Series.")
+    if type(data).__name__ == "DataFrame":
+        raise TypeError("Cannot create histogram from a pandas DataFrame. Use Series.")
 
     # Convert to array
     if data is not None:
@@ -87,7 +87,9 @@ def h1(
         array = None
 
     # Get binning
-    binning = calculate_bins(array, bins, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs)
+    binning = calculate_bins(
+        array, bins, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs
+    )
     # bins = binning.bins
 
     # Get frequencies
@@ -165,7 +167,9 @@ def h3(data: Optional[ArrayLike], bins=None, **kwargs) -> HistogramND:
     """
     if data is not None and isinstance(data, (list, tuple)) and not np.isscalar(data[0]):
         if "axis_names" not in kwargs:
-            kwargs["axis_names"] = [(column.name if hasattr(column, "name") else None) for column in data]
+            kwargs["axis_names"] = [
+                (column.name if hasattr(column, "name") else None) for column in data
+            ]
         data = np.concatenate([item[:, np.newaxis] for item in data], axis=1)
     else:
         kwargs["dim"] = 3
@@ -239,7 +243,9 @@ def h(
         check_nan = False
 
     # Prepare bins
-    bin_schemas = calculate_bins_nd(data, bins, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs)
+    bin_schemas = calculate_bins_nd(
+        data, bins, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs
+    )
 
     # Prepare remaining data
     klass: Type[HistogramND] = Histogram2D if dim == 2 else HistogramND  # type: ignore

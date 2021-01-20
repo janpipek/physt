@@ -1,3 +1,6 @@
 [MASTER]
 max-line-length=120
-good-names=i,j,x,y,f,h1,h2,h3,ax
+good-names=i,j,x,y,z,f,r,h1,h2,h3,ax
+
+[MESSAGES CONTROL]
+# disable=...

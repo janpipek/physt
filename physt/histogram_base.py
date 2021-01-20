@@ -1,7 +1,19 @@
 """HistogramBase - base for all histogram classes."""
 import abc
 import warnings
-from typing import Dict, List, Optional, Iterable, Mapping, Any, Tuple, TYPE_CHECKING, TypeVar, cast, Union
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Iterable,
+    Mapping,
+    Any,
+    Tuple,
+    TYPE_CHECKING,
+    TypeVar,
+    cast,
+    Union,
+)
 
 import numpy as np
 
@@ -12,7 +24,7 @@ from physt.typing_aliases import Axis, ArrayLike, DtypeLike
 if TYPE_CHECKING:
     import physt
 
-HistogramType = TypeVar("HistogramType", bound="HistogramBase")
+    HistogramType = TypeVar("HistogramType", bound="HistogramBase")
 
 
 class HistogramBase(abc.ABC):
@@ -121,7 +133,9 @@ class HistogramBase(abc.ABC):
                 elif np.issubdtype(frequencies.dtype, np.floating):
                     frequencies = frequencies.astype(np.float64)
                 else:
-                    raise RuntimeError("Frequencies of type {0} not understood".format(frequencies.dtype))
+                    raise RuntimeError(
+                        "Frequencies of type {0} not understood".format(frequencies.dtype)
+                    )
             dtype = frequencies.dtype
             self.frequencies = frequencies
         self._dtype, _ = self._eval_dtype(dtype)  # type: ignore
@@ -207,17 +221,18 @@ class HistogramBase(abc.ABC):
             if name_or_index < 0 or name_or_index >= self.ndim:
                 raise ValueError("No such axis, must be from 0 to {0}".format(self.ndim - 1))
             return name_or_index
-        elif isinstance(name_or_index, str):
+        if isinstance(name_or_index, str):
             if name_or_index not in self.axis_names:
                 named_axes = [name for name in self.axis_names if name]
                 raise ValueError(
-                    "No axis with such name: {0}, available names: {1}. In most places, you can also use numbers.".format(
-                        name_or_index, ", ".join(named_axes)
-                    )
+                    f"No axis with such name: {name_or_index}, available names: "
+                    + ", ".join((named_axes))
+                    + "In most places, you can also use numbers."
                 )
             return self.axis_names.index(name_or_index)
-        else:
-            raise TypeError("Argument of type {0} not understood, int or str expected.".format(type(name_or_index)))
+        raise TypeError(
+            f"Argument of type {type(name_or_index)} not understood, int or str expected."
+        )
 
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -453,13 +468,13 @@ class HistogramBase(abc.ABC):
         self._binnings[axis] = new_binning
 
     def merge_bins(
-        self: HistogramType,
+        self: "HistogramType",
         amount: Optional[int] = None,
         *,
         min_frequency: Optional[float] = None,
         axis: Optional[Axis] = None,
         inplace: bool = False,
-    ) -> HistogramType:
+    ) -> "HistogramType":
         """Reduce the number of bins and add their content:
 
         Parameters
@@ -467,8 +482,7 @@ class HistogramBase(abc.ABC):
         amount: How many adjacent bins to join together.
         min_frequency: Try to have at least this value in each bin
             (this is not enforce e.g. for minima between high bins)
-        axis: int or None
-            On which axis to do this (None => all)
+        axis: On which axis to do this (None => all)
         inplace: Whether to modify this histogram or return a new one
         """
         if not inplace:
@@ -490,6 +504,7 @@ class HistogramBase(abc.ABC):
                 else:
                     # TODO: Check this!
                     from physt.histogram_nd import HistogramND
+
                     check = cast(HistogramND, self).projection(axis).frequencies
                 bin_map = []
                 current_new = 0
@@ -598,7 +613,7 @@ class HistogramBase(abc.ABC):
                 return False
         return True
 
-    def copy(self: HistogramType, *, include_frequencies: bool = True) -> HistogramType:
+    def copy(self: "HistogramType", *, include_frequencies: bool = True) -> "HistogramType":
         """Copy the histogram.
 
         Parameters
@@ -625,6 +640,17 @@ class HistogramBase(abc.ABC):
         a_copy._missed = missed
         a_copy._stats = stats
         return a_copy
+
+    @abc.abstractmethod
+    def select(self, axis: Axis, index: Union[int, slice], *, force_copy: bool = False) -> Any:
+        """Select in an axis.
+
+        Parameters
+        ----------
+        axis: Axis, in which we select.
+        index: Index of bin (as in numpy).
+        force_copy: If True, identity slice force a copy to be made.
+        """
 
     @property
     def binnings(self) -> List[BinningBase]:
@@ -675,7 +701,9 @@ class HistogramBase(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def fill_n(self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True):
+    def fill_n(
+        self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True
+    ):
         """Update histogram with more values at once.
 
         It is an in-place operation.
@@ -749,7 +777,9 @@ class HistogramBase(abc.ABC):
         Override if necessary (like it's done in Histogram1D).
         """
         kwargs = {
-            "binnings": [BinningBase.from_dict(binning_data) for binning_data in a_dict["binnings"]],
+            "binnings": [
+                BinningBase.from_dict(binning_data) for binning_data in a_dict["binnings"]
+            ],
             "dtype": np.dtype(a_dict["dtype"]),
             "frequencies": a_dict.get("frequencies"),
             "errors2": a_dict.get("errors2"),
@@ -814,7 +844,7 @@ class HistogramBase(abc.ABC):
         if isinstance(other, HistogramBase):
             if other.ndim != self.ndim:
                 raise ValueError("Cannot add histograms with different dimensions.")
-            elif self.has_same_bins(other):
+            if self.has_same_bins(other):
                 # print("Has same!!!!!!!!!!")
                 self._coerce_dtype(other.dtype)
                 self.frequencies = self.frequencies + other.frequencies

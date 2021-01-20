@@ -66,13 +66,17 @@ try:
         elif cmap == "Greys_r":
             colorbar_range = range(h2.shape[1] + 2)
         else:
-            raise ValueError("Unsupported colormap: {0}, select from: {1}".format(cmap, SUPPORTED_CMAPS))
+            raise ValueError(
+                "Unsupported colormap: {0}, select from: {1}".format(cmap, SUPPORTED_CMAPS)
+            )
         colors = (65536 + 256 + 1) * data
 
         print((value_format(h2.get_bin_right_edges(0)[-1]) + " →").rjust(h2.shape[1] + 2, " "))
         print("+" + "-" * h2.shape[1] + "+")
         for i in range(h2.shape[0] - 1, -1, -1):
-            line_frags = [xtermcolor.colorize("█", bg=0, rgb=colors[i, j]) for j in range(h2.shape[1])]
+            line_frags = [
+                xtermcolor.colorize("█", bg=0, rgb=colors[i, j]) for j in range(h2.shape[1])
+            ]
             line = "|" + "".join(line_frags) + "|"
             if i == h2.shape[0] - 1:
                 line += value_format(h2.get_bin_right_edges(1)[-1]) + " ↑"

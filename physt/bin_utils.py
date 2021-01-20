@@ -186,16 +186,14 @@ def find_human_width_24(raw_width: float) -> int:
 def find_human_width(raw_width: float, kind: Optional[str] = None) -> float:
     if not kind:
         return find_human_width_decimal(raw_width)
-    elif kind == "time":
+    if kind == "time":
         if raw_width < 0.8:
             return find_human_width_decimal(raw_width)
-        elif raw_width < 50:
+        if raw_width < 50:
             return find_human_width_60(raw_width)
-        elif raw_width < 3000:
+        if raw_width < 3000:
             return find_human_width_60(raw_width / 60) * 60
-        elif raw_width < 70000:
+        if raw_width < 70000:
             return find_human_width_24(raw_width / 3600) * 3600
-        else:
-            return find_human_width_decimal(raw_width / 86400) * 86400
-    else:
-        raise ValueError("Value of 'kind' not understood: '{0}'.".format(kind))
+        return find_human_width_decimal(raw_width / 86400) * 86400
+    raise ValueError("Value of 'kind' not understood: '{0}'.".format(kind))

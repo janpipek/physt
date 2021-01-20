@@ -84,7 +84,7 @@ def geo_map(
         latitude = h2.get_bin_centers(0).mean()
         longitude = h2.get_bin_centers(1).mean()
         map = folium.Map(location=[latitude, longitude], tiles=tiles)
-        if fit_bounds == None:
+        if fit_bounds is None:
             fit_bounds = True
 
     geo_json = _bins_to_json(h2)

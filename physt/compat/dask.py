@@ -47,12 +47,10 @@ def _run_dask(
     if compute:
         if not method:
             return dask.get(graph, result_name)
-        elif method in ["thread", "threaded", "threading", "threads"]:
+        if method in ["thread", "threaded", "threading", "threads"]:
             return dask.threaded.get(graph, result_name)
-        else:
-            return method(graph, result_name)
-    else:
-        return graph, result_name
+        return method(graph, result_name)
+    return graph, result_name
 
 
 def histogram1d(data, bins=None, **kwargs):
@@ -99,13 +97,17 @@ def histogramdd(data, bins=None, **kwargs):
         data = dask.array.stack(data, axis=1)
 
     if not hasattr(data, "dask"):
-        data = dask.array.from_array(data, chunks=(int(data.shape[0] / options["chunk_split"]), data.shape[1]))
+        data = dask.array.from_array(
+            data, chunks=(int(data.shape[0] / options["chunk_split"]), data.shape[1])
+        )
     else:
         data = rechunk(data, {1: data.shape[1]})
 
     if isinstance(data, dask.array.Array):
         if data.ndim != 2:
-            raise ValueError(f"Only (n, dim) data allowed for histogramdd, {data.shape} encountered.")
+            raise ValueError(
+                f"Only (n, dim) data allowed for histogramdd, {data.shape} encountered."
+            )
 
     if not kwargs.get("adaptive", True):
         raise ValueError("Only adaptive histograms supported for dask (currently).")

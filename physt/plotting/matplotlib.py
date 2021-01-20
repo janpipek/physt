@@ -112,7 +112,9 @@ def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collectio
 
 
 @register(1, collection=True)
-def bar(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
+def bar(
+    h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs
+):  # pylint: disable=blacklisted-name
     """Bar plot of 1D histograms."""
     show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
@@ -142,7 +144,16 @@ def bar(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):
             kwargs["ecolor"] = "black"
 
     _add_labels(ax, h1, kwargs)
-    ax.bar(h1.bin_left_edges, data, h1.bin_widths, align="edge", label=label, color=colors, linewidth=lw, **kwargs)
+    ax.bar(
+        h1.bin_left_edges,
+        data,
+        h1.bin_widths,
+        align="edge",
+        label=label,
+        color=colors,
+        linewidth=lw,
+        **kwargs,
+    )
 
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
@@ -294,6 +305,7 @@ def map(
     show_zero: bool = True,
     show_values: bool = False,
     show_colorbar: bool = True,
+    value_format: Any = str,
     x=None,
     y=None,
     **kwargs,
@@ -336,7 +348,6 @@ def map(
             y = lambda x, y: y
         transformed = True
 
-    value_format = kwargs.pop("value_format", str)
     # TODO: Implement correctly the text_kwargs
 
     if isinstance(value_format, str):
@@ -373,7 +384,7 @@ def map(
         if data[i] != 0 or show_zero:
             if not transformed:
                 rect = plt.Rectangle(
-                    [xpos[i], ypos[i]],
+                    (xpos[i], ypos[i]),
                     dx[i],
                     dy[i],
                     facecolor=bin_color,
@@ -444,9 +455,8 @@ def map(
 
 
 @register(2, use_3d=True)
-def bar3d(h2: Histogram2D, ax: Axes3D, **kwargs):
+def bar3d(h2: Histogram2D, ax: Axes3D, *, density: bool = False, **kwargs):
     """Plot of 2D histograms as 3D boxes."""
-    density = kwargs.pop("density", False)
     data = get_data(h2, cumulative=False, flatten=True, density=density)
 
     if "cmap" in kwargs:
@@ -466,7 +476,14 @@ def bar3d(h2: Histogram2D, ax: Axes3D, **kwargs):
 
 
 @register(2)
-def image(h2: Histogram2D, ax: Axes, *, show_colorbar: bool = True, interpolation: str = "nearest", **kwargs):
+def image(
+    h2: Histogram2D,
+    ax: Axes,
+    *,
+    show_colorbar: bool = True,
+    interpolation: str = "nearest",
+    **kwargs,
+):
     """Plot of 2D histograms based on pixmaps.
 
     Similar to map, but it:
@@ -485,7 +502,9 @@ def image(h2: Histogram2D, ax: Axes, *, show_colorbar: bool = True, interpolatio
 
     for binning in h2._binnings:
         if not binning.is_regular():
-            raise RuntimeError("Histograms with irregular bins cannot be plotted using image method.")
+            raise RuntimeError(
+                "Histograms with irregular bins cannot be plotted using image method."
+            )
 
     kwargs["interpolation"] = interpolation
     if kwargs.get("xscale") == "log" or kwargs.get("yscale") == "log":
@@ -513,7 +532,9 @@ def image(h2: Histogram2D, ax: Axes, *, show_colorbar: bool = True, interpolatio
 
 
 @register(2, use_polar=True)
-def polar_map(hist: Histogram2D, ax: Axes, *, show_zero: bool = True, show_colorbar: bool = True, **kwargs):
+def polar_map(
+    hist: Histogram2D, ax: Axes, *, show_zero: bool = True, show_colorbar: bool = True, **kwargs
+):
     """Polar map of polar histograms.
 
     Similar to map, but supports less parameters."""
@@ -538,8 +559,7 @@ def polar_map(hist: Histogram2D, ax: Axes, *, show_zero: bool = True, show_color
     for i in range(len(r)):
         if data[i] > 0 or show_zero:
             bin_color = colors[i]
-            # TODO: align = "edge"
-            bars = ax.bar(
+            ax.bar(
                 phi[i],
                 delta_r[i],
                 width=delta_phi[i],
@@ -558,14 +578,20 @@ def polar_map(hist: Histogram2D, ax: Axes, *, show_zero: bool = True, show_color
 
 
 @register(2, use_3d=True)
-def globe_map(hist: Union[Histogram2D, SphericalSurfaceHistogram], ax: Axes3D, *, show_zero: bool = True, **kwargs):
+def globe_map(
+    hist: Union[Histogram2D, SphericalSurfaceHistogram],
+    ax: Axes3D,
+    *,
+    lw: int = 1,
+    show_zero: bool = True,
+    **kwargs,
+):
     """Heat map plotted on the surface of a sphere."""
     data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
     colors = cmap(cmap_data)
-    lw = kwargs.pop("lw", 1)
 
     r = 1
     xs = r * np.outer(np.sin(hist.numpy_bins[0]), np.cos(hist.numpy_bins[1]))
@@ -600,7 +626,11 @@ def globe_map(hist: Union[Histogram2D, SphericalSurfaceHistogram], ax: Axes3D, *
 
 @register(2, use_3d=True)
 def cylinder_map(
-    hist: Union[Histogram2D, CylindricalSurfaceHistogram], ax: Axes3D, *, show_zero: bool = True, **kwargs
+    hist: Union[Histogram2D, CylindricalSurfaceHistogram],
+    ax: Axes3D,
+    *,
+    show_zero: bool = True,
+    **kwargs,
 ):
     """Heat map plotted on the surface of a cylinder."""
     data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
@@ -640,7 +670,14 @@ def cylinder_map(
 
 @register(2, use_3d=True)
 def surface_map(
-    hist, ax: Axes3D, *, show_zero: bool = True, x=(lambda x, y: x), y=(lambda x, y: y), z=(lambda x, y: 0), **kwargs
+    hist,
+    ax: Axes3D,
+    *,
+    show_zero: bool = True,
+    x=(lambda x, y: x),
+    y=(lambda x, y: y),
+    z=(lambda x, y: 0),
+    **kwargs,
 ):
     """Coloured-rectangle plot of 2D histogram, placed on an arbitrary surface.
 
@@ -713,7 +750,12 @@ def surface_map(
 
 
 def pair_bars(
-    first: Histogram1D, second: Histogram1D, *, orientation: str = "vertical", kind: str = "bar", **kwargs
+    first: Histogram1D,
+    second: Histogram1D,
+    *,
+    orientation: str = "vertical",
+    kind: str = "bar",
+    **kwargs,
 ) -> Axes:
     """Draw two different histograms mirrored in one figure.
 
@@ -993,11 +1035,17 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
 
     # First, get the axis scaling
     if h.ndim == 1:
-        xscale = kwargs.pop("xscale", "log" if isinstance(h.binnings[0], ExponentialBinning) else None)
+        xscale = kwargs.pop(
+            "xscale", "log" if isinstance(h.binnings[0], ExponentialBinning) else None
+        )
         yscale = kwargs.pop("yscale", None)
     elif h.ndim == 2:
-        xscale = kwargs.pop("xscale", "log" if isinstance(h.binnings[0], ExponentialBinning) else None)
-        yscale = kwargs.pop("yscale", "log" if isinstance(h.binnings[1], ExponentialBinning) else None)
+        xscale = kwargs.pop(
+            "xscale", "log" if isinstance(h.binnings[0], ExponentialBinning) else None
+        )
+        yscale = kwargs.pop(
+            "yscale", "log" if isinstance(h.binnings[1], ExponentialBinning) else None
+        )
     else:
         raise ValueError(f"Invalid histogram dimension: {h.ndim}")
 

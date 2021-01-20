@@ -78,16 +78,13 @@ def wrap(*, mpl_function: Optional[Any] = None):
 
 
 def enable_collection(f):
-    """Call the wrapped function with a HistogramCollection as argument."""
+    """Decorator calling the wrapped function with a HistogramCollection as argument."""
 
     @wraps(f)
-    def new_f(h: AbstractHistogram1D, **kwargs):
-        from physt.histogram_collection import HistogramCollection
-
-        if isinstance(h, HistogramCollection):
-            return f(h, **kwargs)
-        else:
-            return f(HistogramCollection(h), **kwargs)
+    def new_f(histogram: AbstractHistogram1D, **kwargs):
+        if isinstance(histogram, HistogramCollection):
+            return f(histogram, **kwargs)
+        return f(HistogramCollection(histogram), **kwargs)
 
     return new_f
 
@@ -146,7 +143,13 @@ def line(h: AbstractHistogram1D, **kwargs):
 
 @wrap(mpl_function=mpl_backend.bar)
 @enable_collection
-def bar(h: HistogramCollection, *, barmode: str = DEFAULT_BARMODE, alpha: float = DEFAULT_ALPHA, **kwargs):
+def bar(
+    h: HistogramCollection,
+    *,
+    barmode: str = DEFAULT_BARMODE,
+    alpha: float = DEFAULT_ALPHA,
+    **kwargs
+):  # pylint: disable=blacklisted-name
     """Bar plot.
 
     Parameters

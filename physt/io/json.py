@@ -11,7 +11,9 @@ COMPATIBLE_VERSION = "0.3.20"
 COLLECTION_COMPATIBLE_VERSION = "0.4.5"
 
 
-def save_json(histogram: Union[HistogramBase, HistogramCollection], path: Optional[str] = None, **kwargs) -> str:
+def save_json(
+    histogram: Union[HistogramBase, HistogramCollection], path: Optional[str] = None, **kwargs
+) -> str:
     """Save histogram to JSON format.
 
     Parameters
