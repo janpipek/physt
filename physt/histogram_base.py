@@ -308,10 +308,10 @@ class HistogramBase(abc.ABC):
                 if self.dtype.kind == "f":
                     for array in (self.frequencies, self.errors2):
                         if np.any(array % 1.0):
-                            raise RuntimeError("Data contain non-integer values.")
+                            raise ValueError("Data contain non-integer values.")
             for array in (self.frequencies, self.errors2):
                 if np.any((array > type_info.max) | (array < type_info.min)):
-                    raise RuntimeError("Data contain values outside the specified range.")
+                    raise ValueError("Data contain values outside the specified range.")
 
         self._dtype = value
         self._frequencies = self._frequencies.astype(value)

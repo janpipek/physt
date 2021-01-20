@@ -82,9 +82,9 @@ class TestFillNAdaptive(object):
 
     def test_with_incorrect_weights(self, empty_adaptive1):
         h = empty_adaptive1
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             h.fill_n([0, 1], [2, 3, 4])
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             h.fill_n([0, 1, 2, 3], [2, 3, 4])
 
     def test_empty_exact(self, empty_adaptive1):

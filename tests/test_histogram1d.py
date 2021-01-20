@@ -460,7 +460,7 @@ class TestDtype:
         hist = h1(values, dtype=float)
         assert hist.dtype == float
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             hist = h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
 
     def test_copy(self, values):
@@ -484,7 +484,7 @@ class TestDtype:
         assert hist.frequencies.dtype == np.int16
 
         hist = h1(values, weights=[1, 2, 2.1, 3.2])
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             hist.dtype = np.int16
 
         hist = h1(values, weights=[1, 2, 2, 3])
