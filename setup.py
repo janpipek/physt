@@ -51,13 +51,12 @@ options = dict(
     extras_require={
         "all": [
             "dask[array]",
-            "toolz",
             "pandas",
             "matplotlib",
             "folium",
             "vega3",
             "xarray",
-            "protobuf",
+            "plotly",
             "uproot3",  # TODO: Update to uproot4
             "asciiplotlib",
             "xtermcolor",
