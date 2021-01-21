@@ -162,7 +162,7 @@ class HistogramBase(abc.ABC):
     @property
     def default_axis_names(self) -> List[str]:
         """Axis names to be used when an instance does not define them."""
-        return ["axis{0}".format(i) for i in range(self.ndim)]
+        return [f"axis{i}" for i in range(self.ndim)]
 
     default_init_values: Dict[str, Any] = {}
 
@@ -440,6 +440,7 @@ class HistogramBase(abc.ABC):
 
     @property
     def adaptive(self) -> bool:
+        # TODO: Remove?
         return self.is_adaptive()
 
     @adaptive.setter
@@ -524,64 +525,58 @@ class HistogramBase(abc.ABC):
             self._change_binning(new_binning, bin_map, axis=axis)
         return self
 
-    def _reshape_data(self, new_size, bin_map, axis=0):
+    def _reshape_data(self, new_size: int, bin_map, axis: int = 0):
         """Reshape data to match new binning schema.
 
         Fills frequencies and errors with 0.
 
         Parameters
         ----------
-        new_size: int
+        new_size: New size along the axis
         bin_map: Iterable[(old, new)] or int or None
             If None, we can keep the data unchanged.
             If int, it is offset by which to shift the data (can be 0)
             If iterable, pairs specify which old bin should go into which new bin
-        axis: int
-            On which axis to apply
+        axis: On which axis to apply
         """
         if bin_map is None:
             return
-        else:
-            new_shape = list(self.shape)
-            new_shape[axis] = new_size
-            new_frequencies = np.zeros(new_shape, dtype=self._frequencies.dtype)
-            new_errors2 = np.zeros(new_shape, dtype=self._frequencies.dtype)
-            self._apply_bin_map(
-                old_frequencies=self._frequencies,
-                new_frequencies=new_frequencies,
-                old_errors2=self._errors2,
-                new_errors2=new_errors2,
-                bin_map=bin_map,
-                axis=axis,
-            )
-            self._frequencies = new_frequencies
-            self._errors2 = new_errors2
+
+        new_shape = list(self.shape)
+        new_shape[axis] = new_size
+        new_frequencies = np.zeros(new_shape, dtype=self._frequencies.dtype)
+        new_errors2 = np.zeros(new_shape, dtype=self._frequencies.dtype)
+        self._apply_bin_map(
+            old_frequencies=self._frequencies,
+            new_frequencies=new_frequencies,
+            old_errors2=self._errors2,
+            new_errors2=new_errors2,
+            bin_map=bin_map,
+            axis=axis,
+        )
+        self._frequencies = new_frequencies
+        self._errors2 = new_errors2
 
     def _apply_bin_map(
         self,
-        old_frequencies,
-        new_frequencies,
-        old_errors2,
-        new_errors2,
-        bin_map,
-        axis=0,
+        old_frequencies: np.ndarray,
+        new_frequencies: np.ndarray,
+        old_errors2: np.ndarray,
+        new_errors2: np.ndarray,
+        bin_map: Union[Iterable[Tuple[int, int]], int],
+        axis: int,
     ):
         """Fill new data arrays using a map.
 
         Parameters
         ----------
-        old_frequencies : np.ndarray
-            Source of frequencies data
-        new_frequencies : np.ndarray
-            Target of frequencies data
-        old_errors2 : np.ndarray
-            Source of errors data
-        new_errors2 : np.ndarray
-            Target of errors data
+        old_frequencies : Source of frequencies data
+        new_frequencies : Target of frequencies data
+        old_errors2 : Source of errors data
+        new_errors2 : Target of errors data
         bin_map: Iterable[(old, new)] or int or None
             As in _reshape_data
-        axis: int
-            On which axis to apply
+        axis: On which axis to apply
 
         See also
         --------
@@ -589,7 +584,7 @@ class HistogramBase(abc.ABC):
         """
         if old_frequencies is not None and old_frequencies.shape[axis] > 0:
             if isinstance(bin_map, int):
-                new_index = [slice(None) for i in range(self.ndim)]
+                new_index: List[Union[int, slice]] = [slice(None) for i in range(self.ndim)]
                 new_index[axis] = slice(bin_map, bin_map + old_frequencies.shape[axis])
                 new_frequencies[tuple(new_index)] += old_frequencies
                 new_errors2[tuple(new_index)] += old_errors2
@@ -597,7 +592,7 @@ class HistogramBase(abc.ABC):
                 for (old, new) in bin_map:  # Generic enough
                     new_index = [slice(None) for i in range(self.ndim)]
                     new_index[axis] = new
-                    old_index = [slice(None) for i in range(self.ndim)]
+                    old_index: List[Union[int, slice]] = [slice(None) for i in range(self.ndim)]
                     old_index[axis] = old
                     new_frequencies[tuple(new_index)] += old_frequencies[tuple(old_index)]
                     new_errors2[tuple(new_index)] += old_errors2[tuple(old_index)]
@@ -666,15 +661,13 @@ class HistogramBase(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def find_bin(self, value, axis: Optional[Axis] = None) -> Union[None, int, Tuple[int, ...]]:
+    def find_bin(self, value: ArrayLike, axis: Optional[Axis] = None) -> Union[None, int, Tuple[int, ...]]:
         """Index(-ices) of bin corresponding to a value.
 
         Parameters
         ----------
-        value: array_like
-            Value with dimensionality equal to histogram
-        axis: Optional[int]
-            If set, find axis along an axis. Otherwise, find bins along all axes.
+        value: Value with dimensionality equal to histogram
+        axis: If set, find axis along an axis. Otherwise, find bins along all axes.
             None = outside the bins
 
         Returns

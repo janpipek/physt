@@ -142,19 +142,24 @@ if backends:
 
 def set_default_backend(name: str) -> None:
     """Choose a default backend."""
-    global _default_backend  # pylint
+    global _default_backend  # pylint: disable=global-statement
     if name == "bokeh":
-        raise RuntimeError(
+        raise ValueError(
             "Support for bokeh has been discontinued. At some point, we may return to support holoviews."
         )
     if not name in backends:
-        raise RuntimeError(
+        raise ValueError(
             "Backend {0} is not supported and cannot be set as default.".format(name)
         )
     _default_backend = name
 
 
-def _get_backend(name: str = None) -> Tuple[str, Any]:
+def get_default_backend() -> Optional[str]:
+    """The backend that will be used by default with the `plot` function."""
+    return _default_backend
+
+
+def _get_backend(name: Optional[str] = None) -> Tuple[str, Any]:
     """Get a plotting backend.
 
     Tries to get it using the name - or the default one.
@@ -204,7 +209,7 @@ def plot(
             )
         kind = kinds[0]
     if kind in backend_impl.types:
-        method = getattr(backend, kind)
+        method = getattr(backend_impl, kind)
         return method(histogram, **kwargs)
     else:
         raise RuntimeError(

@@ -366,7 +366,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     #     else:
     #         return None
 
-    def find_bin(self, value: float, axis: Optional[Axis] = None) -> Optional[int]:
+    def find_bin(self, value: ArrayLike, axis: Optional[Axis] = None) -> Optional[int]:
         """Index of bin corresponding to a value.
 
         Returns
