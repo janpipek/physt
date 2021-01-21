@@ -1,40 +1,39 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
+import pytest
+
 if TYPE_CHECKING:
     from physt.histogram_nd import Histogram2D
     from physt.histogram1d import Histogram1D
 
-import pytest
 
-
-class AbstractTest1D(ABC):
+class AbstractTest(ABC):
     module: Any
     function_name: str
 
-    def method(self, h1, *args, **kwargs) -> Any:
+    def method(self, h, *args, **kwargs) -> Any:
         f = getattr(self.module, self.function_name)
-        return f(h1, *args, *kwargs)
+        return f(h, *args, **kwargs)
+    
+    @abstractmethod
+    def assert_valid_output(self, output) -> None:
+        ...
 
-    def test_2d_fail(self, simple_h2: "Histogram2D"):
+
+class AbstractTest1D(AbstractTest, ABC):
+    def test_2d_fail(self, simple_h2: "Histogram2D", default_kwargs):
         with pytest.raises(TypeError):
-            self.method(simple_h2)
+            self.method(simple_h2, **default_kwargs)
 
-    def test_simple_does_not_fail(self, simple_h1):
-        _ = self.method(simple_h1)
+    def test_simple_does_not_fail(self, simple_h1, default_kwargs):
+        _ = self.method(simple_h1, **default_kwargs)
 
 
-class AbstractTest2D(ABC):
-    module: Any
-    function_name: str
-
-    def method(self, h2, *args, **kwargs) -> Any:
-        f = getattr(self.module, self.function_name)
-        return f(h2, *args, *kwargs)
-
-    def test_1d_fail(self, simple_h1: "Histogram1D"):
+class AbstractTest2D(AbstractTest, ABC):
+    def test_1d_fail(self, simple_h1: "Histogram1D", default_kwargs):
         with pytest.raises(TypeError):
-            self.method(simple_h1)
+            self.method(simple_h1, **default_kwargs)
 
-    def test_simple_does_not_fail(self, simple_h2):
-        _ = self.method(simple_h2)
+    def test_simple_does_not_fail(self, simple_h2, default_kwargs):
+        _ = self.method(simple_h2, **default_kwargs)

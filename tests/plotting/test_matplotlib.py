@@ -1,12 +1,20 @@
 from abc import ABC
 
+from matplotlib.axes import Axes
+
 from physt.plotting import matplotlib
-from .shared import AbstractTest1D, AbstractTest2D
+from .shared import AbstractTest1D, AbstractTest2D, AbstractTest
 
 
-class _TestBase1D(AbstractTest1D, ABC):
+class _TestBase(AbstractTest, ABC):
     module = matplotlib
 
+    def assert_valid_output(self, output) -> None:
+        assert isinstance(output, Axes)  
+
+
+class _TestBase1D(_TestBase, AbstractTest1D, ABC):
+    pass
 
 class TestBar(_TestBase1D):
     function_name = "bar"
@@ -28,8 +36,8 @@ class TestStep(_TestBase1D):
     function_name = "step"
 
 
-class _TestBase2D(AbstractTest2D, ABC):
-    module = matplotlib
+class _TestBase2D(_TestBase, AbstractTest2D, ABC):
+    pass
 
 
 class TestMap(_TestBase2D):
