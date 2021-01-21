@@ -50,7 +50,7 @@ from physt import h2
 import seaborn as sns
 
 iris = sns.load_dataset('iris')
-iris_hist = h2(iris["sepal_length"], iris["sepal_width"], "human", (12, 7), name="Iris")
+iris_hist = h2(iris["sepal_length"], iris["sepal_width"], "human", bin_count=[12, 7], name="Iris")
 iris_hist.plot(show_zero=False, cmap="gray_r", show_values=True);
 ```
 
