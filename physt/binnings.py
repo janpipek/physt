@@ -232,13 +232,17 @@ class BinningBase:
         return self._bins
 
     def __eq__(self, other):
+        if self is other:
+            return True
         if other.__class__ != self.__class__:
             return False
         if self._bins is not None:
             return np.array_equal(self.bins, other.bins)
         if self._numpy_bins is not None:
             return np.array_equal(self.numpy_bins, other.numpy_bins)
-        # TODO: Implement carefully
+        bins = self.bins
+        if bins is not None:
+            return np.array_equal(self.bins, other.bins)
         return False
 
     @property
