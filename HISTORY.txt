@@ -1,13 +1,17 @@
-0.5.0 (???)
------------
+0.5.0 (21 January 2021)
+-----------------------
 - Removed: *args in method definition whenever possible (prefering explicit keyword-only arguments)
 - Changed: In multi-dimensional methods arguments:
     - list is treated as different value for each axes
     - tuple is treated as one argument value
-- Fix: A few small bugs
+- Changed: Plotly backend does not allow matplotlib mimicking any more.
+- Added: Basic tests for plotting backends
+- Support: Tested against Python 3.6-3.9
+- Fixed: Typing annotations are passing mypy validation.
+- Fixed: A few small bugs
 
-0.4.12 (16th October 2020)
---------------------------
+0.4.12 (16 October 2020)
+------------------------
 - Added: Optionally allow arithmetic operations with any array-like objects (see HistogramBase docs.)
 - Added: Public setters for frequencies and errors2 (were "private")
 - Renamed: CylinderSurfaceHistogram -> CylindricalSurfaceHistogram
@@ -20,168 +24,168 @@
 ------
 (Unintentionally skipped)
 
-0.4.10 (17th February 2020)
---------------------------
+0.4.10 (17 February 2020)
+-------------------------
 - Fix: Histograms on dask arrays
-- Support: Tested against Python 3.5-3.8
+- Support: Tested against Python 3.6-3.8
 - Removed: protobuf I/O support
 - Removed: some of the examples
 
-0.4.9 (6th February 2020)
--------------------------
+0.4.9 (6 February 2020)
+-----------------------
 - Changed: version.py controls the version number etc.
 - Fix: Several small bugs
 
-0.4.8 (22nd November 2019)
---------------------------
+0.4.8 (22 November 2019)
+------------------------
 - Added: Binning "human" accepts kind="time"
 - Added: find_human_width and related methods in bin_utils
 - Fix: No labels and color cycling in scatter plots for collections
 
-0.4.7 (31th October 2019)
--------------------------
+0.4.7 (31 October 2019)
+-----------------------
 - Changed: Small improvements in histogram collections and time tick handler
 - Fixed: several small bugs
 
-0.4.6 (24th May 2019)
-----------------------
+0.4.6 (24 May 2019)
+-------------------
 - Changed: added `edges` property that will deprecate `numpy_bins`
 - Fixed: several small bugs
 
-0.4.5 (1st April 2019)
-----------------------
+0.4.5 (1 April 2019)
+--------------------
 - Added: I/O for HistogramCollection
 - Added: physt.collection facade function
 
-0.4.4 (4th March 2019)
-----------------------
+0.4.4 (4 March 2019)
+--------------------
 - Changed: plotly plots now using the original API instead of wrapping matplotlib
 - Added: new methods for histogram collections
 - Added: plotting histogram collections in plotly
 - Added: basic 'map' plot for plotly
 
-0.4.3 (2nd March 2019)
-----------------------
+0.4.3 (2 March 2019)
+--------------------
 - Added: histogram collection (experiment, basic behaviour)
 - Added: some basic collection plotting in vega & matplotlib
 - Added: legends in vega (for some plots)
 - Fixed: several small bugs
 - Added: more documentation and typing hints
 
-0.4.2 (15th February 2019)
---------------------------
+0.4.2 (15 February 2019)
+------------------------
 - Added: time-based ticks for matplotlib plots (experimental)
 - Added: a lot of type hints in whole codebase
 
-0.4.1 (6th February 2019)
--------------------------
+0.4.1 (6 February 2019)
+-----------------------
 - Added: basic ASCII plots (experimental)
 
-0.4.0 (5th February 2019)
--------------------------
+0.4.0 (5 February 2019)
+-----------------------
 - CHANGE: drop support for Python 2.7
 - Fixed: several small bugs - #49, #54, ... 
 
-0.3.43 (1st October 2018)
--------------------------
+0.3.43 (1 October 2018)
+-----------------------
 - Added: Basic support for writing ROOT files using uproot
 
-0.3.42 (21st September 2018)
-----------------------------
+0.3.42 (21 September 2018)
+--------------------------
 - Added: google protobuf I/O of histograms (experimental, incomplete)
 - Changed: restructured the physt.io package into more modules
 
-0.3.41 (25th July 2018)
------------------------
+0.3.41 (25 July 2018)
+---------------------
 - Added: colorbar with matplotlib polar_map
 
-0.3.40 (8th July 2018)
-----------------------
+0.3.40 (8 July 2018)
+--------------------
 - Added: .adaptive property to histograms (deprecating is_/set_ methods)
 - Fixed: various small bugs
 
-0.3.39 (7th July 2018)
-----------------------
+0.3.39 (7 July 2018)
+--------------------
 - Added: matplotlib backend step plot
 - Added: string representation for binnings
 - Added: binning(s) as a public property of histograms
 
-0.3.38 (4th July 2018)
------------------------
+0.3.38 (4 July 2018)
+--------------------
 - Added: vega plotting backend: xlim, ylim arguments
 - Added: matplotlib plotting backend: simplified stats box with totals
 - Fixed: several minor bugs
 
-0.3.37 (6th June 2018)
-----------------------
+0.3.37 (6 June 2018)
+--------------------
 - Added: vega plotting backend shows tooltips
 - Added: vega plotting backend accepts more formatting options
 - Added: text formatting for values displayed in the plot
 - Fixed: plotly plotting function did not work sometimes
 
-0.3.36 (24th May 2018)
-----------------------
+0.3.36 (24 May 2018)
+--------------------
 - Fixed: requires numpy for installation (setup.py)
 
-0.3.35 (16th May 2018)
-----------------------
+0.3.35 (16 May 2018)
+--------------------
 - Added: plotly plotting backend (basics)
 
-0.3.34 (8th May 2018)
----------------------
+0.3.34 (8 May 2018)
+-------------------
 Fixed: several minor bugs
 Changed: dropna=True by default
 
-0.3.33 (4th April 2018)
------------------------
+0.3.33 (4 April 2018)
+---------------------
 - Enhanced: vega plotting backend accepting more parameters (closer to matplotlib)
 - Fixed: several minor bugs
 
-0.3.32 (28th February 2018)
----------------------------
+0.3.32 (28 February 2018)
+-------------------------
 - Removed: bokeh plotting backend (as it is outdated)
 - Added: vega plotting backend (as alpha but with cool features already)
 
-0.3.31 (14th December 2017)
----------------------------
+0.3.31 (14 December 2017)
+-------------------------
 - Added: slicing ND histograms with [] - works for ints and slices (alpha)
 - Added: physt.helpers.db to create histograms from cursors (preview)
 - Added: h() facade function; histogram, histogram2d and histogramdd will become obsolete
 
-0.3.30 (13th July 2017)
------------------------
+0.3.30 (13 July 2017)
+---------------------
 - Added: default parameters in matplotlib backend
 - Changed: refactoring of matplotlib backend (DRY)
 - Fixed: several bugs
 
-0.3.29 (7th July 2017)
-----------------------
+0.3.29 (7 July 2017)
+--------------------
 - Added: "fist example"
 - Changed: several binning methods use bin_count instead of bins
 - Changed: matplotlib plotting methods accept `title`, `xlabel`, `ylabel` arguments
 
-0.3.28.1 (15th April 2017)
---------------------------
+0.3.28.1 (15 April 2017)
+------------------------
 - Fixed: Python 2.7 behaviour (some or most?)
 - Added: bokeh line plot type
 
-0.3.28 (10th April 2017)
-------------------------
+0.3.28 (10 April 2017)
+----------------------
 - Added: bokeh map plot type
 - Fixed: various bugs
 
-0.3.27 (30th March 2017)
-------------------------
+0.3.27 (30 March 2017)
+----------------------
 - Added: HistogramND.select to slice histograms
 - Fixed: various bugs
 
-0.3.26 (27th March 2017)
-------------------------
+0.3.26 (27 March 2017)
+----------------------
 - Optimization: Reduced memory overhead of h1 by 60 %.
 - Fixed: small bugs
 
-0.3.25 (25th March 2017)
-------------------------
+0.3.25 (25 March 2017)
+----------------------
 - Added: more items in physt.examples
 - Changed: merge_bins not inplace by default
 - Changed: unified (hopefully) treatment of value_format in matplotlib plotting
@@ -189,124 +193,124 @@ Changed: dropna=True by default
 
 0.3.24 skipped to match dates ;-)
 
-0.3.23 (16th March 2017)
-------------------------
+0.3.23 (16 March 2017)
+----------------------
 - Added: geo_map plot type (based on folium)
 - Fixed: various bugs
 
-0.3.22 (16th January 2017)
---------------------------
+0.3.22 (16 January 2017)
+------------------------
 - Added: JSON output/input (not much tested, but already reads files)
 - Added: physt.example namespace for simple ready-made histograms.
 - Fixed: various bugs
 
-0.3.21 (19th November 2016)
----------------------------
+0.3.21 (19 November 2016)
+-------------------------
 - Added: fill plot type
 - Changed: h.plot(histtype=) changed to kind= (similar to pandas)
 
-0.3.20 (8th November 2016)
---------------------------
+0.3.20 (8 November 2016)
+------------------------
 - Changed: refactored the meta data & copy() method
 - Added: Output to JSON (experimental)
 - Fixed: several bugs
 
-0.3.19 (3th October 2016)
--------------------------
+0.3.19 (3 October 2016)
+-----------------------
 - Added: support zorder for most matplotlib plotting functions
 
-0.3.18 (2nd October 2016)
--------------------------
+0.3.18 (2 October 2016)
+-----------------------
 - Fix: a few dtype-related bugs
 - Changed: refactor constructors to HistogramBase
 
-0.3.17 (23rd September 2016)
-----------------------------
+0.3.17 (23 September 2016)
+--------------------------
 - Added: possibility to transform coordinates in 2D maps
 
-0.3.16 (21st September 2016)
-----------------------------
+0.3.16 (21 September 2016)
+--------------------------
 - Added: cylinder_map plot type
 - Added: surface_map plot type
 
-0.3.15 (15th September 2016)
-----------------------------
+0.3.15 (15 September 2016)
+--------------------------
 - Added: globe_map plot for directional histograms
 - Changed: Reworked projections of cylindrical / spherical histograms
 
-0.3.14 (14th September 2016)
-----------------------------
+0.3.14 (14 September 2016)
+--------------------------
 - Added: CylindricalHistogram
 - Changed: More complete implementation of polar / spherical histograms
 
-0.3.13 (12th September 2016)
-----------------------------
+0.3.13 (12 September 2016)
+--------------------------
 - Added: TransformedHistogramMixin for special histograms
 - Fix: a few dtype-related bugs
 - Fix: a lot of polar histogram bugs
 
-0.3.12 (6th September 2016)
----------------------------
+0.3.12 (6 September 2016)
+-------------------------
 - Fix: a few minor bugs
 
-0.3.11 (22nd August 2016)
--------------------------
+0.3.11 (22 August 2016)
+-----------------------
 - Changed: transform parameter in matplotlib plotting -> cmap_normalize
 - Changed: show_colorbar parameter works in "image" matplotlib plotting
 - Changed: "special" histogram plotting less "special"
 
-0.3.10 (12th August 2016)
--------------------------
+0.3.10 (12 August 2016)
+-----------------------
 - Added: astropy binning schemes (return)
 - Added: Histogram2D.T - a fast transpose
 - Fix: a few minor bugs in plotting
 
-0.3.9 (11th August 2016)
-------------------------
+0.3.9 (11 August 2016)
+----------------------
 - Changed: moved dask support to compat package
 - Added: pair_plot for two histograms
 - Fix: a few minor bugs
 
-0.3.8 (2nd August 2016)
------------------------
+0.3.8 (2 August 2016)
+---------------------
 - Changed: Refactor plotting to a module (no code rewrite required)
 
-0.3.7 (1st August 2016)
------------------------
+0.3.7 (1 August 2016)
+---------------------
 - Added: xscale/yscale, xlim/ylim argument for 1D plots
 - Fix: a few minor bugs
 
-0.3.6 (27th July 2016)
----------------------
+0.3.6 (27 July 2016)
+--------------------
 - Added: Histogram dtypes (beta)
 - Added: "image" plot type for Histogram2D
 - Added: Geant4 CSV histograms input
 - Fix: Broken polar histogram
 
-0.3.5 (5th July 2016)
----------------------
+0.3.5 (5 July 2016)
+-------------------
 - Added: Merging of bins
 
-0.3.4 (30th June 2016)
-----------------------
+0.3.4 (30 June 2016)
+--------------------
 - Added: Support for Python 2.7
 
-0.3.3 (29th June 2016)
-----------------------
+0.3.3 (29 June 2016)
+--------------------
 - Fix: Many bugs
 - Changed: Binnings reworked to classes
 - Updated: Adaptive histogram
 - Added: Adaptive histogram multi-dimensional
 - Added: Basic support for dask (alpha)
 
-0.3.2 (3rd June 2016)
----------------------
+0.3.2 (3 June 2016)
+-------------------
 - Fix: arithmetics with ND histograms
 - Fix: statistics
 - Added: adaptive histogram (alpha)
 
-0.3.1 (1st June 2016)
----------------------
+0.3.1 (1 June 2016)
+-------------------
 - bug fixes
 
 0.3 (May 2016)

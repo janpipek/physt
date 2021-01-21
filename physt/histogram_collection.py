@@ -32,7 +32,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
                 )
             self._binning = histograms[0].binning
             if not all(h.binning == self._binning for h in histograms):
-                raise ValueError("All histogram should share the same binning.")
+                raise ValueError("All histograms should share the same binning.")
         else:
             if binning is None:
                 raise ValueError("Either binning or at least one histogram must be provided.")
