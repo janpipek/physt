@@ -1,9 +1,6 @@
-import sys
-import os
 import pytest
 import numpy as np
 
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 import physt
 from physt import io
 from physt.histogram1d import Histogram1D
@@ -47,13 +44,8 @@ class TestCollectionIO:
         bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
         values1 = [4, 0, 3, 7.2]
         values2 = [14, 10, 13, 17.2]
-        col = HistogramCollection()
-        col.add(Histogram1D(bins, values1))
+        col = HistogramCollection(Histogram1D(bins, values1), Histogram1D(bins, values2))
         col.add(Histogram1D(bins, values2))
         json = col.to_json()
         read = io.parse_json(json)
         assert read == col
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

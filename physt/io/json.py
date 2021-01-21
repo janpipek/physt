@@ -2,7 +2,8 @@
 import json
 from typing import Optional, Union
 
-from physt.io import CURRENT_VERSION, create_from_dict, VersionError
+from physt.io.util import create_from_dict
+from physt.io.version import CURRENT_VERSION
 from physt.histogram_base import HistogramBase
 from physt.histogram_collection import HistogramCollection
 
@@ -11,9 +12,7 @@ COLLECTION_COMPATIBLE_VERSION = "0.4.5"
 
 
 def save_json(
-    histogram: Union[HistogramBase, HistogramCollection],
-    path: Optional[str] = None,
-    **kwargs
+    histogram: Union[HistogramBase, HistogramCollection], path: Optional[str] = None, **kwargs
 ) -> str:
     """Save histogram to JSON format.
 
@@ -44,14 +43,14 @@ def save_json(
     return text
 
 
-def load_json(path: str, encoding: str = "utf-8") -> HistogramBase:
+def load_json(path: str, encoding: str = "utf-8") -> Union[HistogramBase, HistogramCollection]:
     """Load histogram from a JSON file."""
     with open(path, "r", encoding=encoding) as f:
         text = f.read()
         return parse_json(text)
 
 
-def parse_json(text: str) -> HistogramBase:
+def parse_json(text: str) -> Union[HistogramBase, HistogramCollection]:
     """Create histogram from a JSON string."""
     data = json.loads(text)
     return create_from_dict(data, format_name="JSON")

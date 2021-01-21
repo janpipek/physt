@@ -1,9 +1,7 @@
-import sys
-import os
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
-from physt import bin_utils
 import numpy as np
 import pytest
+
+from physt import bin_utils
 
 
 class TestMakeArray:
@@ -90,7 +88,3 @@ class TestFindHumanWidth:
         expected = [1.0, 2.0, 30, 60, 1800, 3600, 86400]
         result = [bin_utils.find_human_width(x, kind="time") for x in invalues]
         assert np.array_equal(result, expected)
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

@@ -17,16 +17,16 @@ class superclasses.
 """
 import abc
 from functools import reduce
-from typing import Optional, Type, Union, Tuple
+from typing import Optional, Type, Union, Tuple, Dict
 
 import numpy as np
 
-from .histogram_nd import HistogramND
-from .histogram1d import Histogram1D
-from .util import deprecation_alias
-from .typing_aliases import Axis, RangeTuple
-from . import binnings, histogram_nd, histogram1d
-
+from physt.histogram_nd import HistogramND
+from physt.histogram1d import Histogram1D
+from physt.util import deprecation_alias
+from physt.typing_aliases import Axis, RangeTuple, ArrayLike
+from . import histogram_nd, binnings
+from .histogram_base import HistogramBase
 
 FULL_PHI_RANGE: RangeTuple = (0, 2 * np.pi)
 FULL_THETA_RANGE: RangeTuple = (0, np.pi)
@@ -66,26 +66,42 @@ class TransformedHistogramMixin(abc.ABC):
         """
         if axis is None and not transformed:
             value = self.transform(value)
-        return HistogramND.find_bin(self, value, axis=axis)
+
+        return super().find_bin(value, axis=axis)  # type: ignore
 
     @property
     @abc.abstractmethod
     def bin_sizes(self):
         ...
 
-    def fill(self, value, weight=1, transformed=False):
+    def fill(
+        self,
+        value: ArrayLike,
+        weight: Optional[ArrayLike] = 1,
+        *,
+        transformed: bool = False,
+        **kwargs,
+    ):
         if not transformed:
             value = self.transform(value)
-        return super().fill(value=value, weight=weight)
+        return super().fill(value=value, weight=weight, **kwargs)  # type: ignore
 
-    def fill_n(self, values, weights=None, dropna=True, transformed=False):
+    def fill_n(
+        self,
+        values: ArrayLike,
+        weights: Optional[ArrayLike] = None,
+        *,
+        dropna: bool = True,
+        transformed: bool = False,
+        **kwargs,
+    ):
         if not transformed:
             values = self.transform(values)
-        super().fill_n(values=values, weights=weights, dropna=dropna)
+        super().fill_n(values=values, weights=weights, dropna=dropna, **kwargs)  # type: ignore
 
-    _projection_class_map = {}
+    _projection_class_map: Dict[Tuple[int, ...], type] = {}
 
-    source_ndim: Union[int, Tuple[int]]
+    source_ndim: Union[int, Tuple[int, ...]]
 
     def projection(self, *axes, **kwargs):
         """Projection to lower-dimensional histogram.
@@ -99,17 +115,15 @@ class TransformedHistogramMixin(abc.ABC):
         if axes in self._projection_class_map:
             klass = self._projection_class_map[axes]
             return HistogramND.projection(self, *axes, type=klass, **kwargs)
-        else:
-            return HistogramND.projection(self, *axes, **kwargs)
+        return HistogramND.projection(self, *axes, **kwargs)
 
     @classmethod
     def _validate_source_dimension(cls, value: np.ndarray):
-        source_ndims = (
-            [cls.source_ndim] if isinstance(cls.source_ndim, int) else cls.source_ndim
-        )
+        source_ndims = [cls.source_ndim] if isinstance(cls.source_ndim, int) else cls.source_ndim
         if not len(value.shape) <= 2 or value.shape[-1] not in source_ndims:
             raise ValueError(
-                f"{cls.__name__} can transform only arrays with shape (N, {cls.source_ndim}) or ({cls.source_ndim},), {value.shape} given."
+                f"{cls.__name__} can transform only arrays with shape (N, {cls.source_ndim})"
+                f" or ({cls.source_ndim},), {value.shape} given."
             )
 
     @classmethod
@@ -125,7 +139,7 @@ class TransformedHistogramMixin(abc.ABC):
 
         Note: Implement _
         """
-        value = np.asarray(value, dtype=np.float64)
+        value = np.atleast_1d(np.asarray(value, dtype=np.float64))
         cls._validate_source_dimension(value)
         return cls._transform_correct_dimension(value)
 
@@ -136,7 +150,9 @@ class RadialHistogram(TransformedHistogramMixin, Histogram1D):
     This is a special case of a 1D histogram with transformed coordinates.
     """
 
-    default_axis_names = ("r",)
+    default_axis_names = [
+        "r",
+    ]
     source_ndim = (2, 3)
 
     @property
@@ -157,9 +173,7 @@ class AzimuthalHistogram(TransformedHistogramMixin, Histogram1D):
     This is a special case of a 1D histogram with transformed coordinates.
     """
 
-    default_axis_names = {
-        "phi",
-    }
+    default_axis_names = ["phi"]
     default_init_values = {"radius": 1}
     source_ndim = 2
 
@@ -193,14 +207,12 @@ class PolarHistogram(TransformedHistogramMixin, HistogramND):
 
     """
 
-    default_axis_names = ("r", "phi")
+    default_axis_names = ["r", "phi"]
     source_ndim = 2
 
     @property
     def bin_sizes(self):
-        sizes = 0.5 * (
-            self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2
-        )
+        sizes = 0.5 * (self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2)
         sizes = np.outer(sizes, self.get_bin_widths(1))
         return sizes
 
@@ -224,13 +236,11 @@ class SphericalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
 
     @property
     def bin_sizes(self):
-        sizes1 = np.cos(self.get_bin_left_edges(0)) - np.cos(
-            self.get_bin_right_edges(0)
-        )
+        sizes1 = np.cos(self.get_bin_left_edges(0)) - np.cos(self.get_bin_right_edges(0))
         sizes2 = self.get_bin_widths(1)
         return reduce(np.multiply, np.ix_(sizes1, sizes2))
 
-    default_axis_names = ("theta", "phi")
+    default_axis_names = ["theta", "phi"]
     default_init_values = {"radius": 1}
     source_ndim = 3
 
@@ -242,6 +252,10 @@ class SphericalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         """
         return self._meta_data.get("radius", 1)
 
+    @radius.setter
+    def radius(self, value):
+        self._meta_data["radius"] = value
+
     @classmethod
     def _transform_correct_dimension(cls, value):
         result = np.ndarray((*value.shape[:-1], 2))
@@ -250,10 +264,6 @@ class SphericalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         result[..., 0] = np.arctan2(xy, z) % (2 * np.pi)
         result[..., 1] = np.arctan2(y, x) % (2 * np.pi)
         return result
-
-    @radius.setter
-    def radius(self, value):
-        self._meta_data["radius"] = value
 
 
 class SphericalHistogram(TransformedHistogramMixin, HistogramND):
@@ -265,7 +275,7 @@ class SphericalHistogram(TransformedHistogramMixin, HistogramND):
     - phi as azimuthal angle  (in the xy projection) in the (0, 2*pi) range
     """
 
-    default_axis_names = ("r", "theta", "phi")
+    default_axis_names = ["r", "theta", "phi"]
     source_ndim = 3
 
     @classmethod
@@ -280,12 +290,8 @@ class SphericalHistogram(TransformedHistogramMixin, HistogramND):
 
     @property
     def bin_sizes(self):
-        sizes1 = (
-            self.get_bin_right_edges(0) ** 3 - self.get_bin_left_edges(0) ** 3
-        ) / 3
-        sizes2 = np.cos(self.get_bin_left_edges(1)) - np.cos(
-            self.get_bin_right_edges(1)
-        )
+        sizes1 = (self.get_bin_right_edges(0) ** 3 - self.get_bin_left_edges(0) ** 3) / 3
+        sizes2 = np.cos(self.get_bin_left_edges(1)) - np.cos(self.get_bin_right_edges(1))
         sizes3 = self.get_bin_widths(2)
         # Hopefully correct
         return reduce(np.multiply, np.ix_(sizes1, sizes2, sizes3))
@@ -307,7 +313,7 @@ class CylindricalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         The radius of the surface. Useful for plotting
     """
 
-    default_axis_names = ("rho", "phi", "z")
+    default_axis_names = ["rho", "phi", "z"]
     default_init_values = {"radius": 1}
     source_ndim = 3
 
@@ -327,15 +333,15 @@ class CylindricalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         """
         return self._meta_data.get("radius", 1)
 
+    @radius.setter
+    def radius(self, value: float):
+        self._meta_data["radius"] = float(value)
+
     @property
     def bin_sizes(self) -> np.ndarray:
         sizes1 = self.get_bin_widths(0)
         sizes2 = self.get_bin_widths(1)
         return reduce(np.multiply, np.ix_(sizes1, sizes2))
-
-    @radius.setter
-    def radius(self, value: float):
-        self._meta_data["radius"] = float(value)
 
     _projection_class_map = {(0,): AzimuthalHistogram}
 
@@ -349,7 +355,7 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
     - z as the last direction without modification, in (-inf, +inf) range
     """
 
-    default_axis_names = ("rho", "phi", "z")
+    default_axis_names = ["rho", "phi", "z"]
     source_ndim = 3
 
     @classmethod
@@ -363,9 +369,7 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
 
     @property
     def bin_sizes(self):
-        sizes1 = 0.5 * (
-            self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2
-        )
+        sizes1 = 0.5 * (self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2)
         sizes2 = self.get_bin_widths(1)
         sizes3 = self.get_bin_widths(2)
         return reduce(np.multiply, np.ix_(sizes1, sizes2, sizes3))
@@ -377,36 +381,35 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
         (1, 2): CylindricalSurfaceHistogram,
     }
 
-    def projection(self, *args, **kwargs):
-        result = TransformedHistogramMixin.projection(self, *args, **kwargs)
+    def projection(self, *axes, **kwargs):
+        result = TransformedHistogramMixin.projection(self, *axes, **kwargs)
         if isinstance(result, CylindricalSurfaceHistogram):
             result.radius = self.get_bin_right_edges(0)[-1]
         return result
 
 
 def polar(
-    xdata,
-    ydata,
+    xdata: ArrayLike,
+    ydata: ArrayLike,
     *,
     radial_bins="numpy",
     radial_range: Optional[RangeTuple] = None,
     phi_bins=DEFAULT_PHI_BINS,
     phi_range: RangeTuple = (0, 2 * np.pi),
     dropna: bool = False,
-    weights=None,
+    weights: Optional[ArrayLike] = None,
     transformed: bool = False,
     **kwargs,
-):
+) -> PolarHistogram:
     """Facade construction function for the PolarHistogram."""
     if "range" in kwargs:
-        raise ValueError(
-            "Please, use `radial_range` and `phi_range` arguments instead of `range`"
-        )
+        raise ValueError("Please, use `radial_range` and `phi_range` arguments instead of `range`")
 
-    data = np.concatenate([xdata[:, np.newaxis], ydata[:, np.newaxis]], axis=1)
-    data = _prepare_data(
-        data, transformed=transformed, klass=PolarHistogram, dropna=dropna
-    )
+    xdata = np.asarray(xdata)
+    ydata = np.asarray(ydata)
+
+    data: np.ndarray = np.concatenate([xdata[:, np.newaxis], ydata[:, np.newaxis]], axis=1)
+    data = _prepare_data(data, transformed=transformed, klass=PolarHistogram, dropna=dropna)
 
     if isinstance(phi_bins, int):
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
@@ -424,8 +427,8 @@ def polar(
 
 
 def azimuthal(
-    xdata,
-    ydata=None,
+    xdata: ArrayLike,
+    ydata: Optional[ArrayLike] = None,
     *,
     bins=DEFAULT_PHI_BINS,
     range: RangeTuple = (0, 2 * np.pi),
@@ -433,43 +436,42 @@ def azimuthal(
     weights=None,
     transformed: bool = False,
     **kwargs,
-):
+) -> AzimuthalHistogram:
+    """Facade function to create an AzimuthalHistogram."""
     if transformed:
-        data = xdata
+        data: np.ndarray = np.asarray(xdata)
         if ydata is not None:
             raise ValueError(
                 "With `transformed==True`, you can provide only one positional argument (xdata)."
             )
     else:
-        data = np.concatenate([xdata[:, np.newaxis], ydata[:, np.newaxis]], axis=1)
-    data = _prepare_data(
-        data, transformed=False, klass=AzimuthalHistogram, dropna=dropna
-    )
+        data = np.concatenate([np.asarray(xdata)[:, np.newaxis], np.asarray(ydata)[:, np.newaxis]], axis=1)
+    data = _prepare_data(data, transformed=False, klass=AzimuthalHistogram, dropna=dropna)
     if isinstance(bins, int):
         bins = np.linspace(*range, bins + 1)
-    bin_schema = binnings.calculate_bins(
-        data, bins, range=range, check_nan=not dropna, **kwargs
-    )
+    bin_schema = binnings.calculate_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
     return AzimuthalHistogram.from_calculate_frequencies(
         data=data, binning=bin_schema, weights=weights
     )
 
 
 def radial(
-    xdata,
-    ydata=None,
-    zdata=None,
+    xdata: ArrayLike,
+    ydata: Optional[ArrayLike] = None,
+    zdata: Optional[ArrayLike] = None,
     *,
     bins="numpy",
     range: Optional[RangeTuple] = None,
     dropna: bool = False,
-    weights=None,
+    weights: Optional[ArrayLike] = None,
     transformed: bool = False,
     **kwargs,
-):
+) -> RadialHistogram:
+    """Facade function to create a radial histogram."""
     # Contruct source data
+    xdata = np.asarray(xdata)
     if transformed:
-        data = xdata
+        data = np.asarray(xdata)
         if ydata is not None or zdata is not None:
             raise ValueError(
                 "With `transformed==True`, you can provide only one positional argument (xdata)."
@@ -480,26 +482,25 @@ def radial(
             raise ValueError(
                 "With 3D first argument (`xdata`), you cannot provide other positional arguments."
             )
-    elif zdata is None:
-        data = np.concatenate([xdata[:, np.newaxis], ydata[:, np.newaxis]], axis=1)
     else:
-        data = np.concatenate(
-            [xdata[:, np.newaxis], ydata[:, np.newaxis], zdata[:, np.newaxis]], axis=1
-        )
+        ydata = np.asarray(ydata)
+        if zdata is None:
+            data = np.concatenate([xdata[:, np.newaxis], ydata[:, np.newaxis]], axis=1)
+        else:
+            zdata = np.asarray(zdata)
+            data = np.concatenate(
+                [xdata[:, np.newaxis], ydata[:, np.newaxis], zdata[:, np.newaxis]], axis=1
+            )
 
-    data = _prepare_data(
-        data, transformed=transformed, klass=RadialHistogram, dropna=dropna
-    )
-    bin_schema = binnings.calculate_bins(
-        data, bins, range=range, check_nan=not dropna, **kwargs
-    )
+    data = _prepare_data(data, transformed=transformed, klass=RadialHistogram, dropna=dropna)
+    bin_schema = binnings.calculate_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
     return RadialHistogram.from_calculate_frequencies(
         data=data, binning=bin_schema, weights=weights
     )
 
 
 def spherical(
-    data=None,
+    data: ArrayLike,
     *,
     radial_bins="numpy",
     theta_bins=DEFAULT_THETA_BINS,
@@ -511,16 +512,14 @@ def spherical(
     radial_range: Optional[RangeTuple] = None,
     weights=None,
     **kwargs,
-):
-    """Facade construction function for the SphericalHistogram."""
+) -> SphericalHistogram:
+    """Facade function to create a speherical histogram."""
     if "range" in kwargs:
         raise ValueError(
             "Please, use `radial_range`, `theta_range` and `phi_range` arguments instead of `range`"
         )
 
-    data = _prepare_data(
-        data, transformed=transformed, klass=SphericalHistogram, dropna=dropna
-    )
+    data = _prepare_data(data, transformed=transformed, klass=SphericalHistogram, dropna=dropna)
 
     if isinstance(theta_bins, int):
         theta_bins = np.linspace(*theta_range, theta_bins + 1)
@@ -538,9 +537,7 @@ def spherical(
         )
     except RuntimeError as err:
         if "Bins not in rising order" in str(err):
-            import warnings
-
-            if np.isclose(data[:, 0].min(), data[:, 0].max()):
+            if data is not None and np.isclose(data[:, 0].min(), data[:, 0].max()):
                 raise ValueError(
                     f"All radii seem to be the same: {data[:,0].min():,.4f}. "
                     "Perhaps you wanted to use `spherical_surface_histogram` instead or set radius bins explicitly?"
@@ -552,30 +549,30 @@ def spherical(
 
 
 def spherical_surface(
-    data=None,
+    data: ArrayLike,
     *,
     theta_bins=DEFAULT_THETA_BINS,
     phi_bins=DEFAULT_PHI_BINS,
     transformed: bool = False,
-    radius=None,
+    radius: Optional[float] = None,
     dropna: bool = False,
-    weights=None,
+    weights: Optional[ArrayLike] = None,
     theta_range: RangeTuple = FULL_THETA_RANGE,
     phi_range: RangeTuple = FULL_PHI_RANGE,
     **kwargs,
-):
+) -> SphericalSurfaceHistogram:
     """Facade construction function for the SphericalSurfaceHistogram."""
     transformed_data = _prepare_data(
         data, transformed=transformed, klass=SphericalSurfaceHistogram, dropna=dropna
     )
 
     if "range" in kwargs:
-        raise ValueError(
-            "Please, use `theta_range` and `phi_range` arguments instead of `range`"
-        )
+        raise ValueError("Please, use `theta_range` and `phi_range` arguments instead of `range`")
 
     if transformed_data is not None:
         if not transformed and radius is None:
+            # TODO: Do we really want this?
+            data = np.asarray(data)
             radius = np.hypot(np.hypot(data[:, 0], data[:, 1]), data[:, 2])
 
     if radius is None:
@@ -596,7 +593,7 @@ def spherical_surface(
 
 
 def cylindrical(
-    data=None,
+    data: Optional[ArrayLike] = None,
     *,
     rho_bins="numpy",
     phi_bins=16,
@@ -605,19 +602,17 @@ def cylindrical(
     dropna: bool = True,
     rho_range: Optional[RangeTuple] = None,
     phi_range: RangeTuple = FULL_PHI_RANGE,
-    weights=None,
-    z_range=None,
+    weights: Optional[ArrayLike] = None,
+    z_range: Optional[RangeTuple] = None,
     **kwargs,
-):
-    """Facade construction function for the CylindricalHistogram."""
+) -> CylindricalHistogram:
+    """Facade function to create a cylindrical histogram."""
     if "range" in kwargs:
         raise ValueError(
             "Please, use `rho_range`, `phi_range` and `z_range` arguments instead of `range`"
         )
 
-    data = _prepare_data(
-        data, transformed=transformed, klass=CylindricalHistogram, dropna=dropna
-    )
+    data = _prepare_data(data, transformed=transformed, klass=CylindricalHistogram, dropna=dropna)
 
     if isinstance(phi_bins, int):
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
@@ -646,12 +641,10 @@ def cylindrical_surface(
     phi_range: RangeTuple = FULL_PHI_RANGE,
     z_range: Optional[RangeTuple] = None,
     **kwargs,
-):
-    """Facade construction function for the CylindricalSurfaceHistogram."""
+) -> CylindricalSurfaceHistogram:
+    """Facade function to create a cylindrical surface histogram."""
     if "range" in kwargs:
-        raise ValueError(
-            "Please, use `phi_range` and `z_range` arguments instead of `range`"
-        )
+        raise ValueError("Please, use `phi_range` and `z_range` arguments instead of `range`")
 
     transformed_data = _prepare_data(
         data, transformed=transformed, klass=CylindricalHistogram, dropna=dropna
@@ -674,7 +667,7 @@ def cylindrical_surface(
         **kwargs,
     )
     frequencies, errors2, missed = histogram_nd.calculate_frequencies(
-        data, ndim=3, binnings=bin_schemas, weights=weights
+        data, binnings=bin_schemas, weights=weights
     )
     return CylindricalSurfaceHistogram(
         binnings=bin_schemas,
@@ -697,7 +690,7 @@ cylindrical_surface_histogram = deprecation_alias(
 
 
 def _prepare_data(
-    data,
+    data: Optional[ArrayLike],
     transformed: bool,
     klass: Type[TransformedHistogramMixin],
     *,

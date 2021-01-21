@@ -85,7 +85,7 @@ lw (or linewidth) : int
     Width of the lines
 """
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, Tuple
 
 from physt.histogram_base import HistogramBase
 from physt.histogram_collection import HistogramCollection
@@ -106,28 +106,28 @@ try:
     from . import matplotlib as mpl_backend
 
     backends["matplotlib"] = mpl_backend
-except:
+except ImportError:
     pass
 
 try:
     from . import vega as vega_backend
 
     backends["vega"] = vega_backend
-except:
+except ImportError:
     pass
 
 try:
     from . import plotly as plotly_backend
 
     backends["plotly"] = plotly_backend
-except:
+except ImportError:
     pass
 
 try:
     from . import folium as folium_backend
 
     backends["folium"] = folium_backend
-except:
+except ImportError:
     pass
 
 from . import ascii as ascii_backend
@@ -140,21 +140,26 @@ if backends:
     _default_backend = list(backends.keys())[0]
 
 
-def set_default_backend(name: str):
+def set_default_backend(name: str) -> None:
     """Choose a default backend."""
-    global _default_backend
+    global _default_backend  # pylint: disable=global-statement
     if name == "bokeh":
-        raise RuntimeError(
+        raise ValueError(
             "Support for bokeh has been discontinued. At some point, we may return to support holoviews."
         )
     if not name in backends:
-        raise RuntimeError(
+        raise ValueError(
             "Backend {0} is not supported and cannot be set as default.".format(name)
         )
     _default_backend = name
 
 
-def _get_backend(name: str = None):
+def get_default_backend() -> Optional[str]:
+    """The backend that will be used by default with the `plot` function."""
+    return _default_backend
+
+
+def _get_backend(name: Optional[str] = None) -> Tuple[str, Any]:
     """Get a plotting backend.
 
     Tries to get it using the name - or the default one.
@@ -165,6 +170,8 @@ def _get_backend(name: str = None):
         )
     if not name:
         name = _default_backend
+        if not name:
+            raise RuntimeError("No backend for physt plotting.")
     if name == "bokeh":
         raise RuntimeError(
             "Support for bokeh has been discontinued. At some point, we may return to support holoviews."
@@ -176,11 +183,11 @@ def _get_backend(name: str = None):
                 name, ", ".join(backends.keys())
             )
         )
-    return name, backends[name]
+    return name, backend
 
 
 def plot(
-    histogram: HistogramBase,
+    histogram: Union[HistogramBase, HistogramCollection],
     kind: Optional[str] = None,
     backend: Optional[str] = None,
     **kwargs
@@ -193,22 +200,20 @@ def plot(
     ----------
     kind: Type of the plot (like "scatter", "line", ...), similar to pandas
     """
-    backend_name, backend = _get_backend(backend)
+    backend_name, backend_impl = _get_backend(backend)
     if kind is None:
-        kinds = [t for t in backend.types if histogram.ndim in backend.dims[t]]
+        kinds = [t for t in backend_impl.types if histogram.ndim in backend_impl.dims[t]]  # type: ignore
         if not kinds:
             raise RuntimeError(
                 "No plot type is supported for {0}".format(histogram.__class__.__name__)
             )
         kind = kinds[0]
-    if kind in backend.types:
-        method = getattr(backend, kind)
+    if kind in backend_impl.types:
+        method = getattr(backend_impl, kind)
         return method(histogram, **kwargs)
     else:
         raise RuntimeError(
-            "Histogram type error: {0} missing in backend {1}".format(
-                kind, backend_name
-            )
+            "Histogram type error: {0} missing in backend {1}".format(kind, backend_name)
         )
 
 
@@ -250,6 +255,4 @@ class PlottingProxy:
 
     def __dir__(self):
         _, backend = _get_backend()
-        return tuple(
-            (t for t in backend.types if self.histogram.ndim in backend.dims[t])
-        )
+        return tuple((t for t in backend.types if self.histogram.ndim in backend.dims[t]))

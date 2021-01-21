@@ -1,11 +1,19 @@
 """Dask-based and dask oriented variants of physt histogram facade functions."""
+from typing import TYPE_CHECKING
+
+import dask
+
 from physt import h1 as original_h1
 from physt import histogramdd as original_hdd
+
+if TYPE_CHECKING:
+    import dask.array
 
 options = {"chunk_split": 16}
 
 
 def _run_dask(
+    *,
     name: str,
     data: "dask.array.Array",
     compute: bool,
@@ -22,8 +30,6 @@ def _run_dask(
     :param method: None (linear execution), "threaded" or callable
         to apply when computing.
     """
-    import dask
-
     if expand_arg:
         graph = dict(
             ("{0}-{1}-{2}".format(name, data.name, index), (func, *item))
@@ -41,15 +47,13 @@ def _run_dask(
     if compute:
         if not method:
             return dask.get(graph, result_name)
-        elif method in ["thread", "threaded", "threading", "threads"]:
+        if method in ["thread", "threaded", "threading", "threads"]:
             return dask.threaded.get(graph, result_name)
-        else:
-            return method(graph, result_name)
-    else:
-        return graph, result_name
+        return method(graph, result_name)
+    return graph, result_name
 
 
-def histogram1d(data, bins=None, *args, **kwargs):
+def histogram1d(data, bins=None, **kwargs):
     """Facade function to create one-dimensional histogram using dask.
 
     Parameters
@@ -60,19 +64,15 @@ def histogram1d(data, bins=None, *args, **kwargs):
     --------
     physt.histogram
     """
-    import dask
-
     if not hasattr(data, "dask"):
-        data = dask.array.from_array(
-            data, chunks=int(data.shape[0] / options["chunk_split"])
-        )
+        data = dask.array.from_array(data, chunks=int(data.shape[0] / options["chunk_split"]))
 
     if not kwargs.get("adaptive", True):
         raise RuntimeError("Only adaptive histograms supported for dask (currently).")
     kwargs["adaptive"] = True
 
     def block_hist(array):
-        return original_h1(array, bins, *args, **kwargs)
+        return original_h1(array, bins, **kwargs)
 
     return _run_dask(
         name="dask_adaptive1d",
@@ -86,12 +86,11 @@ def histogram1d(data, bins=None, *args, **kwargs):
 h1 = histogram1d  # Alias for convenience
 
 
-def histogramdd(data, bins=None, *args, **kwargs):
+def histogramdd(data, bins=None, **kwargs):
     """Facade function to create multi-dimensional histogram using dask.
 
     Each "column" must be one-dimensional.
     """
-    import dask
     from dask.array.rechunk import rechunk
 
     if isinstance(data, (list, tuple)):
@@ -115,7 +114,7 @@ def histogramdd(data, bins=None, *args, **kwargs):
     kwargs["adaptive"] = True
 
     def block_hist(array):
-        return original_hdd(array, bins, *args, **kwargs)
+        return original_hdd(array, bins, **kwargs)
 
     return _run_dask(
         name="dask_adaptive_dd",
@@ -127,11 +126,9 @@ def histogramdd(data, bins=None, *args, **kwargs):
     )
 
 
-def histogram2d(data1, data2, bins=None, *args, **kwargs):
+def histogram2d(data1, data2, bins=None, **kwargs):
     """Facade function to create 2D histogram using dask."""
     # TODO: currently very unoptimized! for non-dasks
-    import dask
-
     if "axis_names" not in kwargs:
         if hasattr(data1, "name") and hasattr(data2, "name"):
             kwargs["axis_names"] = [data1.name, data2.name]
@@ -142,12 +139,12 @@ def histogram2d(data1, data2, bins=None, *args, **kwargs):
 
     data = dask.array.stack([data1, data2], axis=1)
     kwargs["dim"] = 2
-    return histogramdd(data, bins, *args, **kwargs)
+    return histogramdd(data, bins, **kwargs)
 
 
 h2 = histogram2d  # Alias for convenience
 
 
-def h3(data, *args, **kwargs):
+def h3(data, bins=None, **kwargs):
     """Facade function to create 3D histogram using dask."""
-    return histogramdd(data, dim=3, *args, **kwargs)
+    return histogramdd(data, bins, **kwargs)

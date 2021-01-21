@@ -3,8 +3,9 @@ Functions that are shared by several (all) plotting backends.
 
 """
 import re
+from functools import wraps
 from typing import Tuple, List, Union, Callable
-from datetime import timedelta, time
+from datetime import timedelta
 
 import numpy as np
 
@@ -38,7 +39,10 @@ def get_data(
             data = histogram.densities
     else:
         if cumulative:
-            data = histogram.cumulative_frequencies
+            try:
+                data = histogram.cumulative_frequencies  # type: ignore
+            except AttributeError:
+                raise TypeError(f"Type {type(histogram)} does not support cumulative frequencies.")
         else:
             data = histogram.frequencies
 
@@ -73,7 +77,7 @@ def get_err_data(
 
 
 def get_value_format(
-    value_format: Union[Callable, str, None]
+    value_format: Union[Callable[[float], str], str, None]
 ) -> Callable[[float], str]:
     """Create a formatting function from a generic value_format argument."""
     if not value_format:
@@ -110,6 +114,24 @@ def pop_kwargs_with_prefix(prefix: str, kwargs: dict) -> dict:
     return {key[len(prefix) :]: kwargs.pop(key) for key in keys}
 
 
+def check_ndim(ndim: Union[int, Tuple[int, ...]]):
+    """Decorator checking proper histogram dimension."""
+
+    def wrapper(f):
+        @wraps(f)
+        def wrapped(h, *args, **kwargs):
+            expected_dim = (ndim,) if isinstance(ndim, int) else ndim
+            if h.ndim not in expected_dim:
+                raise TypeError(
+                    f"This type of plot must have dimension in {expected_dim}, {h.ndim} found."
+                )
+            return f(h, *args, **kwargs)
+
+        return wrapped
+
+    return wrapper
+
+
 TickCollection = Tuple[List[float], List[str]]
 
 
@@ -138,17 +160,18 @@ class TimeTickHandler:
     ) -> "TimeTickHandler.LevelType":
         if isinstance(value, tuple):
             if len(value) != 2:
-                raise ValueError("Invalid level: {0}".format(value))
+                raise ValueError(f"Invalid level: {value}")
             if value[0] not in cls.LEVELS:
-                raise ValueError("Invalid level: {0}".format(value))
+                raise ValueError(f"Invalid level: {value}")
             if not isinstance(value[1], (float, int)):
-                raise ValueError("Invalid level: {0}".format(value))
+                raise ValueError(f"Invalid level: {value}")
             return value
-        elif isinstance(value, (float, int)):
+        if isinstance(value, (float, int)):
             return cls.parse_level(timedelta(seconds=value))
-        elif isinstance(value, timedelta):
-            ...  # TODO: Implement
-        elif isinstance(value, str):
+        if isinstance(value, timedelta):
+            # TODO: Implement
+            raise NotImplementedError
+        if isinstance(value, str):
             matchers = (
                 ("^(center|edge)s?$", lambda m: (m[1], 0)),
                 ("^([0-9\\.]+)?d(ay(s)?)?$", lambda m: ("day", float(m[1] or 1))),
@@ -163,14 +186,11 @@ class TimeTickHandler:
                 match = re.match(matcher[0], value)
                 if match:
                     return matcher[1](match)
-            raise ValueError("Cannot parse level: {0}".format(value))
-        else:
-            raise ValueError("Invalid level: {0}".format(value))
+            raise ValueError(f"Cannot parse level: {value}")
+        raise TypeError(f"Invalid level: {value}")
 
     @classmethod
-    def deduce_level(
-        cls, h1: Histogram1D, min_: float, max_: float
-    ) -> "TimeTickHandler.LevelType":
+    def deduce_level(cls, h1: Histogram1D, min_: float, max_: float) -> "TimeTickHandler.LevelType":
         ideal_width = (max_ - min_) / 6
         if ideal_width < 0.8:
             return ("sec", find_human_width_decimal(ideal_width))
@@ -189,15 +209,15 @@ class TimeTickHandler:
         # TODO: Change to class method?
         if level[0] == "edge":
             return h1.numpy_bins.tolist()
-        elif level[0] == "center":
+        if level[0] == "center":
             return h1.bin_centers
-        else:
-            width = level[1] * self.LEVELS[level[0]]
-            min_factor = int(min_ // width)
-            if min_ % width != 0:
-                min_factor += 1
-            max_factor = int(max_ // width)
-            return list(np.arange(min_factor, max_factor + 1) * width)
+
+        width = level[1] * self.LEVELS[level[0]]
+        min_factor = int(min_ // width)
+        if min_ % width != 0:
+            min_factor += 1
+        max_factor = int(max_ // width)
+        return list(np.arange(min_factor, max_factor + 1) * width)
 
     @classmethod
     def split_hms(cls, value) -> Tuple[bool, int, int, Union[int, float]]:
@@ -212,10 +232,7 @@ class TimeTickHandler:
             tick_days = [tick / 86400 for tick in ticks]
             if not any(tick % 1 for tick in tick_days):
                 tick_days = [int(tick) for tick in tick_days]
-            return [
-                "{0} day{1}".format(tick, "" if tick == 1 else "s")
-                for tick in tick_days
-            ]
+            return ["{0} day{1}".format(tick, "" if tick == 1 else "s") for tick in tick_days]
         else:
             hms = [self.split_hms(tick) for tick in ticks]
             include_hours = any(h for _, h, _, _ in hms)

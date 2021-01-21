@@ -1,12 +1,10 @@
-import sys
-import os
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
-import physt
-from physt import histogram_nd, h2, binnings
-from physt.histogram_nd import Histogram2D
 import numpy as np
 import pytest
 
+import physt
+from physt import h2, histogram_nd, binnings
+from physt.binnings import as_binning, BinningBase
+from physt.histogram_nd import Histogram2D
 
 vals = [
     [0.1, 2.0],
@@ -21,6 +19,25 @@ vals = [
 np.random.seed(42)
 
 
+@pytest.fixture
+def bins0to3() -> BinningBase:
+    return as_binning(np.linspace(0, 3, 4))
+
+
+@pytest.fixture
+def a3x3() -> np.ndarray:
+    return np.linspace(0, 8, 9).reshape((3, 3))
+
+
+@pytest.fixture
+def h3x3(bins0to3, a3x3) -> Histogram2D:
+    """Simple 2D histograms of shape 3x3."""
+    return Histogram2D(
+        binnings=[bins0to3, bins0to3],
+        frequencies=a3x3
+    )
+
+
 class TestCalculateFrequencies:
     def test_simple(self):
         bins = [[0, 1, 2], [0, 1, 2]]
@@ -28,7 +45,7 @@ class TestCalculateFrequencies:
         frequencies, errors2, missing = histogram_nd.calculate_frequencies(vals, binnings=schemas)
         assert np.array_equal([[1, 3], [0, 1]], frequencies)
         assert missing == 2
-        assert np.array_equal(errors2, frequencies)
+        assert errors2 is None
 
     def test_gap(self):
         bins = [
@@ -39,7 +56,7 @@ class TestCalculateFrequencies:
         frequencies, errors2, missing = histogram_nd.calculate_frequencies(vals, binnings=schemas)
         assert np.array_equal([[0, 0], [0, 1]], frequencies)
         assert missing == 6
-        assert np.array_equal(errors2, frequencies)
+        assert errors2 is None
 
     def test_errors(self):
         bins = [
@@ -73,90 +90,56 @@ class TestHistogram2D:
         assert hist.frequencies.sum() == 6
 
 
-# Calculated:
-freqs = np.array([[ 1.,  0.],
-    [ 1.,  0.],
-    [ 1.,  1.],
-    [ 1.,  0.],
-    [ 1.,  0.]])
-
-
 class TestArithmetics:
     # TODO: Add free arithmetics checks
-    def test_multiply_by_constant(self):
-        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
-        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
-        h = physt.h2(xx, yy, "fixed_width", 1)
+    def test_multiply_by_constant(self, h3x3, a3x3):
+        mul1 = h3x3 * 2
+        assert np.array_equal(mul1.frequencies, a3x3 * 2)
+        assert np.array_equal(mul1.errors2, a3x3 * 4)
 
-        assert np.array_equal(h.frequencies, freqs)
-        i = h * 2
-        assert np.array_equal(i.frequencies, freqs * 2)
-        assert np.array_equal(i.errors2, freqs * 4)
+        mul2 = h3x3 * 0.5
+        assert np.array_equal(mul2.frequencies, a3x3 * 0.5)
+        assert np.array_equal(mul2.errors2, a3x3 * 0.25)
 
-        i = h * 0.5
-        assert np.array_equal(i.frequencies, freqs * 0.5)
-        assert np.array_equal(i.errors2, freqs * 0.25)
-
-    def test_multiply_by_other(self):
-        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
-        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
-        h = physt.h2(xx, yy, "fixed_width", 1)
+    def test_multiply_by_other(self, h3x3):
         with pytest.raises(TypeError):
-            h * h
+            h3x3 * h3x3
 
-    def test_divide_by_other(self):
-        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
-        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
-        h = physt.h2(xx, yy, "fixed_width", 1)
+    def test_divide_by_other(self, h3x3):
         with pytest.raises(TypeError):
-            h / h
+            h3x3 / h3x3
 
-    def test_divide_by_constant(self):
-        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
-        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
-        h = physt.h2(xx, yy, "fixed_width", 1)
-        i = h / 2
-        assert np.array_equal(i.frequencies, freqs / 2)
-        assert np.array_equal(i.errors2, freqs / 4)
+    def test_divide_by_constant(self, h3x3, a3x3):
+        frac = h3x3 / 2
+        assert np.array_equal(frac.frequencies, a3x3 / 2)
+        assert np.array_equal(frac.errors2, a3x3 / 4)
 
-    def test_addition_by_constant(self):
-        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
-        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
-        h = physt.h2(xx, yy, "fixed_width", 1)
+    def test_addition_by_constant(self, h3x3):
         with pytest.raises(TypeError):
-            h + 4
+            h3x3 + 4
 
-    def test_addition_with_another(self):
-        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
-        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
-        h = physt.h2(xx, yy, "fixed_width", 1)
-        i = h + h
-        assert np.array_equal(i.frequencies, freqs * 2)
-        assert np.array_equal(i.errors2, freqs * 2)
+    def test_addition_with_another(self, h3x3, a3x3):
+        add = h3x3 + h3x3
+        assert np.array_equal(add.frequencies, a3x3 * 2)
+        assert np.array_equal(add.errors2, a3x3 * 2)
 
-    def test_addition_with_adaptive(self):
-        ha = h2([1], [11], "fixed_width", 10, adaptive=True)
-        hb = h2([10], [5], "fixed_width", 10, adaptive=True)
+    def test_addition_with_adaptive(self, create_adaptive):
+        ha = create_adaptive((1, 2))
+        hb = create_adaptive((2, 2))
         hha = ha + hb
         assert hha == hb + ha
         assert hha.shape == (2, 2)
-        assert hha.total == 2
-        assert np.array_equal(hha.frequencies, [[0, 1], [1, 0]])
+        assert hha.total == 7
+        assert np.array_equal(hha.frequencies, [[0, 2], [2, 3]])
 
-    def test_subtraction_with_another(self):
-        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
-        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
-        h = physt.h2(xx, yy, "fixed_width", 1)
-        i = h * 2 - h
-        assert np.array_equal(i.frequencies, freqs)
-        assert np.array_equal(i.errors2, 5 * freqs)
+    def test_subtraction_with_another(self, h3x3, a3x3):
+        sub = h3x3 * 2 - h3x3
+        assert np.array_equal(sub.frequencies, a3x3)
+        assert np.array_equal(sub.errors2, 5 * a3x3)
 
-    def test_subtraction_by_constant(self):
-        xx = np.array([0.5, 1.5, 2.5, 2.2, 3.3, 4.2])
-        yy = np.array([1.5, 1.5, 1.5, 2.2, 1.3, 1.2])
-        h = physt.h2(xx, yy, "fixed_width", 1)
+    def test_subtraction_by_constant(self, h3x3):
         with pytest.raises(TypeError):
-            h - 4
+            h3x3 - 4
 
 
 class TestDtype:
@@ -230,8 +213,3 @@ class TestPartialNormalizing:
         h = Histogram2D(binnings=(range(3), range(3)), frequencies=freqs)
         h1 = h.partial_normalize(1)
         assert np.allclose(h1.frequencies, [[0, 0], [0, 1.0]])
-
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

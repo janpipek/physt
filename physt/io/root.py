@@ -8,14 +8,12 @@ See also
 import os
 from typing import Optional
 
-import uproot
+import uproot3
 
 from physt.histogram_base import HistogramBase
 
 
-def write_root(
-    histogram: HistogramBase, hfile: uproot.write.TFile.TFileUpdate, name: str
-):
+def write_root(histogram: HistogramBase, hfile: uproot3.write.TFile.TFileUpdate, name: str):
     """Write histogram to an open ROOT file.
 
     Parameters
@@ -37,11 +35,11 @@ def save_root(histogram: HistogramBase, path: str, name: Optional[str] = None):
     name : The name of the histogram inside the file
     """
     if name is None:
-        name = histogram.name
+        name = histogram.name or histogram.title or repr(histogram)
     if os.path.isfile(path):
         # TODO: Not supported currently
-        hfile = uproot.write.TFile.TFileUpdate(path)
+        hfile = uproot3.write.TFile.TFileUpdate(path)
     else:
-        hfile = uproot.write.TFile.TFileCreate(path)
+        hfile = uproot3.write.TFile.TFileCreate(path)
     write_root(histogram, hfile, name)
     hfile.close()

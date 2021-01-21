@@ -1,11 +1,9 @@
-import sys
-import os
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
+import numpy as np
+import pytest
+
 from physt.config import config
 from physt.histogram1d import Histogram1D
 from physt import h1
-import numpy as np
-import pytest
 
 
 @pytest.fixture
@@ -462,7 +460,7 @@ class TestDtype:
         hist = h1(values, dtype=float)
         assert hist.dtype == float
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             hist = h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
 
     def test_copy(self, values):
@@ -486,7 +484,7 @@ class TestDtype:
         assert hist.frequencies.dtype == np.int16
 
         hist = h1(values, weights=[1, 2, 2.1, 3.2])
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             hist.dtype = np.int16
 
         hist = h1(values, weights=[1, 2, 2, 3])
@@ -521,8 +519,5 @@ class TestDtype:
             hist * complex(4, 5)
 
     def test_empty(self):
-        hist = h1(None, "fixed_width", 10, adaptive=True)
+        hist = h1(None, "fixed_width", bin_width=10, adaptive=True)
         assert hist.dtype == np.int64
-
-if __name__ == "__main__":
-    pytest.main(__file__)

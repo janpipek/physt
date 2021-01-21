@@ -1,35 +1,42 @@
-from typing import Optional, Container, Tuple, Dict, Any
+from typing import Optional, Container, Tuple, Dict, Any, TYPE_CHECKING, cast
 
 import numpy as np
 
-from physt.histogram1d import Histogram1D
-from physt.binnings import BinningBase
+from physt.histogram1d import Histogram1D, ObjectWithBinning
+from physt.binnings import BinningBase, BinningLike, as_binning
 from physt.typing_aliases import ArrayLike
 
+if TYPE_CHECKING:
+    import physt
 
-class HistogramCollection(Container[Histogram1D]):
+
+class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
     """Experimental collection of histograms.
 
-    It contains (potentially name-addressable) histograms
+    It contains (potentially name-addressable) 1-D histograms
     with a shared binning.
     """
 
     def __init__(
         self,
         *histograms: Histogram1D,
-        binning: Optional[BinningBase] = None,
+        binning: Optional[BinningLike] = None,
         title: Optional[str] = None,
         name: Optional[str] = None
     ):
         self.histograms = list(histograms)
         if histograms:
             if binning:
-                raise ValueError("")
+                raise ValueError(
+                    "When creating collection from histograms, binning is deduced from them."
+                )
             self._binning = histograms[0].binning
             if not all(h.binning == self._binning for h in histograms):
-                raise ValueError("All histogram should share the same binning.")
+                raise ValueError("All histograms should share the same binning.")
         else:
-            self._binning = binning
+            if binning is None:
+                raise ValueError("Either binning or at least one histogram must be provided.")
+            self._binning = as_binning(binning)
         self.name = name
         self.title = title or self.name
 
@@ -40,10 +47,6 @@ class HistogramCollection(Container[Histogram1D]):
         except KeyError:
             return False
 
-    @property
-    def ndim(self) -> int:
-        return 1
-
     def __iter__(self):
         return iter(self.histograms)
 
@@ -52,10 +55,10 @@ class HistogramCollection(Container[Histogram1D]):
 
     def copy(self) -> "HistogramCollection":
         # TODO: The binnings are probably not consistent in the copies
-        copy_binning = self.binning.copy()
+        binning_copy = self.binning.copy()
         histograms = [h.copy() for h in self.histograms]
-        for h in histograms:
-            h._binning = copy_binning
+        for histogram in histograms:
+            histogram._binning = binning_copy
         return HistogramCollection(*histograms, title=self.title, name=self.name)
 
     @property
@@ -63,12 +66,8 @@ class HistogramCollection(Container[Histogram1D]):
         return self._binning
 
     @property
-    def bins(self) -> np.ndarray:
-        return self.binning.bins
-
-    @property
-    def axis_name(self) -> Optional[str]:
-        return self.histograms and self.histograms[0].axis_name or None
+    def axis_name(self) -> str:
+        return self.histograms[0].axis_name if self.histograms else "axis0"
 
     @property
     def axis_names(self) -> Tuple[str]:
@@ -84,7 +83,7 @@ class HistogramCollection(Container[Histogram1D]):
         self, name: str, values, *, weights=None, dropna: bool = True, **kwargs
     ) -> Histogram1D:
         # TODO: Rename!
-        init_kwargs = {"axis_name": self.axis_name}
+        init_kwargs: Dict[str, Any] = {"axis_name": self.axis_name}
         init_kwargs.update(kwargs)
         histogram = Histogram1D(binning=self.binning, name=name, **init_kwargs)
         histogram.fill_n(values, weights=weights, dropna=dropna)
@@ -95,9 +94,7 @@ class HistogramCollection(Container[Histogram1D]):
         if isinstance(item, str):
             candidates = [h for h in self.histograms if h.name == item]
             if len(candidates) == 0:
-                raise KeyError(
-                    "Collection does not contain histogram named {0}".format(item)
-                )
+                raise KeyError("Collection does not contain histogram named {0}".format(item))
             return candidates[0]
         else:
             return self.histograms[item]
@@ -131,7 +128,11 @@ class HistogramCollection(Container[Histogram1D]):
 
     def sum(self) -> Histogram1D:
         """Return the sum of all contained histograms."""
-        return sum(self.histograms)
+        if not self.histograms:
+            return Histogram1D(
+                data=np.zeros((self.binning.bin_count)), dtype=np.int64, binning=self.binning
+            )
+        return cast(Histogram1D, sum(self.histograms))
 
     @property
     def plot(self) -> "physt.plotting.PlottingProxy":
@@ -141,19 +142,17 @@ class HistogramCollection(Container[Histogram1D]):
         simple cases, it can be used as a method. For more sophisticated
         use, see the documentation for physt.plotting package.
         """
-        from .plotting import PlottingProxy
+        from physt.plotting import PlottingProxy
 
         return PlottingProxy(self)
 
     @classmethod
-    def multi_h1(
-        cls, a_dict: Dict[str, ArrayLike], bins=None, *args, **kwargs
-    ) -> "HistogramCollection":
+    def multi_h1(cls, a_dict: Dict[str, ArrayLike], bins=None, **kwargs) -> "HistogramCollection":
         """Create a collection from multiple datasets."""
         from physt.binnings import calculate_bins
 
         mega_values = np.concatenate(list(a_dict.values()))
-        binning = calculate_bins(mega_values, bins, *args, **kwargs)
+        binning = calculate_bins(mega_values, bins, **kwargs)
 
         title = kwargs.pop("title", None)
         name = kwargs.pop("name", None)
@@ -167,11 +166,11 @@ class HistogramCollection(Container[Histogram1D]):
     def from_dict(cls, a_dict: Dict[str, Any]) -> "HistogramCollection":
         from physt.io import create_from_dict
 
-        col = HistogramCollection()
-        for item in a_dict["histograms"]:
-            h = create_from_dict(item, "HistogramCollection", check_version=False)
-            col.add(h)
-        return col
+        histograms = (
+            cast(Histogram1D, create_from_dict(item, "HistogramCollection", check_version=False))
+            for item in a_dict["histograms"]
+        )
+        return HistogramCollection(*histograms)
 
     def to_dict(self) -> Dict[str, Any]:
         return {

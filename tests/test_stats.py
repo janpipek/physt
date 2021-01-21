@@ -1,11 +1,7 @@
-
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import numpy as np
 import pytest
+
 import physt
-from physt.histogram1d import calculate_frequencies
 
 values = [1, 2, 3, 4]
 weights = [1, 1, 1, 2]
@@ -32,7 +28,3 @@ class TestStatistics:
     def test_std_weights(self):
         hw = physt.h1(values, weights=weights)
         assert np.allclose(hw.std(), np.sqrt(6.8 / 5))
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

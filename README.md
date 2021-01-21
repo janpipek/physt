@@ -23,7 +23,7 @@ nice integration into IPython notebook and various plotting options. In short, w
 * Versions 0.3.x support Python 2.7 (no new releases in 2019)
 * Versions 0.4.x support Python 3.5+ while continuing the 0.3 API
 * Versions 0.4.9+ support only Python 3.6+ while continuing the 0.3 API
-* Versions 0.5.x will contain reworked API
+* Versions 0.5.x slightly change the interpretation of *args in h1, h2, ...
 
 ## Simple example
 
@@ -87,6 +87,7 @@ See more in docstring's and notebooks:
 - Use dask for large (not "big") data - *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/dask.ipynb>
 - Geographical bins . *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/geospatial.ipynb>
 - Plotting with vega backend: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/vega-examples.ipynb>
+...and others, see the `doc` directory.
 
 ## Installation
 

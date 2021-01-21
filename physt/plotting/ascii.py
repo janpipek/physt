@@ -3,6 +3,11 @@
 The plots are printed directly to standard output.
 
 """
+import typing
+
+if typing.TYPE_CHECKING:
+    from physt.histogram_nd import Histogram2D
+
 try:
     import asciiplotlib
 
@@ -11,7 +16,7 @@ except ImportError:
     asciiplotlib = None
     ENABLE_ASCIIPLOTLIB = False
 
-types = ("hbar",)
+types: typing.Tuple[str, ...] = ("hbar",)
 
 dims = {
     "hbar": [1],
@@ -62,24 +67,17 @@ try:
             colorbar_range = range(h2.shape[1] + 2)
         else:
             raise ValueError(
-                "Unsupported colormap: {0}, select from: {1}".format(
-                    cmap, SUPPORTED_CMAPS
-                )
+                "Unsupported colormap: {0}, select from: {1}".format(cmap, SUPPORTED_CMAPS)
             )
         colors = (65536 + 256 + 1) * data
 
-        print(
-            (value_format(h2.get_bin_right_edges(0)[-1]) + " →").rjust(
-                h2.shape[1] + 2, " "
-            )
-        )
+        print((value_format(h2.get_bin_right_edges(0)[-1]) + " →").rjust(h2.shape[1] + 2, " "))
         print("+" + "-" * h2.shape[1] + "+")
         for i in range(h2.shape[0] - 1, -1, -1):
-            line = [
-                xtermcolor.colorize("█", bg=0, rgb=colors[i, j])
-                for j in range(h2.shape[1])
+            line_frags = [
+                xtermcolor.colorize("█", bg=0, rgb=colors[i, j]) for j in range(h2.shape[1])
             ]
-            line = "|" + "".join(line) + "|"
+            line = "|" + "".join(line_frags) + "|"
             if i == h2.shape[0] - 1:
                 line += value_format(h2.get_bin_right_edges(1)[-1]) + " ↑"
             if i == 0:
@@ -87,13 +85,11 @@ try:
             print(line)
         print("+" + "-" * h2.shape[1] + "+")
         print("←", value_format(h2.get_bin_left_edges(0)[0]))
-        colorbar = [
-            xtermcolor.colorize(
-                "█", bg=0, rgb=(65536 + 256 + 1) * int(j * 255 / (h2.shape[1] + 2))
-            )
+        colorbar_frags = [
+            xtermcolor.colorize("█", bg=0, rgb=(65536 + 256 + 1) * int(j * 255 / (h2.shape[1] + 2)))
             for j in colorbar_range
         ]
-        colorbar = "".join(colorbar)
+        colorbar = "".join(colorbar_frags)
         print()
         print("↓", 0)
         print(colorbar)

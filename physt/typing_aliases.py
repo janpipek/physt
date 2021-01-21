@@ -1,9 +1,11 @@
 """Definitions for type hints."""
-from typing import NewType, Tuple, Union
+from typing import Tuple, Union, Iterable
+
+from numpy import ndarray, dtype
 
 RangeTuple = Tuple[float, float]
 Axis = Union[int, str]
 
 # TODO: Update with numpy 1.20
-ArrayLike = NewType("ArrayLike", object)
-DtypeLike = NewType("DtypeLike", object)
+ArrayLike = Union[ndarray, Iterable, int, float]
+DtypeLike = Union[type, dtype, str]

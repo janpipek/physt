@@ -1,4 +1,4 @@
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Type, cast
 
 import numpy as np
 
@@ -22,7 +22,7 @@ from physt.typing_aliases import ArrayLike, DtypeLike
 def h1(
     data: Optional[ArrayLike],
     bins=None,
-    *args,
+    *,
     adaptive: bool = False,
     dropna: bool = True,
     dtype: Optional[DtypeLike] = None,
@@ -73,12 +73,10 @@ def h1(
     numpy.histogram
     """
 
-    if isinstance(data, tuple) and isinstance(
-        data[0], str
-    ):  # Works for groupby DataSeries
-        return histogram(data[1], bins, *args, name=data[0], **kwargs)
-    elif type(data).__name__ == "DataFrame":
-        raise ValueError("Cannot create histogram from a pandas DataFrame. Use Series.")
+    if isinstance(data, tuple) and isinstance(data[0], str):  # Works for groupby DataSeries
+        return h1(data[1], bins, name=data[0], **kwargs)
+    if type(data).__name__ == "DataFrame":
+        raise TypeError("Cannot create histogram from a pandas DataFrame. Use Series.")
 
     # Convert to array
     if data is not None:
@@ -90,12 +88,7 @@ def h1(
 
     # Get binning
     binning = calculate_bins(
-        array,
-        bins,
-        *args,
-        check_nan=not dropna and array is not None,
-        adaptive=adaptive,
-        **kwargs
+        array, bins, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs
     )
     # bins = binning.bins
 
@@ -117,14 +110,14 @@ def h1(
         overflow = 0
     if not axis_name:
         if hasattr(data, "name"):
-            axis_name = data.name
+            axis_name = str(data.name)  # type: ignore
         elif (
             hasattr(data, "fields")
-            and len(data.fields) == 1
-            and isinstance(data.fields[0], str)
+            and len(data.fields) == 1  # type: ignore
+            and isinstance(data.fields[0], str)  # type: ignore
         ):
             # Case of dask fields (examples)
-            axis_name = data.fields[0]
+            axis_name = str(data.fields[0])  # type: ignore
     return Histogram1D(
         binning=binning,
         frequencies=frequencies,
@@ -140,7 +133,7 @@ def h1(
     )
 
 
-def h2(data1, data2, bins=10, *args, **kwargs) -> Histogram2D:
+def h2(data1: Optional[ArrayLike], data2: Optional[ArrayLike], bins=10, **kwargs) -> Histogram2D:
     """Facade function to create 2D histograms.
 
     For implementation and parameters, see histogramdd.
@@ -150,22 +143,20 @@ def h2(data1, data2, bins=10, *args, **kwargs) -> Histogram2D:
     numpy.histogram2d
     histogramdd
     """
-    import numpy as np
-
     # guess axis names
     if "axis_names" not in kwargs:
         if hasattr(data1, "name") and hasattr(data2, "name"):
-            kwargs["axis_names"] = [data1.name, data2.name]
+            kwargs["axis_names"] = [str(data1.name), str(data2.name)]  # type: ignore
     if data1 is not None and data2 is not None:
         data1 = np.asarray(data1)
         data2 = np.asarray(data2)
         data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
     else:
         data = None
-    return histogramdd(data, bins, *args, dim=2, **kwargs)
+    return cast(Histogram2D, h(data, bins, dim=2, **kwargs))
 
 
-def h3(data, *args, **kwargs) -> HistogramND:
+def h3(data: Optional[ArrayLike], bins=None, **kwargs) -> HistogramND:
     """Facade function to create 3D histograms.
 
     Parameters
@@ -174,11 +165,7 @@ def h3(data, *args, **kwargs) -> HistogramND:
         Can be a single array (with three columns) or three different arrays
         (for each component)
     """
-    if (
-        data is not None
-        and isinstance(data, (list, tuple))
-        and not np.isscalar(data[0])
-    ):
+    if data is not None and isinstance(data, (list, tuple)) and not np.isscalar(data[0]):
         if "axis_names" not in kwargs:
             kwargs["axis_names"] = [
                 (column.name if hasattr(column, "name") else None) for column in data
@@ -186,13 +173,13 @@ def h3(data, *args, **kwargs) -> HistogramND:
         data = np.concatenate([item[:, np.newaxis] for item in data], axis=1)
     else:
         kwargs["dim"] = 3
-    return h(data, *args, **kwargs)
+    return h(data, bins, **kwargs)
 
 
 def h(
     data: Optional[ArrayLike],
     bins=10,
-    *args,
+    *,
     adaptive=False,
     dropna: bool = True,
     name: Optional[str] = None,
@@ -223,6 +210,9 @@ def h(
     title: What will be displayed in the title of the plot
     dim: Dimension - necessary if you are creating an empty adaptive histogram
 
+    Note: For most arguments, if a list is passed, its values are used as values for
+    individual axes.
+
     See Also
     --------
     numpy.histogramdd
@@ -231,7 +221,7 @@ def h(
     if not axis_names:
         if hasattr(data, "columns"):
             try:
-                axis_names = tuple(data.columns)
+                axis_names = tuple(str(c) for c in data.columns)  # type: ignore
             except:
                 pass  # Perhaps columns has different meaning here.
 
@@ -240,9 +230,7 @@ def h(
     if data is not None:
         data = np.asarray(data)
         if data.ndim != 2:
-            raise ValueError(
-                "Array must have shape (n, d), {0} encountered".format(data.shape)
-            )
+            raise ValueError("Array must have shape (n, d), {0} encountered".format(data.shape))
         if dim is not None and dim != data.shape[1]:
             raise ValueError("Dimension mismatch: {0}!={1}".format(dim, data.shape[1]))
         _, dim = data.shape
@@ -252,26 +240,21 @@ def h(
     else:
         if dim is None:
             raise ValueError("You have to specify either data or its dimension.")
-        data = np.zeros((0, dim))
         check_nan = False
 
     # Prepare bins
     bin_schemas = calculate_bins_nd(
-        data, bins, *args, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs
+        data, bins, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs
     )
 
     # Prepare remaining data
-    klass = Histogram2D if dim == 2 else HistogramND
-
+    klass: Type[HistogramND] = Histogram2D if dim == 2 else HistogramND  # type: ignore
     if name:
         kwargs["name"] = name
     if title:
         kwargs["title"] = title
-    if axis_names:
-        kwargs["axis_names"] = axis_names
-
     return klass.from_calculate_frequencies(
-        data, binnings=bin_schemas, weights=weights, **kwargs
+        data, binnings=bin_schemas, weights=weights, axis_names=axis_names, **kwargs
     )
 
 
@@ -281,11 +264,11 @@ histogram2d = deprecation_alias(h2, "histogram2d")
 histogramdd = deprecation_alias(h, "histogramdd")
 
 
-def collection(data, bins=10, *args, **kwargs) -> HistogramCollection:
+def collection(data, bins=10, **kwargs) -> HistogramCollection:
     """Create histogram collection with shared binnning."""
     if hasattr(data, "columns"):
         data = {column: data[column] for column in data.columns}
-    return HistogramCollection.multi_h1(data, bins, *args, **kwargs)
+    return HistogramCollection.multi_h1(data, bins, **kwargs)
 
 
 __all__ = [

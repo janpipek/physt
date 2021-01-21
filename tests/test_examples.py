@@ -1,8 +1,12 @@
 import sys
-import os
 
 import pytest
 import numpy as np
+
+from physt import examples
+from physt.histogram1d import Histogram1D
+from physt.histogram_nd import HistogramND, Histogram2D
+
 try:
     import pandas as pd
 except ImportError:
@@ -12,13 +16,6 @@ try:
     import seaborn as sns
 except ImportError:
     pass
-
-
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
-
-from physt import examples
-from physt.histogram1d import Histogram1D
-from physt.histogram_nd import HistogramND, Histogram2D
 
 
 class TestExamples:
@@ -35,7 +32,3 @@ class TestExamples:
         assert h1.axis_names == ("lat", "long")
         assert np.allclose(56.166666667, h1.get_bin_left_edges(0)[0])
         assert np.allclose(58.333333333, h1.get_bin_left_edges(0)[-1])
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

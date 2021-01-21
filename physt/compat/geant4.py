@@ -1,11 +1,14 @@
-"""Support for Geant4 histograms saved in CSV format."""
+"""Support for Geant4 histograms saved in CSV format.
+
+See https://geant4.web.cern.ch/ for the project pages.
+"""
 import codecs
 
 import numpy as np
 
-from ..histogram1d import Histogram1D
-from ..histogram_nd import Histogram2D
-from ..binnings import fixed_width_binning
+from physt.histogram1d import Histogram1D
+from physt.histogram_nd import Histogram2D
+from physt.binnings import fixed_width_binning
 
 
 def load_csv(path):
@@ -54,9 +57,7 @@ def _create_h1(data, meta):
     bin_count = int(bin_count)
     min_ = float(min_)
     max_ = float(max_)
-    binning = fixed_width_binning(
-        None, bin_width=(max_ - min_) / bin_count, range=(min_, max_)
-    )
+    binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_))
     hist = Histogram1D(binning, name=_get(meta, "title"))
     hist._frequencies = data[1:-1, 1]
     hist._errors2 = data[1:-1, 2]
@@ -74,9 +75,7 @@ def _create_h2(data, meta):
         bin_count = int(bin_count)
         min_ = float(min_)
         max_ = float(max_)
-        binning = fixed_width_binning(
-            None, bin_width=(max_ - min_) / bin_count, range=(min_, max_)
-        )
+        binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_))
         binnings.append(binning)
 
     hist = Histogram2D(binnings, name=_get(meta, "title"))

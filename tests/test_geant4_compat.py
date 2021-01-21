@@ -1,9 +1,5 @@
 import os
-import sys
 
-import pytest
-
-sys.path = [os.path.join(os.path.dirname(__file__), "..")] + sys.path
 from physt.compat import geant4
 
 
@@ -23,7 +19,3 @@ class TestGeant4Compat:
         assert h.shape == (50,50)
         assert h.name == "Drift Chamber 1 X vs Y"
         assert h.total == 292
-
-
-if __name__ == "__main__":
-    pytest.main(__file__)

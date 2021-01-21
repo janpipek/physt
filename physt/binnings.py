@@ -1,10 +1,9 @@
 """Different binning algorithms/schemas for the histograms."""
-from collections import OrderedDict
-from typing import Any, Dict, Optional, Tuple, List, Union
+from typing import cast, Any, Dict, Optional, Tuple, List, Union, Sequence, TYPE_CHECKING
 
 import numpy as np
 
-from .bin_utils import (
+from physt.bin_utils import (
     is_bin_subset,
     is_consecutive,
     is_rising,
@@ -13,8 +12,32 @@ from .bin_utils import (
     to_numpy_bins_with_mask,
     find_human_width,
 )
-from .typing_aliases import RangeTuple, ArrayLike
-from .util import find_subclass
+from physt.typing_aliases import RangeTuple, ArrayLike
+from physt.util import find_subclass
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+
+    BinningType = TypeVar("BinningType", bound="BinningBase")
+
+
+binning_methods = {}
+"""Dictionary of available binnnings."""
+
+
+def register_binning(f=None, *, name: Optional[str] = None):
+    """Decorator to register among available binning methods."""
+
+    def decorator(f):
+        key = name or f.__name__[:-8]
+        binning_methods[key] = f
+        return f
+
+    if f:
+        return decorator(f)
+    else:
+        return decorator
+
 
 # TODO: Locking and edit operations (like numpy read-only)
 
@@ -52,9 +75,7 @@ class BinningBase:
         self._consecutive = None
         if bins is not None:
             if numpy_bins is not None:
-                raise RuntimeError(
-                    "Cannot specify numpy_bins and bins at the same time."
-                )
+                raise RuntimeError("Cannot specify numpy_bins and bins at the same time.")
             bins = make_bin_array(bins)
             if not is_rising(bins):
                 raise RuntimeError("Bins must be in rising order.")
@@ -68,13 +89,9 @@ class BinningBase:
         self._numpy_bins = numpy_bins
         self._includes_right_edge = includes_right_edge
         if adaptive and not self.adaptive_allowed:
-            raise RuntimeError(
-                "Adaptivity not allowed for {0}".format(self.__class__.__name__)
-            )
+            raise RuntimeError("Adaptivity not allowed for {0}".format(self.__class__.__name__))
         if adaptive and includes_right_edge:
-            raise RuntimeError(
-                "Adaptivity does not work together with right-edge inclusion."
-            )
+            raise RuntimeError("Adaptivity does not work together with right-edge inclusion.")
         self._adaptive = adaptive
 
     def __getitem__(self, index: Union[slice, int]):
@@ -109,9 +126,7 @@ class BinningBase:
 
     def _update_dict(self, a_dict):
         raise NotImplementedError(
-            "Dictionary representation of {0} is not implemented.".format(
-                type(self).__name__
-            )
+            "Dictionary representation of {0} is not implemented.".format(type(self).__name__)
         )
 
     @property
@@ -119,16 +134,14 @@ class BinningBase:
         # TODO: Document and explain
         return self._includes_right_edge
 
-    def is_regular(self, rtol: float = 1.0e-5, atol: float = 1.0e-8) -> bool:
+    def is_regular(self, *, rtol: float = 1.0e-5, atol: float = 1.0e-8) -> bool:
         """Whether all bins have the same width.
 
         Parameters
         ----------
         rtol, atol : numpy tolerance parameters
         """
-        return np.allclose(
-            np.diff(self.bins[1] - self.bins[0]), 0.0, rtol=rtol, atol=atol
-        )
+        return np.allclose(np.diff(self.bins[1] - self.bins[0]), 0.0, rtol=rtol, atol=atol)
 
     def is_consecutive(self, rtol: float = 1.0e-5, atol: float = 1.0e-8) -> bool:
         """Whether all bins are in a growing order.
@@ -218,6 +231,20 @@ class BinningBase:
             self._bins = make_bin_array(self.numpy_bins)
         return self._bins
 
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if other.__class__ != self.__class__:
+            return False
+        if self._bins is not None:
+            return np.array_equal(self.bins, other.bins)
+        if self._numpy_bins is not None:
+            return np.array_equal(self.numpy_bins, other.numpy_bins)
+        bins = self.bins
+        if bins is not None:
+            return np.array_equal(self.bins, other.bins)
+        return False
+
     @property
     def bin_count(self) -> int:
         """The total number of bins."""
@@ -250,10 +277,10 @@ class BinningBase:
         --------
         bin_utils.to_numpy_bins_with_mask
         """
-        bwm = to_numpy_bins_with_mask(self.bins)
+        edges, mask = to_numpy_bins_with_mask(self.bins)
         if not self.includes_right_edge:
-            bwm[0].append(np.inf)
-        return bwm
+            edges = np.concatenate([edges, [np.inf]])
+        return edges, mask
 
     @property
     def first_edge(self) -> float:
@@ -271,7 +298,7 @@ class BinningBase:
         else:
             return self.bins[-1][1]
 
-    def as_static(self, copy: bool = True) -> "StaticBinning":
+    def as_static(self, copy: bool = True) -> "StaticBinning":  # pylint: disable=unused-argument
         """Convert binning to a static form.
 
         Parameters
@@ -284,11 +311,11 @@ class BinningBase:
         StaticBinning
             A new static binning with a copy of bins.
         """
-        return StaticBinning(
-            bins=self.bins.copy(), includes_right_edge=self.includes_right_edge
-        )
+        return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
 
-    def as_fixed_width(self, copy: bool = True) -> "FixedWidthBinning":
+    def as_fixed_width(
+        self, copy: bool = True
+    ) -> "FixedWidthBinning":  # pylint: disable=unused-argument
         """Convert binning to recipe with fixed width (if possible.)
 
         Parameters
@@ -304,11 +331,9 @@ class BinningBase:
                 bin_width=self.bins[1] - self.bins[0],
             )
         else:
-            raise ValueError(
-                "Cannot create fixed-width binning from differing bin widths."
-            )
+            raise ValueError("Cannot create fixed-width binning from differing bin widths.")
 
-    def copy(self) -> "BinningBase":
+    def copy(self: "BinningType") -> "BinningType":
         """An identical, independent copy."""
         raise NotImplementedError()
 
@@ -332,9 +357,7 @@ class BinningBase:
                 bins[new, 1] = self.bins[old, 1]
         if np.any(np.isnan(bins)):
             raise ValueError("New binning is not complete.")
-        includes_right_edge = (
-            self.includes_right_edge and bins[-1, 1] == self.bins[-1, 1]
-        )
+        includes_right_edge = self.includes_right_edge and bins[-1, 1] == self.bins[-1, 1]
         binning = StaticBinning(bins, includes_right_edge=includes_right_edge)
         return binning
 
@@ -347,12 +370,12 @@ BinningLike = Union[BinningBase, ArrayLike]
 
 
 class StaticBinning(BinningBase):
+    """Binning defined by an array of bin edge pairs."""
+
     inconsecutive_allowed = True
 
     def __init__(self, bins, includes_right_edge=True, **kwargs):
-        super(StaticBinning, self).__init__(
-            bins=bins, includes_right_edge=includes_right_edge
-        )
+        super().__init__(bins=bins, includes_right_edge=includes_right_edge)
 
     def as_static(self, copy: bool = True) -> "StaticBinning":
         """Convert binning to a static form.
@@ -400,9 +423,7 @@ class NumpyBinning(BinningBase):
     def __init__(self, numpy_bins: ArrayLike, includes_right_edge=True, **kwargs):
         if not is_rising(numpy_bins):
             raise RuntimeError("Bins not in rising order.")
-        super(NumpyBinning, self).__init__(
-            numpy_bins=numpy_bins, includes_right_edge=includes_right_edge, **kwargs
-        )
+        super().__init__(numpy_bins=numpy_bins, includes_right_edge=includes_right_edge, **kwargs)
 
     @property
     def numpy_bins(self):
@@ -424,6 +445,7 @@ class FixedWidthBinning(BinningBase):
 
     def __init__(
         self,
+        *,
         bin_width,
         bin_count=0,
         bin_times_min=None,
@@ -434,16 +456,16 @@ class FixedWidthBinning(BinningBase):
         align=True,
         **kwargs,
     ):
-        super(FixedWidthBinning, self).__init__(
-            adaptive=adaptive, includes_right_edge=includes_right_edge
-        )
+        super().__init__(adaptive=adaptive, includes_right_edge=includes_right_edge)
         # TODO: Check edge cases for min/shift/align
         if bin_width <= 0:
-            raise RuntimeError("Bin width must be > 0.")
+            raise ValueError("Bin width must be > 0.")
         if bin_count < 0:
-            raise RuntimeError("Bin count must be >= 0.")
+            raise ValueError("Bin count must be >= 0.")
         if (bin_times_min is not None or bin_shift is not None) and (min is not None):
-            raise RuntimeError("Cannot specify both min and (times_min or shift)")
+            raise ValueError("Cannot specify both min and (times_min or shift)")
+        if (bin_count == 0) and ((bin_times_min is not None) or (min is not None)):
+            raise ValueError("Cannot set min for an empty binning.")
         self._bin_width = float(bin_width)
         self._align = align
         self._bin_count = int(bin_count)
@@ -464,7 +486,7 @@ class FixedWidthBinning(BinningBase):
             result += ", adaptive=True"
         return result + ")"
 
-    def is_regular(self, *args, **kwargs) -> bool:
+    def is_regular(self, **kwargs) -> bool:
         return True
 
     def _force_bin_existence_single(self, value, includes_right_edge=None):
@@ -499,16 +521,14 @@ class FixedWidthBinning(BinningBase):
             else:
                 return None
 
-    def _force_bin_existence(self, values, includes_right_edge=None):
+    def _force_bin_existence(self, values, *, includes_right_edge=None):
         if np.isscalar(values):
-            return self._force_bin_existence_single(
-                values, includes_right_edge=includes_right_edge
-            )
+            return self._force_bin_existence_single(values, includes_right_edge=includes_right_edge)
         else:
-            min, max = np.min(values), np.max(values)
-            result = self._force_bin_existence_single(min)
+            min_, max_ = np.min(values), np.max(values)
+            result = self._force_bin_existence_single(min_)
             result2 = self._force_bin_existence_single(
-                max, includes_right_edge=includes_right_edge
+                max_, includes_right_edge=includes_right_edge
             )
             if result is None:
                 return result2
@@ -583,9 +603,7 @@ class FixedWidthBinning(BinningBase):
         """
         other = other.as_fixed_width()
         if self.bin_width != other.bin_width:
-            raise RuntimeError(
-                "Cannot adapt fixed-width histograms with different widths"
-            )
+            raise RuntimeError("Cannot adapt fixed-width histograms with different widths")
         if self._shift != other._shift:
             raise RuntimeError(
                 "Cannot adapt shifted fixed-width histograms: {0} vs {1}".format(
@@ -593,16 +611,14 @@ class FixedWidthBinning(BinningBase):
                 )
             )
         # Following operations modify schemas
-        other = other.copy()
+        other = cast(FixedWidthBinning, other.copy())
         if other.bin_count == 0:
             return None, ()
         if self.bin_count == 0:
             self._set_min_and_count(other._times_min, other.bin_count)
             return (), None
         new_min = min(self._times_min, other._times_min)
-        new_max = max(
-            self._times_min + self._bin_count, other._times_min + other._bin_count
-        )
+        new_max = max(self._times_min + self._bin_count, other._times_min + other._bin_count)
 
         bin_map1 = self._force_new_min_max(new_min, new_max)
         bin_map2 = other._force_new_min_max(new_min, new_max)
@@ -645,7 +661,7 @@ class ExponentialBinning(BinningBase):
         self._log_width = log_width
         self._bin_count = bin_count
 
-    def is_regular(self, *args, **kwargs) -> bool:
+    def is_regular(self, **kwargs) -> bool:
         return False
 
     @property
@@ -668,16 +684,17 @@ class ExponentialBinning(BinningBase):
         a_dict["bin_count"] = self._bin_count
 
 
+@register_binning
 def numpy_binning(
-    data, bins=10, range: Optional[RangeTuple] = None, **kwargs
+    data: Optional[np.ndarray], bin_count: int = 10, range: Optional[RangeTuple] = None, **kwargs
 ) -> NumpyBinning:
-    """Construct binning schema compatible with numpy.histogram
+    """Construct binning schema compatible with numpy.histogram together with int argument
 
     Parameters
     ----------
     data: array_like, optional
         This is optional if both bins and range are set
-    bins: int or array_like
+    bin_count: int
     range: Optional[tuple]
         (min, max)
     includes_right_edge: Optional[bool]
@@ -686,24 +703,24 @@ def numpy_binning(
     See Also
     --------
     numpy.histogram
+    static_binning
     """
-    if isinstance(bins, int):
-        if range:
-            bins = np.linspace(range[0], range[1], bins + 1)
-        else:
-            start = data.min()
-            stop = data.max()
-            bins = np.linspace(start, stop, bins + 1)
-    elif np.iterable(bins):
-        bins = np.asarray(bins)
+    if not isinstance(bin_count, int):
+        raise TypeError("bin_count must be a number.")
+    if range:
+        bins = np.linspace(range[0], range[1], bin_count + 1)
     else:
-        # Some numpy edge case
-        _, bins = np.histogram(data, bins, **kwargs)
+        if data is None:
+            raise ValueError("Either `range` or `data` must be set.")
+        start = data.min()
+        stop = data.max()
+        bins = np.linspace(start, stop, bin_count + 1)
     return NumpyBinning(bins)
 
 
+@register_binning
 def human_binning(
-    data=None,
+    data: Optional[np.ndarray] = None,
     bin_count: Optional[int] = None,
     *,
     kind: Optional[str] = None,
@@ -725,12 +742,18 @@ def human_binning(
     max_bin_width: If present, the bin cannot be wider than this.
     """
     # TODO: remove colliding kwargs
-    if data is None and range is None:
-        raise RuntimeError("Cannot guess optimum bin width without data.")
+    if range is None:
+        if data is None:
+            raise ValueError("Cannot guess optimum bin width without data.")
+        min_ = data.min()
+        max_ = data.max()
+    else:
+        min_, max_ = range
     if bin_count is None:
+        if data is None:
+            raise ValueError("Cannot guess optimum bin count without data.")
         bin_count = ideal_bin_count(data)
-    min_ = range[0] if range else data.min()
-    max_ = range[1] if range else data.max()
+
     raw_width = (max_ - min_) / bin_count
     bin_width = find_human_width(raw_width, kind=kind)
 
@@ -742,8 +765,14 @@ def human_binning(
     return fixed_width_binning(bin_width=bin_width, data=data, range=range, **kwargs)
 
 
+@register_binning
 def quantile_binning(
-    data=None, bins=10, *, qrange: RangeTuple = (0.0, 1.0), **kwargs
+    data: Optional[ArrayLike] = None,
+    *,
+    bin_count: Optional[int] = None,
+    q: Optional[Sequence[int]] = None,
+    qrange: Optional[RangeTuple] = None,
+    **kwargs,
 ) -> StaticBinning:
     """Binning schema based on quantile ranges.
 
@@ -755,28 +784,35 @@ def quantile_binning(
 
     Parameters
     ----------
-    bins: sequence or Optional[int]
-        Number of bins
-    qrange: Optional[tuple]
-        Two floats as minimum and maximum quantile (default: 0.0, 1.0)
+    bin_count: Number of bins
+    q: Sequence of quantiles to be used as edges (a la numpy)
+    qrange: Two floats as minimum and maximum quantile (default: 0.0, 1.0)
 
     Returns
     -------
     StaticBinning
     """
-
-    if np.isscalar(bins):
-        bins = np.linspace(qrange[0] * 100, qrange[1] * 100, bins + 1)
-    # TODO: Warn / exception about qrange not being used
-    bins = np.percentile(data, bins)
+    if (bin_count is not None and q is not None) or (bin_count is None and q is None):
+        raise ValueError("Exactly one of `bin_count` and `q` must be set.")
+    if bin_count:
+        if qrange is None:
+            qrange = (0.0, 1.0)
+        percentiles = np.linspace(qrange[0] * 100, qrange[1] * 100, bin_count + 1)
+    elif qrange is not None:
+        raise ValueError("Cannot set both `q` and `qrange`")
+    else:
+        percentiles = np.asarray(q) * 100
+    bins = np.percentile(data, percentiles)
     return static_binning(bins=make_bin_array(bins), includes_right_edge=True)
 
 
+@register_binning
 def static_binning(data=None, bins=None, **kwargs) -> StaticBinning:
     """Construct static binning with whatever bins."""
     return StaticBinning(bins=make_bin_array(bins), **kwargs)
 
 
+@register_binning
 def integer_binning(data=None, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width binning schema with bins centered around integers.
 
@@ -798,6 +834,7 @@ def integer_binning(data=None, **kwargs) -> FixedWidthBinning:
     )
 
 
+@register_binning
 def fixed_width_binning(
     data=None,
     bin_width: Union[float, int] = 1,
@@ -832,6 +869,7 @@ def fixed_width_binning(
     return result
 
 
+@register_binning
 def exponential_binning(
     data=None,
     bin_count: Optional[int] = None,
@@ -858,12 +896,10 @@ def exponential_binning(
     else:
         range = (np.log10(data.min()), np.log10(data.max()))
     log_width = (range[1] - range[0]) / bin_count
-    return ExponentialBinning(
-        log_min=range[0], log_width=log_width, bin_count=bin_count, **kwargs
-    )
+    return ExponentialBinning(log_min=range[0], log_width=log_width, bin_count=bin_count, **kwargs)
 
 
-def calculate_bins(array, _=None, *args, **kwargs) -> BinningBase:
+def calculate_bins(array, _=None, **kwargs) -> BinningBase:
     """Find optimal binning from arguments.
 
     Parameters
@@ -891,27 +927,29 @@ def calculate_bins(array, _=None, *args, **kwargs) -> BinningBase:
         if kwargs.get("range", None):  # TODO: re-consider the usage of this parameter
             array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
-        bin_count = (
-            10  # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
-        )
-        binning = numpy_binning(array, bin_count, *args, **kwargs)
+        bin_count = 10  # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
+        binning = numpy_binning(array, bin_count, **kwargs)
     elif isinstance(_, BinningBase):
         binning = _
     elif isinstance(_, int):
-        binning = numpy_binning(array, _, *args, **kwargs)
+        binning = numpy_binning(array, _, **kwargs)
     elif isinstance(_, str):
         # What about the ranges???
         if _ in bincount_methods:
             bin_count = ideal_bin_count(array, method=_)
-            binning = numpy_binning(array, bin_count, *args, **kwargs)
+            binning = numpy_binning(array, bin_count, **kwargs)
         elif _ in binning_methods:
             method = binning_methods[_]
-            binning = method(array, *args, **kwargs)
+            binning = method(array, **kwargs)
         else:
             raise RuntimeError("No binning method {0} available.".format(_))
     elif callable(_):
-        binning = _(array, *args, **kwargs)
+        binning = _(array, **kwargs)
     elif np.iterable(_):
+        if isinstance(_, list):
+            warnings.warn(
+                "Using `list` for bins not recommended, it has different meaning with N-D histograms."
+            )
         binning = static_binning(array, _, **kwargs)
     else:
         raise RuntimeError("Binning {0} not understood.".format(_))
@@ -919,15 +957,11 @@ def calculate_bins(array, _=None, *args, **kwargs) -> BinningBase:
 
 
 def calculate_bins_nd(
-    array, bins=None, *args, dim: Optional[int] = None, check_nan=True, **kwargs
-):
+    array: Optional[np.ndarray], bins=None, dim: Optional[int] = None, check_nan=True, **kwargs
+) -> List[BinningBase]:
     """Find optimal binning from arguments (n-dimensional variant)
 
     Usage similar to `calculate_bins`.
-
-    Returns
-    -------
-    List[BinningBase]
     """
     if check_nan:
         if np.any(np.isnan(array)):
@@ -935,40 +969,37 @@ def calculate_bins_nd(
 
     if array is not None:
         if dim and array.shape[-1] != dim:
-            raise ValueError(
-                f"The array must be of shape (N, {dim}), {array.shape} found."
-            )
+            raise ValueError(f"The array must be of shape (N, {dim}), {array.shape} found.")
         _, dim = array.shape
 
     # Prepare bins
-    if isinstance(bins, (list, tuple)):
-        if len(bins) != dim:
-            raise RuntimeError(
-                "List of bins not understood, expected {0} items, got {1}.".format(
-                    dim, len(bins)
+    if isinstance(bins, list):
+        if dim:
+            if len(bins) != dim:
+                raise ValueError(
+                    "List of bins not understood, expected {0} items, got {1}.".format(
+                        dim, len(bins)
+                    )
                 )
-            )
+        else:
+            dim = len(bins)
     else:
+        if not dim:
+            raise ValueError("Unknown dimension.")
         bins = [bins] * dim
 
     # Prepare arguments
-    args = list(args)
+    # TODO: Lists = argument for multiple axes, tuples = array argument
     range_ = kwargs.pop("range", None)
     if range_:
         if len(range_) == 2 and all(np.isscalar(i) for i in range_):
             range_ = dim * [range_]
         elif len(range_) != dim:
-            raise RuntimeError("Wrong dimensionality of range")
-    for i in range(len(args)):
-        if isinstance(args[i], (list, tuple)):
-            if len(args[i]) != dim:
-                raise RuntimeError("Argument not understood.")
-        else:
-            args[i] = dim * [args[i]]
+            raise ValueError("Wrong dimensionality of range")
     for key in list(kwargs.keys()):
-        if isinstance(kwargs[key], (list, tuple)):
+        if isinstance(kwargs[key], list):
             if len(kwargs[key]) != dim:
-                raise RuntimeError("Argument not understood.")
+                raise ValueError("Argument not understood.")
         else:
             kwargs[key] = dim * [kwargs[key]]
 
@@ -977,25 +1008,13 @@ def calculate_bins_nd(
 
     bins = [
         calculate_bins(
-            array[:, i],
+            array[:, i] if array is not None else None,
             bins[i],
-            *(arg[i] for arg in args if arg[i] is not None),
             **{k: kwarg[i] for k, kwarg in kwargs.items() if kwarg[i] is not None},
         )
         for i in range(dim)
     ]
     return bins
-
-
-# TODO: Rename
-binning_methods = {
-    "numpy": numpy_binning,
-    "exponential": exponential_binning,
-    "quantile": quantile_binning,
-    "fixed_width": fixed_width_binning,
-    "integer": integer_binning,
-    "human": human_binning,
-}
 
 
 try:
@@ -1007,7 +1026,8 @@ try:
 
     warnings.filterwarnings("ignore", module="astropy\\..*")
 
-    def bayesian_blocks_binning(data, range=None, **kwargs) -> NumpyBinning:
+    @register_binning(name="blocks")
+    def bayesian_blocks_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Bayesian blocks (from astropy).
 
         Computationally expensive for large data sets.
@@ -1026,8 +1046,9 @@ try:
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         edges = bayesian_blocks(data)
-        return NumpyBinning(edges, **kwargs)
+        return StaticBinning(edges, **kwargs)
 
+    @register_binning
     def knuth_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Knuth's rule (from astropy).
 
@@ -1049,8 +1070,9 @@ try:
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         _, edges = knuth_bin_width(data, True)
-        return NumpyBinning(edges, **kwargs)
+        return StaticBinning(edges, **kwargs)
 
+    @register_binning
     def scott_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Scott's rule (from astropy).
 
@@ -1069,8 +1091,9 @@ try:
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         _, edges = scott_bin_width(data, True)
-        return NumpyBinning(edges, **kwargs)
+        return StaticBinning(edges, **kwargs)
 
+    @register_binning
     def freedman_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Freedman-Diaconis rule (from astropy).
 
@@ -1090,23 +1113,19 @@ try:
         if range is not None:
             data = data[(data >= range[0]) & (data <= range[1])]
         _, edges = freedman_bin_width(data, True)
-        return NumpyBinning(edges, **kwargs)
+        return StaticBinning(edges, **kwargs)
 
-    binning_methods["blocks"] = bayesian_blocks_binning
-    binning_methods["knuth"] = knuth_binning
-    binning_methods["scott"] = scott_binning
-    binning_methods["freedman"] = freedman_binning
+
 except:
     pass  # astropy is not required
 
 
-def ideal_bin_count(data, method: str = "default") -> int:
+def ideal_bin_count(data: np.ndarray, method: str = "default") -> int:
     """A theoretically ideal bin count.
 
     Parameters
     ----------
-    data: array_likes
-        Data to work on. Most methods don't use this.
+    data: Data to work on. Most methods don't use this.
     method: str
         Name of the method to apply, available values:
           - default (~sturges)
@@ -1116,27 +1135,28 @@ def ideal_bin_count(data, method: str = "default") -> int:
           - rice
         See https://en.wikipedia.org/wiki/Histogram for the description
     """
-    n = data.size
-    if n < 1:
+    value_count = data.size
+    if value_count < 1:
         return 1
     if method == "default":
-        if n <= 32:
+        if value_count <= 32:
             return 7
         else:
             return ideal_bin_count(data, "sturges")
-    elif method == "sqrt":
-        return int(np.ceil(np.sqrt(n)))
-    elif method == "sturges":
-        return int(np.ceil(np.log2(n)) + 1)
-    elif method == "doane":
-        if n < 3:
+    if method == "sqrt":
+        return int(np.ceil(np.sqrt(value_count)))
+    if method == "sturges":
+        return int(np.ceil(np.log2(value_count)) + 1)
+    if method == "doane":
+        if value_count < 3:
             return 1
         from scipy.stats import skew
 
-        sigma = np.sqrt(6 * (n - 2) / (n + 1) * (n + 3))
-        return int(np.ceil(1 + np.log2(n) + np.log2(1 + np.abs(skew(data)) / sigma)))
-    elif method == "rice":
-        return int(np.ceil(2 * np.power(n, 1 / 3)))
+        sigma = np.sqrt(6 * (value_count - 2) / (value_count + 1) * (value_count + 3))
+        return int(np.ceil(1 + np.log2(value_count) + np.log2(1 + np.abs(skew(data)) / sigma)))
+    if method == "rice":
+        return int(np.ceil(2 * np.power(value_count, 1 / 3)))
+    raise ValueError(f"Unknown bin count method: {method}")
 
 
 bincount_methods = ["default", "sturges", "rice", "sqrt", "doane"]

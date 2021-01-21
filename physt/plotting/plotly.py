@@ -8,92 +8,48 @@ Currently, it uses matplotlib translation for 1D histograms:
 TODO: More elaborate output planned
 """
 from functools import wraps
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
-import plotly.offline as pyo
-import plotly.plotly as pyp
 import plotly.graph_objs as go
+import plotly.offline as pyo
+from plotly.graph_objs import Figure
 
-from physt.histogram1d import Histogram1D, HistogramBase
-from physt.histogram_nd import Histogram2D
+from physt.histogram1d import Histogram1D
 from physt.histogram_collection import HistogramCollection
+from physt.histogram_nd import Histogram2D
 from physt.util import pop_many
-from . import matplotlib as mpl_backend
-from .common import get_data
-
+from .common import get_data, check_ndim
 
 AbstractHistogram1D = Union[HistogramCollection, Histogram1D]
-
+# TODO: Move this to the typing itself
 
 DEFAULT_BARMODE = "overlay"
 DEFAULT_ALPHA = 1.0
 
 
-def _wrap_standard_f(f):
+def enable_output(f):
     @wraps(f)
-    def new_f(*args, raw=False, offline=True, write_to=None, **kwargs):
-        py = pyo if offline else pyp
-        object = f(*args, **kwargs)
-        if raw:
-            return object
+    def new_f(*args, write_to: Optional[str] = None, **kwargs) -> Figure:
+        figure: Figure = f(*args, **kwargs)
         if write_to:
-            return py.plot(object, filename=write_to)
-        else:
-            return py.iplot(object)
-
+            pyo.plot(figure, filename=write_to)
+        return figure
     return new_f
-
-
-def _wrap_matplotlib_f(f):
-    @wraps(f)
-    def new_f(*args, offline=True, write_to=None, **kwargs):
-        py = pyo if offline else pyp
-        ax = f(*args, **kwargs)
-        fig = ax.figure
-        if write_to:
-            return py.plot_mpl(fig, filename=write_to)
-        else:
-            return py.iplot_mpl(fig)
-
-    return new_f
-
-
-def wrap(*, mpl_function: Optional[Any] = None):
-    def decorate(function):
-        normal_variant = _wrap_standard_f(function)
-        if mpl_function:
-            mpl_variant = _wrap_matplotlib_f(mpl_function)
-
-            @wraps(function)
-            def new_f(*args, mpl: bool = False, **kwargs):
-                if mpl:
-                    return mpl_variant(*args, **kwargs)
-                else:
-                    return normal_variant(*args, **kwargs)
-
-            return new_f
-        else:
-            return normal_variant
-
-    return decorate
 
 
 def enable_collection(f):
-    """Call the wrapped function with a HistogramCollection as argument."""
+    """Decorator calling the wrapped function with a HistogramCollection as argument."""
 
     @wraps(f)
-    def new_f(h: AbstractHistogram1D, **kwargs):
-        from physt.histogram_collection import HistogramCollection
-
-        if isinstance(h, HistogramCollection):
-            return f(h, **kwargs)
-        else:
-            return f(HistogramCollection(h), **kwargs)
+    def new_f(histogram: AbstractHistogram1D, **kwargs):
+        if isinstance(histogram, HistogramCollection):
+            return f(histogram, **kwargs)
+        return f(HistogramCollection(histogram), **kwargs)
 
     return new_f
 
 
-def _add_ticks(xaxis: go.layout.XAxis, histogram: HistogramBase, kwargs: dict):
+def _add_ticks(xaxis: go.layout.XAxis, histogram: AbstractHistogram1D, kwargs: dict):
     """Customize ticks for an axis (1D histogram)."""
     ticks = kwargs.pop("ticks", None)
     tick_handler = kwargs.pop("tick_handler", None)
@@ -115,7 +71,7 @@ def _add_ticks(xaxis: go.layout.XAxis, histogram: HistogramBase, kwargs: dict):
 
 
 @enable_collection
-def _line_or_scatter(h: AbstractHistogram1D, *, mode: str, **kwargs):
+def _line_or_scatter(h: HistogramCollection, *, mode: str, **kwargs):
     get_data_kwargs = pop_many(kwargs, "density", "cumulative", "flatten")
     data = [
         go.Scatter(
@@ -135,25 +91,30 @@ def _line_or_scatter(h: AbstractHistogram1D, *, mode: str, **kwargs):
     return figure
 
 
-@wrap(mpl_function=mpl_backend.scatter)
+@enable_output
+@check_ndim(1)
+@enable_collection
 def scatter(h: AbstractHistogram1D, **kwargs):
     return _line_or_scatter(h, mode="markers", **kwargs)
 
 
-@wrap(mpl_function=mpl_backend.line)
+@enable_output
+@check_ndim(1)
+@enable_collection
 def line(h: AbstractHistogram1D, **kwargs):
     return _line_or_scatter(h, mode="lines", **kwargs)
 
 
-@wrap(mpl_function=mpl_backend.bar)
+@enable_output
+@check_ndim(1)
 @enable_collection
 def bar(
-    h: Histogram2D,
+    h: HistogramCollection,
     *,
     barmode: str = DEFAULT_BARMODE,
     alpha: float = DEFAULT_ALPHA,
     **kwargs
-):
+):  # pylint: disable=blacklisted-name
     """Bar plot.
 
     Parameters
@@ -182,7 +143,8 @@ def bar(
     return figure
 
 
-@wrap()
+@enable_output
+@check_ndim(2)
 def map(h2: Histogram2D, **kwargs):
     """Heatmap."""
     data = [go.Heatmap(z=h2.frequencies, **kwargs)]
