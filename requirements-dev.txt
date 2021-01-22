@@ -1,0 +1,9 @@
+mypy
+pylint
+black
+
+# Doc
+sphinx
+sphinx_rtd_theme
+sphinx-apidoc
+nbsphinx
