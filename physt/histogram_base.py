@@ -661,7 +661,9 @@ class HistogramBase(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def find_bin(self, value: ArrayLike, axis: Optional[Axis] = None) -> Union[None, int, Tuple[int, ...]]:
+    def find_bin(
+        self, value: ArrayLike, axis: Optional[Axis] = None
+    ) -> Union[None, int, Tuple[int, ...]]:
         """Index(-ices) of bin corresponding to a value.
 
         Parameters
@@ -830,8 +832,7 @@ class HistogramBase(abc.ABC):
     def __radd__(self, other):
         if other == 0:  # Enable sum()
             return self
-        else:
-            return self + other
+        return self + other
 
     def __iadd__(self, other):
         if isinstance(other, HistogramBase):

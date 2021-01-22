@@ -12,8 +12,15 @@ Tutorials
    2d_histograms
    binning
    adaptive_histogram
+   interrupted-workflow
+   merge-bins
+   dask
    special_histograms
+   ascii
+   geospatial
    vega-examples
+   plotly
+   collections
 
 API
 ---

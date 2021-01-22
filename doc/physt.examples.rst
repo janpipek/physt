@@ -5,6 +5,6 @@ Module contents
 ---------------
 
 .. automodule:: physt.examples
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

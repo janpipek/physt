@@ -125,8 +125,7 @@ class HistogramND(HistogramBase):
 
         Returns
         -------
-        HistogramBase or tuple
-            Depending on the parameters, a sub-histogram or content of one bin are returned.
+        Depending on the parameters, a sub-histogram or content of one bin are returned.
 
         Indexing shares semantics with Numpy arrays, however
 
