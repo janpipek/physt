@@ -120,8 +120,9 @@ class TestSlicing:
         data2 = np.random.rand(100)
         h = physt.histogram2d(data1, data2, [4, 5], axis_names=["1", "2"])
         assert h[2].shape == (5,)
-        assert h[:,2].shape == (4,)
+        assert h[:, 2].shape == (4,)
         # TODO: Add more combinations
+
 
 class TestH2:
     def test_create_empty_h2(self):

@@ -44,18 +44,11 @@ class TestNumpyBinsWithMask:
 
 class TestValidation:
     def test_rising(self):
-        valid = [
-            [[1, 2], [2, 3], [3, 4]],
-            [[1, 2], [3, 4], [4, 5]]
-        ]
+        valid = [[[1, 2], [2, 3], [3, 4]], [[1, 2], [3, 4], [4, 5]]]
         for sequence in valid:
             assert bin_utils.is_rising((np.array(sequence)))
 
-        invalid = [
-            [[2, 2], [2, 3], [3, 4]],
-            [[1, 2], [1.7, 4], [4, 5]],
-            [[1, 2], [3, 4], [2, 3]]
-        ]
+        invalid = [[[2, 2], [2, 3], [3, 4]], [[1, 2], [1.7, 4], [4, 5]], [[1, 2], [3, 4], [2, 3]]]
         for sequence in invalid:
             assert not bin_utils.is_rising((np.array(sequence)))
 
@@ -68,10 +61,7 @@ class TestValidation:
         for sequence in valid:
             assert bin_utils.is_consecutive((np.array(sequence)))
 
-        invalid = [
-            [[1, 2], [1.8, 3], [3, 4]],
-            [[1, 2], [2.2, 3], [3, 4]]
-        ]
+        invalid = [[[1, 2], [1.8, 3], [3, 4]], [[1, 2], [2.2, 3], [3, 4]]]
         for sequence in invalid:
             assert not bin_utils.is_consecutive((np.array(sequence)))
 

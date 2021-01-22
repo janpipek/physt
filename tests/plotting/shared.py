@@ -15,7 +15,7 @@ class AbstractTest(ABC):
     def method(self, h, *args, **kwargs) -> Any:
         f = getattr(self.module, self.function_name)
         return f(h, *args, **kwargs)
-    
+
     @abstractmethod
     def assert_valid_output(self, output) -> None:
         ...

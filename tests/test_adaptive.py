@@ -75,7 +75,7 @@ class TestFillNAdaptive(object):
 
     def test_with_weights(self, empty_adaptive1):
         h = empty_adaptive1
-        h.fill_n([.4, .5, .6, 1.2], [1, 1, 2, 3])
+        h.fill_n([0.4, 0.5, 0.6, 1.2], [1, 1, 2, 3])
         assert np.array_equal(h.frequencies, [4, 3])
         assert np.array_equal(h.errors2, [6, 9])
         assert np.array_equal(h.numpy_bins, [0, 1.0, 2.0])
@@ -154,6 +154,6 @@ class TestAdaptiveArithmetics:
         d1 = np.asarray([1, 21, 3])
         d2 = np.asarray([10, 12, 20])
         h = h2(d1, d2, "fixed_width", bin_width=10, adaptive=True)
-        hb = h2(d1, d2 +10, "fixed_width", bin_width=10, adaptive=True)
+        hb = h2(d1, d2 + 10, "fixed_width", bin_width=10, adaptive=True)
         hc = h + hb
         assert np.array_equal(hc.numpy_bins[1], [10, 20, 30, 40])

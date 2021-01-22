@@ -10,17 +10,16 @@ from physt import h1
 def values():
     return np.asarray([4, 0, 3, 7.2])
 
-@pytest.fixture(params=[
-    4,
-    np.asarray([4, 0.17, 3, 7.2], dtype=float),
-    [1, 2, 3, 4]
-])
+
+@pytest.fixture(params=[4, np.asarray([4, 0.17, 3, 7.2], dtype=float), [1, 2, 3, 4]])
 def array_like(request):
     return request.param
+
 
 @pytest.fixture
 def bins():
     return np.asarray([1.2, 1.4, 1.5, 1.7, 1.8])
+
 
 @pytest.fixture
 def example(values, bins):
@@ -37,7 +36,7 @@ class TestBins:
         assert np.allclose(example.bin_centers, [1.3, 1.45, 1.6, 1.75])
 
     def test_numpy_bins(self, example):
-        assert np.allclose(example.numpy_bins, [1.2, 1.4, 1.5, 1.7, 1.8 ])
+        assert np.allclose(example.numpy_bins, [1.2, 1.4, 1.5, 1.7, 1.8])
 
     def test_widths(self, example):
         assert np.allclose(example.bin_widths, [0.2, 0.1, 0.2, 0.1])
@@ -123,17 +122,17 @@ class TestEquivalence:
         other1 = Histogram1D(bins, values, underflow=2, overflow=1)
         assert other1 == example
 
-        bins = [1.22, 1.4, 1.5, 1.7, 1.8 ]
+        bins = [1.22, 1.4, 1.5, 1.7, 1.8]
         values = [4, 0, 3, 7.2]
         other2 = Histogram1D(bins, values, underflow=2, overflow=1)
         assert other2 != example
 
-        bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
+        bins = [1.2, 1.4, 1.5, 1.7, 1.8]
         values = [4, 0, 13, 7.2]
         other3 = Histogram1D(bins, values, underflow=2, overflow=1)
         assert other3 != example
 
-        bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
+        bins = [1.2, 1.4, 1.5, 1.7, 1.8]
         values = [4, 0, 3, 7.2]
         errors2 = [4, 0, 3, 7.2]
         other4 = Histogram1D(bins, values, errors2, underflow=2, overflow=1)
@@ -144,7 +143,7 @@ class TestEquivalence:
         assert other5 != example
 
     def test_eq_with_underflows(self, example):
-        bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
+        bins = [1.2, 1.4, 1.5, 1.7, 1.8]
         values = [4, 0, 3, 7.2]
         other1 = Histogram1D(bins, values, underflow=2)
         assert other1 != example
@@ -187,24 +186,24 @@ class TestIndexing:
         assert np.array_equal(selected.frequencies, [4, 0, 3])
 
     def test_masked(self, example):
-        mask =  np.array([True, True, True, True], dtype=bool)
+        mask = np.array([True, True, True, True], dtype=bool)
         assert np.array_equal(example[mask].bins, example.bins)
         assert np.array_equal(example[mask].frequencies, example.frequencies)
         assert np.isnan(example[mask].underflow)
         assert np.isnan(example[mask].overflow)
 
-        mask =  np.array([True, False, False, False], dtype=bool)
+        mask = np.array([True, False, False, False], dtype=bool)
         assert np.array_equal(example[mask].bins, example[:1].bins)
         assert np.array_equal(example[mask].frequencies, example[:1].frequencies)
         assert np.isnan(example[mask].underflow)
         assert np.isnan(example[mask].overflow)
 
         with pytest.raises(IndexError):
-            mask =  np.array([True, False, False, False, False, False], dtype=bool)
+            mask = np.array([True, False, False, False, False, False], dtype=bool)
             example[mask]
 
         with pytest.raises(IndexError):
-            mask =  np.array([False, False, False], dtype=bool)
+            mask = np.array([False, False, False], dtype=bool)
             example[mask]
 
     def test_array(self, example):
@@ -223,13 +222,7 @@ class TestIndexing:
 class TestArithmetics:
     class TestAddition:
         @pytest.mark.parametrize("free_arithmetics", [True, False])
-        def test_add_non_hist(
-                self,
-                free_arithmetics,
-                example,
-                values,
-                array_like
-        ):
+        def test_add_non_hist(self, free_arithmetics, example, values, array_like):
             with config.enable_free_arithmetics(free_arithmetics):
                 if free_arithmetics:
                     result = example + array_like
@@ -248,14 +241,14 @@ class TestArithmetics:
         def test_add_wrong_histograms(self, example):
             with pytest.raises(ValueError):
                 wrong_bins = [
-                     [],                              # No bins
-                     [1.2, 1.5, 1.7, 1.8 ],           # Too few
-                     [1.2, 1.44, 1.5, 1.7, 1.8],      # Different
-                     [1.2, 1.4, 1.5, 1.7, 1.8, 1.]    # Too many
+                    [],  # No bins
+                    [1.2, 1.5, 1.7, 1.8],  # Too few
+                    [1.2, 1.44, 1.5, 1.7, 1.8],  # Different
+                    [1.2, 1.4, 1.5, 1.7, 1.8, 1.0],  # Too many
                 ]
                 values = [1, 1, 0, 2.2, 3, 4, 4]
                 for binset in wrong_bins:
-                    other = Histogram1D(binset, values[:len(binset) - 1])
+                    other = Histogram1D(binset, values[: len(binset) - 1])
                     with pytest.raises(RuntimeError):
                         example + other
 
@@ -282,13 +275,13 @@ class TestArithmetics:
     class TestSubtraction:
         def test_subtract_wrong_histograms(self, example):
             wrong_bins = [
-                 [1.2, 1.5, 1.7, 1.8 ],           # Too few
-                 [1.2, 1.44, 1.5, 1.7, 1.8],      # Different
-                 [1.2, 1.4, 1.5, 1.7, 1.8, 2.]    # Too many
+                [1.2, 1.5, 1.7, 1.8],  # Too few
+                [1.2, 1.44, 1.5, 1.7, 1.8],  # Different
+                [1.2, 1.4, 1.5, 1.7, 1.8, 2.0],  # Too many
             ]
             values = [1, 1, 0, 2.2, 3, 4, 4]
             for binset in wrong_bins:
-                other = Histogram1D(binset, values[:len(binset) - 1])
+                other = Histogram1D(binset, values[: len(binset) - 1])
                 with pytest.raises(ValueError):
                     example - other
 
@@ -300,13 +293,7 @@ class TestArithmetics:
             assert np.allclose(sum.frequencies, [3, 0, 3, 6.2])
 
         @pytest.mark.parametrize("free_arithmetics", [True, False])
-        def test_subtract_non_hist(
-                self,
-                free_arithmetics,
-                example,
-                values,
-                array_like
-        ):
+        def test_subtract_non_hist(self, free_arithmetics, example, values, array_like):
             with config.enable_free_arithmetics(free_arithmetics):
                 if free_arithmetics:
                     result = example - array_like
@@ -388,7 +375,7 @@ class TestConversion:
         assert df.shape == (4, 4)
         assert np.array_equal(df.columns.values, ["left", "right", "frequency", "error"])
         assert np.array_equal(df.left, [1.2, 1.4, 1.5, 1.7])
-        assert np.array_equal(df.right, [1.4, 1.5, 1.7, 1.8 ])
+        assert np.array_equal(df.right, [1.4, 1.5, 1.7, 1.8])
         assert np.array_equal(df.frequency, [4, 0, 3, 7.2])
 
     # def test_json(self):
@@ -423,14 +410,14 @@ class TestFill:
         # bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
         # values = [4, 0, 3, 7.2]
         copy = example.copy()
-        copy.fill(1.44)    # Underflow
+        copy.fill(1.44)  # Underflow
         assert np.allclose(copy.frequencies, [4, 1, 3, 7.2])
 
-        copy.fill(1.94)    # Overflow
+        copy.fill(1.94)  # Overflow
         assert np.allclose(copy.frequencies, [4, 1, 3, 7.2])
         assert copy.overflow == 2
 
-        copy.fill(0.44)    # Underflow
+        copy.fill(0.44)  # Underflow
         assert np.allclose(copy.frequencies, [4, 1, 3, 7.2])
         assert copy.underflow == 3
 
@@ -438,7 +425,7 @@ class TestFill:
         assert np.allclose(copy.frequencies, [4, 3.2, 3, 7.2])
 
     def test_fill_dtype(self):
-        h = Histogram1D([[0,1], [1, 2], [2, 3]], [1, 2, 3])
+        h = Histogram1D([[0, 1], [1, 2], [2, 3]], [1, 2, 3])
         assert h.dtype == np.int64
         assert np.allclose(h.frequencies, [1, 2, 3])
 

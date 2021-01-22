@@ -16,6 +16,6 @@ class TestGeant4Compat:
         path = os.path.join(os.path.dirname(__file__), "data/geant-h2.csv")
         h = geant4.load_csv(path)
         assert h.ndim == 2
-        assert h.shape == (50,50)
+        assert h.shape == (50, 50)
         assert h.name == "Drift Chamber 1 X vs Y"
         assert h.total == 292

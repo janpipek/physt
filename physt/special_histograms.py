@@ -445,7 +445,9 @@ def azimuthal(
                 "With `transformed==True`, you can provide only one positional argument (xdata)."
             )
     else:
-        data = np.concatenate([np.asarray(xdata)[:, np.newaxis], np.asarray(ydata)[:, np.newaxis]], axis=1)
+        data = np.concatenate(
+            [np.asarray(xdata)[:, np.newaxis], np.asarray(ydata)[:, np.newaxis]], axis=1
+        )
     data = _prepare_data(data, transformed=False, klass=AzimuthalHistogram, dropna=dropna)
     if isinstance(bins, int):
         bins = np.linspace(*range, bins + 1)

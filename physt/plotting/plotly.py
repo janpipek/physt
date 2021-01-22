@@ -34,6 +34,7 @@ def enable_output(f):
         if write_to:
             pyo.plot(figure, filename=write_to)
         return figure
+
     return new_f
 
 

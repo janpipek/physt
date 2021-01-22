@@ -139,9 +139,9 @@ class TestHumanBins:
 
         the_binning = binnings.human_binning(data, min_bin_width=0.3)
         assert the_binning.bin_width == 0.3
-        
+
         the_binning = binnings.human_binning(data, max_bin_width=0.001)
-        assert the_binning.bin_width == 0.001              
+        assert the_binning.bin_width == 0.001
 
 
 class TestIntegerBins:
@@ -176,7 +176,7 @@ class TestQuantileBins:
     def test_qrange(self):
         data = np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])
         the_binning = binnings.quantile_binning(data, bin_count=3, qrange=(0.4, 1.0))
-        assert np.allclose(the_binning.numpy_bins, [0.76, 1.8, 2.96, 10.])
+        assert np.allclose(the_binning.numpy_bins, [0.76, 1.8, 2.96, 10.0])
 
     def test_q(self):
         data = np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])

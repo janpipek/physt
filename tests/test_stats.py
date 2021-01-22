@@ -19,7 +19,7 @@ class TestStatistics:
 
     def test_std_no_weights(self):
         h = physt.h1(values)
-        assert np.allclose(h.std(), np.sqrt(5/4))
+        assert np.allclose(h.std(), np.sqrt(5 / 4))
 
     def test_mean_weights(self):
         hw = physt.h1(values, weights=weights)

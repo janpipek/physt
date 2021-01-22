@@ -10,11 +10,12 @@ class _TestBase(AbstractTest, ABC):
     module = matplotlib
 
     def assert_valid_output(self, output) -> None:
-        assert isinstance(output, Axes)  
+        assert isinstance(output, Axes)
 
 
 class _TestBase1D(_TestBase, AbstractTest1D, ABC):
     pass
+
 
 class TestBar(_TestBase1D):
     function_name = "bar"

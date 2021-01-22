@@ -23,6 +23,7 @@ class _TestBase(AbstractTest, ABC):
 class _TestBase1D(_TestBase, AbstractTest1D, ABC):
     pass
 
+
 class TestBar(_TestBase1D):
     function_name = "bar"
 

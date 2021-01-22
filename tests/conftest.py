@@ -13,9 +13,12 @@ from physt.histogram_nd import Histogram2D, HistogramND
 @pytest.fixture
 def create_adaptive():
     """Adaptive fixed-width histogram of a defined shape and some values."""
+
     def inner(shape: Tuple[int]) -> HistogramBase:
-        binnings=[
-            FixedWidthBinning(bin_width=1, bin_count=dim, bin_times_min=0 if shape[i] else None, adaptive=True)
+        binnings = [
+            FixedWidthBinning(
+                bin_width=1, bin_count=dim, bin_times_min=0 if shape[i] else None, adaptive=True
+            )
             for i, dim in enumerate(shape)
         ]
         data = np.linspace(0, np.prod(shape) - 1, np.product(shape)).reshape(shape)
@@ -25,6 +28,7 @@ def create_adaptive():
         elif len(shape) == 1:
             return Histogram1D(binning=binnings[0], frequencies=data)
         return klass(binnings=binnings, frequencies=data)
+
     return inner
 
 

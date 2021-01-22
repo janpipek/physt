@@ -24,7 +24,7 @@ class TestExamples:
         assert isinstance(examples.normal_h2(), Histogram2D)
         assert isinstance(examples.normal_h3(), HistogramND)
 
-    @pytest.mark.skipif('pandas' not in sys.modules, reason="requires the pandas library")
+    @pytest.mark.skipif("pandas" not in sys.modules, reason="requires the pandas library")
     def test_munros(self):
         h1 = examples.munros()
         assert h1.total == 282

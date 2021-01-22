@@ -6,15 +6,7 @@ from physt import h2, histogram_nd, binnings
 from physt.binnings import as_binning, BinningBase
 from physt.histogram_nd import Histogram2D
 
-vals = [
-    [0.1, 2.0],
-    [-0.1, 0.7],
-    [0.2, 1.5],
-    [0.2, -1.5],
-    [0.2, 1.47],
-    [1.2, 1.23],
-    [0.7, 0.5]
-]
+vals = [[0.1, 2.0], [-0.1, 0.7], [0.2, 1.5], [0.2, -1.5], [0.2, 1.47], [1.2, 1.23], [0.7, 0.5]]
 
 np.random.seed(42)
 
@@ -32,10 +24,7 @@ def a3x3() -> np.ndarray:
 @pytest.fixture
 def h3x3(bins0to3, a3x3) -> Histogram2D:
     """Simple 2D histograms of shape 3x3."""
-    return Histogram2D(
-        binnings=[bins0to3, bins0to3],
-        frequencies=a3x3
-    )
+    return Histogram2D(binnings=[bins0to3, bins0to3], frequencies=a3x3)
 
 
 class TestCalculateFrequencies:
@@ -48,10 +37,7 @@ class TestCalculateFrequencies:
         assert errors2 is None
 
     def test_gap(self):
-        bins = [
-            [[-1, 0], [1, 2]],
-            [[-2, -1], [1, 2]]
-        ]
+        bins = [[[-1, 0], [1, 2]], [[-2, -1], [1, 2]]]
         schemas = [binnings.static_binning(None, np.asarray(bs)) for bs in bins]
         frequencies, errors2, missing = histogram_nd.calculate_frequencies(vals, binnings=schemas)
         assert np.array_equal([[0, 0], [0, 1]], frequencies)
@@ -59,13 +45,12 @@ class TestCalculateFrequencies:
         assert errors2 is None
 
     def test_errors(self):
-        bins = [
-            [[-1, 0], [1, 2]],
-            [[-2, -1], [1, 2]]
-        ]
+        bins = [[[-1, 0], [1, 2]], [[-2, -1], [1, 2]]]
         weights = [2, 1, 1, 1, 1, 2, 1]
         schemas = [binnings.static_binning(None, np.asarray(bs)) for bs in bins]
-        frequencies, errors2, missing = histogram_nd.calculate_frequencies(vals, binnings=schemas, weights=weights)
+        frequencies, errors2, missing = histogram_nd.calculate_frequencies(
+            vals, binnings=schemas, weights=weights
+        )
         assert np.array_equal([[0, 0], [0, 2]], frequencies)
         assert missing == 7
         assert np.array_equal([[0, 0], [0, 4]], errors2)
@@ -85,7 +70,7 @@ class TestHistogram2D:
         vals2 = np.array(vals)
         vals2[0, 1] = np.nan
         with pytest.raises(RuntimeError):
-            hist = physt.h2(vals2[:,0], vals2[:,1], dropna=False)
+            hist = physt.h2(vals2[:, 0], vals2[:, 1], dropna=False)
         hist = physt.h2(vals2[:, 0], vals2[:, 1])
         assert hist.frequencies.sum() == 6
 
@@ -145,6 +130,7 @@ class TestArithmetics:
 class TestDtype:
     def test_simple(self):
         from physt import examples
+
         assert examples.normal_h2().dtype == np.dtype(np.int64)
 
 
@@ -160,10 +146,7 @@ class TestMerging:
 
 class TestPartialNormalizing:
     def test_wrong_arguments(self):
-        freqs = [
-            [1, 0],
-            [1, 2]
-        ]
+        freqs = [[1, 0], [1, 2]]
         h = Histogram2D(binnings=(range(3), range(3)), frequencies=freqs)
         with pytest.raises(ValueError):
             h0 = h.partial_normalize(2)
@@ -171,21 +154,19 @@ class TestPartialNormalizing:
             h0 = h.partial_normalize(-2)
 
     def test_axis_names(self):
-        freqs = [
-            [1, 0],
-            [1, 2]
-        ]
-        h = Histogram2D(binnings=(range(3), range(3)), frequencies=freqs, axis_names=["first_axis", "second_axis"])
+        freqs = [[1, 0], [1, 2]]
+        h = Histogram2D(
+            binnings=(range(3), range(3)),
+            frequencies=freqs,
+            axis_names=["first_axis", "second_axis"],
+        )
         h1 = h.partial_normalize("second_axis")
-        assert np.allclose(h1.frequencies, [[1, 0], [.333333333333, .6666666666]])
+        assert np.allclose(h1.frequencies, [[1, 0], [0.333333333333, 0.6666666666]])
         with pytest.raises(ValueError):
             h0 = h.partial_normalize("third_axis")
 
     def test_inplace(self):
-        freqs = [
-            [1, 0],
-            [1, 2]
-        ]
+        freqs = [[1, 0], [1, 2]]
         h = Histogram2D(binnings=(range(3), range(3)), frequencies=freqs)
         h1 = h.partial_normalize(0, inplace=False)
         assert np.allclose(h.frequencies, freqs)
@@ -194,22 +175,16 @@ class TestPartialNormalizing:
         assert h1 == h
 
     def test_values(self):
-        freqs = [
-            [1, 0],
-            [1, 2]
-        ]
+        freqs = [[1, 0], [1, 2]]
         h = Histogram2D(binnings=(range(3), range(3)), frequencies=freqs)
         h0 = h.partial_normalize(0)
         h1 = h.partial_normalize(1)
 
-        assert np.allclose(h0.frequencies, [[.5, 0], [.5, 1.0]])
-        assert np.allclose(h1.frequencies, [[1, 0], [.333333333333, .6666666666]])
+        assert np.allclose(h0.frequencies, [[0.5, 0], [0.5, 1.0]])
+        assert np.allclose(h1.frequencies, [[1, 0], [0.333333333333, 0.6666666666]])
 
     def test_with_zeros(self):
-        freqs = [
-            [0, 0],
-            [0, 2]
-        ]
+        freqs = [[0, 0], [0, 2]]
         h = Histogram2D(binnings=(range(3), range(3)), frequencies=freqs)
         h1 = h.partial_normalize(1)
         assert np.allclose(h1.frequencies, [[0, 0], [0, 1.0]])
