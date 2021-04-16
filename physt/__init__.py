@@ -11,5 +11,6 @@ See https://github.com/janpipek/physt
 
 from . import binnings
 from . import special_histograms
+from . import compat
 from .facade import *
 from .version import __version__, __author__, __author_email__, __url__
