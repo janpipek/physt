@@ -27,13 +27,13 @@ def example(values, bins):
 
 
 class TestBins:
-    def test_nbins(self, example):
-        assert example.bin_count == 4
+    def test_nbins(self, simple_h1: Histogram1D) -> None:
+        assert simple_h1.bin_count == 4
 
-    def test_edges(self, example):
-        assert np.allclose(example.bin_left_edges, [1.2, 1.4, 1.5, 1.7])
-        assert np.allclose(example.bin_right_edges, [1.4, 1.5, 1.7, 1.8])
-        assert np.allclose(example.bin_centers, [1.3, 1.45, 1.6, 1.75])
+    def test_edges(self, simple_h1: Histogram1D) -> None:
+        assert np.allclose(simple_h1.bin_left_edges, [0, 1, 1.5, 2])
+        assert np.allclose(simple_h1.bin_right_edges, [1, 1.5, 2, 3])
+        assert np.allclose(simple_h1.bin_centers, [0.5, 1.25, 1.75, 2.5])
 
     def test_numpy_bins(self, example):
         assert np.allclose(example.numpy_bins, [1.2, 1.4, 1.5, 1.7, 1.8])
@@ -372,8 +372,8 @@ class TestMerging:
 class TestConversion:
     def test_pandas(self, example):
         df = example.to_dataframe()
-        assert df.shape == (4, 4)
-        assert np.array_equal(df.columns.values, ["left", "right", "frequency", "error"])
+        assert df.shape == (4, 2)
+        assert np.array_equal(df.columns.values, ["frequency", "error"])
         assert np.array_equal(df.left, [1.2, 1.4, 1.5, 1.7])
         assert np.array_equal(df.right, [1.4, 1.5, 1.7, 1.8])
         assert np.array_equal(df.frequency, [4, 0, 3, 7.2])
@@ -441,7 +441,7 @@ class TestDtype:
 
     def test_with_weights(self, values):
         hist = h1(values, weights=[1, 2, 2.1, 3.2])
-        assert hist.dtype == np.float
+        assert hist.dtype == float
 
     def test_explicit(self, values):
         hist = h1(values, dtype=float)
