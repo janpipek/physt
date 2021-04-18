@@ -66,14 +66,14 @@ def deprecation_alias(f, deprecated_name: str):
     Examples
     --------
     >>> def new(x): return 1
-    >>> old = deprecated_name(new, "old")
+    >>> old = deprecation_alias(new, "old")
     """
 
     @wraps(f)
     def inner(*args, **kwargs):
         warnings.warn(
             f"{deprecated_name} is deprecated, use {f.__name__} instead",
-            DeprecationWarning,
+            FutureWarning,
         )
         return f(*args, **kwargs)
 
