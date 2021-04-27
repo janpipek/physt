@@ -10,4 +10,4 @@ black:
 	black -l 100 physt tests
 
 mypy:
-	mypy --ignore-missing-imports `find . ! -path '*/\.*' -name '*.py'`
+	mypy --ignore-missing-imports physt tests
