@@ -441,7 +441,7 @@ class TestDtype:
 
     def test_with_weights(self, values):
         hist = h1(values, weights=[1, 2, 2.1, 3.2])
-        assert hist.dtype == np.float
+        assert hist.dtype == float
 
     def test_explicit(self, values):
         hist = h1(values, dtype=float)
@@ -459,10 +459,10 @@ class TestDtype:
         hist = h1(values, dtype=np.int32)
         hist._coerce_dtype(np.int64)
         assert hist.dtype == np.int64
-        hist._coerce_dtype(np.float)
-        assert hist.dtype == np.float
+        hist._coerce_dtype(float)
+        assert hist.dtype == float
         hist._coerce_dtype(np.int32)
-        assert hist.dtype == np.float
+        assert hist.dtype == float
 
     def test_update(self, values):
         hist = h1(values)
@@ -481,26 +481,26 @@ class TestDtype:
     def test_hist_arithmetic(self, values):
         hist1 = h1(values, dtype=np.int32)
         hist2 = hist1.copy()
-        hist2.dtype = np.float
+        hist2.dtype = float
         hist2 *= 1.01
 
         example3 = hist1.copy()
         example3.dtype = np.int64
 
-        assert (hist1 + hist2).dtype == np.float
-        assert (hist2 + hist1).dtype == np.float
+        assert (hist1 + hist2).dtype == float
+        assert (hist2 + hist1).dtype == float
         assert (hist1 + example3).dtype == np.int64
         assert (example3 - hist1).dtype == np.int64
 
         hist1 += hist2
-        assert hist1.dtype == np.float
+        assert hist1.dtype == float
 
     def test_scalar_arithmetic(self, values):
         hist = h1(values, dtype=np.int32)
 
-        assert (hist / 3).dtype == np.float
+        assert (hist / 3).dtype == float
         assert (hist * 3).dtype in (np.int32, np.int64)  # Different platforms :-/
-        assert (hist * 3.1).dtype == np.float
+        assert (hist * 3.1).dtype == float
 
         with pytest.raises(TypeError):
             hist * complex(4, 5)
