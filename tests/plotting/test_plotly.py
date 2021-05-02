@@ -2,6 +2,8 @@ from abc import ABC
 from typing import Any, Dict
 
 import pytest
+
+pytest.importorskip("plotly")
 from plotly.graph_objs import Figure
 
 from physt.plotting import plotly

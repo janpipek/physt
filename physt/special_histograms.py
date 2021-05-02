@@ -17,7 +17,7 @@ class superclasses.
 """
 import abc
 from functools import reduce
-from typing import Optional, Type, Union, Tuple, Dict
+from typing import Optional, Type, Union, Tuple, Dict, overload
 
 import numpy as np
 
@@ -26,7 +26,6 @@ from physt.histogram1d import Histogram1D
 from physt.util import deprecation_alias
 from physt.typing_aliases import Axis, RangeTuple, ArrayLike
 from . import histogram_nd, binnings
-from .histogram_base import HistogramBase
 
 FULL_PHI_RANGE: RangeTuple = (0, 2 * np.pi)
 FULL_THETA_RANGE: RangeTuple = (0, np.pi)
@@ -54,7 +53,7 @@ class TransformedHistogramMixin(abc.ABC):
     def _transform_correct_dimension(cls, value: np.ndarray):
         ...
 
-    def find_bin(self, value, axis: Optional[Axis] = None, transformed: bool = False):
+    def find_bin(self, value: ArrayLike, axis: Optional[Axis] = None, transformed: bool = False):
         """
 
         Parameters
@@ -118,7 +117,7 @@ class TransformedHistogramMixin(abc.ABC):
         return HistogramND.projection(self, *axes, **kwargs)
 
     @classmethod
-    def _validate_source_dimension(cls, value: np.ndarray):
+    def _validate_source_dimension(cls, value: np.ndarray) -> None:
         source_ndims = [cls.source_ndim] if isinstance(cls.source_ndim, int) else cls.source_ndim
         if not len(value.shape) <= 2 or value.shape[-1] not in source_ndims:
             raise ValueError(
@@ -127,7 +126,7 @@ class TransformedHistogramMixin(abc.ABC):
             )
 
     @classmethod
-    def transform(cls, value) -> Union[np.ndarray, float]:
+    def transform(cls, value: ArrayLike) -> Union[np.ndarray, float]:
         """Convert cartesian (general) coordinates into internal ones.
 
         Parameters
@@ -691,6 +690,13 @@ cylindrical_surface_histogram = deprecation_alias(
 )
 
 
+@overload
+def _prepare_data(data: ArrayLike, transformed: bool, klass: Type[TransformedHistogramMixin], *, dropna: bool = False) -> np.ndarray: ...
+
+@overload
+def _prepare_data(data: None, transformed: bool, klass: Type[TransformedHistogramMixin], *, dropna: bool = False) -> None: ...
+
+
 def _prepare_data(
     data: Optional[ArrayLike],
     transformed: bool,
@@ -701,9 +707,9 @@ def _prepare_data(
     """Transform data for binning."""
     if data is None:
         return None
-    data = np.asarray(data)
+    data_: np.ndarray = np.asarray(data)
     if dropna:
-        data = data[~np.isnan(data).any(axis=1)]
+        data_ = data_[~np.isnan(data_).any(axis=1)]
     if not transformed:
-        data = klass.transform(data)
-    return data
+        data_ = klass.transform(data_)
+    return data_

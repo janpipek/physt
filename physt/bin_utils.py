@@ -100,7 +100,6 @@ def to_numpy_bins_with_mask(bins: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
                 j += 1
             mask_.append(j)
             edges_.append(bins[-1, 1])
-        edges_
     else:
         raise RuntimeError("to_numpy_bins_with_mask: array with dim=1 or 2 expected")
     if not np.all(np.diff(edges_) > 0):
