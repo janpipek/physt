@@ -3,6 +3,7 @@ from typing import Any, List, Optional
 import numpy as np
 import pandas
 from pandas.core.arrays.masked import BaseMaskedDtype
+from pandas.api.types import is_numeric_dtype
 
 from physt.binnings import BinningBase
 from physt.facade import h, h1, h2
@@ -23,9 +24,14 @@ def _extract_values(series: pandas.Series, dropna: bool = True) -> np.ndarray:
 
 @pandas.api.extensions.register_series_accessor("physt")
 class PhystSeriesAccessor:
-    """Histogramming methods for pandas Series."""
+    """Histogramming methods for pandas Series.
+
+    It exists only for numeric series.
+    """
 
     def __init__(self, series: pandas.Series):
+        if not is_numeric_dtype(series):
+            raise AttributeError(f"Series must be of a numeric type, not {series.dtype}")
         self._series = series
 
     def h1(self, bins=None, *, dropna: bool = True, **kwargs) -> Histogram1D:
