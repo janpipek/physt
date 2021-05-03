@@ -54,7 +54,7 @@ class PhystDataFrameAccessor:
             if self._df.shape[1] != 1:
                 raise ValueError("Argument `col` must be set.")
             col = self._df.columns[0]
-        return self[col].physt.h1(bins=bins, **kwargs)
+        return self._df[col].physt.h1(bins=bins, **kwargs)
 
     def h2(
         self,
@@ -65,7 +65,7 @@ class PhystDataFrameAccessor:
         dropna: bool = True,
         **kwargs
     ) -> Histogram2D:
-        """Create 1D histogram from two columns.
+        """Create 2D histogram from two columns.
 
         Parameters
         ----------
