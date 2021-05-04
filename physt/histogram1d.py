@@ -483,24 +483,6 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             return False
         return True
 
-    def to_dataframe(self) -> "pandas.DataFrame":
-        """Convert to pandas DataFrame.
-
-        This is not a lossless conversion - (under/over)flow info is lost.
-        """
-        import pandas as pd
-
-        df = pd.DataFrame(
-            {
-                "left": self.bin_left_edges,
-                "right": self.bin_right_edges,
-                "frequency": self.frequencies,
-                "error": self.errors,
-            },
-            columns=["left", "right", "frequency", "error"],
-        )
-        return df
-
     @classmethod
     def _kwargs_from_dict(cls, a_dict: Mapping[str, Any]) -> Dict[str, Any]:
         kwargs = HistogramBase._kwargs_from_dict(a_dict)  # type: ignore
@@ -509,6 +491,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
 
     def to_xarray(self) -> "xarray.Dataset":
         """Convert to xarray.Dataset"""
+        # TODO: Move this to physt.compat.xarray
         import xarray as xr
 
         data_vars: Dict[str, Any] = {

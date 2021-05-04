@@ -271,19 +271,21 @@ def collection(data, bins=10, **kwargs) -> HistogramCollection:
     return HistogramCollection.multi_h1(data, bins, **kwargs)
 
 
+del deprecation_alias
+
 __all__ = [
+    "azimuthal",
+    "collection",
+    "cylindrical_surface",
+    "cylindrical",
     "h1",
     "h2",
     "h3",
     "histogram",
     "histogram2d",
     "histogramdd",
-    "collection",
     "polar",
-    "azimuthal",
     "radial",
-    "cylindrical",
-    "cylindrical_surface",
-    "spherical",
     "spherical_surface",
+    "spherical",
 ]

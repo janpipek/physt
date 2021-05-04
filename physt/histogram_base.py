@@ -212,6 +212,7 @@ class HistogramBase(abc.ABC):
 
     @axis_names.setter
     def axis_names(self, value: Iterable[str]):
+        # TODO: Check dimension for this
         self._meta_data["axis_names"] = tuple(str(name) for name in value)
 
     def _get_axis(self, name_or_index: Axis) -> int:
@@ -338,6 +339,7 @@ class HistogramBase(abc.ABC):
     @property
     def bin_count(self) -> int:
         """Total number of bins."""
+        # TODO: Rename to size (in parallel with numpy/pandas)?
         return int(np.product(self.shape))
 
     @property

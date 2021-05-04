@@ -244,7 +244,7 @@ class SphericalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
     source_ndim = 3
 
     @property
-    def radius(self):
+    def radius(self) -> float:
         """Radius of the surface.
 
         Useful for calculating densities.
@@ -252,14 +252,14 @@ class SphericalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         return self._meta_data.get("radius", 1)
 
     @radius.setter
-    def radius(self, value):
+    def radius(self, value: float):
         self._meta_data["radius"] = value
 
     @classmethod
     def _transform_correct_dimension(cls, value):
         result = np.ndarray((*value.shape[:-1], 2))
         x, y, z = value.T
-        xy = np.hypot(x, y)
+        xy = np.hypot(x, y)  # pylint: disable=invalid-name
         result[..., 0] = np.arctan2(xy, z) % (2 * np.pi)
         result[..., 1] = np.arctan2(y, x) % (2 * np.pi)
         return result
