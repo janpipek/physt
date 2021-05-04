@@ -369,21 +369,6 @@ class TestMerging:
         assert hist2 == merged
 
 
-class TestConversion:
-    def test_pandas(self, example):
-        df = example.to_dataframe()
-        assert df.shape == (4, 2)
-        assert np.array_equal(df.columns.values, ["frequency", "error"])
-        assert np.array_equal(df.left, [1.2, 1.4, 1.5, 1.7])
-        assert np.array_equal(df.right, [1.4, 1.5, 1.7, 1.8])
-        assert np.array_equal(df.frequency, [4, 0, 3, 7.2])
-
-    # def test_json(self):
-    #     json = example.to_json()
-    #     h2 = Histogram1D.from_json(json)
-    #     assert example == h2
-
-
 class TestFindBin:
     def test_normal(self, example):
         # bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]

@@ -491,6 +491,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
 
     def to_xarray(self) -> "xarray.Dataset":
         """Convert to xarray.Dataset"""
+        # TODO: Move this to physt.compat.xarray
         import xarray as xr
 
         data_vars: Dict[str, Any] = {

@@ -1,3 +1,9 @@
+"""Pandas integration.
+
+- conversion between histograms and Series/DataFrames
+- .physt accessor for pandas objects
+"""
+
 from typing import Any, List, Optional
 
 import numpy as np
