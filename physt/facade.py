@@ -195,8 +195,7 @@ def h(
 
     Parameters
     ----------
-    data : array_like
-        Container of all the values
+    data: Container of all the values
     bins: Any
     weights: array_like, optional
         (as numpy.histogram)

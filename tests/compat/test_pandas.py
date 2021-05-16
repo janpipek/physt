@@ -48,6 +48,18 @@ def df_three_columns(series_of_int: pd.Series) -> pd.DataFrame:
         {
             "a": series_of_int,
             "b": series_of_int * 2,
+            "c": series_of_int * 3,
+        }
+    )
+
+
+@pytest.fixture
+def df_multilevel_column_index(series_of_int: pd.Series) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            ("a", "b"): series_of_int,
+            ("a", "c"): series_of_int * 2,
+            ("b", "d"): series_of_int * 3,
         }
     )
 
@@ -106,9 +118,6 @@ class TestPhystSeriesAccessors:
             with pytest.raises(ValueError, match="Cannot histogram series with NA's"):
                 series_of_nullable_int.physt.h1(dropna=False)
 
-        # TODO: Just check that it works
-        pass
-
 
 class TestPhystDataFrameAccessors:
     def test_exists(self, df_one_column: pd.DataFrame):
@@ -128,7 +137,22 @@ class TestPhystDataFrameAccessors:
             assert output.name == "a"
 
         def test_two_columns_no_arg(self, df_two_columns: pd.DataFrame) -> None:
-            pass
+            with pytest.raises(ValueError, match="Argument `column` must be set"):
+                output = df_two_columns.physt.h1()
+
+        @pytest.mark.parametrize(
+            "index",
+            [("a", "b"), ("a", "c"), ("non", "existent"), "a", ("a",)]
+        )
+        def test_with_multilevel_index(self, df_multilevel_column_index: pd.DataFrame, index: Any) -> None:
+            try:
+                data = df_multilevel_column_index[index]
+            except:
+                with pytest.raises(KeyError):
+                    df_multilevel_column_index.physt.h1(index)
+            else:
+                output = df_multilevel_column_index.physt.h1(index)
+                expected = h1(data)
 
     class TestH2:
         # TODO: Just check that it works

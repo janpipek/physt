@@ -54,18 +54,28 @@ class PhystDataFrameAccessor:
     def __init__(self, df: pandas.DataFrame):
         self._df = df
 
-    def h1(self, col: Any = None, bins=None, **kwargs) -> Histogram1D:
-        """Create 1D histogram from a column."""
-        if col is None:
+    def h1(self, column: Any = None, bins=None, **kwargs) -> Histogram1D:
+        """Create 1D histogram from a column.
+
+        Parameters
+        ----------
+        column: Name of the column to apply on (not required for 1-column data frames)
+        bins: Universal `bins` argument
+
+        See Also
+        --------
+        physt.h1
+        """
+        if column is None:
             if self._df.shape[1] != 1:
-                raise ValueError("Argument `col` must be set.")
-            col = self._df.columns[0]
-        return self._df[col].physt.h1(bins=bins, **kwargs)
+                raise ValueError("Argument `column` must be set.")
+            column = self._df.columns[0]
+        return self._df[column].physt.h1(bins=bins, **kwargs)
 
     def h2(
         self,
-        col1: Any = None,
-        col2: Any = None,
+        column1: Any = None,
+        column2: Any = None,
         bins=None,
         *,
         dropna: bool = True,
@@ -75,28 +85,42 @@ class PhystDataFrameAccessor:
 
         Parameters
         ----------
-        col1: Name of the first column
-        col2: Name of the second column
-        bins: Universal bins
-        dropna:
+        column1: Name of the first column (not required for 2-column data frames)
+        column2: Name of the second column (not required for 2-column data frames)
+        bins: Universal `bins` argument
+        dropna: Ignore NA values
+
+        See Also
+        --------
+        physt.h2
         """
-        if col1 is None and col2 is None and self._df.shape[1] == 2:
-            col1, col2 = self._df.columns
-        elif col1 is None or col2 is None:
-            raise ValueError("Arguments `col1` and `col2` must be set.")
-        data = self._df[[col1, col2]]
+        if column1 is None and column2 is None and self._df.shape[1] == 2:
+            column1, column2 = self._df.columns
+        elif column1 is None or column2 is None:
+            raise ValueError("Arguments `column1` and `column2` must be set.")
+        data = self._df[[column1, column2]]
         if dropna:
             data = data.dropna()
         return h2(
-            data1=_extract_values(data[col1], dropna=False),
-            data2=_extract_values(data[col2], dropna=False),
+            data1=_extract_values(data[column1], dropna=False),
+            data2=_extract_values(data[column2], dropna=False),
             bins=bins,
             dropna=False,  # Already done
             **kwargs
         )
 
-    def h(self, cols: List[Any], bins=None, *, dropna=True, **kwargs) -> HistogramND:
-        data = self._df[cols]
+    def h(self, columns: List[Any] = None, bins=None, *, dropna=True, **kwargs) -> HistogramND:
+        """Create an ND histogram.
+
+        Parameters
+        ----------
+        columns: The columns to apply on. Uses all columns if not set
+
+        See Also
+        --------
+        physt.h
+        """
+        data = self._df[columns]
         if dropna:
             data = data.dropna()
         return h(data=data.astype(float).values, bins=bins, **kwargs)
