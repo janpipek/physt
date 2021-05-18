@@ -71,9 +71,14 @@ class PhystDataFrameAccessor:
             if self._df.shape[1] != 1:
                 raise ValueError("Argument `column` must be set.")
             column = self._df.columns[0]
-        data = self._df[column]
+        try:
+            data = self._df[column]
+        except KeyError:
+            raise KeyError(f"Column '{column}' not found.")
         if not isinstance(data, pd.Series):
             raise ValueError(f"Argument `column` must select a single series: {column}")
+        if not "axis_name" in kwargs:
+            kwargs["axis_name"] = column
         return data.physt.h1(bins=bins, **kwargs)
 
     def h2(
@@ -102,9 +107,14 @@ class PhystDataFrameAccessor:
             column1, column2 = self._df.columns
         elif column1 is None or column2 is None:
             raise ValueError("Arguments `column1` and `column2` must be set.")
-        data = self._df[[column1, column2]]
+        try:
+            data = self._df[[column1, column2]]
+        except KeyError:
+            raise KeyError(f"Column(s) '{column1}' and/or '{column2}' could not be found.")
         if dropna:
             data = data.dropna()
+        if not "axis_names" in kwargs:
+            kwargs["axis_names"] = (column1, column2)
         return h2(
             data1=_extract_values(data[column1], dropna=False),
             data2=_extract_values(data[column2], dropna=False),
@@ -113,7 +123,7 @@ class PhystDataFrameAccessor:
             **kwargs
         )
 
-    def h(self, columns: List[Any] = None, bins=None, *, dropna=True, **kwargs) -> HistogramND:
+    def h(self, columns: List[Any] = None, bins: Any = None, *, dropna: bool = True, **kwargs) -> HistogramND:
         """Create an ND histogram.
 
         Parameters
@@ -124,7 +134,11 @@ class PhystDataFrameAccessor:
         --------
         physt.h
         """
+        if not columns:
+            columns = self._df.columns
         data = self._df[columns]
+        if not "axis_names" in kwargs:
+            kwargs["axis_name"] = columns
         if dropna:
             data = data.dropna()
         return h(data=data.astype(float).values, bins=bins, **kwargs)

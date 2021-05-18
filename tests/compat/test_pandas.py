@@ -3,6 +3,8 @@ from typing import Any, Dict, Iterable
 import numpy as np
 import pytest
 
+from physt.histogram1d import Histogram1D
+
 pd = pytest.importorskip("pandas")
 from pandas import IntervalIndex
 from pandas.testing import assert_index_equal
@@ -120,7 +122,7 @@ class TestPhystSeriesAccessors:
 
 
 class TestPhystDataFrameAccessors:
-    def test_exists(self, df_one_column: pd.DataFrame):
+    def test_exists(self, df_one_column: pd.DataFrame) -> None:
         assert hasattr(df_one_column, "physt")
 
     class TestH1:
@@ -131,14 +133,33 @@ class TestPhystDataFrameAccessors:
         def test_single_column(self, df_one_column: pd.DataFrame, args: Iterable[Any], kwargs: Dict[str, Any]) -> None:
             # TODO: Test no argument separately
             # Non-trivial *args should perhaps fail?
-            output = df_one_column.physt.h1(None, *args, **kwargs)
-            expected = h1(np.asarray(df_one_column["a"].array), *args, **kwargs)
+            output: Histogram1D = df_one_column.physt.h1(None, *args, **kwargs)
+            expected: Histogram1D = h1(np.asarray(df_one_column["a"].array), *args, **kwargs)
             assert_histograms_equal(output, expected, check_metadata=False)
+
+        def test_correct_meta_data(self, df_one_column: pd.DataFrame) -> None:
+            output: Histogram1D = df_one_column.physt.h1()
             assert output.name == "a"
+            assert output.axis_name == "a"
 
         def test_two_columns_no_arg(self, df_two_columns: pd.DataFrame) -> None:
             with pytest.raises(ValueError, match="Argument `column` must be set"):
                 output = df_two_columns.physt.h1()
+
+        @pytest.mark.parametrize(
+            "column_name,bin_arg",
+            [("a", None), ("a", "human"), ("b", None), ("xxx", None)]
+        )
+        def test_two_columns(self, df_two_columns: pd.DataFrame, column_name: str, bin_arg: Any) -> None:
+            try:
+                data = df_two_columns[column_name]
+            except:
+                with pytest.raises(KeyError, match=f"Column '{column_name}' not found"):
+                    df_two_columns.physt.h1(column_name, bin_arg)
+            else:
+                expected = h1(data, bin_arg)
+                output = df_two_columns.physt.h1(column_name, bin_arg)
+                assert_histograms_equal(output, expected, check_metadata=False)
 
         @pytest.mark.parametrize(
             "index",
@@ -157,10 +178,25 @@ class TestPhystDataFrameAccessors:
                 else:
                     output = df_multilevel_column_index.physt.h1(index)
                     expected = h1(data)
+                    assert_histograms_equal(output, expected, check_metadata=False)
 
     class TestH2:
         # TODO: Just check that it works
-        pass
+        def test_one_column(self):
+            pass
+
+        def test_meta_data(self, df_two_columns: pd.DataFrame, df_three_columns: pd.DataFrame) -> None:
+            h = df_three_columns.physt.h2(column1="a", column2="b")
+            assert h.name is None  # TODO: Do we now how to call it?
+            assert h.axis_names == ("a", "b")
+
+            h = df_two_columns.physt.h2()
+            assert h.axis_names == ("a", "b")
+
+            h = df_two_columns.physt.h2(axis_names=("b", "c"))
+            assert h.axis_names == ("b", "c")
+
+
 
     class TestH3:
         pass
