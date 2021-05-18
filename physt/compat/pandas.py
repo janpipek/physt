@@ -8,6 +8,7 @@ from typing import Any, List, Optional
 
 import numpy as np
 import pandas
+import pandas as pd
 from pandas.core.arrays.masked import BaseMaskedDtype
 from pandas.api.types import is_numeric_dtype
 
@@ -70,7 +71,10 @@ class PhystDataFrameAccessor:
             if self._df.shape[1] != 1:
                 raise ValueError("Argument `column` must be set.")
             column = self._df.columns[0]
-        return self._df[column].physt.h1(bins=bins, **kwargs)
+        data = self._df[column]
+        if not isinstance(data, pd.Series):
+            raise ValueError(f"Argument `column` must select a single series: {column}")
+        return data.physt.h1(bins=bins, **kwargs)
 
     def h2(
         self,

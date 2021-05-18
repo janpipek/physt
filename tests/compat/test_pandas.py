@@ -151,8 +151,12 @@ class TestPhystDataFrameAccessors:
                 with pytest.raises(KeyError):
                     df_multilevel_column_index.physt.h1(index)
             else:
-                output = df_multilevel_column_index.physt.h1(index)
-                expected = h1(data)
+                if not isinstance(data, pd.Series):
+                    with pytest.raises(ValueError, match="Argument `column` must select a single series"):
+                        df_multilevel_column_index.physt.h1(index)
+                else:
+                    output = df_multilevel_column_index.physt.h1(index)
+                    expected = h1(data)
 
     class TestH2:
         # TODO: Just check that it works
