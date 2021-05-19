@@ -210,7 +210,7 @@ class TimeTickHandler:
         if level[0] == "edge":
             return h1.numpy_bins.tolist()
         if level[0] == "center":
-            return h1.bin_centers
+            return list(h1.bin_centers)
 
         width = level[1] * self.LEVELS[level[0]]
         min_factor = int(min_ // width)

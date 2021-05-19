@@ -415,7 +415,7 @@ class HistogramBase(abc.ABC):
     @property
     def total(self) -> float:
         """Total number (sum of weights) of entries excluding underflow and overflow."""
-        return self._frequencies.sum()
+        return np.asscalar(self._frequencies.sum())
 
     @property
     def missed(self) -> float:
@@ -771,7 +771,7 @@ class HistogramBase(abc.ABC):
         Template method for from dict.
         Override if necessary (like it's done in Histogram1D).
         """
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "binnings": [
                 BinningBase.from_dict(binning_data) for binning_data in a_dict["binnings"]
             ],

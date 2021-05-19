@@ -741,8 +741,8 @@ def human_binning(
     if range is None:
         if data is None:
             raise ValueError("Cannot guess optimum bin width without data.")
-        min_ = data.min()
-        max_ = data.max()
+        min_ = np.asscalar(data.min())
+        max_ = np.asscalar(data.max())
     else:
         min_, max_ = range
     if bin_count is None:
@@ -896,7 +896,7 @@ def exponential_binning(
     return ExponentialBinning(log_min=range[0], log_width=log_width, bin_count=bin_count, **kwargs)
 
 
-def calculate_bins(array, _=None, **kwargs) -> BinningBase:
+def calculate_bins(array: Optional[np.ndarray], _ = Any, **kwargs) -> BinningBase:
     """Find optimal binning from arguments.
 
     Parameters
@@ -933,6 +933,9 @@ def calculate_bins(array, _=None, **kwargs) -> BinningBase:
     elif isinstance(_, str):
         # What about the ranges???
         if _ in bincount_methods:
+            # TODO: Do we really want this?
+            if array is None:
+                raise ValueError(f"Cannot find the ideal number of bins without data (method='{_}')")
             bin_count = ideal_bin_count(array, method=_)
             binning = numpy_binning(array, bin_count, **kwargs)
         elif _ in binning_methods:

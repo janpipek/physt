@@ -1,5 +1,5 @@
 """Methods for investigation and manipulation of bin arrays."""
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 
@@ -82,9 +82,9 @@ def to_numpy_bins_with_mask(bins: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
     """
     bins = np.asarray(bins)
     if bins.ndim == 1:
-        edges_ = bins
+        edges_: Union[np.ndarray, list] = bins
         if bins.shape[0] > 1:
-            mask_ = np.arange(bins.shape[0] - 1)
+            mask_: Union[np.ndarray, list] = np.arange(bins.shape[0] - 1)
         else:
             mask_ = []
     elif bins.ndim == 2:

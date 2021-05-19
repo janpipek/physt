@@ -1,4 +1,4 @@
-from typing import Optional, Iterable, Type, cast
+from typing import Optional, Iterable, Type, cast, Dict, Any, Tuple
 
 import numpy as np
 
@@ -78,13 +78,16 @@ def h1(
     if type(data).__name__ == "DataFrame":
         raise TypeError("Cannot create histogram from a pandas DataFrame. Use Series.")
 
-    # Convert to array
-    if data is not None:
-        array = np.asarray(data)  # .flatten()
-        if dropna:
-            array = array[~np.isnan(array)]
-    else:
-        array = None
+    def _maybe_to_array(data: Optional[ArrayLike], dropna: bool) -> Optional[np.ndarray]:
+        if data is not None:
+            array: np.ndarray = np.asarray(data)
+            if dropna:
+                array = array[~np.isnan(array)]
+            return array
+        else:
+            return None
+
+    array = _maybe_to_array(data, dropna=dropna)
 
     # Get binning
     binning = calculate_bins(
@@ -93,16 +96,16 @@ def h1(
     # bins = binning.bins
 
     # Get frequencies
-    if array is not None:
+    if array is None:
+        frequencies: Optional[np.ndarray] = None
+        errors2: Optional[np.ndarray] = None
+        underflow: float = 0
+        overflow: float = 0
+        stats: Dict[str, Any] = {"sum": 0.0, "sum2": 0.0}
+    else:
         (frequencies, errors2, underflow, overflow, stats) = calculate_frequencies(
             array, binning=binning, weights=weights, dtype=dtype
         )
-    else:
-        frequencies = None
-        errors2 = None
-        underflow = 0
-        overflow = 0
-        stats = {"sum": 0.0, "sum2": 0.0}
 
     # Construct the object
     if not keep_missed:
@@ -224,26 +227,33 @@ def h(
             except:
                 pass  # Perhaps columns has different meaning here.
 
+    def _maybe_to_array(data: Optional[ArrayLike], dim: Optional[int], dropna: bool) -> Tuple[int, Optional[np.ndarray]]:
+        if data is not None:
+            array: np.ndarray = np.asarray(data)
+            if array.ndim != 2:
+                raise ValueError(f"Array must have shape (n, d), {array.shape} encountered.")
+            if dim is not None and dim != array.shape[1]:
+                raise ValueError(f"Dimension mismatch: {dim} != {array.shape[1]}")
+            _, dim = array.shape
+            if dropna:
+                array = array[~np.isnan(array).any(axis=1)]
+            return dim, array
+        else:
+            if dim is None:
+                raise ValueError("You have to specify either data or its dimension.")
+            return dim, None
+
+    check_nan = data is not None and not dropna
+
+    dim, array = _maybe_to_array(data, dim=dim, dropna=dropna)
+
     # Prepare and check data
     # Convert to array
-    if data is not None:
-        data = np.asarray(data)
-        if data.ndim != 2:
-            raise ValueError(f"Array must have shape (n, d), {data.shape} encountered.")
-        if dim is not None and dim != data.shape[1]:
-            raise ValueError(f"Dimension mismatch: {dim} != {data.shape[1]}")
-        _, dim = data.shape
-        if dropna:
-            data = data[~np.isnan(data).any(axis=1)]
-        check_nan = not dropna
-    else:
-        if dim is None:
-            raise ValueError("You have to specify either data or its dimension.")
-        check_nan = False
+
 
     # Prepare bins
     bin_schemas = calculate_bins_nd(
-        data, bins, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs
+        array, bins, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs
     )
 
     # Prepare remaining data
@@ -253,7 +263,7 @@ def h(
     if title:
         kwargs["title"] = title
     return klass.from_calculate_frequencies(
-        data, binnings=bin_schemas, weights=weights, axis_names=axis_names, **kwargs
+        array, binnings=bin_schemas, weights=weights, axis_names=axis_names, **kwargs
     )
 
 

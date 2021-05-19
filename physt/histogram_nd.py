@@ -188,10 +188,10 @@ class HistogramND(HistogramBase):
         """
         return float(np.sum(self.bin_sizes))
 
-    def get_bin_edges(self, axis: Optional[Axis] = None) -> Tuple[np.ndarray, ...]:
+    def get_bin_edges(self, axis: Optional[Axis] = None) -> np.ndarray:
         if axis is not None:
             axis = self._get_axis(axis)
-            return self.numpy_bins[self._get_axis(axis)]
+            return self.edges[self._get_axis(axis)]
         else:
             edges = [self.get_bin_edges(i) for i in range(self.ndim)]
             return np.meshgrid(*edges, indexing="ij")

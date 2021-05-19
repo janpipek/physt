@@ -300,7 +300,7 @@ class TestPhystDataFrameAccessors:
 
 class TestH1ToSeries:
     def test_simple_h1(self, simple_h1: Histogram1D) -> None:
-        output = simple_h1.to_series()
+        output = simple_h1.to_series()  # type: ignore
         expected = pd.Series(
             [1, 25, 0, 12],
             index=IntervalIndex.from_breaks(
@@ -315,7 +315,7 @@ class TestH1ToSeries:
 
 class TestH1ToDDataFrame:
     def test_simple_h1(self, simple_h1: Histogram1D) -> None:
-        output = simple_h1.to_dataframe()
+        output = simple_h1.to_dataframe()  # type: ignore
         expected = pd.DataFrame(
             {"frequency": [1, 25, 0, 12], "error": [1, 5, 0, np.sqrt(12)]},
             index=IntervalIndex.from_breaks(
