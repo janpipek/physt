@@ -331,14 +331,11 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
 
         This number is precise, because we keep the necessary data
         separate from bin contents.
-
-        Returns
-        -------
-        float
         """
         # TODO: Add DOF
-        if self._stats:
-            return np.sqrt(self.variance())
+        variance = self.variance()
+        if variance is not None:
+            return np.sqrt(variance)
         return None  # TODO: or error
 
     def variance(self) -> Optional[float]:  # , ddof: int = 0) -> float:
@@ -346,10 +343,6 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
 
         This number is precise, because we keep the necessary data
         separate from bin contents.
-
-        Returns
-        -------
-        float
         """
         # TODO: Add DOF
         # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
@@ -359,14 +352,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             return np.nan
         return None
 
-    # TODO: Add (correct) implementation of SEM
-    # def sem(self):
-    #     if self._stats:
-    #         return 1 / total * np.sqrt(self.variance)
-    #     else:
-    #         return None
-
-    def find_bin(self, value: ArrayLike, axis: Optional[Axis] = None) -> Optional[int]:
+    def find_bin(self, value: float, axis: Optional[Axis] = None) -> Optional[int]:
         """Index of bin corresponding to a value.
 
         Returns
@@ -378,7 +364,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             self._get_axis(axis)  # Check that it is valid
         if not np.isscalar(value):
             raise ValueError(f"Non-scalar value for 1D histogram: {value}")
-        ixbin = np.searchsorted(self.bin_left_edges, value, side="right")
+        ixbin = np.asscalar(np.searchsorted(self.bin_left_edges, value, side="right"))
         if ixbin == 0:
             return -1
         if ixbin == self.bin_count:

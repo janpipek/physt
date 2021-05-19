@@ -660,23 +660,6 @@ class HistogramBase(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def find_bin(
-        self, value: ArrayLike, axis: Optional[Axis] = None
-    ) -> Union[None, int, Tuple[int, ...]]:
-        """Index(-ices) of bin corresponding to a value.
-
-        Parameters
-        ----------
-        value: Value with dimensionality equal to histogram
-        axis: If set, find axis along an axis. Otherwise, find bins along all axes.
-            None = outside the bins
-
-        Returns
-        -------
-        If axis is specified (or the histogram is 1D), a number. Otherwise, a tuple. If not available, None.
-        """
-
-    @abc.abstractmethod
     def fill(self, value: float, weight: float = 1, **kwargs) -> Union[None, int, Tuple[int, ...]]:
         """Update histogram with a new value.
 

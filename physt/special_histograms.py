@@ -722,5 +722,6 @@ def _prepare_data(
     if dropna:
         data_ = data_[~np.isnan(data_).any(axis=1)]
     if not transformed:
-        data_ = klass.transform(data_)
+        # TODO: Perhaps we should be able to disi
+        data_ = klass.transform(data_)  # type: ignore
     return data_

@@ -11,3 +11,6 @@ black:
 
 mypy:
 	mypy --ignore-missing-imports physt tests
+
+pytest:
+	pytest

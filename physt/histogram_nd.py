@@ -120,7 +120,7 @@ class HistogramND(HistogramBase):
 
     def __getitem__(
         self, index: Union[int, slice, Iterable[int]]
-    ) -> Union["HistogramBase", Tuple[Tuple[np.ndarray, ...], float]]:
+    ) -> Union["HistogramBase", Tuple[Tuple[Tuple[int, int], ...], float]]:
         """Select subset of histogram.
 
         Parameters
@@ -216,37 +216,52 @@ class HistogramND(HistogramBase):
             return (self.get_bin_right_edges(axis) + self.get_bin_left_edges(axis)) / 2
         return np.meshgrid(*[self.get_bin_centers(i) for i in range(self.ndim)], indexing="ij")
 
-    def find_bin(self, value, axis: Optional[Axis] = None) -> Union[None, int, Tuple[int, ...]]:
+    def find_bin(self, value: ArrayLike, axis: Optional[Axis] = None) -> Union[None, int, Tuple[int, ...]]:
+        """Index(-ices) of bin corresponding to a value.
+
+        Parameters
+        ----------
+        value: Value with dimensionality equal to histogram
+        axis: If set, find axis along an axis. Otherwise, find bins along all axes.
+            None = outside the bins
+
+        Returns
+        -------
+        If axis is specified a number. Otherwise, a tuple. If not available, None.
+        """
         if axis is not None:
+            value_scalar = np.asscalar(value)
             axis = self._get_axis(axis)
-            ixbin = np.searchsorted(self.get_bin_left_edges(axis), value, side="right")
+            ixbin = np.searchsorted(self.get_bin_left_edges(axis), value_scalar, side="right")
             if ixbin == 0:
                 return None
             elif ixbin == self.shape[axis]:
-                if value <= self.get_bin_right_edges(axis)[-1]:
+                if value_scalar <= self.get_bin_right_edges(axis)[-1]:
                     return int(ixbin - 1)
                 else:
                     return None
-            elif value < self.get_bin_right_edges(axis)[ixbin - 1]:
+            elif value_scalar < self.get_bin_right_edges(axis)[ixbin - 1]:
                 return int(ixbin - 1)
             elif ixbin == self.shape[axis]:
                 return None
             else:
                 return None
         else:
-            ixbin = tuple(self.find_bin(value[i], i) for i in range(self.ndim))
+            value_array = np.asarray(value)
+            ixbin = tuple(self.find_bin(value_array[i], i) for i in range(self.ndim))
             if None in ixbin:
                 return None
             else:
                 return ixbin
 
-    def fill(self, value, weight=1, **kwargs):
+    def fill(self, value: ArrayLike, weight=1, **kwargs):
         self._coerce_dtype(type(weight))
+        value_array = np.asarray(value)
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
-                bin_map = binning.force_bin_existence(value[i])
+                bin_map = binning.force_bin_existence(value_array[i])
                 self._reshape_data(binning.bin_count, bin_map, i)
-        ixbin = self.find_bin(value, **kwargs)
+        ixbin = self.find_bin(value_array, **kwargs)
         if ixbin is None and self.keep_missed:
             self._missed += weight
         else:
@@ -279,25 +294,25 @@ class HistogramND(HistogramBase):
             Signal that the data are transposed (in columns, instead of rows).
             This allows to pass list of arrays in values.
         """
-        values = np.asarray(values)
-        if values.ndim != 2:
-            raise ValueError(f"Expecting 2D array of values, {values.ndim} found.")
+        values_array = np.asarray(values)
+        if values_array.ndim != 2:
+            raise ValueError(f"Expecting 2D array of values, {values_array.ndim} found.")
         if columns:
-            values = values.T
-        if values.shape[1] != self.ndim:
-            raise ValueError(f"Expecting array with {self.ndim} columns, {values.shape[1]} found.")
+            values_array = values_array.T
+        if values_array.shape[1] != self.ndim:
+            raise ValueError(f"Expecting array with {self.ndim} columns, {values_array.shape[1]} found.")
         if dropna:
-            values = values[~np.isnan(values).any(axis=1)]
+            values_array = values_array[~np.isnan(values_array).any(axis=1)]
         if weights is not None:
             weights = np.asarray(weights)
             # TODO: Check for weights size?
             self._coerce_dtype(weights.dtype)
         for i, binning in enumerate(self._binnings):
             if binning.is_adaptive():
-                bin_map = binning.force_bin_existence(values[:, i])  # TODO: Add to some test
+                bin_map = binning.force_bin_existence(values_array[:, i])  # TODO: Add to some test
                 self._reshape_data(binning.bin_count, bin_map, i)
         frequencies, errors2, missed = calculate_frequencies(
-            values, self._binnings, weights=weights
+            values_array, self._binnings, weights=weights
         )
         self._frequencies += frequencies
         self._errors2 += errors2 if errors2 is not None else frequencies
@@ -455,7 +470,7 @@ class Histogram2D(HistogramND):
             a_copy._errors2 = a_copy._errors2.T
         return a_copy
 
-    def partial_normalize(self, axis: Axis = 0, inplace: bool = False):
+    def partial_normalize(self, axis: Axis = 0, inplace: bool = False) -> "Histogram2D":
         """Normalize in rows or columns.
 
         Parameters
@@ -464,10 +479,6 @@ class Histogram2D(HistogramND):
             Along which axis to sum (numpy-sense)
         inplace: bool
             Update the object itself
-
-        Returns
-        -------
-        hist : Histogram2D
         """
         # TODO: Is this applicable for HistogramND?
         axis = self._get_axis(axis)
@@ -478,9 +489,9 @@ class Histogram2D(HistogramND):
         else:
             self._coerce_dtype(float)
             if axis == 0:
-                divisor = self._frequencies.sum(axis=0)
+                divisor = np.atleast_1d(self._frequencies.sum(axis=0))
             else:
-                divisor = self._frequencies.sum(axis=1)[:, np.newaxis]
+                divisor = np.atleast_2d(self._frequencies.sum(axis=1)[:, np.newaxis])
             divisor[divisor == 0] = 1  # Prevent division errors
             self._frequencies /= divisor
             self._errors2 /= divisor * divisor  # Has its limitations
