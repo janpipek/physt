@@ -16,3 +16,9 @@ try:
     from . import geant4
 except ImportError:
     pass
+
+
+try:
+    from . import xarray
+except ImportError:
+    pass
