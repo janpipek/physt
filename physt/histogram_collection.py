@@ -22,7 +22,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         *histograms: Histogram1D,
         binning: Optional[BinningLike] = None,
         title: Optional[str] = None,
-        name: Optional[str] = None
+        name: Optional[str] = None,
     ):
         self.histograms = list(histograms)
         if histograms:

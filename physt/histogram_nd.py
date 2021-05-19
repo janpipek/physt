@@ -216,7 +216,9 @@ class HistogramND(HistogramBase):
             return (self.get_bin_right_edges(axis) + self.get_bin_left_edges(axis)) / 2
         return np.meshgrid(*[self.get_bin_centers(i) for i in range(self.ndim)], indexing="ij")
 
-    def find_bin(self, value: ArrayLike, axis: Optional[Axis] = None) -> Union[None, int, Tuple[int, ...]]:
+    def find_bin(
+        self, value: ArrayLike, axis: Optional[Axis] = None
+    ) -> Union[None, int, Tuple[int, ...]]:
         """Index(-ices) of bin corresponding to a value.
 
         Parameters
@@ -300,7 +302,9 @@ class HistogramND(HistogramBase):
         if columns:
             values_array = values_array.T
         if values_array.shape[1] != self.ndim:
-            raise ValueError(f"Expecting array with {self.ndim} columns, {values_array.shape[1]} found.")
+            raise ValueError(
+                f"Expecting array with {self.ndim} columns, {values_array.shape[1]} found."
+            )
         if dropna:
             values_array = values_array[~np.isnan(values_array).any(axis=1)]
         if weights is not None:
@@ -509,8 +513,10 @@ def calculate_frequencies(
     binnings: Iterable[BinningBase],
     weights: Optional[ArrayLike] = None,
     *,
-    dtype: Optional[DtypeLike] = None
-) -> Tuple[np.ndarray, np.ndarray, float]: ...
+    dtype: Optional[DtypeLike] = None,
+) -> Tuple[np.ndarray, np.ndarray, float]:
+    ...
+
 
 @overload
 def calculate_frequencies(
@@ -518,8 +524,9 @@ def calculate_frequencies(
     binnings: Iterable[BinningBase],
     weights: Optional[ArrayLike] = None,
     *,
-    dtype: Optional[DtypeLike] = None
-) -> Tuple[None, None, float]: ...
+    dtype: Optional[DtypeLike] = None,
+) -> Tuple[None, None, float]:
+    ...
 
 
 def calculate_frequencies(

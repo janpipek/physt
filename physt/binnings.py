@@ -896,7 +896,7 @@ def exponential_binning(
     return ExponentialBinning(log_min=range[0], log_width=log_width, bin_count=bin_count, **kwargs)
 
 
-def calculate_bins(array: Optional[np.ndarray], _ = Any, **kwargs) -> BinningBase:
+def calculate_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> BinningBase:
     """Find optimal binning from arguments.
 
     Parameters
@@ -935,7 +935,9 @@ def calculate_bins(array: Optional[np.ndarray], _ = Any, **kwargs) -> BinningBas
         if _ in bincount_methods:
             # TODO: Do we really want this?
             if array is None:
-                raise ValueError(f"Cannot find the ideal number of bins without data (method='{_}')")
+                raise ValueError(
+                    f"Cannot find the ideal number of bins without data (method='{_}')"
+                )
             bin_count = ideal_bin_count(array, method=_)
             binning = numpy_binning(array, bin_count, **kwargs)
         elif _ in binning_methods:
@@ -957,7 +959,11 @@ def calculate_bins(array: Optional[np.ndarray], _ = Any, **kwargs) -> BinningBas
 
 
 def calculate_bins_nd(
-    array: Optional[np.ndarray], bins=None, dim: Optional[int] = None, check_nan: bool = True, **kwargs
+    array: Optional[np.ndarray],
+    bins=None,
+    dim: Optional[int] = None,
+    check_nan: bool = True,
+    **kwargs,
 ) -> List[BinningBase]:
     """Find optimal binning from arguments (n-dimensional variant)
 

@@ -615,7 +615,9 @@ def calculate_frequencies(
 
         # Check compatibility of weights
         if weights_array.shape != data_array.shape:
-            raise ValueError(f"Weights must have the same shape as data, {weights_array.shape} != {data_array.shape}")
+            raise ValueError(
+                f"Weights must have the same shape as data, {weights_array.shape} != {data_array.shape}"
+            )
     else:
         weights_array = np.ones_like(data_array, dtype=int)
 

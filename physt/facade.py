@@ -31,7 +31,7 @@ def h1(
     name: Optional[str] = None,
     title: Optional[str] = None,
     axis_name: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> Histogram1D:
     """Facade function to create 1D histograms.
 
@@ -190,7 +190,7 @@ def h(
     axis_names: Optional[Iterable[str]] = None,
     dim: Optional[int] = None,
     weights: Optional[ArrayLike] = None,
-    **kwargs
+    **kwargs,
 ) -> HistogramND:
     """Facade function to create n-dimensional histograms.
 
@@ -227,7 +227,9 @@ def h(
             except:
                 pass  # Perhaps columns has different meaning here.
 
-    def _maybe_to_array(data: Optional[ArrayLike], dim: Optional[int], dropna: bool) -> Tuple[int, Optional[np.ndarray]]:
+    def _maybe_to_array(
+        data: Optional[ArrayLike], dim: Optional[int], dropna: bool
+    ) -> Tuple[int, Optional[np.ndarray]]:
         if data is not None:
             array: np.ndarray = np.asarray(data)
             if array.ndim != 2:
@@ -249,7 +251,6 @@ def h(
 
     # Prepare and check data
     # Convert to array
-
 
     # Prepare bins
     bin_schemas = calculate_bins_nd(

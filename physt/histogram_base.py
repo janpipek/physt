@@ -796,7 +796,9 @@ class HistogramBase(abc.ABC):
     def __repr__(self):
         if self.name:
             return f"{self.__class__.__name__}('{self.name}', bins={self.shape}, total={self.total}, dtype={self.dtype})"
-        return f"{self.__class__.__name__}(bins={self.shape}, total={self.total}, dtype={self.dtype})"
+        return (
+            f"{self.__class__.__name__}(bins={self.shape}, total={self.total}, dtype={self.dtype})"
+        )
 
     def __add__(self, other):
         new = self.copy()

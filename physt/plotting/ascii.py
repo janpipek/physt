@@ -66,9 +66,7 @@ try:
         elif cmap == "Greys_r":
             colorbar_range = range(h2.shape[1] + 2)
         else:
-            raise ValueError(
-                f"Unsupported colormap: {cmap}, select from: {SUPPORTED_CMAPS}"
-            )
+            raise ValueError(f"Unsupported colormap: {cmap}, select from: {SUPPORTED_CMAPS}")
         colors = (65536 + 256 + 1) * data
 
         print((value_format(h2.get_bin_right_edges(0)[-1]) + " →").rjust(h2.shape[1] + 2, " "))
