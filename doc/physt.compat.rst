@@ -20,6 +20,14 @@ physt.compat.geant4 module
    :undoc-members:
    :show-inheritance:
 
+physt.compat.pandas module
+--------------------------
+
+.. automodule:: physt.compat.pandas
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

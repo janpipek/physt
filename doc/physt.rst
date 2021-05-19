@@ -95,10 +95,26 @@ physt.special\_histograms module
    :undoc-members:
    :show-inheritance:
 
+physt.testing module
+--------------------
+
+.. automodule:: physt.testing
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 physt.time module
 -----------------
 
 .. automodule:: physt.time
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+physt.types module
+------------------
+
+.. automodule:: physt.types
    :members:
    :undoc-members:
    :show-inheritance:

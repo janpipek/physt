@@ -146,7 +146,7 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
-- Python 3.5+
+- Python 3.6+
 - numpy
 - (optional) matplotlib - simple output
 - (optional) xarray - I/O

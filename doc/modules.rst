@@ -1,5 +1,5 @@
-API Reference
-=============
+physt
+=====
 
 .. toctree::
    :maxdepth: 4
