@@ -12,8 +12,8 @@ import pandas as pd
 from pandas import IntervalIndex
 from pandas.testing import assert_index_equal, assert_series_equal, assert_frame_equal
 from physt import h1, h2
-from physt.binnings import static_binning
-from physt.compat.pandas import binning_to_index
+from physt.binnings import static_binning, StaticBinning
+from physt.compat.pandas import binning_to_index, index_to_binning
 from physt.testing import assert_histograms_equal
 
 
@@ -80,6 +80,43 @@ class TestBinningToIndex:
         index = binning_to_index(binning)
         expected = IntervalIndex.from_breaks([1, 2, 3, 4], closed="left", dtype="interval[int64]")
         assert_index_equal(index, expected)
+
+
+class TestIndexToBinning:
+    def test_valid_index(self) -> None:
+        index=IntervalIndex.from_breaks(
+                [0, 1, 1.5, 2, 3], closed="left", dtype="interval[float64]", name="Name"
+        )
+        output = index_to_binning(index)
+        expected = static_binning(bins=[0, 1, 1.5, 2, 3])
+        assert output == expected
+
+    def test_non_rising_index(self) -> None:
+        index = IntervalIndex.from_arrays(
+            left=[1, 0],
+            right=[2, 1],
+            closed="left"
+        )
+        with pytest.raises(ValueError, match="Bins must be in rising order."):
+            index_to_binning(index)
+
+    def test_overlapping_index(self) -> None:
+        index = IntervalIndex.from_arrays(
+            left=[0, 0.8],
+            right=[1, 1.5],
+            closed="left"
+        )
+        with pytest.raises(ValueError, match="Intervals cannot overlap"):
+            index_to_binning(index)
+
+    def test_right_closed_index(self) -> None:
+        index = IntervalIndex.from_arrays(
+            left=[0, 1, 2, 1],
+            right=[0.5, 1.5, 2.5, 1.5],
+            closed="right"
+        )
+        with pytest.raises(ValueError, match="Only `closed_left` indices supported"):
+            index_to_binning(index)
 
 
 class TestPhystSeriesAccessors:

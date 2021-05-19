@@ -12,7 +12,7 @@ import pandas as pd
 from pandas.core.arrays.masked import BaseMaskedDtype
 from pandas.api.types import is_numeric_dtype
 
-from physt.binnings import BinningBase, calculate_bins
+from physt.binnings import BinningBase, calculate_bins, StaticBinning, static_binning
 from physt.facade import h, h1, h2
 from physt.histogram1d import Histogram1D
 from physt.histogram_base import HistogramBase
@@ -130,13 +130,19 @@ class PhystDataFrameAccessor:
         )
 
     def histogram(
-        self, columns: List[Any] = None, bins: Any = None, *, dropna: bool = True, **kwargs
+        self, columns: Any = None, bins: Any = None, *, dropna: bool = True, **kwargs
     ) -> HistogramBase:
-        """Create a histogram of any dimensionality.
+        """Create a histogram.
 
         Parameters
         ----------
-        columns: The columns to apply on. Uses all columns if not set
+        columns: The column(s) to apply on. Uses all columns if not set. It can be
+            a `str` for one column, `tuple` for a multi-level index, `list` for
+            more columns, everything that pandas item selection supports.
+
+        Returns
+        -------
+        A histogram with dimensionality depending on the final set of columns.
 
         See Also
         --------
@@ -165,11 +171,23 @@ class PhystDataFrameAccessor:
 
 
 def binning_to_index(binning: BinningBase, name: Optional[str] = None) -> pandas.IntervalIndex:
-    """Convert binning to a pandas interval index."""
+    """Convert physt binning to a pandas interval index."""
     # TODO: Check closedness
     return pandas.IntervalIndex.from_arrays(
         left=binning.bins[:, 0], right=binning.bins[:, 1], closed="left", name=name
     )
+
+
+def index_to_binning(index: pandas.IntervalIndex) -> BinningBase:
+    """Convert an interval index into physt binning."""
+    if not isinstance(index, pandas.IntervalIndex):
+        raise TypeError(f"IntervalIndex required, '{type(index)}' passed.")
+    if not index.closed_left:
+        raise ValueError("Only `closed_left` indices supported.")
+    if index.is_overlapping:
+        raise ValueError("Intervals cannot overlap.")
+    bins = np.hstack([index.left[:,np.newaxis], index.right[:,np.newaxis]])
+    return static_binning(bins=bins)
 
 
 def _h1_to_dataframe(h1: Histogram1D) -> pandas.DataFrame:
