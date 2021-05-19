@@ -258,7 +258,7 @@ def h(
 
 
 # Aliases
-histogram = deprecation_alias(h1, "histogram")
+histogram = h1
 histogram2d = deprecation_alias(h2, "histogram2d")
 histogramdd = deprecation_alias(h, "histogramdd")
 
@@ -277,6 +277,7 @@ __all__ = [
     "collection",
     "cylindrical_surface",
     "cylindrical",
+    "h",
     "h1",
     "h2",
     "h3",

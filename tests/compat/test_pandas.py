@@ -3,11 +3,14 @@ from typing import Any, Dict, Iterable
 import numpy as np
 import pytest
 
+from physt.facade import h
 from physt.histogram1d import Histogram1D
+from physt.histogram_nd import HistogramND, Histogram2D
 
-pd = pytest.importorskip("pandas")
+pytest.importorskip("pandas")
+import pandas as pd
 from pandas import IntervalIndex
-from pandas.testing import assert_index_equal
+from pandas.testing import assert_index_equal, assert_series_equal, assert_frame_equal
 from physt import h1, h2
 from physt.binnings import static_binning
 from physt.compat.pandas import binning_to_index
@@ -56,6 +59,11 @@ def df_three_columns(series_of_int: pd.Series) -> pd.DataFrame:
 
 
 @pytest.fixture
+def df_with_str(series_of_int: pd.Series, series_of_str: pd.Series) -> pd.DataFrame:
+    return pd.DataFrame({"int": series_of_int, "str": series_of_str})
+
+
+@pytest.fixture
 def df_multilevel_column_index(series_of_int: pd.Series) -> pd.DataFrame:
     return pd.DataFrame(
         {
@@ -70,9 +78,7 @@ class TestBinningToIndex:
     def test_binning(self):
         binning = static_binning(data=None, bins=[1, 2, 3, 4])
         index = binning_to_index(binning)
-        expected = IntervalIndex.from_breaks(
-            [1, 2, 3, 4], closed="left", dtype="interval[int64]"
-        )
+        expected = IntervalIndex.from_breaks([1, 2, 3, 4], closed="left", dtype="interval[int64]")
         assert_index_equal(index, expected)
 
 
@@ -80,6 +86,7 @@ class TestPhystSeriesAccessors:
     def test_exists_compatible_dtype(self, series_of_int) -> None:
         assert hasattr(series_of_int, "physt")
         assert hasattr(series_of_int.physt, "h1")
+        assert hasattr(series_of_int.physt, "histogram")
         assert not hasattr(series_of_int.physt, "h2")
 
     def test_does_not_exist_incompatible_dtype(self, series_of_str) -> None:
@@ -114,9 +121,7 @@ class TestPhystSeriesAccessors:
             expected = h1(np.array([0, 1, 2, 3, 4]), *args, **kwargs)
             assert_histograms_equal(output, expected, check_metadata=False)
 
-        def test_raise_nullable_with_no_dropna(
-            self, series_of_nullable_int: pd.Series
-        ) -> None:
+        def test_raise_nullable_with_no_dropna(self, series_of_nullable_int: pd.Series) -> None:
             with pytest.raises(ValueError, match="Cannot histogram series with NA's"):
                 series_of_nullable_int.physt.h1(dropna=False)
 
@@ -124,13 +129,21 @@ class TestPhystSeriesAccessors:
 class TestPhystDataFrameAccessors:
     def test_exists(self, df_one_column: pd.DataFrame) -> None:
         assert hasattr(df_one_column, "physt")
+        assert hasattr(df_one_column.physt, "h1")
+        assert hasattr(df_one_column.physt, "h2")
+        assert hasattr(df_one_column.physt, "histogram")
 
     class TestH1:
         @pytest.mark.parametrize(
             "args,kwargs",
             [([], {}), (["human"], {}), (["fixed_width"], {"bin_width": 0.2})],
         )
-        def test_single_column(self, df_one_column: pd.DataFrame, args: Iterable[Any], kwargs: Dict[str, Any]) -> None:
+        def test_single_column(
+            self,
+            df_one_column: pd.DataFrame,
+            args: Iterable[Any],
+            kwargs: Dict[str, Any],
+        ) -> None:
             # TODO: Test no argument separately
             # Non-trivial *args should perhaps fail?
             output: Histogram1D = df_one_column.physt.h1(None, *args, **kwargs)
@@ -144,13 +157,19 @@ class TestPhystDataFrameAccessors:
 
         def test_two_columns_no_arg(self, df_two_columns: pd.DataFrame) -> None:
             with pytest.raises(ValueError, match="Argument `column` must be set"):
-                output = df_two_columns.physt.h1()
+                df_two_columns.physt.h1()
+
+        def test_invalid_dtype(self, df_with_str: pd.DataFrame) -> None:
+            with pytest.raises(ValueError, match="Column 'str' is not numeric"):
+                df_with_str.physt.h1("str")
 
         @pytest.mark.parametrize(
             "column_name,bin_arg",
-            [("a", None), ("a", "human"), ("b", None), ("xxx", None)]
+            [("a", None), ("a", "human"), ("b", None), ("xxx", None)],
         )
-        def test_two_columns(self, df_two_columns: pd.DataFrame, column_name: str, bin_arg: Any) -> None:
+        def test_two_columns(
+            self, df_two_columns: pd.DataFrame, column_name: str, bin_arg: Any
+        ) -> None:
             try:
                 data = df_two_columns[column_name]
             except:
@@ -162,10 +181,11 @@ class TestPhystDataFrameAccessors:
                 assert_histograms_equal(output, expected, check_metadata=False)
 
         @pytest.mark.parametrize(
-            "index",
-            [("a", "b"), ("a", "c"), ("non", "existent"), "a", ("a",)]
+            "index", [("a", "b"), ("a", "c"), ("non", "existent"), "a", ("a",)]
         )
-        def test_with_multilevel_index(self, df_multilevel_column_index: pd.DataFrame, index: Any) -> None:
+        def test_with_multilevel_index(
+            self, df_multilevel_column_index: pd.DataFrame, index: Any
+        ) -> None:
             try:
                 data = df_multilevel_column_index[index]
             except:
@@ -173,7 +193,10 @@ class TestPhystDataFrameAccessors:
                     df_multilevel_column_index.physt.h1(index)
             else:
                 if not isinstance(data, pd.Series):
-                    with pytest.raises(ValueError, match="Argument `column` must select a single series"):
+                    with pytest.raises(
+                        ValueError,
+                        match="Argument `column` must select a single series",
+                    ):
                         df_multilevel_column_index.physt.h1(index)
                 else:
                     output = df_multilevel_column_index.physt.h1(index)
@@ -181,11 +204,25 @@ class TestPhystDataFrameAccessors:
                     assert_histograms_equal(output, expected, check_metadata=False)
 
     class TestH2:
-        # TODO: Just check that it works
-        def test_one_column(self):
-            pass
+        def test_one_column(self, df_one_column: pd.DataFrame) -> None:
+            with pytest.raises(ValueError, match="At least two columns required for 2D histograms"):
+                df_one_column.physt.h2()
 
-        def test_meta_data(self, df_two_columns: pd.DataFrame, df_three_columns: pd.DataFrame) -> None:
+        def test_two_columns(self, df_two_columns: pd.DataFrame) -> None:
+            output = df_two_columns.physt.h2()
+            expected = h2(df_two_columns["a"], df_two_columns["b"])
+
+        def test_three_columns_no_arg(self, df_three_columns: pd.DataFrame) -> None:
+            with pytest.raises(ValueError, match="Arguments `column1` and `column2` must be set"):
+                output = df_three_columns.physt.h2()
+
+        def test_invalid_dtype(self, df_with_str: pd.DataFrame) -> None:
+            with pytest.raises(ValueError, match="Column 'str' is not numeric"):
+                df_with_str.physt.h2()
+
+        def test_meta_data(
+            self, df_two_columns: pd.DataFrame, df_three_columns: pd.DataFrame
+        ) -> None:
             h = df_three_columns.physt.h2(column1="a", column2="b")
             assert h.name is None  # TODO: Do we now how to call it?
             assert h.axis_names == ("a", "b")
@@ -196,15 +233,70 @@ class TestPhystDataFrameAccessors:
             h = df_two_columns.physt.h2(axis_names=("b", "c"))
             assert h.axis_names == ("b", "c")
 
+    class TestHistogram:
+        def test_no_args(self, df_three_columns: pd.DataFrame) -> None:
+            output: HistogramND = df_three_columns.physt.histogram()
+            expected = h(df_three_columns.values)
+            assert_histograms_equal(output, expected, check_metadata=False)
 
+        @pytest.mark.parametrize("columns_arg", [["a", "b", "d"], [0, 1]])
+        def test_invalid_columns(self, df_three_columns: pd.DataFrame, columns_arg: Any) -> None:
+            with pytest.raises(KeyError, match="At least one of the columns .+ could not be found"):
+                df_three_columns.physt.histogram(columns=columns_arg)
 
-    class TestH3:
-        pass
+        def test_with_no_columns(self, df_three_columns) -> None:
+            with pytest.raises(
+                ValueError, match="Cannot make histogram from DataFrame with no columns"
+            ):
+                df_three_columns.physt.histogram(columns=[])
+
+        def test_invalid_dtype(self, df_with_str: pd.DataFrame) -> None:
+            with pytest.raises(ValueError, match="Column 'str' is not numeric"):
+                df_with_str.physt.histogram()
+
+        def test_scalar_columns_arg(self, df_three_columns: pd.DataFrame) -> None:
+            output = df_three_columns.physt.histogram(columns="a")
+            assert isinstance(output, Histogram1D)
+
+        def test_meta_data(self, df_three_columns: pd.DataFrame) -> None:
+            output: HistogramND = df_three_columns.physt.histogram()
+            assert output.axis_names == ("a", "b", "c")
+
+        def test_two_columns(self, df_two_columns) -> None:
+            output = df_two_columns.physt.histogram()
+            assert isinstance(output, Histogram2D)
+
+        def test_single_column(self, df_one_column: pd.DataFrame) -> None:
+            output = df_one_column.physt.histogram()
+            assert isinstance(output, Histogram1D)
 
 
 class TestH1ToSeries:
-    pass
+    def test_simple_h1(self, simple_h1: Histogram1D) -> None:
+        output = simple_h1.to_series()
+        expected = pd.Series(
+            [1, 25, 0, 12],
+            index=IntervalIndex.from_breaks(
+                [0, 1, 1.5, 2, 3], closed="left", dtype="interval[float64]", name="Name"
+            ),
+            name="frequency",
+        )
+        assert_series_equal(output, expected)
+
+    # TODO: Add more tests?
 
 
 class TestH1ToDDataFrame:
-    pass
+    def test_simple_h1(self, simple_h1: Histogram1D) -> None:
+        output = simple_h1.to_dataframe()
+        expected = pd.DataFrame({
+                "frequency": [1, 25, 0, 12],
+                "error": [1, 5, 0, np.sqrt(12)]
+            },
+            index=IntervalIndex.from_breaks(
+                [0, 1, 1.5, 2, 3], closed="left", dtype="interval[float64]", name="Name"
+            ),
+        )
+        assert_frame_equal(output, expected)
+
+    # TODO: Add more tests?

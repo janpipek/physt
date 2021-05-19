@@ -3,7 +3,7 @@
 - conversion between histograms and Series/DataFrames
 - .physt accessor for pandas objects
 """
-
+import warnings
 from typing import Any, List, Optional
 
 import numpy as np
@@ -12,9 +12,10 @@ import pandas as pd
 from pandas.core.arrays.masked import BaseMaskedDtype
 from pandas.api.types import is_numeric_dtype
 
-from physt.binnings import BinningBase
+from physt.binnings import BinningBase, calculate_bins
 from physt.facade import h, h1, h2
 from physt.histogram1d import Histogram1D
+from physt.histogram_base import HistogramBase
 from physt.histogram_nd import Histogram2D, HistogramND
 
 
@@ -22,9 +23,7 @@ def _extract_values(series: pandas.Series, dropna: bool = True) -> np.ndarray:
     if isinstance(series.dtype, BaseMaskedDtype):
         array = series.array
         if not dropna and any(array._mask):
-            raise ValueError(
-                "Cannot histogram series with NA's. Set `dropna` to True to override."
-            )
+            raise ValueError("Cannot histogram series with NA's. Set `dropna` to True to override.")
         return array._data[~array._mask]
     return series.values
 
@@ -43,9 +42,14 @@ class PhystSeriesAccessor:
 
     def h1(self, bins=None, *, dropna: bool = True, **kwargs) -> Histogram1D:
         values = _extract_values(self._series, dropna=dropna)
-        return h1(
-            data=values, name=self._series.name, bins=bins, dropna=False, **kwargs
-        )
+        return h1(data=values, name=self._series.name, bins=bins, dropna=False, **kwargs)
+
+    histogram = h1
+
+    def cut(self, bins=None, *, dropna: bool = True, **kwargs) -> pd.Series:
+        warnings.warn("This method is experimental, only partially implemented and may removed.")
+        binning = calculate_bins(_extract_values(self._series, dropna=dropna), bins)
+        return pd.cut(self._series, binning.numpy_bins)
 
 
 @pandas.api.extensions.register_dataframe_accessor("physt")
@@ -77,18 +81,14 @@ class PhystDataFrameAccessor:
             raise KeyError(f"Column '{column}' not found.")
         if not isinstance(data, pd.Series):
             raise ValueError(f"Argument `column` must select a single series: {column}")
-        if not "axis_name" in kwargs:
+        if not is_numeric_dtype(data):
+            raise ValueError(f"Column '{column}' is not numeric.")
+        if "axis_name" not in kwargs:
             kwargs["axis_name"] = column
         return data.physt.h1(bins=bins, **kwargs)
 
     def h2(
-        self,
-        column1: Any = None,
-        column2: Any = None,
-        bins=None,
-        *,
-        dropna: bool = True,
-        **kwargs
+        self, column1: Any = None, column2: Any = None, bins=None, *, dropna: bool = True, **kwargs
     ) -> Histogram2D:
         """Create 2D histogram from two columns.
 
@@ -103,6 +103,8 @@ class PhystDataFrameAccessor:
         --------
         physt.h2
         """
+        if self._df.shape[1] < 2:
+            raise ValueError("At least two columns required for 2D histograms.")
         if column1 is None and column2 is None and self._df.shape[1] == 2:
             column1, column2 = self._df.columns
         elif column1 is None or column2 is None:
@@ -111,20 +113,26 @@ class PhystDataFrameAccessor:
             data = self._df[[column1, column2]]
         except KeyError:
             raise KeyError(f"Column(s) '{column1}' and/or '{column2}' could not be found.")
+        if not is_numeric_dtype(data[column1]):
+            raise ValueError(f"Column '{column1}' is not numeric.")
+        if not is_numeric_dtype(data[column2]):
+            raise ValueError(f"Column '{column2}' is not numeric.")
         if dropna:
             data = data.dropna()
-        if not "axis_names" in kwargs:
+        if "axis_names" not in kwargs:
             kwargs["axis_names"] = (column1, column2)
         return h2(
             data1=_extract_values(data[column1], dropna=False),
             data2=_extract_values(data[column2], dropna=False),
             bins=bins,
             dropna=False,  # Already done
-            **kwargs
+            **kwargs,
         )
 
-    def h(self, columns: List[Any] = None, bins: Any = None, *, dropna: bool = True, **kwargs) -> HistogramND:
-        """Create an ND histogram.
+    def histogram(
+        self, columns: List[Any] = None, bins: Any = None, *, dropna: bool = True, **kwargs
+    ) -> HistogramBase:
+        """Create a histogram of any dimensionality.
 
         Parameters
         ----------
@@ -134,19 +142,29 @@ class PhystDataFrameAccessor:
         --------
         physt.h
         """
-        if not columns:
+        if columns is None:
             columns = self._df.columns
-        data = self._df[columns]
-        if not "axis_names" in kwargs:
-            kwargs["axis_name"] = columns
+        try:
+            data = self._df[columns]
+        except KeyError as exc:
+            raise KeyError(f"At least one of the columns '{columns}' could not be found.") from exc
+        if isinstance(data, pd.Series) or data.shape[1] == 1:
+            return data.physt.h1(bins, dropna=dropna, **kwargs)
+        if not isinstance(data, pd.DataFrame):
+            raise TypeError(f"Argument `columns` does not select a DataFrame: '{columns}'")
         if dropna:
             data = data.dropna()
+        if not data.shape[1]:
+            raise ValueError("Cannot make histogram from DataFrame with no columns.")
+        for column in data.columns:
+            if not is_numeric_dtype(data[column]):
+                raise ValueError(f"Column '{column}' is not numeric")
+        if "axis_names" not in kwargs:
+            kwargs["axis_names"] = data.columns.tolist()
         return h(data=data.astype(float).values, bins=bins, **kwargs)
 
 
-def binning_to_index(
-    binning: BinningBase, name: Optional[str] = None
-) -> pandas.IntervalIndex:
+def binning_to_index(binning: BinningBase, name: Optional[str] = None) -> pandas.IntervalIndex:
     """Convert binning to a pandas interval index."""
     # TODO: Check closedness
     return pandas.IntervalIndex.from_arrays(
@@ -179,3 +197,4 @@ setattr(Histogram1D, "to_series", _h1_to_series)
 # TODO: Implement multidimensional histogram to series/dataframe
 # TODO: Implement histogram collection to series/dataframe
 # TODO: Implement histogram collection from dataframe / groupby ?
+# TODO: Implement index to binning

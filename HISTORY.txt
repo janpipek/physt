@@ -1,3 +1,8 @@
+0.5.1 (19 May 2021)
+-------------------
+- Changed: Reworked pandas compatibility (.to_series, .to_dataframe methods)
+- Added: .physt series/dataframe accessors (with h1, h2, histogram methods)
+
 0.5.0 (21 January 2021)
 -----------------------
 - Removed: *args in method definition whenever possible (prefering explicit keyword-only arguments)
