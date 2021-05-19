@@ -1,6 +1,6 @@
 """Multi-dimensional histograms."""
 import warnings
-from typing import Optional, List, Any, Tuple, Union, Iterable
+from typing import Optional, List, Any, Tuple, Union, Iterable, overload
 
 import numpy as np
 
@@ -490,6 +490,25 @@ class Histogram2D(HistogramND):
     def numpy_like(self) -> Tuple[np.ndarray, ...]:
         """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins[0], self.numpy_bins[1]
+
+
+@overload
+def calculate_frequencies(
+    data: ArrayLike,
+    binnings: Iterable[BinningBase],
+    weights: Optional[ArrayLike] = None,
+    *,
+    dtype: Optional[DtypeLike] = None
+) -> Tuple[np.ndarray, np.ndarray, float]: ...
+
+@overload
+def calculate_frequencies(
+    data: None,
+    binnings: Iterable[BinningBase],
+    weights: Optional[ArrayLike] = None,
+    *,
+    dtype: Optional[DtypeLike] = None
+) -> Tuple[None, None, float]: ...
 
 
 def calculate_frequencies(

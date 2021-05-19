@@ -103,7 +103,7 @@ class ObjectWithBinning(ABC):
 
         In inconsecutive histograms, the missing intervals are not counted in.
         """
-        return self.bin_widths.sum()
+        return np.asscalar(self.bin_widths.sum())
 
     @property
     def bin_sizes(self) -> np.ndarray:

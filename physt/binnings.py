@@ -957,20 +957,20 @@ def calculate_bins(array: Optional[np.ndarray], _ = Any, **kwargs) -> BinningBas
 
 
 def calculate_bins_nd(
-    array: Optional[np.ndarray], bins=None, dim: Optional[int] = None, check_nan=True, **kwargs
+    array: Optional[np.ndarray], bins=None, dim: Optional[int] = None, check_nan: bool = True, **kwargs
 ) -> List[BinningBase]:
     """Find optimal binning from arguments (n-dimensional variant)
 
     Usage similar to `calculate_bins`.
     """
-    if check_nan:
-        if np.any(np.isnan(array)):
-            raise ValueError("Cannot calculate bins in presence of NaN's.")
-
     if array is not None:
         if dim and array.shape[-1] != dim:
             raise ValueError(f"The array must be of shape (N, {dim}), {array.shape} found.")
         _, dim = array.shape
+
+        if check_nan:
+            if np.any(np.isnan(array)):
+                raise ValueError("Cannot calculate bins in presence of NaN's.")
 
     # Prepare bins
     if isinstance(bins, list):

@@ -140,10 +140,9 @@ class HistogramBase(abc.ABC):
 
         # Errors
         if errors2 is None:
-            errors2 = abs(self._frequencies.copy())
+            self.errors2 = abs(self._frequencies.copy())
         else:
-            errors2 = np.asarray(errors2, dtype=self.dtype)
-        self.errors2 = errors2
+            self.errors2 = np.asarray(errors2, dtype=self.dtype)
 
         self.keep_missed = keep_missed
         # Note: missed are dealt differently in 1D/ND cases
@@ -420,7 +419,7 @@ class HistogramBase(abc.ABC):
     @property
     def missed(self) -> float:
         """Total number (weight) of entries that missed the bins."""
-        return self._missed.sum()
+        return np.asscalar(self._missed.sum())
 
     def is_adaptive(self) -> bool:
         """Whether the binning can be changed with operations."""
