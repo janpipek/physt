@@ -125,7 +125,7 @@ def enable_inline_view(f):
         vega_data = f(hist, **kwargs)
 
         if display is True and not VEGA_IPYTHON_PLUGIN_ENABLED:
-            raise RuntimeError("Cannot display vega plot: {0}".format(VEGA_ERROR))
+            raise ValueError(f"Cannot display vega plot: {VEGA_ERROR}")
 
         if display == "auto":
             display = write_to is None
@@ -165,7 +165,7 @@ def write_vega(
     elif write_format == "json" or write_format == "auto" and write_to.endswith(".json"):
         output = spec
     else:
-        raise RuntimeError("Format not understood.")
+        raise ValueError(f"Format not understood: '{write_format}'")
     with codecs.open(write_to, "w", encoding="utf-8") as out:
         out.write(output)
 

@@ -30,12 +30,14 @@ def make_bin_array(bins: ArrayLike) -> np.ndarray:
         return np.hstack((bins[:-1, np.newaxis], bins[1:, np.newaxis]))
     elif bins.ndim == 2:
         if bins.shape[1] != 2:
-            raise RuntimeError("Binning schema with ndim==2 must have 2 columns")
+            raise ValueError(
+                f"Binning schema with ndim==2 requires shape (n, 2), {bins.shape} found."
+            )
         # if bins.shape[0] == 0:
         #     raise RuntimeError("Needs at least one bin")
         return bins  # Already correct, just pass
     else:
-        raise RuntimeError("Binning schema must have ndim==1 or ndim==2")
+        raise ValueError(f"Binning schema must have ndim==1 or ndim==2, {bins.ndim} found.")
 
 
 def to_numpy_bins(bins: ArrayLike) -> np.ndarray:
@@ -54,7 +56,7 @@ def to_numpy_bins(bins: ArrayLike) -> np.ndarray:
     if bins.ndim == 1:  # Already in the proper format
         return bins
     if not is_consecutive(bins):
-        raise RuntimeError("Cannot create numpy bins from inconsecutive edges")
+        raise ValueError("Cannot create numpy bins from inconsecutive edges.")
     return np.concatenate([bins[:1, 0], bins[:, 1]])
 
 
@@ -101,9 +103,9 @@ def to_numpy_bins_with_mask(bins: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
             mask_.append(j)
             edges_.append(bins[-1, 1])
     else:
-        raise RuntimeError("to_numpy_bins_with_mask: array with dim=1 or 2 expected")
+        raise ValueError("to_numpy_bins_with_mask: array with dim=1 or 2 expected")
     if not np.all(np.diff(edges_) > 0):
-        raise RuntimeError("to_numpy_bins_with_mask: edges array not monotone.")
+        raise ValueError("to_numpy_bins_with_mask: edges array not monotone.")
     return np.asarray(edges_), np.asarray(mask_)
 
 

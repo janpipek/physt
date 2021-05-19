@@ -75,7 +75,7 @@ def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collectio
     collection : Whether to allow histogram collections to be used
     """
     if use_3d and use_polar:
-        raise RuntimeError("Cannot have polar and 3d coordinates simultaneously.")
+        raise ValueError("Cannot have polar and 3d coordinates simultaneously.")
 
     # TODO: Add some kind of class parameter
 
@@ -502,13 +502,11 @@ def image(
 
     for binning in h2._binnings:
         if not binning.is_regular():
-            raise RuntimeError(
-                "Histograms with irregular bins cannot be plotted using image method."
-            )
+            raise ValueError("Histograms with irregular bins cannot be plotted using image method.")
 
     kwargs["interpolation"] = interpolation
     if kwargs.get("xscale") == "log" or kwargs.get("yscale") == "log":
-        raise RuntimeError("Cannot use logarithmic axes with image plots.")
+        raise ValueError("Cannot use logarithmic axes with image plots.")
 
     _apply_xy_lims(ax, h2, data=data, kwargs=kwargs)
 

@@ -27,9 +27,9 @@ def find_subclass(base: type, name: str) -> type:
     """
     class_candidates = [klass for klass in all_subclasses(base) if klass.__name__ == name]
     if len(class_candidates) == 0:
-        raise RuntimeError('No "{0}" subclass of "{1}".'.format(base.__name__, name))
+        raise TypeError(f"No '{base.__name__}' subclass of '{name}'.")
     if len(class_candidates) > 1:
-        raise RuntimeError('Multiple "{0}" subclasses of "{1}".'.format(base.__name__, name))
+        raise TypeError(f"Multiple '{base.__name__}' subclasses of '{name}'.")
     return class_candidates[0]
 
 

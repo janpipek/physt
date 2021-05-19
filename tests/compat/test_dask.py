@@ -37,7 +37,12 @@ class TestH1:
 
     def test_huge_2d(self, method, huge_2d_array):
         result = h1(
-            huge_2d_array, "fixed_width", bin_width=100, adaptive=True, compute=True, method=method
+            huge_2d_array,
+            "fixed_width",
+            bin_width=100,
+            adaptive=True,
+            compute=True,
+            method=method,
         )
         assert result.total == 1000000
         assert result.bin_right_edges[-1] == 1000

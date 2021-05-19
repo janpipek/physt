@@ -75,23 +75,23 @@ class BinningBase:
         self._consecutive = None
         if bins is not None:
             if numpy_bins is not None:
-                raise RuntimeError("Cannot specify numpy_bins and bins at the same time.")
+                raise ValueError("Cannot specify numpy_bins and bins at the same time.")
             bins = make_bin_array(bins)
             if not is_rising(bins):
-                raise RuntimeError("Bins must be in rising order.")
+                raise ValueError("Bins must be in rising order.")
             # TODO: Test for consecutiveness?
         elif numpy_bins is not None:
             numpy_bins = to_numpy_bins(numpy_bins)
             if not np.all(numpy_bins[1:] > numpy_bins[:-1]):
-                raise RuntimeError("Bins must be in rising order.")
+                raise ValueError("Bins must be in rising order.")
             self._consecutive = True
         self._bins = bins
         self._numpy_bins = numpy_bins
         self._includes_right_edge = includes_right_edge
         if adaptive and not self.adaptive_allowed:
-            raise RuntimeError("Adaptivity not allowed for {0}".format(self.__class__.__name__))
+            raise ValueError("Adaptivity not allowed for {0}".format(self.__class__.__name__))
         if adaptive and includes_right_edge:
-            raise RuntimeError("Adaptivity does not work together with right-edge inclusion.")
+            raise ValueError("Adaptivity does not work together with right-edge inclusion.")
         self._adaptive = adaptive
 
     def __getitem__(self, index: Union[slice, int]):
@@ -353,7 +353,7 @@ class BinningBase:
                 bins[new, :] = self.bins[old, :]
             else:
                 if bins[new, 1] != self.bins[old, 0]:
-                    raise RuntimeError("Merging non-consecutive bins")
+                    raise ValueError("Merging non-consecutive bins.")
                 bins[new, 1] = self.bins[old, 1]
         if np.any(np.isnan(bins)):
             raise ValueError("New binning is not complete.")
@@ -422,7 +422,7 @@ class NumpyBinning(BinningBase):
 
     def __init__(self, numpy_bins: ArrayLike, includes_right_edge=True, **kwargs):
         if not is_rising(numpy_bins):
-            raise RuntimeError("Bins not in rising order.")
+            raise ValueError("Bins not in rising order.")
         super().__init__(numpy_bins=numpy_bins, includes_right_edge=includes_right_edge, **kwargs)
 
     @property
@@ -603,12 +603,10 @@ class FixedWidthBinning(BinningBase):
         """
         other = other.as_fixed_width()
         if self.bin_width != other.bin_width:
-            raise RuntimeError("Cannot adapt fixed-width histograms with different widths")
+            raise ValueError("Cannot adapt fixed-width histograms with different widths")
         if self._shift != other._shift:
-            raise RuntimeError(
-                "Cannot adapt shifted fixed-width histograms: {0} vs {1}".format(
-                    self._shift, other._shift
-                )
+            raise ValueError(
+                f"Cannot adapt shifted fixed-width histograms: {self._shift} vs {other._shift}"
             )
         # Following operations modify schemas
         other = cast(FixedWidthBinning, other.copy())
@@ -809,6 +807,7 @@ def quantile_binning(
 @register_binning
 def static_binning(data=None, bins=None, **kwargs) -> StaticBinning:
     """Construct static binning with whatever bins."""
+    # TODO: Fail with no bins!
     return StaticBinning(bins=make_bin_array(bins), **kwargs)
 
 
@@ -923,7 +922,7 @@ def calculate_bins(array, _=None, **kwargs) -> BinningBase:
     if array is not None:
         if kwargs.pop("check_nan", True):
             if np.any(np.isnan(array)):
-                raise RuntimeError("Cannot calculate bins in presence of NaN's.")
+                raise ValueError("Cannot calculate bins in presence of NaN's.")
         if kwargs.get("range", None):  # TODO: re-consider the usage of this parameter
             array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
@@ -942,7 +941,7 @@ def calculate_bins(array, _=None, **kwargs) -> BinningBase:
             method = binning_methods[_]
             binning = method(array, **kwargs)
         else:
-            raise RuntimeError("No binning method {0} available.".format(_))
+            raise ValueError(f"No binning method '{_}' available.")
     elif callable(_):
         binning = _(array, **kwargs)
     elif np.iterable(_):
@@ -952,7 +951,7 @@ def calculate_bins(array, _=None, **kwargs) -> BinningBase:
             )
         binning = static_binning(array, _, **kwargs)
     else:
-        raise RuntimeError("Binning {0} not understood.".format(_))
+        raise ValueError(f"Binning {_} not understood.")
     return binning
 
 
@@ -965,7 +964,7 @@ def calculate_bins_nd(
     """
     if check_nan:
         if np.any(np.isnan(array)):
-            raise RuntimeError("Cannot calculate bins in presence of NaN's.")
+            raise ValueError("Cannot calculate bins in presence of NaN's.")
 
     if array is not None:
         if dim and array.shape[-1] != dim:

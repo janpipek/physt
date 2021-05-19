@@ -13,7 +13,7 @@ def assert_histograms_equal(
     check_binnings: bool = True,
     check_metadata: bool = True,
     rtol: float = 1e-7,
-    atol: float = 0
+    atol: float = 0,
 ) -> None:
     """Helper function to compare two histograms."""
     assert type(left) == type(right)
@@ -26,4 +26,6 @@ def assert_histograms_equal(
     if check_binnings:
         assert left.binnings == right.binnings
     if check_metadata:
-        assert left.meta_data == right.meta_data, f"meta_data differ: {left.meta_data} vs {right.meta_data}"
+        assert (
+            left.meta_data == right.meta_data
+        ), f"meta_data differ: {left.meta_data} vs {right.meta_data}"

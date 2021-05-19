@@ -6,7 +6,15 @@ from physt import h2, histogram_nd, binnings
 from physt.binnings import as_binning, BinningBase
 from physt.histogram_nd import Histogram2D
 
-vals = [[0.1, 2.0], [-0.1, 0.7], [0.2, 1.5], [0.2, -1.5], [0.2, 1.47], [1.2, 1.23], [0.7, 0.5]]
+vals = [
+    [0.1, 2.0],
+    [-0.1, 0.7],
+    [0.2, 1.5],
+    [0.2, -1.5],
+    [0.2, 1.47],
+    [1.2, 1.23],
+    [0.7, 0.5],
+]
 
 np.random.seed(42)
 

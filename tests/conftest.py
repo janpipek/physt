@@ -17,7 +17,10 @@ def create_adaptive():
     def inner(shape: Tuple[int]) -> HistogramBase:
         binnings = [
             FixedWidthBinning(
-                bin_width=1, bin_count=dim, bin_times_min=0 if shape[i] else None, adaptive=True
+                bin_width=1,
+                bin_count=dim,
+                bin_times_min=0 if shape[i] else None,
+                adaptive=True,
             )
             for i, dim in enumerate(shape)
         ]

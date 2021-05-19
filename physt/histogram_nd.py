@@ -48,12 +48,16 @@ class HistogramND(HistogramBase):
         binnings = list(binnings)
         if dimension:
             if len(binnings) != dimension:
-                raise ValueError("bins must be a sequence of {0} schemas".format(dimension))
+                raise ValueError(
+                    f"bins must be a sequence of {dimension} schemas, {len(binnings)} found."
+                )
 
         HistogramBase.__init__(self, binnings, frequencies, **kwargs)
 
         if len(self.axis_names) != self.ndim:
-            raise RuntimeError("The length of axis names must be equal to histogram dimension.")
+            raise ValueError(
+                f"The length of axis names ({len(self.axis_names)}) must be equal to histogram dimension ({self.ndim})."
+            )
 
         # Missed values
         self._missed = np.array([missed], dtype=self.dtype)
@@ -279,11 +283,11 @@ class HistogramND(HistogramBase):
         """
         values = np.asarray(values)
         if values.ndim != 2:
-            raise RuntimeError("Expecting 2D array of values.")
+            raise ValueError(f"Expecting 2D array of values, {values.ndim} found.")
         if columns:
             values = values.T
         if values.shape[1] != self.ndim:
-            raise RuntimeError("Expecting array with {0} columns".format(self.ndim))
+            raise ValueError(f"Expecting array with {self.ndim} columns, {values.shape[1]} found.")
         if dropna:
             values = values[~np.isnan(values).any(axis=1)]
         if weights is not None:
@@ -529,7 +533,7 @@ def calculate_frequencies(
     else:
         weights = np.asarray(weights)
         if data is None:
-            raise RuntimeError("Weights specified but data not.")
+            raise ValueError("Weights specified but data not.")
         if data.shape[0] != weights.shape[0]:
             raise ValueError("Different number of entries in data and weights.")
         if dtype:

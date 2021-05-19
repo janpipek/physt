@@ -691,10 +691,21 @@ cylindrical_surface_histogram = deprecation_alias(
 
 
 @overload
-def _prepare_data(data: ArrayLike, transformed: bool, klass: Type[TransformedHistogramMixin], *, dropna: bool = False) -> np.ndarray: ...
+def _prepare_data(
+    data: ArrayLike,
+    transformed: bool,
+    klass: Type[TransformedHistogramMixin],
+    *,
+    dropna: bool = False,
+) -> np.ndarray:
+    ...
+
 
 @overload
-def _prepare_data(data: None, transformed: bool, klass: Type[TransformedHistogramMixin], *, dropna: bool = False) -> None: ...
+def _prepare_data(
+    data: None, transformed: bool, klass: Type[TransformedHistogramMixin], *, dropna: bool = False
+) -> None:
+    ...
 
 
 def _prepare_data(

@@ -68,7 +68,7 @@ def histogram1d(data, bins=None, **kwargs):
         data = dask.array.from_array(data, chunks=int(data.shape[0] / options["chunk_split"]))
 
     if not kwargs.get("adaptive", True):
-        raise RuntimeError("Only adaptive histograms supported for dask (currently).")
+        raise ValueError("Only adaptive histograms supported for dask (currently).")
     kwargs["adaptive"] = True
 
     def block_hist(array):

@@ -66,7 +66,7 @@ def get_err_data(
     flatten : Whether to flatten multidimensional bins
     """
     if cumulative:
-        raise RuntimeError("Error bars not supported for cumulative plots.")
+        raise ValueError("Error bars not supported for cumulative plots.")
     if density:
         data = histogram.errors / histogram.bin_sizes
     else:

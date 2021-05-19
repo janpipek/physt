@@ -7,6 +7,7 @@ pytest.importorskip("plotly")
 from plotly.graph_objs import Figure
 
 from physt.plotting import plotly
+
 from .shared import AbstractTest, AbstractTest1D, AbstractTest2D
 
 

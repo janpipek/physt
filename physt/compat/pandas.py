@@ -186,7 +186,7 @@ def index_to_binning(index: pandas.IntervalIndex) -> BinningBase:
         raise ValueError("Only `closed_left` indices supported.")
     if index.is_overlapping:
         raise ValueError("Intervals cannot overlap.")
-    bins = np.hstack([index.left[:,np.newaxis], index.right[:,np.newaxis]])
+    bins = np.hstack([index.left[:, np.newaxis], index.right[:, np.newaxis]])
     return static_binning(bins=bins)
 
 
@@ -215,4 +215,4 @@ setattr(Histogram1D, "to_series", _h1_to_series)
 # TODO: Implement multidimensional histogram to series/dataframe
 # TODO: Implement histogram collection to series/dataframe
 # TODO: Implement histogram collection from dataframe / groupby ?
-# TODO: Implement index to binning
+# TODO: Implement multidimensional index to binning

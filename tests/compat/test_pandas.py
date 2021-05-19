@@ -84,36 +84,26 @@ class TestBinningToIndex:
 
 class TestIndexToBinning:
     def test_valid_index(self) -> None:
-        index=IntervalIndex.from_breaks(
-                [0, 1, 1.5, 2, 3], closed="left", dtype="interval[float64]", name="Name"
+        index = IntervalIndex.from_breaks(
+            [0, 1, 1.5, 2, 3], closed="left", dtype="interval[float64]", name="Name"
         )
         output = index_to_binning(index)
         expected = static_binning(bins=[0, 1, 1.5, 2, 3])
         assert output == expected
 
     def test_non_rising_index(self) -> None:
-        index = IntervalIndex.from_arrays(
-            left=[1, 0],
-            right=[2, 1],
-            closed="left"
-        )
+        index = IntervalIndex.from_arrays(left=[1, 0], right=[2, 1], closed="left")
         with pytest.raises(ValueError, match="Bins must be in rising order."):
             index_to_binning(index)
 
     def test_overlapping_index(self) -> None:
-        index = IntervalIndex.from_arrays(
-            left=[0, 0.8],
-            right=[1, 1.5],
-            closed="left"
-        )
+        index = IntervalIndex.from_arrays(left=[0, 0.8], right=[1, 1.5], closed="left")
         with pytest.raises(ValueError, match="Intervals cannot overlap"):
             index_to_binning(index)
 
     def test_right_closed_index(self) -> None:
         index = IntervalIndex.from_arrays(
-            left=[0, 1, 2, 1],
-            right=[0.5, 1.5, 2.5, 1.5],
-            closed="right"
+            left=[0, 1, 2, 1], right=[0.5, 1.5, 2.5, 1.5], closed="right"
         )
         with pytest.raises(ValueError, match="Only `closed_left` indices supported"):
             index_to_binning(index)
@@ -326,10 +316,8 @@ class TestH1ToSeries:
 class TestH1ToDDataFrame:
     def test_simple_h1(self, simple_h1: Histogram1D) -> None:
         output = simple_h1.to_dataframe()
-        expected = pd.DataFrame({
-                "frequency": [1, 25, 0, 12],
-                "error": [1, 5, 0, np.sqrt(12)]
-            },
+        expected = pd.DataFrame(
+            {"frequency": [1, 25, 0, 12], "error": [1, 5, 0, np.sqrt(12)]},
             index=IntervalIndex.from_breaks(
                 [0, 1, 1.5, 2, 3], closed="left", dtype="interval[float64]", name="Name"
             ),

@@ -133,9 +133,7 @@ class HistogramBase(abc.ABC):
                 elif np.issubdtype(frequencies.dtype, np.floating):
                     frequencies = frequencies.astype(np.float64)
                 else:
-                    raise RuntimeError(
-                        "Frequencies of type {0} not understood".format(frequencies.dtype)
-                    )
+                    raise ValueError(f"Frequencies of type {frequencies.dtype} not understood")
             dtype = frequencies.dtype
             self.frequencies = frequencies
         self._dtype, _ = self._eval_dtype(dtype)  # type: ignore
@@ -436,7 +434,7 @@ class HistogramBase(abc.ABC):
         """
         # TODO: remove in favour of adaptive property
         if not all(b.adaptive_allowed for b in self._binnings):
-            raise RuntimeError("All binnings must allow adaptive behaviour.")
+            raise ValueError("All binnings must allow adaptive behaviour.")
         for binning in self._binnings:
             binning.set_adaptive(value)
 
@@ -499,7 +497,7 @@ class HistogramBase(abc.ABC):
             axis = self._get_axis(axis)
             if amount is not None:
                 if not amount == int(amount):
-                    raise RuntimeError("Amount must be integer")
+                    raise ValueError(f"Amount must be integer, {amount} found.")
                 bin_map = [(i, i // amount) for i in range(self.shape[axis])]
             elif min_frequency is not None:
                 if self.ndim == 1:

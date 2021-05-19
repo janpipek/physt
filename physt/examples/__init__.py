@@ -99,7 +99,7 @@ try:
             pass
 
         # Fall through
-        raise RuntimeError("Dataset {0} not available.".format(name))
+        raise KeyError("Dataset {0} not available.".format(name))
 
     def munros(edge_length: float = 10) -> Histogram2D:
         """Number of munros in different rectangular areas of Scotland.

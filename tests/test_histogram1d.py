@@ -249,7 +249,7 @@ class TestArithmetics:
                 values = [1, 1, 0, 2.2, 3, 4, 4]
                 for binset in wrong_bins:
                     other = Histogram1D(binset, values[: len(binset) - 1])
-                    with pytest.raises(RuntimeError):
+                    with pytest.raises(ValueError):
                         example + other
 
         def test_add_correct_histogram(self, bins, example):

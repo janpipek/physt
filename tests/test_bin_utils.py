@@ -35,10 +35,12 @@ class TestNumpyBinsWithMask:
 
     def test_nonsense(self):
         arr = np.array([[0, 1], [0.1, 2.1]])
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError, match="to_numpy_bins_with_mask: edges array not monotone"):
             bin_utils.to_numpy_bins_with_mask(arr)
         arr = np.array([[[0, 1], [0.1, 2.1]], [[0, 1], [0.1, 2.1]]])
-        with pytest.raises(RuntimeError):
+        with pytest.raises(
+            ValueError, match="to_numpy_bins_with_mask: array with dim=1 or 2 expected"
+        ):
             bin_utils.to_numpy_bins_with_mask(arr)
 
 
@@ -48,7 +50,11 @@ class TestValidation:
         for sequence in valid:
             assert bin_utils.is_rising((np.array(sequence)))
 
-        invalid = [[[2, 2], [2, 3], [3, 4]], [[1, 2], [1.7, 4], [4, 5]], [[1, 2], [3, 4], [2, 3]]]
+        invalid = [
+            [[2, 2], [2, 3], [3, 4]],
+            [[1, 2], [1.7, 4], [4, 5]],
+            [[1, 2], [3, 4], [2, 3]],
+        ]
         for sequence in invalid:
             assert not bin_utils.is_rising((np.array(sequence)))
 
