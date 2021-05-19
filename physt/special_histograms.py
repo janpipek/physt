@@ -536,7 +536,7 @@ def spherical(
             check_nan=not dropna,
             **kwargs,
         )
-    except RuntimeError as err:
+    except ValueError as err:
         if "Bins not in rising order" in str(err):
             if data is not None and np.isclose(data[:, 0].min(), data[:, 0].max()):
                 raise ValueError(

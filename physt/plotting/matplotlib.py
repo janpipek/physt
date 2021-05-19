@@ -769,7 +769,7 @@ def pair_bars(
     _, ax = _get_axes(kwargs)
     color1 = kwargs.pop("color1", "red")
     color2 = kwargs.pop("color2", "blue")
-    title = kwargs.pop("title", "{0} - {1}".format(first.name, second.name))
+    title = kwargs.pop("title", f"{first.name} - {second.name}")
     xlim = kwargs.pop(
         "xlim",
         (
@@ -1078,7 +1078,7 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
                 if h.ndim <= 2:
                     xlim = (h.get_bin_left_edges(0)[0], h.get_bin_right_edges(0)[-1])
                 else:
-                    raise ValueError("Invalid dimension: {0}".format(h.ndim))
+                    raise ValueError(f"Invalid dimension: {h.ndim}")
                 if xscale == "log":
                     if xlim[0] <= 0:
                         raise ValueError("Cannot use xscale='log' for non-positive bins.")

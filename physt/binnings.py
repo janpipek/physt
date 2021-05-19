@@ -89,7 +89,7 @@ class BinningBase:
         self._numpy_bins = numpy_bins
         self._includes_right_edge = includes_right_edge
         if adaptive and not self.adaptive_allowed:
-            raise ValueError("Adaptivity not allowed for {0}".format(self.__class__.__name__))
+            raise ValueError(f"Adaptivity not allowed for {self.__class__.__name__}.")
         if adaptive and includes_right_edge:
             raise ValueError("Adaptivity does not work together with right-edge inclusion.")
         self._adaptive = adaptive
@@ -126,7 +126,7 @@ class BinningBase:
 
     def _update_dict(self, a_dict):
         raise NotImplementedError(
-            "Dictionary representation of {0} is not implemented.".format(type(self).__name__)
+            f"Dictionary representation of {type(self).__name__} is not implemented."
         )
 
     @property
@@ -362,7 +362,7 @@ class BinningBase:
         return binning
 
     def __repr__(self):
-        return "{0}({1})".format(self.__class__.__name__, repr(self.numpy_bins))
+        return f"{self.__class__.__name__}({repr(self.numpy_bins)})"
 
 
 BinningLike = Union[BinningBase, ArrayLike]
@@ -414,7 +414,7 @@ class StaticBinning(BinningBase):
             return None, list(enumerate(indices))
 
     def __repr__(self):
-        return "{0}({1})".format(self.__class__.__name__, repr(self.bins))
+        return f"{self.__class__.__name__}({repr(self.bins)})"
 
 
 class NumpyBinning(BinningBase):
@@ -479,9 +479,7 @@ class FixedWidthBinning(BinningBase):
         self._numpy_bins = None
 
     def __repr__(self):
-        result = "{0}(bin_width={1}, bin_count={2}, min={3}".format(
-            self.__class__.__name__, self.bin_width, self.bin_count, self.first_edge
-        )
+        result = f"{self.__class__.__name__}(bin_width={self.bin_width}, bin_count={self.bin_count}, min={self.first_edge}"
         if self.is_adaptive():
             result += ", adaptive=True"
         return result + ")"
@@ -976,9 +974,7 @@ def calculate_bins_nd(
         if dim:
             if len(bins) != dim:
                 raise ValueError(
-                    "List of bins not understood, expected {0} items, got {1}.".format(
-                        dim, len(bins)
-                    )
+                    f"List of bins not understood, expected {dim} items, got {len(bins)}."
                 )
         else:
             dim = len(bins)

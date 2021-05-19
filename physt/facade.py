@@ -229,9 +229,9 @@ def h(
     if data is not None:
         data = np.asarray(data)
         if data.ndim != 2:
-            raise ValueError("Array must have shape (n, d), {0} encountered".format(data.shape))
+            raise ValueError(f"Array must have shape (n, d), {data.shape} encountered.")
         if dim is not None and dim != data.shape[1]:
-            raise ValueError("Dimension mismatch: {0}!={1}".format(dim, data.shape[1]))
+            raise ValueError(f"Dimension mismatch: {dim} != {data.shape[1]}")
         _, dim = data.shape
         if dropna:
             data = data[~np.isnan(data).any(axis=1)]

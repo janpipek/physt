@@ -148,7 +148,7 @@ def set_default_backend(name: str) -> None:
             "Support for bokeh has been discontinued. At some point, we may return to support holoviews."
         )
     if not name in backends:
-        raise ValueError("Backend {0} is not supported and cannot be set as default.".format(name))
+        raise ValueError(f"Backend '{name}' is not supported and cannot be set as default.")
     _default_backend = name
 
 

@@ -67,7 +67,7 @@ try:
             colorbar_range = range(h2.shape[1] + 2)
         else:
             raise ValueError(
-                "Unsupported colormap: {0}, select from: {1}".format(cmap, SUPPORTED_CMAPS)
+                f"Unsupported colormap: {cmap}, select from: {SUPPORTED_CMAPS}"
             )
         colors = (65536 + 256 + 1) * data
 

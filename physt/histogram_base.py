@@ -205,7 +205,7 @@ class HistogramBase(abc.ABC):
     @property
     def axis_names(self) -> Tuple[str, ...]:
         """Names of axes (stored in meta-data)."""
-        default = ["axis{0}".format(i) for i in range(self.ndim)]
+        default = [f"axis{i}" for i in range(self.ndim)]
         return tuple(self._meta_data.get("axis_names", None) or default)
 
     @axis_names.setter
@@ -218,7 +218,7 @@ class HistogramBase(abc.ABC):
         # TODO: Add unit test
         if isinstance(name_or_index, int):
             if name_or_index < 0 or name_or_index >= self.ndim:
-                raise ValueError("No such axis, must be from 0 to {0}".format(self.ndim - 1))
+                raise ValueError(f"No axis {name_or_index}, must be from 0 to {self.ndim - 1}")
             return name_or_index
         if isinstance(name_or_index, str):
             if name_or_index not in self.axis_names:
@@ -813,14 +813,8 @@ class HistogramBase(abc.ABC):
 
     def __repr__(self):
         if self.name:
-            result = "{0}('{4}', bins={1}, total={2}, dtype={3})".format(
-                self.__class__.__name__, self.shape, self.total, self.dtype, self.name
-            )
-        else:
-            result = "{0}(bins={1}, total={2}, dtype={3})".format(
-                self.__class__.__name__, self.shape, self.total, self.dtype
-            )
-        return result
+            return f"{self.__class__.__name__}('{self.name}', bins={self.shape}, total={self.total}, dtype={self.dtype})"
+        return f"{self.__class__.__name__}(bins={self.shape}, total={self.total}, dtype={self.dtype})"
 
     def __add__(self, other):
         new = self.copy()

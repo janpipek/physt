@@ -34,7 +34,7 @@ def save_json(
     elif isinstance(histogram, HistogramCollection):
         data["physt_compatible"] = COLLECTION_COMPATIBLE_VERSION
     else:
-        raise TypeError("Cannot save unknown type: {0}".format(type(histogram)))
+        raise TypeError(f"Cannot save unknown type: {type(histogram)}")
 
     text = json.dumps(data, **kwargs)
     if path:

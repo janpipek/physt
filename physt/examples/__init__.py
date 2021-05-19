@@ -80,7 +80,7 @@ try:
         """
         # Our custom datasets:
         try:
-            binary_data = pkgutil.get_data("physt", "examples/{0}.csv".format(name))
+            binary_data = pkgutil.get_data("physt", f"examples/{name}.csv")
             if binary_data:
                 return pd.read_csv(io.BytesIO(binary_data))
         except FileNotFoundError:
@@ -99,7 +99,7 @@ try:
             pass
 
         # Fall through
-        raise KeyError("Dataset {0} not available.".format(name))
+        raise KeyError(f"Dataset '{name}' not available.")
 
     def munros(edge_length: float = 10) -> Histogram2D:
         """Number of munros in different rectangular areas of Scotland.

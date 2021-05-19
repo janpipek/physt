@@ -110,15 +110,15 @@ class TestFixedWidthBins:
     def test_adapt_wrong(self):
         b1 = binnings.FixedWidthBinning(bin_width=10, bin_count=2, min=0, adaptive=True)
         b2 = binnings.FixedWidthBinning(bin_width=10, bin_count=2, min=1, adaptive=True)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError, match="Cannot adapt shifted fixed-width histograms"):
             b1.adapt(b2)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError, match="Cannot adapt shifted fixed-width histograms"):
             b2.adapt(b1)
 
         b3 = binnings.FixedWidthBinning(bin_width=5, bin_count=6, min=0, adaptive=True)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             b1.adapt(b3)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             b3.adapt(b1)
 
 

@@ -94,7 +94,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         if isinstance(item, str):
             candidates = [h for h in self.histograms if h.name == item]
             if len(candidates) == 0:
-                raise KeyError("Collection does not contain histogram named {0}".format(item))
+                raise KeyError(f"Collection does not contain histogram named '{item}'.")
             return candidates[0]
         else:
             return self.histograms[item]

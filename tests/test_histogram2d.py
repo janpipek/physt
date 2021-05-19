@@ -77,7 +77,7 @@ class TestHistogram2D:
     def test_dropna(self):
         vals2 = np.array(vals)
         vals2[0, 1] = np.nan
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError, match="Cannot calculate bins in presence of NaN's"):
             hist = physt.h2(vals2[:, 0], vals2[:, 1], dropna=False)
         hist = physt.h2(vals2[:, 0], vals2[:, 1])
         assert hist.frequencies.sum() == 6

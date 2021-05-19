@@ -32,16 +32,16 @@ def _run_dask(
     """
     if expand_arg:
         graph = dict(
-            ("{0}-{1}-{2}".format(name, data.name, index), (func, *item))
+            (f"{name}-{data.name}-{index}", (func, *item))
             for index, item in enumerate(data.__dask_keys__())
         )
     else:
         graph = dict(
-            ("{0}-{1}-{2}".format(name, data.name, index), (func, item))
+            (f"{name}-{data.name}-{index}", (func, item))
             for index, item in enumerate(data.__dask_keys__())
         )
     items = list(graph.keys())
-    result_name = "{0}-{1}-result".format(name, data.name)
+    result_name = f"{name}-{data.name}-result"
     graph.update(data.dask)
     graph[result_name] = (sum, items)
     if compute:

@@ -141,9 +141,7 @@ class HistogramND(HistogramBase):
         if isinstance(index, tuple):
             if len(index) > self.ndim:
                 raise IndexError(
-                    "Too many indices ({0}) to select from {1}D histogram".format(
-                        len(index), self.ndim
-                    )
+                    f"Too many indices ({len(index)}) to select from {self.ndim}D histogram"
                 )
 
             # Scalar case => return (bin edges), (frequency)
