@@ -616,67 +616,52 @@ def calculate_frequencies(
             raise ValueError("Bins must be rising.")
 
     # Prepare 1D numpy array of data
-    data = np.asarray(data)
-    if data.ndim > 1:
-        data = data.flatten()
+    data_array: np.ndarray = np.asarray(data)
+    if data_array.ndim > 1:
+        # TODO: Perhaps disallow this?
+        data_array = data_array.flatten()
 
     # Prepare 1D numpy array of weights
     if weights is not None:
-        weights = np.asarray(weights)
-        if weights.ndim > 1:
-            weights = weights.flatten()
+        weights_array: np.ndarray = np.asarray(weights)
+        if weights_array.ndim > 1:
+            weights_array = weights_array.flatten()
 
         # Check compatibility of weights
-        if weights.shape != data.shape:
-            raise ValueError("Weights must have the same shape as data.")
+        if weights_array.shape != data_array.shape:
+            raise ValueError(f"Weights must have the same shape as data, {weights_array.shape} != {data_array.shape}")
+    else:
+        weights_array = np.ones_like(data_array, dtype=int)
 
-        # Ensure proper dtype for the bin contents
-        if dtype is None:
-            dtype = weights.dtype
-
-    if dtype is None:
-        dtype = int
-    dtype = np.dtype(dtype)
-    if dtype.kind in "iu" and weights is not None and weights.dtype.kind == "f":
+    # Prepare dtype
+    inferred_dtype: np.dtype = np.dtype(dtype or weights_array.dtype)
+    if inferred_dtype.kind in "iu" and weights_array.dtype.kind == "f":
         raise ValueError("Integer histogram requested but float weights entered.")
 
     # Data sorting
     if not already_sorted:
-        args = np.argsort(data)  # Memory: another copy
-        data = data[args]  # Memory: another copy
-        if weights is not None:
-            weights = weights[args]
+        args = np.argsort(data_array)  # Memory: another copy
+        data_array = data_array[args]  # Memory: another copy
+        weights_array = weights_array[args]
         del args
 
     # Fill frequencies and errors
-    frequencies = np.zeros(bins.shape[0], dtype=dtype)
-    errors2 = np.zeros(bins.shape[0], dtype=dtype)
+    frequencies = np.zeros(bins.shape[0], dtype=inferred_dtype)
+    errors2 = np.zeros(bins.shape[0], dtype=inferred_dtype)
     for xbin, bin in enumerate(bins):
-        start = np.searchsorted(data, bin[0], side="left")
-        stop = np.searchsorted(data, bin[1], side="left")
+        start = np.searchsorted(data_array, bin[0], side="left")
+        stop = np.searchsorted(data_array, bin[1], side="left")
 
         if xbin == 0:
-            if weights is not None:
-                underflow = weights[0:start].sum()
-            else:
-                underflow = start
+            underflow = weights_array[0:start].sum()
         if xbin == len(bins) - 1:
-            stop = np.searchsorted(data, bin[1], side="right")  # TODO: Understand and explain
-            if weights is not None:
-                overflow = weights[stop:].sum()
-            else:
-                overflow = data.shape[0] - stop
+            stop = np.searchsorted(data_array, bin[1], side="right")  # TODO: Understand and explain
+            overflow = weights_array[stop:].sum()
 
-        if weights is not None:
-            frequencies[xbin] = weights[start:stop].sum()
-            errors2[xbin] = (weights[start:stop] ** 2).sum()
-            sum += (data[start:stop] * weights[start:stop]).sum()
-            sum2 += ((data[start:stop]) ** 2 * weights[start:stop]).sum()
-        else:
-            frequencies[xbin] = stop - start
-            errors2[xbin] = stop - start
-            sum += data[start:stop].sum()
-            sum2 += (data[start:stop] ** 2).sum()
+        frequencies[xbin] = weights_array[start:stop].sum()
+        errors2[xbin] = (weights_array[start:stop] ** 2).sum()
+        sum += (data_array[start:stop] * weights_array[start:stop]).sum()
+        sum2 += ((data_array[start:stop]) ** 2 * weights_array[start:stop]).sum()
 
     # Underflow and overflow don't make sense for unconsecutive binning.
     if not bin_utils.is_consecutive(bins):
