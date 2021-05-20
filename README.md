@@ -13,10 +13,11 @@ nice integration into IPython notebook and various plotting options. In short, w
 
 [![Travis](https://travis-ci.com/janpipek/physt.svg?branch=master)](https://travis-ci.com/janpipek/physt/)
 [![ReadTheDocs](https://readthedocs.org/projects/physt/badge/?version=latest)](http://physt.readthedocs.io/en/latest/)
-[![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/physt.svg)](https://gitter.im/physt/physt) 
+[![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/physt.svg)](https://gitter.im/physt/physt)
 [![PyPI version](https://badge.fury.io/py/physt.svg)](https://badge.fury.io/py/physt)
 [![Anaconda-Server Badge](https://anaconda.org/janpipek/physt/badges/version.svg)](https://anaconda.org/janpipek/physt)
 [![Anaconda-Server Badge](https://anaconda.org/janpipek/physt/badges/license.svg)](https://anaconda.org/janpipek/physt)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ### Versioning
 
@@ -69,10 +70,10 @@ data[:,1] = np.random.normal(0, 1.3, 1000)
 data[:,2] = np.random.normal(1, .6, 1000)
 
 # Get histogram data (in spherical coordinates)
-h = special_histograms.spherical(data)                 
+h = special_histograms.spherical(data)
 
 # And plot its projection on a globe
-h.projection("theta", "phi").plot.globe_map(density=True, figsize=(7, 7), cmap="rainbow")   
+h.projection("theta", "phi").plot.globe_map(density=True, figsize=(7, 7), cmap="rainbow")
 ```
 
 ![Directional 3D plot](doc/globe.png)
@@ -125,7 +126,7 @@ Using pip:
   - human-friendly
   - mathematical
 * IO, conversions
-  - I/O JSON 
+  - I/O JSON
   - I/O xarray.DataSet (experimental)
   - O ROOT file (experimental)
   - O pandas.DataFrame (basic)

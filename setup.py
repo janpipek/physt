@@ -32,6 +32,7 @@ def read_info():
         exec(f.read(), scope)  # pylint: disable=exec-used
     return scope
 
+
 THIS_DIR = os.path.dirname(__file__)
 INFO = read_info()
 

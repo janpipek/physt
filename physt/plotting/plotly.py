@@ -114,7 +114,7 @@ def bar(
     *,
     barmode: str = DEFAULT_BARMODE,
     alpha: float = DEFAULT_ALPHA,
-    **kwargs
+    **kwargs,
 ):  # pylint: disable=blacklisted-name
     """Bar plot.
 
@@ -131,7 +131,7 @@ def bar(
             width=histogram.bin_widths,
             name=histogram.name,
             opacity=alpha,
-            **kwargs
+            **kwargs,
         )
         for histogram in h
     ]
