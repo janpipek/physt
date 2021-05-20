@@ -106,11 +106,11 @@ class HistogramBase(abc.ABC):
 
         Parameters
         ----------
-        binnings : Iterable[BinningBase or array_like]
-        frequencies : Optional[array_like]
-        errors2 : Optional[array_like]
-        dtype : np.dtype
-        keep_missed : bool
+        binnings : Iterable of something that can be turned into binnnings
+        frequencies : Frequencies to fill bins with (default to zeros if not present)
+        errors2 : Squared errors for bins (default is equal to frequencies)
+        dtype : Dtype for bin contents
+        keep_missed : If True, keep information about bins that did not hit any bin
 
         """
         self._binnings = [as_binning(binning) for binning in binnings]

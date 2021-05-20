@@ -11,8 +11,7 @@ def make_bin_array(bins: ArrayLike) -> np.ndarray:
 
     Parameters
     ----------
-    bins: array_like
-        Array of edges or array of edge tuples
+    bins: Array of edges or array of edge tuples
 
     Examples
     --------
@@ -45,8 +44,7 @@ def to_numpy_bins(bins: ArrayLike) -> np.ndarray:
 
     Parameters
     ----------
-    bins: array_like
-        1-D (n) or 2-D (n, 2) array of edges
+    bins: 1-D (n) or 2-D (n, 2) array of edges
 
     Returns
     -------
@@ -145,10 +143,8 @@ def is_bin_subset(sub: ArrayLike, sup: ArrayLike) -> bool:
 
     Parameters
     ----------
-    sub: array_like
-        Candidate for the bin subset
-    sup: array_like
-        Candidate for the bin superset
+    sub: Candidate for the bin subset
+    sup: Candidate for the bin superset
     """
     sub = make_bin_array(sub)
     sup = make_bin_array(sup)
