@@ -1,6 +1,7 @@
 """Multi-dimensional histograms."""
 import warnings
-from typing import Optional, List, Any, Tuple, Union, Iterable, overload
+from numbers import Number
+from typing import Optional, List, Any, Tuple, Union, Iterable, cast, overload
 
 import numpy as np
 
@@ -231,30 +232,36 @@ class HistogramND(HistogramBase):
         -------
         If axis is specified a number. Otherwise, a tuple. If not available, None.
         """
+        # TODO: Support multiple values?
         if axis is not None:
-            value_scalar = np.asscalar(value)
+            if not isinstance(value, Number):
+                raise TypeError(f"Number expected: {value}")
+            value_scalar = cast(Number, value)  # TODO: Does that work with scalar?
             axis = self._get_axis(axis)
             ixbin = np.searchsorted(self.get_bin_left_edges(axis), value_scalar, side="right")
             if ixbin == 0:
                 return None
-            elif ixbin == self.shape[axis]:
+            if ixbin == self.shape[axis]:
                 if value_scalar <= self.get_bin_right_edges(axis)[-1]:
                     return int(ixbin - 1)
                 else:
                     return None
-            elif value_scalar < self.get_bin_right_edges(axis)[ixbin - 1]:
+            if value_scalar < self.get_bin_right_edges(axis)[ixbin - 1]:
                 return int(ixbin - 1)
-            elif ixbin == self.shape[axis]:
+            if ixbin == self.shape[axis]:
                 return None
-            else:
-                return None
+            return None
+
         else:
+            if np.isscalar(value):
+                raise TypeError(f"Array expected: {value}")
             value_array = np.asarray(value)
+            if value_array.shape != (self.ndim,):
+                raise ValueError(f"Wrong shape: {value_array.shape}, expected: ({self.ndim},)")
             ixbin = tuple(self.find_bin(value_array[i], i) for i in range(self.ndim))
             if None in ixbin:
                 return None
-            else:
-                return ixbin
+            return ixbin
 
     def fill(self, value: ArrayLike, weight=1, **kwargs):
         self._coerce_dtype(type(weight))

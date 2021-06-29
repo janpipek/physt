@@ -50,4 +50,8 @@ def simple_h1() -> Histogram1D:
 
 @pytest.fixture
 def simple_h2() -> Histogram2D:
-    return normal_h2()
+    edges = [[0, 1, 2, 3], [4, 5, 6]]
+    frequencies = [[1, 2], [3, 4], [5, 6]]
+    return Histogram2D(
+        binnings=edges, frequencies=frequencies, axis_names=["x", "y"], name="Name", title="Title"
+    )

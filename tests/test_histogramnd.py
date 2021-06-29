@@ -1,3 +1,4 @@
+from physt.typing_aliases import ArrayLike
 import numpy as np
 import pytest
 
@@ -39,6 +40,33 @@ class TestHistogramND:
         data = np.array([data1, data2, data3]).T
         h = physt.histogramdd(data, [10, 11, 12])
         assert h.bin_sizes.shape == (10, 11, 12)
+
+    class TestFindBin:
+        def test_scalar_with_axis(self, simple_h2: Histogram2D) -> None:
+            assert 1 == simple_h2.find_bin(1.7, axis="x")
+
+        def test_scalar_without_axis(self, simple_h2: Histogram2D) -> None:
+            with pytest.raises(TypeError, match="Array expected"):
+                simple_h2.find_bin(5)
+
+        @pytest.mark.parametrize("value", [-1, 17, np.inf])
+        def test_scalar_outside_the_range(self, simple_h2: Histogram2D, value: float) -> None:
+            assert simple_h2.find_bin(value, axis="x") is None
+
+        @pytest.mark.parametrize("value", [[0.5, 6.5], [3.5, 5.5], [-np.inf, 12]])
+        def test_array_outside_the_range(self, simple_h2: Histogram2D, value: ArrayLike) -> None:
+            assert simple_h2.find_bin(value) is None
+
+        def test_array_with_axis(self, simple_h2: Histogram2D) -> None:
+            with pytest.raises(TypeError, match="Number expected"):
+                simple_h2.find_bin([2.7, 4.4], axis="x")
+
+        def test_array_without_axis(self, simple_h2: Histogram2D) -> None:
+            assert (2, 0) == simple_h2.find_bin([2.7, 4.4])
+
+        def test_array_with_wrong_shape(self, simple_h2: Histogram2D) -> None:
+            with pytest.raises(ValueError, match="Wrong shape"):
+                simple_h2.find_bin([2.2, 2.2, 2.2])
 
 
 class TestProjections:
