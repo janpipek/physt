@@ -313,7 +313,7 @@ class TestH1ToSeries:
     # TODO: Add more tests?
 
 
-class TestH1ToDDataFrame:
+class TestH1ToDataFrame:
     def test_simple_h1(self, simple_h1: Histogram1D) -> None:
         output = simple_h1.to_dataframe()  # type: ignore
         expected = pd.DataFrame(

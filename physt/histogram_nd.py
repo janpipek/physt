@@ -24,6 +24,7 @@ class HistogramND(HistogramBase):
         frequencies: Optional[ArrayLike] = None,
         *,
         dimension: Optional[int] = None,
+        axis_names: Optional[Iterable[str]] = None,
         missed=0,
         **kwargs,
     ):
@@ -33,16 +34,13 @@ class HistogramND(HistogramBase):
         ----------
         dimension: int
 
-        binnings: Iterable[physt.binnings.BinningBase]
-            The binnings for all axes.
-        frequencies: Optional[array_like]
-            The bin contents.
+        binnings: The binnings for all axes.
+        frequencies: The bin contents.
         errors2: Optional[array_like]
             Quadratic errors of individual bins. If not set, defaults to frequencies.
         keep_missed: bool
         missed: int or float (dtype?)
         name: Optional[str]
-        axis_names: Optional[Iterable[str]]
         """
 
         # Bins + checks
@@ -53,7 +51,7 @@ class HistogramND(HistogramBase):
                     f"bins must be a sequence of {dimension} schemas, {len(binnings)} found."
                 )
 
-        HistogramBase.__init__(self, binnings, frequencies, **kwargs)
+        HistogramBase.__init__(self, binnings, frequencies, axis_names=axis_names, **kwargs)
 
         if len(self.axis_names) != self.ndim:
             raise ValueError(

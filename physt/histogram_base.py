@@ -419,7 +419,7 @@ class HistogramBase(abc.ABC):
     @property
     def missed(self) -> float:
         """Total number (weight) of entries that missed the bins."""
-        return np.asscalar(self._missed.sum())
+        return self._missed.sum().item()
 
     def is_adaptive(self) -> bool:
         """Whether the binning can be changed with operations."""

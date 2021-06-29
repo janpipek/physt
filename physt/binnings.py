@@ -741,8 +741,8 @@ def human_binning(
     if range is None:
         if data is None:
             raise ValueError("Cannot guess optimum bin width without data.")
-        min_ = np.asscalar(data.min())
-        max_ = np.asscalar(data.max())
+        min_ = data.min().item()
+        max_ = data.max().item()
     else:
         min_, max_ = range
     if bin_count is None:

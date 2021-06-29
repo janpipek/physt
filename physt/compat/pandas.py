@@ -77,8 +77,8 @@ class PhystDataFrameAccessor:
             column = self._df.columns[0]
         try:
             data = self._df[column]
-        except KeyError:
-            raise KeyError(f"Column '{column}' not found.")
+        except KeyError as exc:
+            raise KeyError(f"Column '{column}' not found.") from exc
         if not isinstance(data, pd.Series):
             raise ValueError(f"Argument `column` must select a single series: {column}")
         if not is_numeric_dtype(data):
@@ -111,8 +111,8 @@ class PhystDataFrameAccessor:
             raise ValueError("Arguments `column1` and `column2` must be set.")
         try:
             data = self._df[[column1, column2]]
-        except KeyError:
-            raise KeyError(f"Column(s) '{column1}' and/or '{column2}' could not be found.")
+        except KeyError as exc:
+            raise KeyError(f"Column(s) '{column1}' and/or '{column2}' could not be found.") from exc
         if not is_numeric_dtype(data[column1]):
             raise ValueError(f"Column '{column1}' is not numeric.")
         if not is_numeric_dtype(data[column2]):

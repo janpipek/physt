@@ -1,5 +1,8 @@
 from abc import ABC
 
+import pytest
+
+pytest.importorskip("matplotlib")
 from matplotlib.axes import Axes
 
 from physt.plotting import matplotlib
