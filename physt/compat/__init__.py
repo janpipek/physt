@@ -18,7 +18,4 @@ except ImportError:
     pass
 
 
-try:
-    from . import xarray
-except ImportError:
-    pass
+# TODO: Make xarray a compat too.

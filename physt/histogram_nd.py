@@ -215,6 +215,12 @@ class HistogramND(HistogramBase):
             return (self.get_bin_right_edges(axis) + self.get_bin_left_edges(axis)) / 2
         return np.meshgrid(*[self.get_bin_centers(i) for i in range(self.ndim)], indexing="ij")
 
+    # @overload
+    # def find_bin(self, value: ArrayLike, axis: None) -> Optional[Tuple[int, ...]]: ...
+
+    # @overload
+    # def find_bin(self, value: Number, axis: Axis) -> Optional[int]: ...
+
     def find_bin(
         self, value: ArrayLike, axis: Optional[Axis] = None
     ) -> Union[None, int, Tuple[int, ...]]:
@@ -222,19 +228,19 @@ class HistogramND(HistogramBase):
 
         Parameters
         ----------
-        value: Value with dimensionality equal to histogram
+        value: Value with dimensionality equal to histogram.
         axis: If set, find axis along an axis. Otherwise, find bins along all axes.
             None = outside the bins
 
         Returns
         -------
-        If axis is specified a number. Otherwise, a tuple. If not available, None.
+        If axis is specified, a number. Otherwise, a tuple. If not available, None.
         """
         # TODO: Support multiple values?
         if axis is not None:
             if not isinstance(value, Number):
                 raise TypeError(f"Number expected: {value}")
-            value_scalar = cast(Number, value)  # TODO: Does that work with scalar?
+            value_scalar = cast(float, value)  # TODO: Does that work with scalar?
             axis = self._get_axis(axis)
             ixbin = np.searchsorted(self.get_bin_left_edges(axis), value_scalar, side="right")
             if ixbin == 0:
@@ -256,10 +262,12 @@ class HistogramND(HistogramBase):
             value_array = np.asarray(value)
             if value_array.shape != (self.ndim,):
                 raise ValueError(f"Wrong shape: {value_array.shape}, expected: ({self.ndim},)")
-            ixbin = tuple(self.find_bin(value_array[i], i) for i in range(self.ndim))
-            if None in ixbin:
+            ixbins = cast(
+                Tuple[int, ...], tuple(self.find_bin(value_array[i], i) for i in range(self.ndim))
+            )
+            if None in ixbins:
                 return None
-            return ixbin
+            return ixbins
 
     def fill(self, value: ArrayLike, weight=1, **kwargs):
         self._coerce_dtype(type(weight))

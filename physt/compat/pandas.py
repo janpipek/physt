@@ -186,7 +186,7 @@ def index_to_binning(index: pandas.IntervalIndex) -> BinningBase:
         raise ValueError("Only `closed_left` indices supported.")
     if index.is_overlapping:
         raise ValueError("Intervals cannot overlap.")
-    bins = np.hstack([index.left[:, np.newaxis], index.right[:, np.newaxis]])
+    bins = np.hstack([index.left.values[:, np.newaxis], index.right.values[:, np.newaxis]])
     return static_binning(bins=bins)
 
 

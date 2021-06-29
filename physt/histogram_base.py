@@ -414,7 +414,7 @@ class HistogramBase(abc.ABC):
     @property
     def total(self) -> float:
         """Total number (sum of weights) of entries excluding underflow and overflow."""
-        return np.asscalar(self._frequencies.sum())
+        return self._frequencies.sum().item()
 
     @property
     def missed(self) -> float:

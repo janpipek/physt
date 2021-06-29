@@ -364,7 +364,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             self._get_axis(axis)  # Check that it is valid
         if not np.isscalar(value):
             raise ValueError(f"Non-scalar value for 1D histogram: {value}")
-        ixbin = np.asscalar(np.searchsorted(self.bin_left_edges, value, side="right"))
+        ixbin = np.searchsorted(self.bin_left_edges, value, side="right").item()
         if ixbin == 0:
             return -1
         if ixbin == self.bin_count:
