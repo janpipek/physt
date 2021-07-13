@@ -160,6 +160,8 @@ class TestPhystDataFrameAccessors:
         assert hasattr(df_one_column.physt, "h2")
         assert hasattr(df_one_column.physt, "histogram")
 
+    # TODO: Test weights
+
     class TestH1:
         @pytest.mark.parametrize(
             "args,kwargs",

@@ -3,8 +3,9 @@
 - conversion between histograms and Series/DataFrames
 - .physt accessor for pandas objects
 """
+from physt.typing_aliases import ArrayLike
 import warnings
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 import numpy as np
 import pandas
@@ -59,13 +60,21 @@ class PhystDataFrameAccessor:
     def __init__(self, df: pandas.DataFrame):
         self._df = df
 
-    def h1(self, column: Any = None, bins=None, **kwargs) -> Histogram1D:
+    def h1(
+        self,
+        column: Any = None,
+        bins=None,
+        *,
+        weights: Union[ArrayLike, str, None] = None,
+        **kwargs,
+    ) -> Histogram1D:
         """Create 1D histogram from a column.
 
         Parameters
         ----------
         column: Name of the column to apply on (not required for 1-column data frames)
         bins: Universal `bins` argument
+        weights: Name of the column to use for weight or some arraylike object
 
         See Also
         --------
@@ -81,11 +90,13 @@ class PhystDataFrameAccessor:
             raise KeyError(f"Column '{column}' not found.") from exc
         if not isinstance(data, pd.Series):
             raise ValueError(f"Argument `column` must select a single series: {column}")
+        if isinstance(weights, str) and weights in self._df.columns:
+            weights = self._df[weights]
         if not is_numeric_dtype(data):
             raise ValueError(f"Column '{column}' is not numeric.")
         if "axis_name" not in kwargs:
             kwargs["axis_name"] = column
-        return data.physt.h1(bins=bins, **kwargs)
+        return data.physt.h1(bins=bins, weights=weights, **kwargs)
 
     def h2(
         self, column1: Any = None, column2: Any = None, bins=None, *, dropna: bool = True, **kwargs
@@ -111,6 +122,7 @@ class PhystDataFrameAccessor:
             raise ValueError("Arguments `column1` and `column2` must be set.")
         try:
             data = self._df[[column1, column2]]
+        # TODO: Enable weights to be a name of the column
         except KeyError as exc:
             raise KeyError(f"Column(s) '{column1}' and/or '{column2}' could not be found.") from exc
         if not is_numeric_dtype(data[column1]):
@@ -165,6 +177,7 @@ class PhystDataFrameAccessor:
         for column in data.columns:
             if not is_numeric_dtype(data[column]):
                 raise ValueError(f"Column '{column}' is not numeric")
+        # TODO: Enable weights to be a name of the column
         if "axis_names" not in kwargs:
             kwargs["axis_names"] = data.columns.tolist()
         return h(data=data.astype(float).values, bins=bins, **kwargs)
