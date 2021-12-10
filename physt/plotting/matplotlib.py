@@ -30,7 +30,7 @@ Parameters
 
 """
 from functools import wraps
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Collection, Dict, Optional, Tuple, Union
 
 import matplotlib
 import matplotlib.cm as cm
@@ -955,35 +955,49 @@ def _add_colorbar(ax: Axes, cmap: colors.Colormap, cmap_data: np.ndarray, norm: 
     fig.colorbar(mappable, ax=ax)
 
 
-def _add_stats_box(h1: Histogram1D, ax: Axes, stats: Union[str, bool] = "all"):
+def _add_stats_box(h1: Histogram1D, ax: Axes, stats: Union[str, bool, Collection[str]] = "all"):
     """Insert a small legend-like box with statistical information.
 
     Parameters
     ----------
-    stats : "all" | "total" | True
+    stats : False | "all" or True | field | list of fields
         What info to display
 
     Note
     ----
     Very basic implementation.
     """
+    available_stats = (
+        "mean",
+        "std",
+        "total",
+    )
 
-    # place a text box in upper left in axes coords
+    if not stats:
+        return
+
     if stats in ["all", True]:
-        text_frags = [f"Total: {h1.total}"]
+        stats = available_stats.keys()
+    elif isinstance(stats, str):
+        stats = [stats]
+    else:
+        stats = list(stats)
 
+    text_frags = []
+    if "total" in stats:
+        text_frags.append(f"Total: {h1.total}")
+    if "mean" in stats:
         mean = h1.mean()
         if mean is not None:
             text_frags.append(f"Mean: {mean:.2f}")
+    if "std" in stats:
         std = h1.std()
         if std is not None:
             text_frags.append(f"Std.dev: {std:.2f}")
-        text = "\n".join(text_frags)
-    elif stats == "total":
-        text = f"Total: {h1.total}"
-    else:
-        raise ValueError("Invalid stats specification")
 
+    text = "\n".join(text_frags)
+
+    # The placement
     ax.text(
         0.05,
         0.95,

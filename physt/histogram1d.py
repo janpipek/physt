@@ -587,9 +587,6 @@ def calculate_frequencies(
     # TODO: What if data is None
     # TODO: Change stats into namedtuple
 
-    # Statistics
-    sum = 0.0
-    sum2 = 0.0
     underflow = np.nan
     overflow = np.nan
 
@@ -648,14 +645,21 @@ def calculate_frequencies(
 
         frequencies[xbin] = weights_array[start:stop].sum()
         errors2[xbin] = (weights_array[start:stop] ** 2).sum()
-        sum += (data_array[start:stop] * weights_array[start:stop]).sum()
-        sum2 += ((data_array[start:stop]) ** 2 * weights_array[start:stop]).sum()
 
     # Underflow and overflow don't make sense for unconsecutive binning.
     if not bin_utils.is_consecutive(bins):
         underflow = np.nan
         overflow = np.nan
 
-    stats = {"sum": sum, "sum2": sum2}
+    # Statistics
+    if not data_array.size:
+        stats = {"sum": 0.0, "sum2": 0.0, "min": np.nan, "max": np.nan}
+    else:
+        stats = {
+            "sum": (data_array * weights_array).sum(),
+            "sum2": (data_array ** 2 * weights_array).sum(),
+            "min": data_array.min(),
+            "max": data_array.max(),
+        }
 
     return frequencies, errors2, underflow, overflow, stats
