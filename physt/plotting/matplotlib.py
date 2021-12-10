@@ -971,6 +971,8 @@ def _add_stats_box(h1: Histogram1D, ax: Axes, stats: Union[str, bool, Collection
         "mean",
         "min",
         "max",
+        "underflow",
+        "overflow",
         "std",
         "total",
     ]
@@ -988,6 +990,12 @@ def _add_stats_box(h1: Histogram1D, ax: Axes, stats: Union[str, bool, Collection
     text_frags = []
     if "total" in used_stats:
         text_frags.append(f"Total: {h1.total}")
+    if "underflow" in used_stats:
+        if h1.underflow:
+            text_frags.append(f"Underflow: {h1.underflow}")
+    if "overflow" in used_stats:
+        if h1.overflow:
+            text_frags.append(f"Overflow: {h1.overflow}")
     if "mean" in used_stats:
         mean = h1.mean()
         if mean is not None:

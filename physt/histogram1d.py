@@ -21,10 +21,14 @@ if TYPE_CHECKING:
 
 
 class StatisticsDict(TypedDict):
+    """Container of statistics accumulative data."""
+
+    # TODO: Change to dataclass once dropping Python 3.6 support
     sum: float
     sum2: float
     min: float
     max: float
+    weight: float
 
 
 # TODO: Fix I/O with binning
@@ -327,7 +331,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         """
         if self._stats:  # TODO: should be true always?
             if self.total > 0:
-                return self._stats["sum"] / self.total
+                return self._stats["sum"] / self._stats["weight"]
             return np.nan
         return None  # TODO: or error
 
@@ -369,7 +373,9 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
         if self._stats:
             if self.total > 0:
-                return (self._stats["sum2"] - self._stats["sum"] ** 2 / self.total) / self.total
+                return (
+                    self._stats["sum2"] - self._stats["sum"] ** 2 / self._stats["weight"]
+                ) / self._stats["weight"]
             return np.nan
         return None
 
@@ -693,6 +699,7 @@ def calculate_frequencies(
             "sum2": (data_array ** 2 * weights_array).sum(),
             "min": float(data_array.min()),
             "max": float(data_array.max()),
+            "weight": weights_array.sum(),
         }
 
     return frequencies, errors2, underflow, overflow, stats
