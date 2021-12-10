@@ -539,24 +539,36 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     @classmethod
     def from_calculate_frequencies(
         cls: Type["Histogram1DType"],
-        data: ArrayLike,
+        data: Optional[np.ndarray],
         binning: BinningBase,
         weights: Optional[ArrayLike] = None,
         *,
         validate_bins: bool = True,
         already_sorted: bool = False,
         dtype: Optional[DtypeLike] = None,
+        keep_missed: bool = True,
         **kwargs,
     ) -> "Histogram1DType":
         """Construct the histogram from values and bins."""
-        frequencies, errors2, underflow, overflow, stats = calculate_frequencies(
-            data=data,
-            binning=binning,
-            weights=weights,
-            validate_bins=validate_bins,
-            already_sorted=already_sorted,
-            dtype=dtype,
-        )
+        if data is None:
+            frequencies: Optional[np.ndarray] = None
+            errors2: Optional[np.ndarray] = None
+            underflow: float = 0.0
+            overflow: float = 0.0
+            stats: Optional[StatisticsDict] = None
+        else:
+            frequencies, errors2, underflow, overflow, stats = calculate_frequencies(
+                data=data,
+                binning=binning,
+                weights=weights,
+                validate_bins=validate_bins,
+                already_sorted=already_sorted,
+                dtype=dtype,
+            )
+            if not keep_missed:
+                underflow = 0.0
+                overflow = 0.0
+
         return cls(
             binning=binning,
             frequencies=frequencies,
@@ -564,6 +576,8 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             stats=stats,
             underflow=underflow,
             overflow=overflow,
+            keep_missed=keep_missed,
+            dtype=dtype,
             **kwargs,
         )
 
@@ -605,8 +619,6 @@ def calculate_frequencies(
     """
 
     # TODO: Is it possible to merge with histogram_nd.calculate_frequencies?
-    # TODO: What if data is None
-    # TODO: Change stats into namedtuple
 
     underflow = np.nan
     overflow = np.nan
@@ -646,10 +658,10 @@ def calculate_frequencies(
 
     # Data sorting
     if not already_sorted:
-        args = np.argsort(data_array)  # Memory: another copy
-        data_array = data_array[args]  # Memory: another copy
-        weights_array = weights_array[args]
-        del args
+        sort_order = np.argsort(data_array)  # Memory: another copy
+        data_array = data_array[sort_order]  # Memory: another copy
+        weights_array = weights_array[sort_order]
+        del sort_order
 
     # Fill frequencies and errors
     frequencies = np.zeros(bins.shape[0], dtype=inferred_dtype)

@@ -428,12 +428,20 @@ class TestDtype:
         hist = h1(values, weights=[1, 2, 2.1, 3.2])
         assert hist.dtype == float
 
-    def test_explicit(self, values):
-        hist = h1(values, dtype=float)
-        assert hist.dtype == float
+    def test_float_weights_in_integer(self, values):
 
         with pytest.raises(ValueError):
             hist = h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
+
+    @pytest.mark.parametrize(
+        "dtype", [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.float128]
+    )
+    @pytest.mark.parametrize(
+        "values", [pytest.param([0, 1, 1], id="existing"), pytest.param(None, id="none")]
+    )
+    def test_explicit_construction(self, dtype, values):
+        hist = h1(values, dtype=dtype, range=(-1, 1))
+        assert hist.dtype == dtype
 
     def test_copy(self, values):
         hist = h1(values, dtype=np.int32)

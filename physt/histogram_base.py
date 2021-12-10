@@ -128,7 +128,9 @@ class HistogramBase(abc.ABC):
                 frequencies = np.asarray(frequencies, dtype=dtype)
             else:
                 frequencies = np.asarray(frequencies)
-                if np.issubdtype(frequencies.dtype, np.integer):
+                if frequencies.dtype in self.SUPPORTED_DTYPES:
+                    pass  # OK
+                elif np.issubdtype(frequencies.dtype, np.integer):
                     frequencies = frequencies.astype(np.int64)
                 elif np.issubdtype(frequencies.dtype, np.floating):
                     frequencies = frequencies.astype(np.float64)
@@ -155,6 +157,16 @@ class HistogramBase(abc.ABC):
     _frequencies: np.ndarray
     _errors2: np.ndarray
     _missed: np.ndarray
+
+    SUPPORTED_DTYPES = [
+        np.int16,
+        np.int32,
+        np.int64,
+        np.float16,
+        np.float32,
+        np.float64,
+        np.float128,
+    ]
 
     @property
     def default_axis_names(self) -> List[str]:
@@ -891,7 +903,7 @@ class HistogramBase(abc.ABC):
     def __imul__(self, other: Any):
         if isinstance(other, HistogramBase):
             raise TypeError("Multiplication of two histograms is not supported.")
-        elif np.isscalar(other):
+        if np.isscalar(other):
             array = np.asarray(other)
             try:
                 self._coerce_dtype(array.dtype)

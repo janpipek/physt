@@ -76,7 +76,7 @@ def h1(
     if isinstance(data, tuple) and isinstance(data[0], str):  # Works for groupby DataSeries
         return h1(data[1], bins, name=data[0], **kwargs)
     if type(data).__name__ == "DataFrame":
-        raise TypeError("Cannot create histogram from a pandas DataFrame. Use Series.")
+        raise TypeError("Cannot create a 1D histogram from a pandas DataFrame. Use Series.")
 
     def _maybe_to_array(data: Optional[ArrayLike], dropna: bool) -> Optional[np.ndarray]:
         if data is not None:
@@ -84,8 +84,7 @@ def h1(
             if dropna:
                 array = array[~np.isnan(array)]
             return array
-        else:
-            return None
+        return None
 
     array = _maybe_to_array(data, dropna=dropna)
 
@@ -93,24 +92,7 @@ def h1(
     binning = calculate_bins(
         array, bins, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs
     )
-    # bins = binning.bins
 
-    # Get frequencies
-    if array is None:
-        frequencies: Optional[np.ndarray] = None
-        errors2: Optional[np.ndarray] = None
-        underflow: float = 0
-        overflow: float = 0
-        stats: Optional[StatisticsDict] = None
-    else:
-        (frequencies, errors2, underflow, overflow, stats) = calculate_frequencies(
-            array, binning=binning, weights=weights, dtype=dtype
-        )
-
-    # Construct the object
-    if not keep_missed:
-        underflow = 0
-        overflow = 0
     if not axis_name:
         if hasattr(data, "name"):
             axis_name = str(data.name)  # type: ignore
@@ -121,13 +103,12 @@ def h1(
         ):
             # Case of dask fields (examples)
             axis_name = str(data.fields[0])  # type: ignore
-    return Histogram1D(
+
+    # Construct the object
+    return Histogram1D.from_calculate_frequencies(
+        data=array,
         binning=binning,
-        frequencies=frequencies,
-        errors2=errors2,
-        overflow=overflow,
-        underflow=underflow,
-        stats=stats,
+        weights=weights,
         dtype=dtype,
         keep_missed=keep_missed,
         name=name,
