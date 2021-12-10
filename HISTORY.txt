@@ -1,3 +1,8 @@
+0.5.2 (?? Dec 2021)
+-------------------
+- Changed: Statistics are now computed from all values (more options for plot too)
+- Fixed: Sometimes, dtypes were not properly used
+
 0.5.1 (21 May 2021)
 -------------------
 - Changed: Reworked pandas compatibility (.to_series, .to_dataframe methods)
@@ -91,7 +96,7 @@
 0.4.0 (5 February 2019)
 -----------------------
 - CHANGE: drop support for Python 2.7
-- Fixed: several small bugs - #49, #54, ... 
+- Fixed: several small bugs - #49, #54, ...
 
 0.3.43 (1 October 2018)
 -----------------------
