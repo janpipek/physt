@@ -1,6 +1,8 @@
 """One-dimensional histograms."""
 from abc import ABC, abstractmethod
+from optparse import Option
 from typing import Any, Dict, Mapping, Optional, Tuple, TYPE_CHECKING, Type, Union
+from typing_extensions import TypedDict
 
 import numpy as np
 
@@ -11,10 +13,19 @@ from physt.typing_aliases import ArrayLike, DtypeLike, Axis
 
 if TYPE_CHECKING:
     from typing import TypeVar
+
     import xarray
     import pandas
 
     Histogram1DType = TypeVar("Histogram1DType", bound="Histogram1D")
+
+
+class StatisticsDict(TypedDict):
+    sum: float
+    sum2: float
+    min: float
+    max: float
+
 
 # TODO: Fix I/O with binning
 
@@ -120,7 +131,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
 
     Attributes
     ----------
-    _stats : dict
+    _stats : Optional[StaticDict]
 
 
     These are the basic attributes that can be used in the constructor (see there)
@@ -134,7 +145,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         errors2: Optional[ArrayLike] = None,
         *,
         keep_missed: bool = True,
-        stats: Optional[Dict[str, float]] = None,
+        stats: Optional[StatisticsDict] = None,
         overflow: Optional[float] = 0.0,
         underflow: Optional[float] = 0.0,
         inner_missed: Optional[float] = 0.0,
@@ -148,18 +159,12 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         binning: The binning
         frequencies: The bin contents.
         keep_missed: Whether to keep track of underflow/overflow when filling with new values.
-        underflow: Optional[float]
-            Weight of observations that were smaller than the minimum bin.
-        overflow: Optional[float]
-            Weight of observations that were larger than the maximum bin.
-        name: Optional[str]
-            Name of the histogram (will be displayed as plot title)
-        axis_name: Optional[str]
-            Name of the characteristics that is histogrammed (will be displayed on x axis)
-        errors2: Optional[array_like]
-            Quadratic errors of individual bins. If not set, defaults to frequencies.
-        stats: dict
-            Dictionary of various statistics ("sum", "sum2")
+        underflow: Weight of observations that were smaller than the minimum bin.
+        overflow: Weight of observations that were larger than the maximum bin.
+        name: Name of the histogram (will be displayed as plot title)
+        axis_name: Name of the characteristics that is histogrammed (will be displayed on x axis)
+        errors2: Quadratic errors of individual bins. If not set, defaults to frequencies.
+        stats: Dictionary of various statistics ("sum", "sum2", "min", "max")
         """
         missed = [
             underflow,
@@ -183,7 +188,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         else:
             self._missed = np.zeros(3, dtype=self.dtype)
 
-    EMPTY_STATS = {"sum": 0.0, "sum2": 0.0}
+    EMPTY_STATS: StatisticsDict = {"sum": 0.0, "sum2": 0.0, "min": np.nan, "max": np.nan}
 
     @property
     def axis_name(self) -> str:
@@ -315,7 +320,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         self._missed[2] = value
 
     def mean(self) -> Optional[float]:
-        """Statistical mean of all values entered into histogram.
+        """Statistical mean of all values entered into histogram (weighted)
 
         This number is precise, because we keep the necessary data
         separate from bin contents.
@@ -325,6 +330,22 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
                 return self._stats["sum"] / self.total
             return np.nan
         return None  # TODO: or error
+
+    def min(self) -> Optional[float]:
+        """Minimum value used to construct the histogram.
+
+        It may be outside of the bin range."""
+        if self._stats:
+            return self._stats["min"]
+        return None
+
+    def max(self) -> Optional[float]:
+        """Maximum value used to construct the histogram.
+
+        It may be outside of the bin range."""
+        if self._stats:
+            return self._stats["max"]
+        return None
 
     def std(self) -> Optional[float]:  # , ddof=0):
         """Standard deviation of all values entered into histogram.
@@ -555,7 +576,7 @@ def calculate_frequencies(
     validate_bins: bool = True,
     already_sorted: bool = False,
     dtype: Optional[DtypeLike] = None,
-) -> Tuple[np.ndarray, np.ndarray, float, float, dict]:
+) -> Tuple[np.ndarray, np.ndarray, float, float, StatisticsDict]:
     """Get frequencies and bin errors from the data.
 
     Parameters
@@ -575,7 +596,7 @@ def calculate_frequencies(
     underflow : Weight of items smaller than the first bin
     overflow : Weight of items larger than the last bin
     stats: dict
-        { sum: ..., sum2: ...}
+        { sum: ..., sum2: ..., min: ..., max: ...}
 
     Note
     ----
@@ -653,13 +674,13 @@ def calculate_frequencies(
 
     # Statistics
     if not data_array.size:
-        stats = {"sum": 0.0, "sum2": 0.0, "min": np.nan, "max": np.nan}
+        stats: StatisticsDict = {"sum": 0.0, "sum2": 0.0, "min": np.nan, "max": np.nan}
     else:
         stats = {
             "sum": (data_array * weights_array).sum(),
             "sum2": (data_array ** 2 * weights_array).sum(),
-            "min": data_array.min(),
-            "max": data_array.max(),
+            "min": float(data_array.min()),
+            "max": float(data_array.max()),
         }
 
     return frequencies, errors2, underflow, overflow, stats

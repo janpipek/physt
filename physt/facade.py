@@ -3,7 +3,7 @@ from typing import Optional, Iterable, Type, cast, Dict, Any, Tuple
 import numpy as np
 
 from physt.util import deprecation_alias
-from physt.histogram1d import Histogram1D, calculate_frequencies
+from physt.histogram1d import Histogram1D, StatisticsDict, calculate_frequencies
 from physt.histogram_nd import HistogramND, Histogram2D
 from physt.binnings import calculate_bins, calculate_bins_nd
 from physt.histogram_collection import HistogramCollection
@@ -101,7 +101,7 @@ def h1(
         errors2: Optional[np.ndarray] = None
         underflow: float = 0
         overflow: float = 0
-        stats: Dict[str, Any] = {"sum": 0.0, "sum2": 0.0}
+        stats: Optional[StatisticsDict] = None
     else:
         (frequencies, errors2, underflow, overflow, stats) = calculate_frequencies(
             array, binning=binning, weights=weights, dtype=dtype

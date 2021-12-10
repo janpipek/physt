@@ -843,8 +843,12 @@ class HistogramBase(abc.ABC):
                 raise ValueError("Incompatible binning")
 
             if self._stats and other._stats:
-                for key in self._stats:
+                for key in ["sum", "sum2"]:
                     self._stats[key] += other._stats[key]
+                self._stats["min"] = np.nanmin(self._stats["min"], other._stats["min"])
+                self._stats["max"] = np.nanmax(self._stats["max"], other._stats["max"])
+            else:
+                self._stats = None
         elif config.free_arithmetics:
             array = np.asarray(other)
             self._coerce_dtype(array.dtype)

@@ -30,7 +30,7 @@ Parameters
 
 """
 from functools import wraps
-from typing import Any, Collection, Dict, Optional, Tuple, Union
+from typing import Any, Collection, Dict, List, Optional, Tuple, Union
 
 import matplotlib
 import matplotlib.cm as cm
@@ -967,33 +967,43 @@ def _add_stats_box(h1: Histogram1D, ax: Axes, stats: Union[str, bool, Collection
     ----
     Very basic implementation.
     """
-    available_stats = (
+    available_stats = [
         "mean",
+        "min",
+        "max",
         "std",
         "total",
-    )
+    ]
 
     if not stats:
         return
 
     if stats in ["all", True]:
-        stats = available_stats.keys()
+        used_stats: List[str] = available_stats
     elif isinstance(stats, str):
-        stats = [stats]
+        used_stats = [stats]
     else:
-        stats = list(stats)
+        used_stats = list(stats)  # type: ignore
 
     text_frags = []
-    if "total" in stats:
+    if "total" in used_stats:
         text_frags.append(f"Total: {h1.total}")
-    if "mean" in stats:
+    if "mean" in used_stats:
         mean = h1.mean()
         if mean is not None:
             text_frags.append(f"Mean: {mean:.2f}")
-    if "std" in stats:
+    if "std" in used_stats:
         std = h1.std()
         if std is not None:
             text_frags.append(f"Std.dev: {std:.2f}")
+    if "min" in used_stats:
+        min = h1.min()
+        if min is not None:
+            text_frags.append(f"Min.: {min:.2f}")
+    if "max" in used_stats:
+        max = h1.max()
+        if max is not None:
+            text_frags.append(f"Max.: {max:.2f}")
 
     text = "\n".join(text_frags)
 
