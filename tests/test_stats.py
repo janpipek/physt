@@ -3,6 +3,7 @@ import pytest
 
 import physt
 from physt.facade import h1
+from physt.histogram1d import Statistics
 from physt.types import Histogram1D
 from physt.typing_aliases import ArrayLike
 
@@ -38,42 +39,42 @@ class TestStatisticsComputation:
         return histogram
 
     def test_min(self, histogram):
-        assert histogram._stats["min"] == 1
+        assert histogram.statistics.min == 1
 
     def test_max(self, histogram):
-        assert histogram._stats["max"] == 4
+        assert histogram.statistics.max == 4
 
     def test_sum(self, histogram, use_weights):
         if use_weights:
-            assert histogram._stats["sum"] == 14
+            assert histogram.statistics.sum == 14
         else:
-            assert histogram._stats["sum"] == 10
+            assert histogram.statistics.sum == 10
 
     def test_sum2(self, histogram, use_weights):
         if use_weights:
-            assert histogram._stats["sum2"] == 46
+            assert histogram.statistics.sum2 == 46
         else:
-            assert histogram._stats["sum2"] == 30
+            assert histogram.statistics.sum2 == 30
 
     def test_weight(self, histogram, use_weights):
         if use_weights:
-            assert histogram._stats["weight"] == 5
+            assert histogram.statistics.weight == 5
         else:
-            assert histogram._stats["weight"] == 4
+            assert histogram.statistics.weight == 4
 
     def test_mean(self, histogram, use_weights):
         if use_weights:
-            assert histogram.mean() == 2.8
+            assert histogram.statistics.mean() == 2.8
         else:
-            assert histogram.mean() == 2.5
+            assert histogram.statistics.mean() == 2.5
 
     def test_std(self, histogram, use_weights):
         if use_weights:
-            assert np.allclose(histogram.std(), np.sqrt(6.8 / 5))
+            assert np.allclose(histogram.statistics.std(), np.sqrt(6.8 / 5))
         else:
-            assert np.allclose(histogram.std(), np.sqrt(5 / 4))
+            assert np.allclose(histogram.statistics.std(), np.sqrt(5 / 4))
 
 
 class TestEmptyHistogram:
     def test_zero_statistics(self, empty_h1):
-        assert empty_h1._stats == Histogram1D.EMPTY_STATS
+        assert empty_h1.statistics == Statistics()

@@ -1,10 +1,9 @@
-from typing import Optional, Iterable, Type, cast, Dict, Any, Tuple
+from typing import Optional, Iterable, Type, cast, Tuple
 
 import numpy as np
 
 from physt.util import deprecation_alias
-from physt.histogram1d import Histogram1D, StatisticsDict, calculate_frequencies
-from physt.histogram_nd import HistogramND, Histogram2D
+from physt.types import Histogram1D, Histogram2D, HistogramND
 from physt.binnings import calculate_bins, calculate_bins_nd
 from physt.histogram_collection import HistogramCollection
 from physt.special_histograms import (
