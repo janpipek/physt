@@ -1,15 +1,15 @@
 """One-dimensional histograms."""
 from abc import ABC, abstractmethod
-from optparse import Option
 from dataclasses import dataclass
+import dataclasses
 from typing import Any, Dict, Mapping, Optional, Tuple, TYPE_CHECKING, Type, Union
-from typing_extensions import TypedDict
 
 import numpy as np
 
 from physt import bin_utils
 from physt.histogram_base import HistogramBase
 from physt.binnings import BinningBase, BinningLike
+from physt.statistics import Statistics, INVALID_STATISTICS
 from physt.typing_aliases import ArrayLike, DtypeLike, Axis
 
 if TYPE_CHECKING:
@@ -20,42 +20,6 @@ if TYPE_CHECKING:
 
     Histogram1DType = TypeVar("Histogram1DType", bound="Histogram1D")
 
-
-@dataclass(frozen=True)
-class Statistics:
-    """Container of statistics accumulative data."""
-
-    sum: float = 0.0
-    sum2: float = 0.0
-    min: float = np.inf
-    max: float = -np.inf
-    weight: float = 0.0
-
-    def mean(self) -> float:
-        """Statistical mean of all values entered into histogram (weighted)."""
-        return self.sum / self.weight
-
-    def std(self) -> float:  # , ddof=0):
-        """Standard deviation of all values entered into histogram."""
-        # TODO: Add DOF
-        return np.sqrt(self.variance())
-
-    def variance(self) -> float:  # , ddof: int = 0) -> float:
-        """Statistical variance of all values entered into histogram.
-
-        This number is precise, because we keep the necessary data
-        separate from bin contents.
-        """
-        # TODO: Add DOF
-        # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
-        if self.weight > 0:
-            return (self.sum2 - self.sum ** 2 / self.weight) / self.weight
-        return np.nan
-
-
-INVALID_STATISTICS: Statistics = Statistics(
-    sum=np.nan, sum2=np.nan, min=np.nan, max=np.nan, weight=np.nan
-)
 
 # TODO: Fix I/O with binning
 
@@ -159,11 +123,6 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     The bins need not be consecutive. However, some functionality may not be available
     for non-consecutive bins (like keeping information about underflow and overflow).
 
-    Attributes
-    ----------
-    _stats : Optional[StatisticsDict]
-
-
     These are the basic attributes that can be used in the constructor (see there)
     Other attributes are dynamic.
     """
@@ -217,6 +176,12 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             self._missed = np.array(missed, dtype=self.dtype)
         else:
             self._missed = np.zeros(3, dtype=self.dtype)
+
+    def copy(self, *, include_frequencies: bool = True) -> "Histogram1D":
+        a_copy = super().copy(include_frequencies=include_frequencies)
+        if include_frequencies:
+            a_copy._stats = dataclasses.replace(self.statistics)
+        return a_copy
 
     @property
     def statistics(self) -> Statistics:
@@ -351,63 +316,46 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     def inner_missed(self, value):
         self._missed[2] = value
 
-    def mean(self) -> Optional[float]:
+    def mean(self) -> float:
         """Statistical mean of all values entered into histogram (weighted)
 
         This number is precise, because we keep the necessary data
         separate from bin contents.
         """
-        return self.statistics.mean
-        # if self._stats:  # TODO: should be true always?
-        #     if self.total > 0:
-        #         return self._stats["sum"] / self._stats["weight"]
-        #     return np.nan
-        # return None  # TODO: or error
+        # TODO: Warn
+        return self.statistics.mean()
 
-    def min(self) -> Optional[float]:
+    def min(self) -> float:
         """Minimum value used to construct the histogram.
 
         It may be outside of the bin range."""
+        # TODO: Warn
         return self.statistics.min
-        # if self._stats:
-        #     return self._stats["min"]
-        # return None
 
-    def max(self) -> Optional[float]:
+    def max(self) -> float:
         """Maximum value used to construct the histogram.
 
         It may be outside of the bin range."""
-        if self._stats:
-            return self._stats["max"]
-        return None
+        # TODO: Warn
+        return self.statistics.max
 
-    def std(self) -> Optional[float]:  # , ddof=0):
+    def std(self) -> float:  # , ddof=0):
         """Standard deviation of all values entered into histogram.
 
         This number is precise, because we keep the necessary data
         separate from bin contents.
         """
-        # TODO: Add DOF
-        variance = self.variance()
-        if variance is not None:
-            return np.sqrt(variance)
-        return None  # TODO: or error
+        # TODO: Warn
+        return self.statistics.std()
 
-    def variance(self) -> Optional[float]:  # , ddof: int = 0) -> float:
+    def variance(self) -> float:  # , ddof: int = 0) -> float:
         """Statistical variance of all values entered into histogram.
 
         This number is precise, because we keep the necessary data
         separate from bin contents.
         """
-        # TODO: Add DOF
-        # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
-        if self._stats:
-            if self.total > 0:
-                return (
-                    self._stats["sum2"] - self._stats["sum"] ** 2 / self._stats["weight"]
-                ) / self._stats["weight"]
-            return np.nan
-        return None
+        # TODO: Warn
+        return self.statistics.variance()
 
     def find_bin(self, value: float, axis: Optional[Axis] = None) -> Optional[int]:
         """Index of bin corresponding to a value.
@@ -466,9 +414,15 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         else:
             self._frequencies[ixbin] += weight
             self._errors2[ixbin] += weight ** 2
-            if self._stats:
-                self._stats["sum"] += weight * value
-                self._stats["sum2"] += weight * value ** 2
+            self._stats = dataclasses.replace(
+                self.statistics,
+                weight=self.statistics.weight + weight,
+                sum=self.statistics.sum + weight * value,
+                sum2=self.statistics.sum2 + weight * value ** 2,
+                min=min(self.statistics.min, value),
+                max=max(self.statistics.max, value),
+            )
+
         return ixbin
 
     def fill_n(
@@ -497,9 +451,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         if self.keep_missed:
             self.underflow += underflow
             self.overflow += overflow
-        if self._stats:
-            for key in self._stats:
-                self._stats[key] += stats.get(key, 0.0)
+        self._stats += stats
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):

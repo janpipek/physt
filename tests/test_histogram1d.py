@@ -4,6 +4,7 @@ import pytest
 from physt.config import config
 from physt.histogram1d import Histogram1D
 from physt import h1
+from physt.statistics import INVALID_STATISTICS
 
 
 @pytest.fixture
@@ -229,7 +230,7 @@ class TestArithmetics:
                     assert np.array_equal(result.frequencies, values + array_like)
                     assert np.array_equal(result.errors2, example.errors2 + array_like)
                     assert np.isnan(result.missed)
-                    assert result._stats is None
+                    assert result.statistics == INVALID_STATISTICS
 
                     example += array_like
                     assert example == result
@@ -300,7 +301,7 @@ class TestArithmetics:
                     assert np.array_equal(result.frequencies, values - array_like)
                     assert np.array_equal(result.errors2, example.errors2 + array_like)
                     assert np.isnan(result.missed)
-                    assert result._stats is None
+                    assert result.statistics == INVALID_STATISTICS
 
                     example -= array_like
                     assert example == result

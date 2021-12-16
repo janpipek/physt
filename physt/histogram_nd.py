@@ -61,9 +61,6 @@ class HistogramND(HistogramBase):
         # Missed values
         self._missed = np.array([missed], dtype=self.dtype)
 
-    # Not supported yet
-    _stats = None
-
     @property
     def bins(self) -> List[np.ndarray]:
         """List of bin matrices."""
