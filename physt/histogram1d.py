@@ -135,7 +135,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
 
     Attributes
     ----------
-    _stats : Optional[StaticDict]
+    _stats : Optional[StatisticsDict]
 
 
     These are the basic attributes that can be used in the constructor (see there)
@@ -192,7 +192,13 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         else:
             self._missed = np.zeros(3, dtype=self.dtype)
 
-    EMPTY_STATS: StatisticsDict = {"sum": 0.0, "sum2": 0.0, "min": np.nan, "max": np.nan}
+    EMPTY_STATS: StatisticsDict = {
+        "sum": 0.0,
+        "sum2": 0.0,
+        "min": np.nan,
+        "max": np.nan,
+        "weights": 0,
+    }
 
     @property
     def axis_name(self) -> str:
