@@ -543,7 +543,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             errors2: Optional[np.ndarray] = None
             underflow: float = 0.0
             overflow: float = 0.0
-            stats: Optional[StatisticsDict] = None
+            stats: Optional[Statistics] = None
         else:
             frequencies, errors2, underflow, overflow, stats = calculate_frequencies(
                 data=data,

@@ -96,6 +96,7 @@ class TestCopy:
         assert new is not example
         assert new.bins is not example.bins
         assert new.frequencies is not example.frequencies
+        assert new.statistics is not example.statistics
         assert new == example
 
     def test_copy_no_frequencies(self, example):
