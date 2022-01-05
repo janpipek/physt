@@ -716,7 +716,7 @@ def numpy_binning(
 
 @register_binning
 def human_binning(
-    data: Optional[np.ndarray] = None,
+    data: Optional[np.ndarray],
     bin_count: Optional[int] = None,
     *,
     kind: Optional[str] = None,
@@ -763,7 +763,7 @@ def human_binning(
 
 @register_binning
 def quantile_binning(
-    data: Optional[ArrayLike] = None,
+    data: Optional[np.ndarray],
     *,
     bin_count: Optional[int] = None,
     q: Optional[Sequence[int]] = None,
@@ -805,14 +805,14 @@ def quantile_binning(
 
 
 @register_binning
-def static_binning(data=None, bins=None, **kwargs) -> StaticBinning:
+def static_binning(data: Optional[np.ndarray], bins: ArrayLike, **kwargs) -> StaticBinning:
     """Construct static binning with whatever bins."""
     # TODO: Fail with no bins!
     return StaticBinning(bins=make_bin_array(bins), **kwargs)
 
 
 @register_binning
-def integer_binning(data=None, **kwargs) -> FixedWidthBinning:
+def integer_binning(data: Optional[np.ndarray], **kwargs) -> FixedWidthBinning:
     """Construct fixed-width binning schema with bins centered around integers.
 
     Parameters
@@ -835,7 +835,7 @@ def integer_binning(data=None, **kwargs) -> FixedWidthBinning:
 
 @register_binning
 def fixed_width_binning(
-    data=None,
+    data: Optional[np.ndarray],
     bin_width: Union[float, int] = 1,
     *,
     range: Optional[RangeTuple] = None,
@@ -870,7 +870,7 @@ def fixed_width_binning(
 
 @register_binning
 def exponential_binning(
-    data=None,
+    data: Optional[np.ndarray],
     bin_count: Optional[int] = None,
     *,
     range: Optional[RangeTuple] = None,
@@ -888,11 +888,15 @@ def exponential_binning(
     numpy.logspace - note that our range semantics is different
     """
     if bin_count is None:
+        if data is None:
+            raise ValueError("Cannot find optimum bin count without data.")
         bin_count = ideal_bin_count(data)
 
     if range:
         range = (np.log10(range[0]), np.log10(range[1]))
     else:
+        if data is None:
+            raise ValueError("Cannot guess the range without data.")
         range = (np.log10(data.min()), np.log10(data.max()))
     log_width = (range[1] - range[0]) / bin_count
     return ExponentialBinning(log_min=range[0], log_width=log_width, bin_count=bin_count, **kwargs)

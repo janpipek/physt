@@ -84,7 +84,6 @@ class ObjectWithBinning(ABC):
     @property
     def max_edge(self) -> float:
         """Right edge of the last bin."""
-        # TODO: Perh
         return self.bin_right_edges[-1]
 
     @property
