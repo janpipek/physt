@@ -5,7 +5,7 @@ black
 # Doc
 sphinx
 sphinx_rtd_theme
-sphinx-apidoc
+sphinxcontrib-apidoc
 nbsphinx
 pre-commit
 tox
