@@ -898,8 +898,8 @@ class HistogramBase(abc.ABC):
             self.errors2 = self.errors2 * scalar ** 2
             self._missed = self._missed * scalar
             if self._stats:
-                self._stats["sum"] *= other
-                self._stats["sum2"] *= other ** 2
+                self._stats["sum"] *= scalar
+                self._stats["sum2"] *= scalar ** 2
         elif config.free_arithmetics:  # Treat other as array-like
             array = np.asarray(other)
             self._coerce_dtype(array.dtype)

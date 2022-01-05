@@ -279,7 +279,7 @@ class BinningBase:
         """
         edges, mask = to_numpy_bins_with_mask(self.bins)
         if not self.includes_right_edge:
-            edges = np.concatenate([edges, [np.inf]])
+            edges = np.concatenate([edges, np.asarray([np.inf])])
         return edges, mask
 
     @property
@@ -788,6 +788,8 @@ def quantile_binning(
     -------
     StaticBinning
     """
+    if data is None:
+        raise ValueError("Cannot construct quantile binning without data.")
     if (bin_count is not None and q is not None) or (bin_count is None and q is None):
         raise ValueError("Exactly one of `bin_count` and `q` must be set.")
     if bin_count:
