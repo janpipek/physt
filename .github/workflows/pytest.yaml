@@ -1,9 +1,9 @@
-name: Python package
+name: Pytest
 
 on: [push]
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
     strategy:
@@ -12,12 +12,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
-      - name: Install tox and any other packages
-        run: pip install tox
-      - name: Run tox
-        # Run tox using the version of Python in `PATH`
-        run: tox -e py
+
+      - name: Install dependencies
+        run:  |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .[dev]
+
+      - name: Run pytest
+        run: pytest
