@@ -151,7 +151,6 @@ Rationale (for both): physt is dumb, but precise.
 - numpy
 - (optional) matplotlib - simple output
 - (optional) xarray - I/O
-- (optional) protobuf - I/O
 - (optional) uproot - I/O
 - (optional) astropy - additional binning algorithms
 - (optional) folium - map plotting
