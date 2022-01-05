@@ -1,8 +1,9 @@
-()
+(2022)
 --------
 - Fixed: asciiplotlib does not exist anymore => don't require it in all
 - Changed: Moved from Travis to Github Actions
 - Changed: Added pre-commit
+- Removed: Support for Python 3.6
 
 0.5.1 (21 May 2021)
 -------------------

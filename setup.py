@@ -48,7 +48,7 @@ options = dict(
     url=INFO["__url__"],
     package_data={"physt": ["examples/*.csv"]},
     install_requires=["numpy>=1.17", "packaging"],
-    python_requires="~=3.6",
+    python_requires="~=3.7",
     extras_require={
         "all": [
             "dask[array]",
