@@ -3,6 +3,8 @@ import abc
 import dataclasses
 import warnings
 from typing import (
+    ClassVar,
+    Collection,
     Dict,
     List,
     Optional,
@@ -27,6 +29,18 @@ if TYPE_CHECKING:
     import physt
 
     HistogramType = TypeVar("HistogramType", bound="HistogramBase")
+
+
+_FREQUENCY_SUPPORTED_DTYPES = [
+    np.int16,
+    np.int32,
+    np.int64,
+    np.float16,
+    np.float32,
+    np.float64,
+]
+if hasattr(np, "float128"):
+    _FREQUENCY_SUPPORTED_DTYPES.append(np.float128)
 
 
 class HistogramBase(abc.ABC):
@@ -160,15 +174,7 @@ class HistogramBase(abc.ABC):
     _errors2: np.ndarray
     _missed: np.ndarray
 
-    SUPPORTED_DTYPES = [
-        np.int16,
-        np.int32,
-        np.int64,
-        np.float16,
-        np.float32,
-        np.float64,
-        np.float128,
-    ]
+    SUPPORTED_DTYPES: ClassVar[Collection[np.dtype]] = tuple(_FREQUENCY_SUPPORTED_DTYPES)
 
     @property
     def default_axis_names(self) -> List[str]:

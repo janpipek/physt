@@ -435,9 +435,7 @@ class TestDtype:
         with pytest.raises(ValueError):
             hist = h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
 
-    @pytest.mark.parametrize(
-        "dtype", [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.float128]
-    )
+    @pytest.mark.parametrize("dtype", Histogram1D.SUPPORTED_DTYPES)
     @pytest.mark.parametrize(
         "values", [pytest.param([0, 1, 1], id="existing"), pytest.param(None, id="none")]
     )
