@@ -1,5 +1,6 @@
 mypy
 pylint
+pytest
 black
 
 # Doc
