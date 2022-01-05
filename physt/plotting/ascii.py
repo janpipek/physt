@@ -6,15 +6,8 @@ The plots are printed directly to standard output.
 import typing
 
 if typing.TYPE_CHECKING:
-    from physt.histogram_nd import Histogram2D
+    from physt.types import Histogram1D, Histogram2D
 
-try:
-    import asciiplotlib
-
-    ENABLE_ASCIIPLOTLIB = True
-except ImportError:
-    asciiplotlib = None
-    ENABLE_ASCIIPLOTLIB = False
 
 types: typing.Tuple[str, ...] = ("hbar",)
 
@@ -23,20 +16,13 @@ dims = {
 }
 
 
-def hbar(h1, width=80, show_values=False):
-    if ENABLE_ASCIIPLOTLIB:
-        data = h1.frequencies
-        edges = h1.numpy_bins
-        fig = asciiplotlib.figure()
-        fig.hist(data, edges, orientation="horizontal")
-        fig.show()
-    else:
-        data = (h1.normalize().frequencies * width).round().astype(int)
-        for i in range(h1.bin_count):
-            if show_values:
-                print("#" * data[i], h1.frequencies[i])
-            else:
-                print("#" * data[i])
+def hbar(h1: "Histogram1D", width: int = 80, show_values: bool = False) -> None:
+    data = (h1.normalize().frequencies * width).round().astype(int)
+    for i in range(h1.bin_count):
+        if show_values:
+            print("#" * data[i], h1.frequencies[i])
+        else:
+            print("#" * data[i])
 
 
 try:
@@ -45,7 +31,7 @@ try:
     SUPPORTED_CMAPS = ("Greys", "Greys_r")
     DEFAULT_CMAP = SUPPORTED_CMAPS[1]
 
-    def map(h2: "Histogram2D", **kwargs):
+    def map(h2: "Histogram2D", **kwargs) -> None:
         """Heat map.
 
         Note: Available only if xtermcolor present.

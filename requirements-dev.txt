@@ -8,3 +8,5 @@ sphinx_rtd_theme
 sphinx-apidoc
 nbsphinx
 pre-commit
+tox
+tox-conda

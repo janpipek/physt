@@ -1,7 +1,10 @@
-0.5.2 (?? Dec 2021)
--------------------
+0.5.2 (?? January 2022)
+-----------------------
 - Changed: Statistics are now computed from all values (more options for plot too)
+- Changed: Moved from Travis to Github Actions
+- Changed: Added pre-commit
 - Fixed: Sometimes, dtypes were not properly used
+- Fixed: asciiplotlib does not exist anymore => don't require it in all
 
 0.5.1 (21 May 2021)
 -------------------
