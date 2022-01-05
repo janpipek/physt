@@ -1,10 +1,9 @@
-name: Pytest
+name: Physt
 
 on: [push]
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -27,3 +26,25 @@ jobs:
 
       - name: Run pytest
         run: pytest
+
+  mypy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run:  |
+          python -m pip install --upgrade pip
+          pip install wheel
+          pip install -r requirements-dev.txt
+          pip install -e .[all]
+          mypy --install-types
+
+      - name: Run mypy
+        run: mypy physt
