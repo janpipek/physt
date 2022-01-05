@@ -1,6 +1,5 @@
 """HistogramBase - base for all histogram classes."""
 import abc
-import dataclasses
 import warnings
 from typing import (
     ClassVar,
@@ -13,6 +12,7 @@ from typing import (
     Any,
     Tuple,
     TYPE_CHECKING,
+    Type,
     TypeVar,
     cast,
     Union,
@@ -31,7 +31,8 @@ if TYPE_CHECKING:
     HistogramType = TypeVar("HistogramType", bound="HistogramBase")
 
 
-_FREQUENCY_SUPPORTED_DTYPES = [
+# Various platforms have different default floating point dtypes.
+_FREQUENCY_SUPPORTED_DTYPES: List[Type[np.number]] = [
     np.int16,
     np.int32,
     np.int64,
@@ -40,7 +41,7 @@ _FREQUENCY_SUPPORTED_DTYPES = [
     np.float64,
 ]
 if hasattr(np, "float128"):
-    _FREQUENCY_SUPPORTED_DTYPES.append(np.float128)
+    _FREQUENCY_SUPPORTED_DTYPES.append(np.float128)  # type: ignore
 
 
 class HistogramBase(abc.ABC):
@@ -174,7 +175,7 @@ class HistogramBase(abc.ABC):
     _errors2: np.ndarray
     _missed: np.ndarray
 
-    SUPPORTED_DTYPES: ClassVar[Collection[np.dtype]] = tuple(_FREQUENCY_SUPPORTED_DTYPES)
+    SUPPORTED_DTYPES: ClassVar[Collection[Type[np.number]]] = tuple(_FREQUENCY_SUPPORTED_DTYPES)
 
     @property
     def default_axis_names(self) -> List[str]:
