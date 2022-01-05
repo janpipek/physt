@@ -16,7 +16,7 @@ from physt.special_histograms import (
     spherical,
     spherical_surface,
 )
-from physt.typing_aliases import ArrayLike, DtypeLike
+from physt.typing_aliases import ArrayLike, DTypeLike
 
 
 def h1(
@@ -25,7 +25,7 @@ def h1(
     *,
     adaptive: bool = False,
     dropna: bool = True,
-    dtype: Optional[DtypeLike] = None,
+    dtype: Optional[DTypeLike] = None,
     weights: Optional[ArrayLike] = None,
     keep_missed: bool = True,
     name: Optional[str] = None,

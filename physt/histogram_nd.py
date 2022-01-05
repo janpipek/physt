@@ -7,7 +7,7 @@ import numpy as np
 
 from physt.histogram_base import HistogramBase, Axis
 from physt.binnings import BinningBase, BinningLike
-from physt.typing_aliases import ArrayLike, DtypeLike
+from physt.typing_aliases import ArrayLike, DTypeLike
 
 
 class HistogramND(HistogramBase):
@@ -526,7 +526,7 @@ def calculate_frequencies(
     binnings: Iterable[BinningBase],
     weights: Optional[ArrayLike] = None,
     *,
-    dtype: Optional[DtypeLike] = None,
+    dtype: Optional[DTypeLike] = None,
 ) -> Tuple[np.ndarray, np.ndarray, float]:
     ...
 
@@ -537,7 +537,7 @@ def calculate_frequencies(
     binnings: Iterable[BinningBase],
     weights: Optional[ArrayLike] = None,
     *,
-    dtype: Optional[DtypeLike] = None,
+    dtype: Optional[DTypeLike] = None,
 ) -> Tuple[None, None, float]:
     ...
 
@@ -547,7 +547,7 @@ def calculate_frequencies(
     binnings: Iterable[BinningBase],
     weights: Optional[ArrayLike] = None,
     *,
-    dtype: Optional[DtypeLike] = None,
+    dtype: Optional[DTypeLike] = None,
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float]:
     """ "Get frequencies and bin errors from the data (n-dimensional variant).
 

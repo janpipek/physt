@@ -19,7 +19,7 @@ import numpy as np
 
 from physt.binnings import as_binning, BinningLike, BinningBase
 from physt.config import config
-from physt.typing_aliases import Axis, ArrayLike, DtypeLike
+from physt.typing_aliases import Axis, ArrayLike, DTypeLike
 
 if TYPE_CHECKING:
     import physt
@@ -95,7 +95,7 @@ class HistogramBase(abc.ABC):
         errors2: Optional[ArrayLike] = None,
         *,
         axis_names: Optional[Iterable[str]] = None,
-        dtype: Optional[DtypeLike] = None,
+        dtype: Optional[DTypeLike] = None,
         keep_missed: bool = True,
         **kwargs,
     ):
@@ -278,10 +278,10 @@ class HistogramBase(abc.ABC):
         return self._dtype
 
     @dtype.setter
-    def dtype(self, value: DtypeLike) -> None:
+    def dtype(self, value: DTypeLike) -> None:
         self.set_dtype(value)
 
-    def set_dtype(self, value: DtypeLike, *, check: bool = True) -> None:
+    def set_dtype(self, value: DTypeLike, *, check: bool = True) -> None:
         """Change data type of the bin contents.
 
         Allowed conversions:
@@ -318,7 +318,7 @@ class HistogramBase(abc.ABC):
         if self._missed is not None:
             self._missed = self._missed.astype(value)
 
-    def _coerce_dtype(self, other_dtype: DtypeLike) -> None:
+    def _coerce_dtype(self, other_dtype: DTypeLike) -> None:
         """Possibly change the bin content type to allow correct operations with other operand.
 
         Parameters

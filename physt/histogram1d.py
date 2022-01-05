@@ -7,7 +7,7 @@ import numpy as np
 from physt import bin_utils
 from physt.histogram_base import HistogramBase
 from physt.binnings import BinningBase, BinningLike
-from physt.typing_aliases import ArrayLike, DtypeLike, Axis
+from physt.typing_aliases import ArrayLike, DTypeLike, Axis
 
 if TYPE_CHECKING:
     from typing import TypeVar
@@ -524,7 +524,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         *,
         validate_bins: bool = True,
         already_sorted: bool = False,
-        dtype: Optional[DtypeLike] = None,
+        dtype: Optional[DTypeLike] = None,
         **kwargs,
     ) -> "Histogram1DType":
         """Construct the histogram from values and bins."""
@@ -554,7 +554,7 @@ def calculate_frequencies(
     *,
     validate_bins: bool = True,
     already_sorted: bool = False,
-    dtype: Optional[DtypeLike] = None,
+    dtype: Optional[DTypeLike] = None,
 ) -> Tuple[np.ndarray, np.ndarray, float, float, dict]:
     """Get frequencies and bin errors from the data.
 

@@ -47,7 +47,7 @@ options = dict(
     author_email=INFO["__author_email__"],
     url=INFO["__url__"],
     package_data={"physt": ["examples/*.csv"]},
-    install_requires=["numpy>=1.17", "packaging"],
+    install_requires=["numpy>=1.20", "packaging"],
     python_requires="~=3.7",
     extras_require={
         "all": [
