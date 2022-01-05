@@ -38,7 +38,7 @@ def h3x3(bins0to3, a3x3) -> Histogram2D:
 class TestCalculateFrequencies:
     def test_simple(self):
         bins = [[0, 1, 2], [0, 1, 2]]
-        schemas = [binnings.static_binning(None, np.asarray(bs)) for bs in bins]
+        schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
         frequencies, errors2, missing = histogram_nd.calculate_frequencies(vals, binnings=schemas)
         assert np.array_equal([[1, 3], [0, 1]], frequencies)
         assert missing == 2
@@ -46,7 +46,7 @@ class TestCalculateFrequencies:
 
     def test_gap(self):
         bins = [[[-1, 0], [1, 2]], [[-2, -1], [1, 2]]]
-        schemas = [binnings.static_binning(None, np.asarray(bs)) for bs in bins]
+        schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
         frequencies, errors2, missing = histogram_nd.calculate_frequencies(vals, binnings=schemas)
         assert np.array_equal([[0, 0], [0, 1]], frequencies)
         assert missing == 6
@@ -55,7 +55,7 @@ class TestCalculateFrequencies:
     def test_errors(self):
         bins = [[[-1, 0], [1, 2]], [[-2, -1], [1, 2]]]
         weights = [2, 1, 1, 1, 1, 2, 1]
-        schemas = [binnings.static_binning(None, np.asarray(bs)) for bs in bins]
+        schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
         frequencies, errors2, missing = histogram_nd.calculate_frequencies(
             vals, binnings=schemas, weights=weights
         )

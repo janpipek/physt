@@ -682,7 +682,10 @@ class ExponentialBinning(BinningBase):
 
 @register_binning
 def numpy_binning(
-    data: Optional[np.ndarray], bin_count: int = 10, range: Optional[RangeTuple] = None, **kwargs
+    data: Optional[np.ndarray] = None,
+    bin_count: int = 10,
+    range: Optional[RangeTuple] = None,
+    **kwargs,
 ) -> NumpyBinning:
     """Construct binning schema compatible with numpy.histogram together with int argument
 
@@ -731,7 +734,7 @@ def human_binning(
 
     Parameters
     ----------
-    bin_count: Number of bins
+    bin_count: Starting number of bins (the result will be close)
     kind: Optional value "time" works in h,m,s scale instead of seconds
     range: Tuple of (min, max)
     min_bin_width: If present, the bin cannot be narrower than this.
@@ -805,14 +808,16 @@ def quantile_binning(
 
 
 @register_binning
-def static_binning(data: Optional[np.ndarray], bins: ArrayLike, **kwargs) -> StaticBinning:
+def static_binning(
+    data: Optional[np.ndarray] = None, *, bins: ArrayLike, **kwargs
+) -> StaticBinning:
     """Construct static binning with whatever bins."""
     # TODO: Fail with no bins!
     return StaticBinning(bins=make_bin_array(bins), **kwargs)
 
 
 @register_binning
-def integer_binning(data: Optional[np.ndarray], **kwargs) -> FixedWidthBinning:
+def integer_binning(data: Optional[np.ndarray] = None, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width binning schema with bins centered around integers.
 
     Parameters
@@ -835,7 +840,7 @@ def integer_binning(data: Optional[np.ndarray], **kwargs) -> FixedWidthBinning:
 
 @register_binning
 def fixed_width_binning(
-    data: Optional[np.ndarray],
+    data: Optional[np.ndarray] = None,
     bin_width: Union[float, int] = 1,
     *,
     range: Optional[RangeTuple] = None,
@@ -870,7 +875,7 @@ def fixed_width_binning(
 
 @register_binning
 def exponential_binning(
-    data: Optional[np.ndarray],
+    data: Optional[np.ndarray] = None,
     bin_count: Optional[int] = None,
     *,
     range: Optional[RangeTuple] = None,
@@ -958,7 +963,7 @@ def calculate_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> Binn
             warnings.warn(
                 "Using `list` for bins not recommended, it has different meaning with N-D histograms."
             )
-        binning = static_binning(array, _, **kwargs)
+        binning = static_binning(array, bins=_, **kwargs)
     else:
         raise ValueError(f"Binning {_} not understood.")
     return binning
