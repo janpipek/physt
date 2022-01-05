@@ -1,7 +1,6 @@
 """Definitions for type hints."""
-from typing import Iterable, Tuple, Type, Union
+from typing import Tuple, Union
 
-from numpy import ndarray, dtype
 from numpy.typing import ArrayLike, DTypeLike
 
 RangeTuple = Tuple[float, float]

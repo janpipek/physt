@@ -5,7 +5,7 @@ for numerical computing, histogramming, etc.
 """
 import warnings
 from functools import wraps
-from typing import Any, Dict, Tuple
+from typing import Any, Callable, Dict, Tuple
 
 
 def all_subclasses(cls: type) -> Tuple[type, ...]:
@@ -55,7 +55,7 @@ def pop_many(a_dict: Dict[str, Any], *args: str, **kwargs) -> Dict[str, Any]:
     return result
 
 
-def deprecation_alias(f, deprecated_name: str):
+def deprecation_alias(f: Callable, deprecated_name: str) -> Callable:
     """Provide a deprecated copy of a function.
 
     Parameters

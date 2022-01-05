@@ -5,6 +5,7 @@ import pytest
 
 from physt.binnings import FixedWidthBinning
 from physt.examples import normal_h2
+from physt.statistics import Statistics
 from physt.types import HistogramBase, Histogram1D, Histogram2D, HistogramND
 from physt.typing_aliases import ArrayLike
 
@@ -49,13 +50,13 @@ def simple_h1(simple_edges) -> Histogram1D:
         dtype="int64",
         name="Name",
         title="Title",
-        stats={
-            "min": 0.5,
-            "max": 2.87,
-            "sum": 52,
-            "sum2": 71,
-            "weight": 40,  # a bit over 38
-        },
+        stats=Statistics(
+            min=0.5,
+            max=2.87,
+            sum=52,
+            sum2=71,
+            weight=40,  # a bit over 38
+        ),
     )
 
 

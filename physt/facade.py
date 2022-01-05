@@ -261,8 +261,6 @@ def collection(data, bins=10, **kwargs) -> HistogramCollection:
     return HistogramCollection.multi_h1(data, bins, **kwargs)
 
 
-del deprecation_alias
-
 __all__ = [
     "azimuthal",
     "collection",
