@@ -46,5 +46,8 @@ jobs:
           pip install -e .[all]
 
 
-      - name: Run mypy
+      - name: Run mypy (on source)
         run: mypy physt
+
+      - name: Run mypy (on tests)
+        run: mypy tests
