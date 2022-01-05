@@ -44,7 +44,6 @@ jobs:
           pip install wheel
           pip install -r requirements-dev.txt
           pip install -e .[all]
-          mypy --install-types
 
       - name: Run mypy
-        run: mypy physt
+        run: mypy --install-types physt
