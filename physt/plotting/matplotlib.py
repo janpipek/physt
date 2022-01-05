@@ -707,9 +707,9 @@ def surface_map(
     norm, cmap_data = _get_cmap_data(data, kwargs)
     colors = cmap(cmap_data)
 
-    xs = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
-    ys = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
-    zs = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
+    xs: np.ndarray = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
+    ys: np.ndarray = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
+    zs: np.ndarray = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
 
     edges_x = hist.numpy_bins[0]
     edges_y = hist.numpy_bins[1]

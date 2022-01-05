@@ -251,7 +251,7 @@ class HistogramBase(abc.ABC):
         return len(self._binnings)
 
     @classmethod
-    def _eval_dtype(cls, value: DtypeLike) -> Tuple[np.dtype, np.iinfo]:
+    def _eval_dtype(cls, value: DtypeLike) -> Tuple[np.dtype, Union[np.iinfo, np.finfo]]:
         """Convert dtype into canonical form, check its applicability and return info.
 
         Parameters
@@ -265,7 +265,7 @@ class HistogramBase(abc.ABC):
         """
         dtype: np.dtype = np.dtype(value)
         if dtype.kind in "iu":
-            type_info = np.iinfo(dtype)
+            type_info: Union[np.iinfo, np.finfo] = np.iinfo(dtype)
         elif dtype.kind == "f":
             type_info = np.finfo(dtype)
         else:
