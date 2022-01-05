@@ -2,7 +2,7 @@
 #title Edep in absorber
 #dimension 1
 #axis fixed 100 0 800
-#annotation axis_x.title 
+#annotation axis_x.title
 #bin_number 102
 entries,Sw,Sw2,Sxw0,Sx2w0
 0,0,0,0,0

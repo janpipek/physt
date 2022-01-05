@@ -30,7 +30,7 @@ xscale : str (optional)
 yscale : str (optional)
     If "log", y axis will be scaled logarithmically
 xlim : tuple | "auto" | "keep"
-    
+
 ylim : tuple | "auto" | "keep"
 
 invert_y : bool
@@ -39,13 +39,13 @@ ticks : {"center", "edge"}, optional
     If set, each bin will have a tick (either central or edge)
 alpha : float (optional)
     The alpha of the whole plot (default: 1)
-cmap : str or list 
+cmap : str or list
     Name of the palette or list of colors or something that the
     respective backend can interpret as colourmap.
 cmap_normalize : {"log"}, optional
 
-cmap_min : 
-    
+cmap_min :
+
 cmap_max :
 
 show_values : bool
@@ -54,9 +54,9 @@ value_format : str or Callable
     How bin values (if to be displayed) are rendered.
 zorder : int (optional)
 
-text_color : 
-text_alpha : 
-text_* : 
+text_color :
+text_alpha :
+text_* :
     Other options that are passed to the formatting of values without the prefix
 
 1D histograms
@@ -74,7 +74,7 @@ show_stats : bool
 ~~~~~~~~~~~
 show_zero : bool
     Whether to show bins that have 0 frequency
-grid_color : 
+grid_color :
     Colour of line between bins
 show_colorbar : bool
     Whether to display a colorbar next to the plot itself

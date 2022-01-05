@@ -4,8 +4,8 @@
 #axis fixed 50 -1000 1000
 #axis fixed 50 -300 300
 #planes_Sxyw 615843
-#annotation axis_x.title 
-#annotation axis_y.title 
+#annotation axis_x.title
+#annotation axis_y.title
 #bin_number 2704
 entries,Sw,Sw2,Sxw0,Sx2w0,Sxw1,Sx2w1
 0,0,0,0,0,0,0
