@@ -413,7 +413,7 @@ class TestFill:
 
     def test_fill_dtype(self):
         h = Histogram1D([[0, 1], [1, 2], [2, 3]], [1, 2, 3])
-        assert h.dtype == np.int64
+        assert h.dtype == np.int_
         assert np.allclose(h.frequencies, [1, 2, 3])
 
         h.fill(1.3, weight=2.2)
@@ -424,7 +424,7 @@ class TestFill:
 class TestDtype:
     def test_simple(self, values):
         hist = h1(values)
-        assert hist.dtype == np.int64
+        assert hist.dtype == np.int_
 
     def test_with_weights(self, values):
         hist = h1(values, weights=[1, 2, 2.1, 3.2])

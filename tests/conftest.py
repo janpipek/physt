@@ -46,6 +46,7 @@ def simple_h1(simple_edges) -> Histogram1D:
         binning=simple_edges,
         frequencies=frequencies,
         axis_name="axis_x",
+        dtype="int64",
         name="Name",
         title="Title",
         stats={

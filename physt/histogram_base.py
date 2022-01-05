@@ -34,13 +34,14 @@ if TYPE_CHECKING:
 # Various platforms have different default floating point dtypes.
 _FREQUENCY_SUPPORTED_DTYPES: List[Type[np.number]] = [
     np.int16,
-    np.int32,
-    np.int64,
+    np.int32,  # Default in Windows
+    np.int64,  # Default in 64-bit Linux
     np.float16,
     np.float32,
     np.float64,
 ]
 if hasattr(np, "float128"):
+    # Not present in Windows
     _FREQUENCY_SUPPORTED_DTYPES.append(np.float128)  # type: ignore
 
 
