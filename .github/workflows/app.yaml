@@ -45,5 +45,6 @@ jobs:
           pip install -r requirements-dev.txt
           pip install -e .[all]
 
+
       - name: Run mypy
-        run: mypy --install-types physt
+        run: mypy physt
