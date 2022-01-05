@@ -147,8 +147,8 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
-- Python 3.6+
-- numpy
+- Python 3.7+
+- Numpy 1.20+
 - (optional) matplotlib - simple output
 - (optional) xarray - I/O
 - (optional) uproot - I/O
@@ -156,7 +156,7 @@ Rationale (for both): physt is dumb, but precise.
 - (optional) folium - map plotting
 - (optional) vega3 - for vega in-line in IPython notebook (note that to generate vega JSON, this is not necessary)
 - (optional) xtermcolot - for ASCII color maps
-- (testing) py.test, pandas
+- (testing) pytest, pandas
 - (docs) sphinx, sphinx_rtd_theme, ipython
 
 ## Publicity

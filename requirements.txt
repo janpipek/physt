@@ -1,2 +1,2 @@
-numpy>=1.17
 typing_extensions
+numpy>=1.20

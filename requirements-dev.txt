@@ -1,7 +1,10 @@
-mypy
 pylint
 pytest
 black
+
+# Mypy
+mypy
+types-setuptools
 
 # Doc
 sphinx
