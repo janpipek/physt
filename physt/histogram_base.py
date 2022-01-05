@@ -889,13 +889,14 @@ class HistogramBase(abc.ABC):
             raise TypeError("Multiplication of two histograms is not supported.")
         elif np.isscalar(other):
             array = np.asarray(other)
+            scalar = array.item()
             try:
                 self._coerce_dtype(array.dtype)
             except ValueError as v:
                 raise TypeError(str(v)) from v
-            self.frequencies = self.frequencies * other
-            self.errors2 = self.errors2 * other ** 2
-            self._missed = self._missed * other
+            self.frequencies = self.frequencies * scalar
+            self.errors2 = self.errors2 * scalar ** 2
+            self._missed = self._missed * scalar
             if self._stats:
                 self._stats["sum"] *= other
                 self._stats["sum2"] *= other ** 2

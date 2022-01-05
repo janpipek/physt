@@ -151,7 +151,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         """Create a collection from multiple datasets."""
         from physt.binnings import calculate_bins
 
-        mega_values = np.concatenate(list(a_dict.values()))
+        mega_values: np.ndarray = np.concatenate(list(a_dict.values()))
         binning = calculate_bins(mega_values, bins, **kwargs)
 
         title = kwargs.pop("title", None)
