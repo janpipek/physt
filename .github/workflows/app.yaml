@@ -4,10 +4,19 @@ on: [push]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
+        os: ["ubuntu-latest"]
         python: ["3.7", "3.8", "3.9", "3.10"]
+        include:
+          - os: windows-latest
+            python: 3.9
+
+          - os: macos-latest
+            python: 3.9
+
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
