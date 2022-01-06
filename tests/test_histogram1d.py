@@ -413,7 +413,7 @@ class TestFill:
 
     def test_fill_dtype(self):
         h = Histogram1D([[0, 1], [1, 2], [2, 3]], [1, 2, 3])
-        assert h.dtype == np.int64
+        assert h.dtype == np.int_
         assert np.allclose(h.frequencies, [1, 2, 3])
 
         h.fill(1.3, weight=2.2)
@@ -424,7 +424,7 @@ class TestFill:
 class TestDtype:
     def test_simple(self, values):
         hist = h1(values)
-        assert hist.dtype == np.int64
+        assert hist.dtype == np.int_
 
     def test_with_weights(self, values):
         hist = h1(values, weights=[1, 2, 2.1, 3.2])
@@ -435,9 +435,7 @@ class TestDtype:
         with pytest.raises(ValueError):
             hist = h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
 
-    @pytest.mark.parametrize(
-        "dtype", [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.float128]
-    )
+    @pytest.mark.parametrize("dtype", Histogram1D.SUPPORTED_DTYPES)
     @pytest.mark.parametrize(
         "values", [pytest.param([0, 1, 1], id="existing"), pytest.param(None, id="none")]
     )

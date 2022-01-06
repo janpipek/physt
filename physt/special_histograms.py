@@ -570,12 +570,6 @@ def spherical_surface(
     if "range" in kwargs:
         raise ValueError("Please, use `theta_range` and `phi_range` arguments instead of `range`")
 
-    if transformed_data is not None:
-        if not transformed and radius is None:
-            # TODO: Do we really want this?
-            data = np.asarray(data)
-            radius = np.hypot(np.hypot(data[:, 0], data[:, 1]), data[:, 2])
-
     if radius is None:
         radius = 1
 

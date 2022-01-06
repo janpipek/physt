@@ -1,18 +1,12 @@
 import contextlib
+import contextvars
 import os
-import sys
-
-if sys.version_info >= (3, 7):
-    _USES_CONTEXT_VARS = True
-    import contextvars
-else:
-    _USES_CONTEXT_VARS = False
 
 
 class _Config:
     """Main configuration singleton object.
 
-    In Python 3.7+, it uses contextvars to enable async/thread-safe.
+    It uses contextvars to enable async/thread-safe.
     """
 
     _instance = None
@@ -24,40 +18,24 @@ class _Config:
         raise ValueError("Config is a singleton object.")
 
     def _make_var(self, name, default):
-        if _USES_CONTEXT_VARS:
-            var = contextvars.ContextVar(name, default=default)
-        else:
-            var = default
+        var = contextvars.ContextVar(name, default=default)
         setattr(self, name, var)
 
     def _get_value(self, name):
         var = getattr(self, name)
-        if _USES_CONTEXT_VARS:
-            return var.get()
-        return var
+        return var.get()
 
     def _set_value(self, name, value) -> None:
-        if _USES_CONTEXT_VARS:
-            var = getattr(self, name)
-            return var.set(value)
-        else:
-            setattr(self, name, value)
+        var = getattr(self, name)
+        return var.set(value)
 
     @contextlib.contextmanager
     def _change_value(self, name, value):
-        if _USES_CONTEXT_VARS:
-            token = getattr(self, name).set(value)
-            try:
-                yield
-            finally:
-                getattr(self, name).reset(token)
-        else:
-            original_value = getattr(self, name)
-            try:
-                setattr(self, name, value)
-                yield
-            finally:
-                setattr(self, name, original_value)
+        token = getattr(self, name).set(value)
+        try:
+            yield
+        finally:
+            getattr(self, name).reset(token)
 
     def __init__(self):
         self._make_var("_free_arithmetics", os.environ.get("PHYST_FREE_ARITHMETICS", "0") == "1")
@@ -80,4 +58,5 @@ class _Config:
 
 config = _Config()
 
-del os
+
+__all__ = ["config"]

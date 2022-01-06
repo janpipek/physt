@@ -619,7 +619,6 @@ def globe_map(
     ax.set_xlim(-1.1, 1.1)
     ax.set_ylim(-1.1, 1.1)
     ax.set_zlim(-1.1, 1.1)
-    return ax
 
 
 @register(2, use_3d=True)
@@ -629,7 +628,7 @@ def cylinder_map(
     *,
     show_zero: bool = True,
     **kwargs,
-):
+) -> None:
     """Heat map plotted on the surface of a cylinder."""
     data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
 
@@ -676,7 +675,7 @@ def surface_map(
     y=(lambda x, y: y),
     z=(lambda x, y: 0),
     **kwargs,
-):
+) -> None:
     """Coloured-rectangle plot of 2D histogram, placed on an arbitrary surface.
 
     Each bin is mapped to a rectangle in 3D space using the x,y,z functions.
@@ -707,9 +706,9 @@ def surface_map(
     norm, cmap_data = _get_cmap_data(data, kwargs)
     colors = cmap(cmap_data)
 
-    xs = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
-    ys = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
-    zs = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
+    xs: np.ndarray = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
+    ys: np.ndarray = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
+    zs: np.ndarray = np.ndarray((hist.shape[0] + 1, hist.shape[1] + 1), dtype=float)
 
     edges_x = hist.numpy_bins[0]
     edges_y = hist.numpy_bins[1]
@@ -741,10 +740,6 @@ def surface_map(
     ax.set_xlim(xs.min(), xs.max())
     ax.set_ylim(ys.min(), ys.max())
     ax.set_zlim(zs.min(), zs.max())
-
-    # ax.plot_surface(x, y, z, rstride=hist.shape[0], color="b")
-
-    return ax
 
 
 def pair_bars(
@@ -906,7 +901,7 @@ def _get_alpha_data(data: np.ndarray, kwargs) -> np.ndarray:
     return alpha
 
 
-def _add_labels(ax: Axes, h: Union[Histogram1D, Histogram2D], kwargs: dict):
+def _add_labels(ax: Axes, h: Union[Histogram1D, Histogram2D], kwargs: dict) -> None:
     """Add axis and plot labels.
 
     TODO: Document kwargs
@@ -924,7 +919,7 @@ def _add_labels(ax: Axes, h: Union[Histogram1D, Histogram2D], kwargs: dict):
     ax.get_figure().tight_layout()
 
 
-def _add_values(ax: Axes, h1: Histogram1D, data, *, value_format=str, **kwargs):
+def _add_values(ax: Axes, h1: Histogram1D, data, *, value_format=str, **kwargs) -> None:
     """Show values next to each bin in a 1D plot.
 
     Parameters
@@ -947,7 +942,9 @@ def _add_values(ax: Axes, h1: Histogram1D, data, *, value_format=str, **kwargs):
         ax.text(x, y, str(value_format(y)), **text_kwargs)
 
 
-def _add_colorbar(ax: Axes, cmap: colors.Colormap, cmap_data: np.ndarray, norm: colors.Normalize):
+def _add_colorbar(
+    ax: Axes, cmap: colors.Colormap, cmap_data: np.ndarray, norm: colors.Normalize
+) -> None:
     """Show a colorbar right of the plot."""
     fig = ax.get_figure()
     mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
@@ -955,7 +952,9 @@ def _add_colorbar(ax: Axes, cmap: colors.Colormap, cmap_data: np.ndarray, norm: 
     fig.colorbar(mappable, ax=ax)
 
 
-def _add_stats_box(h1: Histogram1D, ax: Axes, stats: Union[str, bool, Collection[str]] = "all"):
+def _add_stats_box(
+    h1: Histogram1D, ax: Axes, stats: Union[str, bool, Collection[str]] = "all"
+) -> None:
     """Insert a small legend-like box with statistical information.
 
     Parameters
@@ -1026,7 +1025,9 @@ def _add_stats_box(h1: Histogram1D, ax: Axes, stats: Union[str, bool, Collection
     )
 
 
-def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarray, kwargs: dict):
+def _apply_xy_lims(
+    ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarray, kwargs: dict
+) -> None:
     """Apply axis limits and scales from kwargs.
 
     Note: if exponential binning is used, the scale defaults to "log"
@@ -1122,7 +1123,7 @@ def _apply_xy_lims(ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarra
         ax.set_yscale(yscale)
 
 
-def _add_ticks(ax: Axes, h1: Histogram1D, kwargs: dict):
+def _add_ticks(ax: Axes, h1: Histogram1D, kwargs: dict) -> None:
     """Customize ticks for an axis (1D histogram).
 
     Parameters

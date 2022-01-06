@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import dataclasses
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -53,11 +53,12 @@ class Statistics:
     def __mul__(self, other: Any) -> "Statistics":
         if not np.isscalar(other):
             return INVALID_STATISTICS
+        other_scalar = cast(float, other)
         return dataclasses.replace(
             self,
-            sum=self.sum * other,
-            sum2=self.sum2 * other ** 2,
-            weight=self.weight * other,
+            sum=self.sum * other_scalar,
+            sum2=self.sum2 * other_scalar ** 2,
+            weight=self.weight * other_scalar,
         )
 
 

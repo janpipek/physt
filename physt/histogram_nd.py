@@ -1,13 +1,13 @@
 """Multi-dimensional histograms."""
 import warnings
 from numbers import Number
-from typing import Optional, List, Any, Tuple, Union, Iterable, cast, overload
+from typing import Optional, List, Any, Sequence, Tuple, Union, Iterable, cast, overload
 
 import numpy as np
 
 from physt.histogram_base import HistogramBase, Axis
 from physt.binnings import BinningBase, BinningLike
-from physt.typing_aliases import ArrayLike, DtypeLike
+from physt.typing_aliases import ArrayLike, DTypeLike
 
 
 class HistogramND(HistogramBase):
@@ -159,7 +159,17 @@ class HistogramND(HistogramBase):
 
     # Missing: cumulative_frequencies - does it make sense?
 
-    def get_bin_widths(self, axis: Optional[Axis] = None) -> np.ndarray:  # TODO: -> Base ?
+    @overload
+    def get_bin_widths(self, axis: Axis) -> np.ndarray:
+        ...
+
+    @overload
+    def get_bin_widths(self, axis: None = ...) -> Sequence[np.ndarray]:
+        ...
+
+    def get_bin_widths(
+        self, axis: Optional[Axis] = None
+    ) -> Union[np.ndarray, Sequence[np.ndarray]]:  # TODO: -> Base ?
         if axis is not None:
             axis = self._get_axis(axis)
             return self.get_bin_right_edges(axis) - self.get_bin_left_edges(axis)
@@ -184,7 +194,15 @@ class HistogramND(HistogramBase):
         """
         return float(np.sum(self.bin_sizes))
 
-    def get_bin_edges(self, axis: Optional[Axis] = None) -> np.ndarray:
+    @overload
+    def get_bin_edges(self, axis: Axis) -> np.ndarray:
+        ...
+
+    @overload
+    def get_bin_edges(self, axis: None = ...) -> Sequence[np.ndarray]:
+        ...
+
+    def get_bin_edges(self, axis: Optional[Axis] = None) -> Union[np.ndarray, Sequence[np.ndarray]]:
         if axis is not None:
             axis = self._get_axis(axis)
             return self.edges[self._get_axis(axis)]
@@ -192,21 +210,51 @@ class HistogramND(HistogramBase):
             edges = [self.get_bin_edges(i) for i in range(self.ndim)]
             return np.meshgrid(*edges, indexing="ij")
 
-    def get_bin_left_edges(self, axis: Optional[Axis] = None) -> np.ndarray:
+    @overload
+    def get_bin_left_edges(self, axis: Axis) -> np.ndarray:
+        ...
+
+    @overload
+    def get_bin_left_edges(self, axis: None = ...) -> Sequence[np.ndarray]:
+        ...
+
+    def get_bin_left_edges(
+        self, axis: Optional[Axis] = None
+    ) -> Union[np.ndarray, Sequence[np.ndarray]]:
         if axis is not None:
             axis = self._get_axis(axis)
             return self.bins[axis][:, 0]
         edges = [self.get_bin_left_edges(i) for i in range(self.ndim)]
         return np.meshgrid(*edges, indexing="ij")
 
-    def get_bin_right_edges(self, axis: Optional[Axis] = None) -> np.ndarray:
+    @overload
+    def get_bin_right_edges(self, axis: Axis) -> np.ndarray:
+        ...
+
+    @overload
+    def get_bin_right_edges(self, axis: None = ...) -> Sequence[np.ndarray]:
+        ...
+
+    def get_bin_right_edges(
+        self, axis: Optional[Axis] = None
+    ) -> Union[np.ndarray, Sequence[np.ndarray]]:
         if axis is not None:
             axis = self._get_axis(axis)
             return self.bins[axis][:, 1]
         edges = [self.get_bin_right_edges(i) for i in range(self.ndim)]
         return np.meshgrid(*edges, indexing="ij")
 
-    def get_bin_centers(self, axis: Optional[Axis] = None) -> np.ndarray:
+    @overload
+    def get_bin_centers(self, axis: Axis) -> np.ndarray:
+        ...
+
+    @overload
+    def get_bin_centers(self, axis: None = ...) -> Sequence[np.ndarray]:
+        ...
+
+    def get_bin_centers(
+        self, axis: Optional[Axis] = None
+    ) -> Union[np.ndarray, Sequence[np.ndarray]]:
         if axis is not None:
             axis = self._get_axis(axis)
             return (self.get_bin_right_edges(axis) + self.get_bin_left_edges(axis)) / 2
@@ -236,7 +284,7 @@ class HistogramND(HistogramBase):
         # TODO: Support multiple values?
         if axis is not None:
             if not isinstance(value, Number):
-                raise TypeError(f"Number expected: {value}")
+                raise TypeError(f"Number expected: {value!r}")
             value_scalar = cast(float, value)  # TODO: Does that work with scalar?
             axis = self._get_axis(axis)
             ixbin = np.searchsorted(self.get_bin_left_edges(axis), value_scalar, side="right")
@@ -255,7 +303,7 @@ class HistogramND(HistogramBase):
 
         else:
             if np.isscalar(value):
-                raise TypeError(f"Array expected: {value}")
+                raise TypeError(f"Array expected: {value!r}")
             value_array = np.asarray(value)
             if value_array.shape != (self.ndim,):
                 raise ValueError(f"Wrong shape: {value_array.shape}, expected: ({self.ndim},)")
@@ -266,7 +314,7 @@ class HistogramND(HistogramBase):
                 return None
             return ixbins
 
-    def fill(self, value: ArrayLike, weight=1, **kwargs):
+    def fill(self, value: ArrayLike, weight: float = 1, **kwargs):
         self._coerce_dtype(type(weight))
         value_array = np.asarray(value)
         for i, binning in enumerate(self._binnings):
@@ -523,7 +571,7 @@ def calculate_frequencies(
     binnings: Iterable[BinningBase],
     weights: Optional[ArrayLike] = None,
     *,
-    dtype: Optional[DtypeLike] = None,
+    dtype: Optional[DTypeLike] = None,
 ) -> Tuple[np.ndarray, np.ndarray, float]:
     ...
 
@@ -534,7 +582,7 @@ def calculate_frequencies(
     binnings: Iterable[BinningBase],
     weights: Optional[ArrayLike] = None,
     *,
-    dtype: Optional[DtypeLike] = None,
+    dtype: Optional[DTypeLike] = None,
 ) -> Tuple[None, None, float]:
     ...
 
@@ -544,7 +592,7 @@ def calculate_frequencies(
     binnings: Iterable[BinningBase],
     weights: Optional[ArrayLike] = None,
     *,
-    dtype: Optional[DtypeLike] = None,
+    dtype: Optional[DTypeLike] = None,
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float]:
     """ "Get frequencies and bin errors from the data (n-dimensional variant).
 

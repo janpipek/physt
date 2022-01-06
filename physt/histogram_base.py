@@ -1,8 +1,9 @@
 """HistogramBase - base for all histogram classes."""
 import abc
-import dataclasses
 import warnings
 from typing import (
+    ClassVar,
+    Collection,
     Dict,
     List,
     Optional,
@@ -11,6 +12,7 @@ from typing import (
     Any,
     Tuple,
     TYPE_CHECKING,
+    Type,
     TypeVar,
     cast,
     Union,
@@ -21,12 +23,26 @@ import numpy as np
 from physt.binnings import as_binning, BinningLike, BinningBase
 from physt.config import config
 from physt.statistics import INVALID_STATISTICS
-from physt.typing_aliases import Axis, ArrayLike, DtypeLike
+from physt.typing_aliases import Axis, ArrayLike, DTypeLike
 
 if TYPE_CHECKING:
     import physt
 
     HistogramType = TypeVar("HistogramType", bound="HistogramBase")
+
+
+# Various platforms have different default floating point dtypes.
+_FREQUENCY_SUPPORTED_DTYPES: List[Type[np.number]] = [
+    np.int16,
+    np.int32,  # Default in Windows
+    np.int64,  # Default in 64-bit Linux
+    np.float16,
+    np.float32,
+    np.float64,
+]
+if hasattr(np, "float128"):
+    # Not present in Windows
+    _FREQUENCY_SUPPORTED_DTYPES.append(np.float128)  # type: ignore
 
 
 class HistogramBase(abc.ABC):
@@ -97,7 +113,7 @@ class HistogramBase(abc.ABC):
         errors2: Optional[ArrayLike] = None,
         *,
         axis_names: Optional[Iterable[str]] = None,
-        dtype: Optional[DtypeLike] = None,
+        dtype: Optional[DTypeLike] = None,
         keep_missed: bool = True,
         **kwargs,
     ):
@@ -160,15 +176,7 @@ class HistogramBase(abc.ABC):
     _errors2: np.ndarray
     _missed: np.ndarray
 
-    SUPPORTED_DTYPES = [
-        np.int16,
-        np.int32,
-        np.int64,
-        np.float16,
-        np.float32,
-        np.float64,
-        np.float128,
-    ]
+    SUPPORTED_DTYPES: ClassVar[Collection[Type[np.number]]] = tuple(_FREQUENCY_SUPPORTED_DTYPES)
 
     @property
     def default_axis_names(self) -> List[str]:
@@ -265,7 +273,7 @@ class HistogramBase(abc.ABC):
         return len(self._binnings)
 
     @classmethod
-    def _eval_dtype(cls, value: DtypeLike) -> Tuple[np.dtype, np.iinfo]:
+    def _eval_dtype(cls, value: DTypeLike) -> Tuple[np.dtype, Union[np.iinfo, np.finfo]]:
         """Convert dtype into canonical form, check its applicability and return info.
 
         Parameters
@@ -279,7 +287,7 @@ class HistogramBase(abc.ABC):
         """
         dtype: np.dtype = np.dtype(value)
         if dtype.kind in "iu":
-            type_info = np.iinfo(dtype)
+            type_info: Union[np.iinfo, np.finfo] = np.iinfo(dtype)
         elif dtype.kind == "f":
             type_info = np.finfo(dtype)
         else:
@@ -292,10 +300,10 @@ class HistogramBase(abc.ABC):
         return self._dtype
 
     @dtype.setter
-    def dtype(self, value: DtypeLike) -> None:
+    def dtype(self, value: DTypeLike) -> None:
         self.set_dtype(value)
 
-    def set_dtype(self, value: DtypeLike, *, check: bool = True) -> None:
+    def set_dtype(self, value: DTypeLike, *, check: bool = True) -> None:
         """Change data type of the bin contents.
 
         Allowed conversions:
@@ -332,7 +340,7 @@ class HistogramBase(abc.ABC):
         if self._missed is not None:
             self._missed = self._missed.astype(value)
 
-    def _coerce_dtype(self, other_dtype: DtypeLike) -> None:
+    def _coerce_dtype(self, other_dtype: DTypeLike) -> None:
         """Possibly change the bin content type to allow correct operations with other operand.
 
         Parameters
@@ -898,15 +906,16 @@ class HistogramBase(abc.ABC):
             raise TypeError("Multiplication of two histograms is not supported.")
         if np.isscalar(other):
             array = np.asarray(other)
+            scalar = cast(float, other)
             try:
                 self._coerce_dtype(array.dtype)
             except ValueError as v:
                 raise TypeError(str(v)) from v
-            self.frequencies = self.frequencies * other
-            self.errors2 = self.errors2 * other ** 2
-            self._missed = self._missed * other
+            self.frequencies = self.frequencies * scalar
+            self.errors2 = self.errors2 * scalar ** 2
+            self._missed = self._missed * scalar
             if hasattr(self, "_stats"):
-                self._stats = self._stats * other
+                self._stats = self._stats * scalar
         elif config.free_arithmetics:  # Treat other as array-like
             array = np.asarray(other)
             self._coerce_dtype(array.dtype)

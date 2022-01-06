@@ -1,10 +1,16 @@
-mypy
 pylint
+pytest
 black
+
+# Mypy
+mypy
+types-setuptools
 
 # Doc
 sphinx
 sphinx_rtd_theme
-sphinx-apidoc
+sphinxcontrib-apidoc
 nbsphinx
 pre-commit
+tox
+tox-conda

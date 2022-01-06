@@ -279,7 +279,7 @@ class BinningBase:
         """
         edges, mask = to_numpy_bins_with_mask(self.bins)
         if not self.includes_right_edge:
-            edges = np.concatenate([edges, [np.inf]])
+            edges = np.concatenate([edges, np.asarray([np.inf])])
         return edges, mask
 
     @property
@@ -682,7 +682,10 @@ class ExponentialBinning(BinningBase):
 
 @register_binning
 def numpy_binning(
-    data: Optional[np.ndarray], bin_count: int = 10, range: Optional[RangeTuple] = None, **kwargs
+    data: Optional[np.ndarray] = None,
+    bin_count: int = 10,
+    range: Optional[RangeTuple] = None,
+    **kwargs,
 ) -> NumpyBinning:
     """Construct binning schema compatible with numpy.histogram together with int argument
 
@@ -716,7 +719,7 @@ def numpy_binning(
 
 @register_binning
 def human_binning(
-    data: Optional[np.ndarray] = None,
+    data: Optional[np.ndarray],
     bin_count: Optional[int] = None,
     *,
     kind: Optional[str] = None,
@@ -731,7 +734,7 @@ def human_binning(
 
     Parameters
     ----------
-    bin_count: Number of bins
+    bin_count: Starting number of bins (the result will be close)
     kind: Optional value "time" works in h,m,s scale instead of seconds
     range: Tuple of (min, max)
     min_bin_width: If present, the bin cannot be narrower than this.
@@ -763,7 +766,7 @@ def human_binning(
 
 @register_binning
 def quantile_binning(
-    data: Optional[ArrayLike] = None,
+    data: Optional[np.ndarray],
     *,
     bin_count: Optional[int] = None,
     q: Optional[Sequence[int]] = None,
@@ -788,6 +791,8 @@ def quantile_binning(
     -------
     StaticBinning
     """
+    if data is None:
+        raise ValueError("Cannot construct quantile binning without data.")
     if (bin_count is not None and q is not None) or (bin_count is None and q is None):
         raise ValueError("Exactly one of `bin_count` and `q` must be set.")
     if bin_count:
@@ -803,14 +808,16 @@ def quantile_binning(
 
 
 @register_binning
-def static_binning(data=None, bins=None, **kwargs) -> StaticBinning:
+def static_binning(
+    data: Optional[np.ndarray] = None, *, bins: ArrayLike, **kwargs
+) -> StaticBinning:
     """Construct static binning with whatever bins."""
     # TODO: Fail with no bins!
     return StaticBinning(bins=make_bin_array(bins), **kwargs)
 
 
 @register_binning
-def integer_binning(data=None, **kwargs) -> FixedWidthBinning:
+def integer_binning(data: Optional[np.ndarray] = None, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width binning schema with bins centered around integers.
 
     Parameters
@@ -833,7 +840,7 @@ def integer_binning(data=None, **kwargs) -> FixedWidthBinning:
 
 @register_binning
 def fixed_width_binning(
-    data=None,
+    data: Optional[np.ndarray] = None,
     bin_width: Union[float, int] = 1,
     *,
     range: Optional[RangeTuple] = None,
@@ -868,7 +875,7 @@ def fixed_width_binning(
 
 @register_binning
 def exponential_binning(
-    data=None,
+    data: Optional[np.ndarray] = None,
     bin_count: Optional[int] = None,
     *,
     range: Optional[RangeTuple] = None,
@@ -886,11 +893,15 @@ def exponential_binning(
     numpy.logspace - note that our range semantics is different
     """
     if bin_count is None:
+        if data is None:
+            raise ValueError("Cannot find optimum bin count without data.")
         bin_count = ideal_bin_count(data)
 
     if range:
         range = (np.log10(range[0]), np.log10(range[1]))
     else:
+        if data is None:
+            raise ValueError("Cannot guess the range without data.")
         range = (np.log10(data.min()), np.log10(data.max()))
     log_width = (range[1] - range[0]) / bin_count
     return ExponentialBinning(log_min=range[0], log_width=log_width, bin_count=bin_count, **kwargs)
@@ -952,7 +963,7 @@ def calculate_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> Binn
             warnings.warn(
                 "Using `list` for bins not recommended, it has different meaning with N-D histograms."
             )
-        binning = static_binning(array, _, **kwargs)
+        binning = static_binning(array, bins=_, **kwargs)
     else:
         raise ValueError(f"Binning {_} not understood.")
     return binning
