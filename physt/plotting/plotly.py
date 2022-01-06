@@ -16,8 +16,8 @@ import plotly.graph_objs as go
 import plotly.offline as pyo
 from plotly.graph_objs import Figure
 
-from physt.histogram_nd import Histogram2D
 from physt.util import pop_many
+from physt.types import Histogram2D, HistogramCollection
 from .common import get_data, check_ndim
 
 if TYPE_CHECKING:

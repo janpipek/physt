@@ -88,8 +88,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from physt.histogram_base import HistogramBase
-from physt.histogram_collection import HistogramCollection
+from physt.types import HistogramBase, HistogramCollection
 
 backends: Dict[str, Any] = {}
 

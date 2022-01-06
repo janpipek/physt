@@ -14,9 +14,8 @@ from typing import cast, TYPE_CHECKING
 import numpy as np
 
 from physt.util import deprecation_alias
-from physt.types import Histogram1D, Histogram2D, HistogramND
+from physt.types import Histogram1D, Histogram2D, HistogramND, HistogramCollection
 from physt.binnings import calculate_bins, calculate_bins_nd
-from physt.histogram_collection import HistogramCollection
 from physt.special_histograms import (
     polar,
     azimuthal,

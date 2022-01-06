@@ -3,8 +3,7 @@ import numpy as np
 
 import physt
 from physt import io
-from physt.histogram1d import Histogram1D
-from physt.histogram_collection import HistogramCollection
+from physt.types import Histogram1D, HistogramCollection
 
 
 class TestIO:
