@@ -3,8 +3,10 @@
 - conversion between histograms and Series/DataFrames
 - .physt accessor for pandas objects
 """
+from __future__ import annotations
+
 import warnings
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas
@@ -14,9 +16,12 @@ from pandas.api.types import is_numeric_dtype
 
 from physt.binnings import BinningBase, calculate_bins, static_binning
 from physt.facade import h, h1, h2
-from physt.histogram_base import HistogramBase
-from physt.types import Histogram2D, Histogram1D
-from physt.typing_aliases import ArrayLike
+from physt.types import HistogramBase, Histogram2D, Histogram1D
+
+
+if TYPE_CHECKING:
+    from typing import Any, Optional, Union
+    from physt.typing_aliases import ArrayLike
 
 
 def _extract_values(series: pandas.Series, dropna: bool = True) -> np.ndarray:

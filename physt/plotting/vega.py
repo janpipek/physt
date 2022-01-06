@@ -10,21 +10,26 @@ Common parameters
 See the `enable_inline_view` wrapper.
 
 """
+from __future__ import annotations
+
 # TODO: Custom JSON serializer better than conversion?
 
 
 import codecs
 import json
 from functools import wraps
-from typing import Any, Optional, Union, Dict
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 
-from physt.histogram_collection import HistogramCollection
-from physt.histogram_base import HistogramBase
-from physt.histogram1d import Histogram1D
-from physt.histogram_nd import Histogram2D, HistogramND
 from physt.plotting.common import get_data, get_value_format, check_ndim
+from physt.types import HistogramCollection
+
+if TYPE_CHECKING:
+    from typing import Any, Optional, Union, Dict
+
+    from physt.types import HistogramBase, Histogram1D, Histogram2D, HistogramND
+
 
 VEGA_IPYTHON_PLUGIN_ENABLED = False
 VEGA_ERROR = None
@@ -102,7 +107,7 @@ dims = {
 }
 
 
-def enable_inline_view(f):
+def enable_inline_view(f: Callable) -> Callable:
     """Decorator to enable in-line viewing in Python and saving to external file.
 
     It adds several parameters to each decorated plotted function:
@@ -146,7 +151,7 @@ def enable_inline_view(f):
 
 def write_vega(
     vega_data, *, title: Optional[str], write_to: str, write_format: str = "auto", indent: int = 2
-):
+) -> None:
     """Write vega dictionary to an external file.
 
     Parameters
@@ -588,12 +593,14 @@ def _create_figure(kwargs: Dict[str, Any]) -> dict:
     }
 
 
-def _create_colorbar(vega: dict, kwargs: dict):
+def _create_colorbar(vega: dict, kwargs: dict) -> None:
     if kwargs.pop("show_colorbar", True):
         vega["legends"] = [{"fill": "color", "type": "gradient"}]
 
 
-def _create_scales(hist: Union[HistogramCollection, HistogramBase], vega: dict, kwargs: dict):
+def _create_scales(
+    hist: Union[HistogramCollection, HistogramBase], vega: dict, kwargs: dict
+) -> None:
     """Find proper scales for axes."""
     if hist.ndim == 1:
         bins0 = hist.bins.astype(float)
@@ -638,7 +645,7 @@ def _create_scales(hist: Union[HistogramCollection, HistogramBase], vega: dict, 
         vega["scales"][1]["domain"] = [bins1[0, 0], bins1[-1, 1]]
 
 
-def _create_series_scales(vega: dict):
+def _create_series_scales(vega: dict) -> None:
     vega["scales"].append(
         {
             "name": "series",
@@ -676,7 +683,7 @@ def _create_series_legend(vega: dict) -> None:
     ]
 
 
-def _create_cmap_scale(values_arr: np.ndarray, vega: dict, kwargs: dict):
+def _create_cmap_scale(values_arr: np.ndarray, vega: dict, kwargs: dict) -> None:
     cmap = kwargs.pop("cmap", DEFAULT_PALETTE)
     cmap_min = float(kwargs.pop("cmap_min", values_arr.min()))
     cmap_max = float(kwargs.pop("cmap_max", values_arr.max()))
@@ -695,7 +702,7 @@ def _create_cmap_scale(values_arr: np.ndarray, vega: dict, kwargs: dict):
     )
 
 
-def _create_axes(hist: Union[HistogramCollection, HistogramBase], vega: dict, kwargs: dict):
+def _create_axes(hist: Union[HistogramCollection, HistogramBase], vega: dict, kwargs: dict) -> None:
     """Create axes in the figure."""
     xlabel = kwargs.pop("xlabel", hist.axis_names[0])
     ylabel = kwargs.pop("ylabel", hist.axis_names[1] if len(hist.axis_names) >= 2 else None)
@@ -705,7 +712,7 @@ def _create_axes(hist: Union[HistogramCollection, HistogramBase], vega: dict, kw
     ]
 
 
-def _create_tooltips(hist: Histogram1D, vega: dict, kwargs: dict):
+def _create_tooltips(hist: Histogram1D, vega: dict, kwargs: dict) -> None:
     """In one-dimensional plots, show values above the value on hover."""
     if kwargs.pop("tooltips", False):
         vega["signals"] = vega.get("signals", [])
@@ -751,7 +758,7 @@ def _create_tooltips(hist: Histogram1D, vega: dict, kwargs: dict):
         )
 
 
-def _add_title(hist: Union[HistogramBase, HistogramCollection], vega: dict, kwargs: dict):
+def _add_title(hist: Union[HistogramBase, HistogramCollection], vega: dict, kwargs: dict) -> None:
     """Display plot title if available."""
     title = kwargs.pop("title", hist.title)
     if title:

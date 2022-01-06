@@ -1,10 +1,14 @@
 """Methods for investigation and manipulation of bin arrays."""
-from typing import Optional, Tuple, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import numpy as np
-from typing_extensions import Literal
 
-from .typing_aliases import ArrayLike
+if TYPE_CHECKING:
+    from typing import Optional, Tuple, Union
+    from typing_extensions import Literal
+    from physt.typing_aliases import ArrayLike
 
 
 def make_bin_array(bins: ArrayLike) -> np.ndarray:

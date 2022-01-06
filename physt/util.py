@@ -3,9 +3,15 @@
 These functions are mostly general Python functions, not specific
 for numerical computing, histogramming, etc.
 """
+from __future__ import annotations
+
 import warnings
 from functools import wraps
-from typing import Any, Callable, Dict, Tuple
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from typing import Any, Callable, Dict, Tuple
 
 
 def all_subclasses(cls: type) -> Tuple[type, ...]:

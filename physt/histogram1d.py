@@ -1,22 +1,26 @@
 """One-dimensional histograms."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 import dataclasses
-from typing import Any, Dict, Mapping, Optional, Tuple, TYPE_CHECKING, Type, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from physt import bin_utils
 from physt.histogram_base import HistogramBase
-from physt.binnings import BinningBase, BinningLike
+
 from physt.statistics import Statistics, INVALID_STATISTICS
-from physt.typing_aliases import ArrayLike, DTypeLike, Axis
+
 
 if TYPE_CHECKING:
-    from typing import TypeVar
+    from typing import TypeVar, Any, Dict, Mapping, Optional, Tuple, Type, Union
 
     import xarray
     import pandas
+
+    from physt.binnings import BinningBase, BinningLike
+    from physt.typing_aliases import ArrayLike, DTypeLike, Axis
 
     Histogram1DType = TypeVar("Histogram1DType", bound="Histogram1D")
 
@@ -680,6 +684,6 @@ def calculate_frequencies(
             sum2=(data_array ** 2 * weights_array).sum(),
             min=float(data_array.min()),
             max=float(data_array.max()),
-            weight=weights_array.sum(),
+            weight=float(weights_array.sum()),
         )
     return frequencies, errors2, underflow, overflow, stats

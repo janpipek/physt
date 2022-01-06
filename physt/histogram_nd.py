@@ -1,13 +1,21 @@
 """Multi-dimensional histograms."""
+from __future__ import annotations
+
 import warnings
 from numbers import Number
-from typing import Optional, List, Any, Sequence, Tuple, Union, Iterable, cast, overload
+from typing import cast, overload, TYPE_CHECKING, Tuple
 
 import numpy as np
 
-from physt.histogram_base import HistogramBase, Axis
-from physt.binnings import BinningBase, BinningLike
-from physt.typing_aliases import ArrayLike, DTypeLike
+from physt.histogram_base import HistogramBase
+
+
+if TYPE_CHECKING:
+    # TODO: use float?
+    from typing import Optional, List, Any, Sequence, Union, Iterable
+
+    from physt.binnings import BinningBase, BinningLike
+    from physt.typing_aliases import ArrayLike, DTypeLike, Axis
 
 
 class HistogramND(HistogramBase):

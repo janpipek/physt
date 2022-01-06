@@ -1,4 +1,15 @@
-from typing import Optional, Iterable, Type, cast, Tuple
+"""Facade functions that allow to compute and create histograms without explicit instance creation.
+
+This involves:
+- finding proper bins
+- calculating frequencies
+- creating the proper histogram instances
+
+Note that the histogram classes are rather data structures and need data to be computed.
+"""
+from __future__ import annotations
+
+from typing import cast, TYPE_CHECKING
 
 import numpy as np
 
@@ -15,7 +26,11 @@ from physt.special_histograms import (
     spherical,
     spherical_surface,
 )
-from physt.typing_aliases import ArrayLike, DTypeLike
+
+if TYPE_CHECKING:
+    from typing import Optional, Iterable, Type, Tuple
+
+    from physt.typing_aliases import ArrayLike, DTypeLike
 
 
 def h1(

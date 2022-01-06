@@ -7,27 +7,32 @@ Currently, it uses matplotlib translation for 1D histograms:
 
 TODO: More elaborate output planned
 """
+from __future__ import annotations
+
 from functools import wraps
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Callable
 
 import plotly.graph_objs as go
 import plotly.offline as pyo
 from plotly.graph_objs import Figure
 
-from physt.histogram1d import Histogram1D
-from physt.histogram_collection import HistogramCollection
 from physt.histogram_nd import Histogram2D
 from physt.util import pop_many
 from .common import get_data, check_ndim
 
-AbstractHistogram1D = Union[HistogramCollection, Histogram1D]
-# TODO: Move this to the typing itself
+if TYPE_CHECKING:
+    from typing import Optional, Union
 
-DEFAULT_BARMODE = "overlay"
-DEFAULT_ALPHA = 1.0
+    from physt.types import HistogramCollection, Histogram1D, Histogram2D
+
+    AbstractHistogram1D = Union[HistogramCollection, Histogram1D]
+    # TODO: Move this to the typing itself
+
+DEFAULT_BARMODE: str = "overlay"
+DEFAULT_ALPHA: float = 1.0
 
 
-def enable_output(f):
+def enable_output(f: Callable) -> Callable:
     @wraps(f)
     def new_f(*args, write_to: Optional[str] = None, **kwargs) -> Figure:
         figure: Figure = f(*args, **kwargs)
@@ -38,7 +43,7 @@ def enable_output(f):
     return new_f
 
 
-def enable_collection(f):
+def enable_collection(f: Callable) -> Callable:
     """Decorator calling the wrapped function with a HistogramCollection as argument."""
 
     @wraps(f)
@@ -50,7 +55,7 @@ def enable_collection(f):
     return new_f
 
 
-def _add_ticks(xaxis: go.layout.XAxis, histogram: AbstractHistogram1D, kwargs: dict):
+def _add_ticks(xaxis: go.layout.XAxis, histogram: AbstractHistogram1D, kwargs: dict) -> None:
     """Customize ticks for an axis (1D histogram)."""
     ticks = kwargs.pop("ticks", None)
     tick_handler = kwargs.pop("tick_handler", None)
@@ -72,7 +77,7 @@ def _add_ticks(xaxis: go.layout.XAxis, histogram: AbstractHistogram1D, kwargs: d
 
 
 @enable_collection
-def _line_or_scatter(h: HistogramCollection, *, mode: str, **kwargs):
+def _line_or_scatter(h: HistogramCollection, *, mode: str, **kwargs) -> go.Figure:
     get_data_kwargs = pop_many(kwargs, "density", "cumulative", "flatten")
     data = [
         go.Scatter(
@@ -95,14 +100,14 @@ def _line_or_scatter(h: HistogramCollection, *, mode: str, **kwargs):
 @enable_output
 @check_ndim(1)
 @enable_collection
-def scatter(h: AbstractHistogram1D, **kwargs):
+def scatter(h: AbstractHistogram1D, **kwargs) -> go.Figure:
     return _line_or_scatter(h, mode="markers", **kwargs)
 
 
 @enable_output
 @check_ndim(1)
 @enable_collection
-def line(h: AbstractHistogram1D, **kwargs):
+def line(h: AbstractHistogram1D, **kwargs) -> go.Figure:
     return _line_or_scatter(h, mode="lines", **kwargs)
 
 
@@ -115,7 +120,7 @@ def bar(
     barmode: str = DEFAULT_BARMODE,
     alpha: float = DEFAULT_ALPHA,
     **kwargs,
-):  # pylint: disable=blacklisted-name
+) -> go.Figure:  # pylint: disable=blacklisted-name
     """Bar plot.
 
     Parameters
@@ -146,7 +151,7 @@ def bar(
 
 @enable_output
 @check_ndim(2)
-def map(h2: Histogram2D, **kwargs):
+def map(h2: Histogram2D, **kwargs) -> go.Figure:
     """Heatmap."""
     data = [go.Heatmap(z=h2.frequencies, **kwargs)]
     layout = go.Layout()

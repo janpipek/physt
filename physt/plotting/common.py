@@ -1,9 +1,11 @@
 """
 Functions that are shared by several (all) plotting backends.
 """
+from __future__ import annotations
+
 import re
 from functools import wraps
-from typing import Any, Dict, Tuple, List, Union, Callable
+from typing import TYPE_CHECKING
 from datetime import timedelta
 
 import numpy as np
@@ -13,8 +15,14 @@ from physt.bin_utils import (
     find_human_width_60,
     find_human_width_decimal,
 )
-from physt.histogram_base import HistogramBase
-from physt.histogram1d import Histogram1D
+
+if TYPE_CHECKING:
+    from typing import Any, Dict, Tuple, List, Union, Callable, Optional
+
+    from physt.types import Histogram1D, HistogramBase
+
+    TickCollection = Tuple[List[float], List[str]]
+    """A tuple of tick values and labels."""
 
 
 def get_data(
@@ -142,16 +150,13 @@ def check_ndim(ndim: Union[int, Tuple[int, ...]]) -> Callable[[Callable], Callab
     return wrapper
 
 
-TickCollection = Tuple[List[float], List[str]]
-
-
 class TimeTickHandler:
     """Callable that creates ticks and labels corresponding to "sane" time values.
 
     Note: This class is very experimental and subject to change or disappear.
     """
 
-    def __init__(self, level: str = None):  # , format=None):
+    def __init__(self, level: Optional[str] = None):  # , format=None):
         self.level = self.parse_level(level) if level else None
 
     LEVELS = {
@@ -161,7 +166,8 @@ class TimeTickHandler:
         "day": 86400,
     }
 
-    LevelType = Tuple[str, Union[float, int]]
+    if TYPE_CHECKING:
+        LevelType = Tuple[str, Union[float, int]]
 
     @classmethod
     def parse_level(

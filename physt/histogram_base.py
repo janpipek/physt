@@ -1,32 +1,39 @@
 """HistogramBase - base for all histogram classes."""
+from __future__ import annotations
+
 import abc
 import warnings
 from typing import (
-    ClassVar,
-    Collection,
-    Dict,
-    List,
-    Optional,
-    Iterable,
-    Mapping,
-    Any,
-    Tuple,
     TYPE_CHECKING,
-    Type,
-    TypeVar,
     cast,
-    Union,
 )
 
 import numpy as np
 
-from physt.binnings import as_binning, BinningLike, BinningBase
+from physt.binnings import as_binning, BinningBase
 from physt.config import config
 from physt.statistics import INVALID_STATISTICS
-from physt.typing_aliases import Axis, ArrayLike, DTypeLike
+
 
 if TYPE_CHECKING:
+    from typing import (
+        ClassVar,
+        Collection,
+        Dict,
+        List,
+        Optional,
+        Iterable,
+        Mapping,
+        Any,
+        Tuple,
+        Type,
+        TypeVar,
+        Union,
+    )
+
     import physt
+    from physt.typing_aliases import Axis, ArrayLike, DTypeLike
+    from physt.binnings import BinningLike
 
     HistogramType = TypeVar("HistogramType", bound="HistogramBase")
 

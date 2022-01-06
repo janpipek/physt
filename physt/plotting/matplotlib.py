@@ -29,8 +29,10 @@ Parameters
 ----------
 
 """
+from __future__ import annotations
+
 from functools import wraps
-from typing import Any, Collection, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 import matplotlib
 import matplotlib.cm as cm
@@ -39,20 +41,22 @@ import matplotlib.patches as patches
 import matplotlib.path as path
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-from physt.histogram1d import Histogram1D
-from physt.histogram_nd import Histogram2D
-from physt.histogram_collection import HistogramCollection
+from physt.types import HistogramCollection
 from physt.config import config
 from physt.plotting.common import get_data, get_err_data, pop_kwargs_with_prefix, check_ndim
-from physt.special_histograms import (
-    CylindricalSurfaceHistogram,
-    SphericalSurfaceHistogram,
-)
+
+if TYPE_CHECKING:
+    from typing import Any, Collection, Dict, List, Optional, Tuple, Union
+
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+    from mpl_toolkits.mplot3d import Axes3D
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+    from physt.types import Histogram1D, Histogram2D
+    from physt.special_histograms import CylindricalSurfaceHistogram, SphericalSurfaceHistogram
+
 
 # To be filled by register function
 types = []

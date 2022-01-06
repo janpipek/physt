@@ -1,8 +1,14 @@
+"""Support for summary statistics kept in the histogram instances."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 import dataclasses
-from typing import Any, cast
+from typing import cast, TYPE_CHECKING
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 @dataclass(frozen=True)
@@ -39,7 +45,7 @@ class Statistics:
             return (self.sum2 - self.sum ** 2 / self.weight) / self.weight
         return np.nan
 
-    def __add__(self, other: Any) -> "Statistics":
+    def __add__(self, other: Any) -> Statistics:
         if not isinstance(other, Statistics):
             return INVALID_STATISTICS
         return Statistics(
@@ -50,7 +56,7 @@ class Statistics:
             weight=self.weight + other.weight,
         )
 
-    def __mul__(self, other: Any) -> "Statistics":
+    def __mul__(self, other: Any) -> Statistics:
         if not np.isscalar(other):
             return INVALID_STATISTICS
         other_scalar = cast(float, other)

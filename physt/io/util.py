@@ -1,9 +1,13 @@
-from typing import Union, Type
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from physt.io.version import require_compatible_version
 from physt.util import find_subclass
-from physt.histogram_base import HistogramBase
-from physt.histogram_collection import HistogramCollection
+from physt.types import HistogramBase, HistogramCollection
+
+if TYPE_CHECKING:
+    from typing import Union, Type
 
 
 def create_from_dict(

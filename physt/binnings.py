@@ -1,7 +1,10 @@
 """Different binning algorithms/schemas for the histograms."""
-from typing import Literal, cast, Any, Dict, Optional, Tuple, List, Union, Sequence, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import cast, TYPE_CHECKING
 
 import numpy as np
+
 
 from physt.bin_utils import (
     is_bin_subset,
@@ -12,11 +15,13 @@ from physt.bin_utils import (
     to_numpy_bins_with_mask,
     find_human_width,
 )
-from physt.typing_aliases import RangeTuple, ArrayLike
 from physt.util import find_subclass
 
 if TYPE_CHECKING:
-    from typing import TypeVar
+    from typing import TypeVar, Any, Dict, Optional, Tuple, List, Union, Sequence
+    from typing_extensions import Literal
+
+    from physt.typing_aliases import RangeTuple, ArrayLike
 
     BinningType = TypeVar("BinningType", bound="BinningBase")
 
@@ -365,8 +370,9 @@ class BinningBase:
         return f"{self.__class__.__name__}({repr(self.numpy_bins)})"
 
 
-BinningLike = Union[BinningBase, ArrayLike]
-"""Anything that can be converted to a binning."""
+if TYPE_CHECKING:
+    BinningLike = Union[BinningBase, ArrayLike]
+    """Anything that can be converted to a binning."""
 
 
 class StaticBinning(BinningBase):
