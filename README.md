@@ -11,7 +11,6 @@ nice integration into IPython notebook and various plotting options. In short, w
 
 *Note: bokeh plotting backend has been discontinued (due to external library being redesigned.)*
 
-[![Travis](https://travis-ci.com/janpipek/physt.svg?branch=master)](https://travis-ci.com/janpipek/physt/)
 [![ReadTheDocs](https://readthedocs.org/projects/physt/badge/?version=latest)](http://physt.readthedocs.io/en/latest/)
 [![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/physt.svg)](https://gitter.im/physt/physt)
 [![PyPI version](https://badge.fury.io/py/physt.svg)](https://badge.fury.io/py/physt)
