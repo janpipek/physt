@@ -1,20 +1,29 @@
 """One-dimensional histograms."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Mapping, Optional, Tuple, TYPE_CHECKING, Type, Union
+import dataclasses
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from physt import bin_utils
 from physt.histogram_base import HistogramBase
-from physt.binnings import BinningBase, BinningLike
-from physt.typing_aliases import ArrayLike, DTypeLike, Axis
+from physt.statistics import Statistics, INVALID_STATISTICS
+from physt.util import deprecation_alias
+
 
 if TYPE_CHECKING:
-    from typing import TypeVar
+    from typing import TypeVar, Any, Dict, Mapping, Optional, Tuple, Type, Union
+
     import xarray
     import pandas
 
+    from physt.binnings import BinningBase, BinningLike
+    from physt.typing_aliases import ArrayLike, DTypeLike, Axis
+
     Histogram1DType = TypeVar("Histogram1DType", bound="Histogram1D")
+
 
 # TODO: Fix I/O with binning
 
@@ -117,11 +126,6 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     The bins need not be consecutive. However, some functionality may not be available
     for non-consecutive bins (like keeping information about underflow and overflow).
 
-    Attributes
-    ----------
-    _stats : dict
-
-
     These are the basic attributes that can be used in the constructor (see there)
     Other attributes are dynamic.
     """
@@ -133,7 +137,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         errors2: Optional[ArrayLike] = None,
         *,
         keep_missed: bool = True,
-        stats: Optional[Dict[str, float]] = None,
+        stats: Optional[Statistics] = None,
         overflow: Optional[float] = 0.0,
         underflow: Optional[float] = 0.0,
         inner_missed: Optional[float] = 0.0,
@@ -147,18 +151,12 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         binning: The binning
         frequencies: The bin contents.
         keep_missed: Whether to keep track of underflow/overflow when filling with new values.
-        underflow: Optional[float]
-            Weight of observations that were smaller than the minimum bin.
-        overflow: Optional[float]
-            Weight of observations that were larger than the maximum bin.
-        name: Optional[str]
-            Name of the histogram (will be displayed as plot title)
-        axis_name: Optional[str]
-            Name of the characteristics that is histogrammed (will be displayed on x axis)
-        errors2: Optional[array_like]
-            Quadratic errors of individual bins. If not set, defaults to frequencies.
-        stats: dict
-            Dictionary of various statistics ("sum", "sum2")
+        underflow: Weight of observations that were smaller than the minimum bin.
+        overflow: Weight of observations that were larger than the maximum bin.
+        name: Name of the histogram (will be displayed as plot title)
+        axis_name: Name of the characteristics that is histogrammed (will be displayed on x axis)
+        errors2: Quadratic errors of individual bins. If not set, defaults to frequencies.
+        stats: The statistics to use. If not set, defaults INVALID_STATISTICS.
         """
         missed = [
             underflow,
@@ -173,16 +171,25 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         )
 
         if frequencies is None:
-            self._stats = Histogram1D.EMPTY_STATS.copy()
+            self._stats = Statistics()
         else:
-            self._stats = stats
+            self._stats = stats or INVALID_STATISTICS
 
         if self.keep_missed:
             self._missed = np.array(missed, dtype=self.dtype)
         else:
             self._missed = np.zeros(3, dtype=self.dtype)
 
-    EMPTY_STATS = {"sum": 0.0, "sum2": 0.0}
+    def copy(self, *, include_frequencies: bool = True) -> "Histogram1D":
+        # Overriden to include the statistics as well
+        a_copy = super().copy(include_frequencies=include_frequencies)
+        if include_frequencies:
+            a_copy._stats = dataclasses.replace(self.statistics)
+        return a_copy
+
+    @property
+    def statistics(self) -> Statistics:
+        return self._stats
 
     @property
     def axis_name(self) -> str:
@@ -313,43 +320,25 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     def inner_missed(self, value):
         self._missed[2] = value
 
-    def mean(self) -> Optional[float]:
-        """Statistical mean of all values entered into histogram.
+    @np.deprecate(message="Please use .statistics.mean instead.")
+    def mean(self) -> float:
+        return self.statistics.mean()
 
-        This number is precise, because we keep the necessary data
-        separate from bin contents.
-        """
-        if self._stats:  # TODO: should be true always?
-            if self.total > 0:
-                return self._stats["sum"] / self.total
-            return np.nan
-        return None  # TODO: or error
+    @np.deprecate(message="Please use .statistics.min instead.")
+    def min(self) -> float:
+        return self.statistics.min
 
-    def std(self) -> Optional[float]:  # , ddof=0):
-        """Standard deviation of all values entered into histogram.
+    @np.deprecate(message="Please use .statistics.max instead.")
+    def max(self) -> float:
+        return self.statistics.max
 
-        This number is precise, because we keep the necessary data
-        separate from bin contents.
-        """
-        # TODO: Add DOF
-        variance = self.variance()
-        if variance is not None:
-            return np.sqrt(variance)
-        return None  # TODO: or error
+    @np.deprecate(message="Please use .statistics.std instead.")
+    def std(self) -> float:  # , ddof=0):
+        return self.statistics.std()
 
-    def variance(self) -> Optional[float]:  # , ddof: int = 0) -> float:
-        """Statistical variance of all values entered into histogram.
-
-        This number is precise, because we keep the necessary data
-        separate from bin contents.
-        """
-        # TODO: Add DOF
-        # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
-        if self._stats:
-            if self.total > 0:
-                return (self._stats["sum2"] - self._stats["sum"] ** 2 / self.total) / self.total
-            return np.nan
-        return None
+    @np.deprecate(message="Please use .statistics.variance instead.")
+    def variance(self) -> float:  # , ddof: int = 0) -> float:
+        return self.statistics.variance()
 
     def find_bin(self, value: float, axis: Optional[Axis] = None) -> Optional[int]:
         """Index of bin corresponding to a value.
@@ -408,9 +397,15 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         else:
             self._frequencies[ixbin] += weight
             self._errors2[ixbin] += weight ** 2
-            if self._stats:
-                self._stats["sum"] += weight * value
-                self._stats["sum2"] += weight * value ** 2
+            self._stats = dataclasses.replace(
+                self.statistics,
+                weight=self.statistics.weight + weight,
+                sum=self.statistics.sum + weight * value,
+                sum2=self.statistics.sum2 + weight * value ** 2,
+                min=min(self.statistics.min, value),
+                max=max(self.statistics.max, value),
+            )
+
         return ixbin
 
     def fill_n(
@@ -439,9 +434,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         if self.keep_missed:
             self.underflow += underflow
             self.overflow += overflow
-        if self._stats:
-            for key in self._stats:
-                self._stats[key] += stats.get(key, 0.0)
+        self._stats += stats
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):
@@ -517,24 +510,36 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     @classmethod
     def from_calculate_frequencies(
         cls: Type["Histogram1DType"],
-        data: ArrayLike,
+        data: Optional[np.ndarray],
         binning: BinningBase,
         weights: Optional[ArrayLike] = None,
         *,
         validate_bins: bool = True,
         already_sorted: bool = False,
+        keep_missed: bool = True,
         dtype: Optional[DTypeLike] = None,
         **kwargs,
     ) -> "Histogram1DType":
         """Construct the histogram from values and bins."""
-        frequencies, errors2, underflow, overflow, stats = calculate_frequencies(
-            data=data,
-            binning=binning,
-            weights=weights,
-            validate_bins=validate_bins,
-            already_sorted=already_sorted,
-            dtype=dtype,
-        )
+        if data is None:
+            frequencies: Optional[np.ndarray] = None
+            errors2: Optional[np.ndarray] = None
+            underflow: float = 0.0
+            overflow: float = 0.0
+            stats: Optional[Statistics] = None
+        else:
+            frequencies, errors2, underflow, overflow, stats = calculate_frequencies(
+                data=data,
+                binning=binning,
+                weights=weights,
+                validate_bins=validate_bins,
+                already_sorted=already_sorted,
+                dtype=dtype,
+            )
+            if not keep_missed:
+                underflow = 0.0
+                overflow = 0.0
+
         return cls(
             binning=binning,
             frequencies=frequencies,
@@ -542,6 +547,8 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             stats=stats,
             underflow=underflow,
             overflow=overflow,
+            keep_missed=keep_missed,
+            dtype=dtype,
             **kwargs,
         )
 
@@ -554,7 +561,7 @@ def calculate_frequencies(
     validate_bins: bool = True,
     already_sorted: bool = False,
     dtype: Optional[DTypeLike] = None,
-) -> Tuple[np.ndarray, np.ndarray, float, float, dict]:
+) -> Tuple[np.ndarray, np.ndarray, float, float, Statistics]:
     """Get frequencies and bin errors from the data.
 
     Parameters
@@ -573,8 +580,7 @@ def calculate_frequencies(
     errors2 :  Error squares of the bins
     underflow : Weight of items smaller than the first bin
     overflow : Weight of items larger than the last bin
-    stats: dict
-        { sum: ..., sum2: ...}
+    stats: The statistics (computed or empty)
 
     Note
     ----
@@ -583,12 +589,7 @@ def calculate_frequencies(
     """
 
     # TODO: Is it possible to merge with histogram_nd.calculate_frequencies?
-    # TODO: What if data is None
-    # TODO: Change stats into namedtuple
 
-    # Statistics
-    sum = 0.0
-    sum2 = 0.0
     underflow = np.nan
     overflow = np.nan
 
@@ -627,10 +628,10 @@ def calculate_frequencies(
 
     # Data sorting
     if not already_sorted:
-        args = np.argsort(data_array)  # Memory: another copy
-        data_array = data_array[args]  # Memory: another copy
-        weights_array = weights_array[args]
-        del args
+        sort_order = np.argsort(data_array)  # Memory: another copy
+        data_array = data_array[sort_order]  # Memory: another copy
+        weights_array = weights_array[sort_order]
+        del sort_order
 
     # Fill frequencies and errors
     frequencies = np.zeros(bins.shape[0], dtype=inferred_dtype)
@@ -647,14 +648,21 @@ def calculate_frequencies(
 
         frequencies[xbin] = weights_array[start:stop].sum()
         errors2[xbin] = (weights_array[start:stop] ** 2).sum()
-        sum += (data_array[start:stop] * weights_array[start:stop]).sum()
-        sum2 += ((data_array[start:stop]) ** 2 * weights_array[start:stop]).sum()
 
     # Underflow and overflow don't make sense for unconsecutive binning.
     if not bin_utils.is_consecutive(bins):
         underflow = np.nan
         overflow = np.nan
 
-    stats = {"sum": sum, "sum2": sum2}
-
+    # Statistics
+    if not data_array.size:
+        stats = Statistics()
+    else:
+        stats = Statistics(
+            sum=(data_array * weights_array).sum(),
+            sum2=(data_array ** 2 * weights_array).sum(),
+            min=float(data_array.min()),
+            max=float(data_array.max()),
+            weight=float(weights_array.sum()),
+        )
     return frequencies, errors2, underflow, overflow, stats

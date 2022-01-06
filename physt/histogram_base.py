@@ -1,30 +1,55 @@
 """HistogramBase - base for all histogram classes."""
+from __future__ import annotations
+
 import abc
 import warnings
 from typing import (
-    Dict,
-    List,
-    Optional,
-    Iterable,
-    Mapping,
-    Any,
-    Tuple,
     TYPE_CHECKING,
-    TypeVar,
     cast,
-    Union,
 )
 
 import numpy as np
 
-from physt.binnings import as_binning, BinningLike, BinningBase
+from physt.binnings import as_binning, BinningBase
 from physt.config import config
-from physt.typing_aliases import Axis, ArrayLike, DTypeLike
+from physt.statistics import INVALID_STATISTICS
+
 
 if TYPE_CHECKING:
+    from typing import (
+        ClassVar,
+        Collection,
+        Dict,
+        List,
+        Optional,
+        Iterable,
+        Mapping,
+        Any,
+        Tuple,
+        Type,
+        TypeVar,
+        Union,
+    )
+
     import physt
+    from physt.typing_aliases import Axis, ArrayLike, DTypeLike
+    from physt.binnings import BinningLike
 
     HistogramType = TypeVar("HistogramType", bound="HistogramBase")
+
+
+# Various platforms have different default floating point dtypes.
+_FREQUENCY_SUPPORTED_DTYPES: List[Type[np.number]] = [
+    np.int16,
+    np.int32,  # Default in Windows
+    np.int64,  # Default in 64-bit Linux
+    np.float16,
+    np.float32,
+    np.float64,
+]
+if hasattr(np, "float128"):
+    # Not present in Windows
+    _FREQUENCY_SUPPORTED_DTYPES.append(np.float128)  # type: ignore
 
 
 class HistogramBase(abc.ABC):
@@ -128,7 +153,9 @@ class HistogramBase(abc.ABC):
                 frequencies = np.asarray(frequencies, dtype=dtype)
             else:
                 frequencies = np.asarray(frequencies)
-                if np.issubdtype(frequencies.dtype, np.integer):
+                if frequencies.dtype in self.SUPPORTED_DTYPES:
+                    pass  # OK
+                elif np.issubdtype(frequencies.dtype, np.integer):
                     frequencies = frequencies.astype(np.int64)
                 elif np.issubdtype(frequencies.dtype, np.floating):
                     frequencies = frequencies.astype(np.float64)
@@ -155,6 +182,8 @@ class HistogramBase(abc.ABC):
     _frequencies: np.ndarray
     _errors2: np.ndarray
     _missed: np.ndarray
+
+    SUPPORTED_DTYPES: ClassVar[Collection[Type[np.number]]] = tuple(_FREQUENCY_SUPPORTED_DTYPES)
 
     @property
     def default_axis_names(self) -> List[str]:
@@ -618,12 +647,10 @@ class HistogramBase(abc.ABC):
             frequencies = np.copy(self.frequencies)
             missed = self._missed.copy()
             errors2 = np.copy(self.errors2)
-            stats = self._stats or None
         else:
             frequencies = np.zeros_like(self._frequencies)
             errors2 = np.zeros_like(self._errors2)
             missed = np.zeros_like(self._missed)
-            stats = None
         a_copy = self.__class__.__new__(self.__class__)
         a_copy._binnings = [binning.copy() for binning in self._binnings]
         a_copy._dtype = self.dtype
@@ -632,7 +659,6 @@ class HistogramBase(abc.ABC):
         a_copy._meta_data = self._meta_data.copy()
         a_copy.keep_missed = self.keep_missed
         a_copy._missed = missed
-        a_copy._stats = stats
         return a_copy
 
     @abc.abstractmethod
@@ -841,17 +867,15 @@ class HistogramBase(abc.ABC):
                 self.errors2 = self.errors2 + other.errors2
             else:
                 raise ValueError("Incompatible binning")
-
-            if self._stats and other._stats:
-                for key in self._stats:
-                    self._stats[key] += other._stats[key]
+            if hasattr(self, "_stats") and hasattr(other, "_stats"):
+                self._stats += other._stats
         elif config.free_arithmetics:
             array = np.asarray(other)
             self._coerce_dtype(array.dtype)
             self.frequencies = self.frequencies + array
             self.errors2 = self.errors2 + abs(array)
             self._missed = self._missed * np.nan  # TODO: Any reasonable interpretation?
-            self._stats = None  # TODO: Any reasonable interpretation?
+            self._stats = INVALID_STATISTICS
         else:
             raise TypeError(f"Only histograms can be added together. {type(other)} found instead.")
         return self
@@ -874,7 +898,7 @@ class HistogramBase(abc.ABC):
                 self.frequencies = adapted_self.frequencies - adapted_other.frequencies
                 self.errors2 = adapted_self.errors2 + adapted_other.errors2
                 self._missed -= other._missed
-            self._stats = None
+            self._stats = INVALID_STATISTICS
             return self
         array = np.asarray(other)
         return self.__iadd__(array * (-1))
@@ -887,9 +911,9 @@ class HistogramBase(abc.ABC):
     def __imul__(self, other: Any):
         if isinstance(other, HistogramBase):
             raise TypeError("Multiplication of two histograms is not supported.")
-        elif np.isscalar(other):
+        if np.isscalar(other):
             array = np.asarray(other)
-            scalar = array.item()
+            scalar = cast(float, other)
             try:
                 self._coerce_dtype(array.dtype)
             except ValueError as v:
@@ -897,15 +921,15 @@ class HistogramBase(abc.ABC):
             self.frequencies = self.frequencies * scalar
             self.errors2 = self.errors2 * scalar ** 2
             self._missed = self._missed * scalar
-            if self._stats:
-                self._stats["sum"] *= scalar
-                self._stats["sum2"] *= scalar ** 2
+            if hasattr(self, "_stats"):
+                self._stats = self._stats * scalar
         elif config.free_arithmetics:  # Treat other as array-like
             array = np.asarray(other)
             self._coerce_dtype(array.dtype)
             self.frequencies = self.frequencies * array
             self.errors2 = self.errors2 * array ** 2
-            self._stats = None
+            if hasattr(self, "_stats"):
+                self._stats = INVALID_STATISTICS
             self._missed = self._missed * np.nan
         else:
             raise TypeError("Histograms may be multiplied only by a constant.")
@@ -927,15 +951,15 @@ class HistogramBase(abc.ABC):
             self.frequencies = self.frequencies / other
             self.errors2 = self.errors2 / other ** 2
             self._missed /= other
-            if self._stats:
-                self._stats["sum"] *= other
-                self._stats["sum2"] *= other ** 2
+            if hasattr(self, "_stats"):
+                self._stats *= 1 / other
         elif config.free_arithmetics:  # Treat other as array-like
             self._coerce_dtype(np.float64)
             array = np.asarray(other)
             self.frequencies = self.frequencies / array
             self.errors2 = self.errors2 / array ** 2
-            self._stats = None
+            if hasattr(self, "_stats"):
+                self._stats = INVALID_STATISTICS
             self._missed /= np.nan
         else:
             raise TypeError("Histograms may be divided only by a constant.")

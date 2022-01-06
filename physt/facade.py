@@ -1,12 +1,21 @@
-from typing import Optional, Iterable, Type, cast, Dict, Any, Tuple
+"""Facade functions that allow to compute and create histograms without explicit instance creation.
+
+This involves:
+- finding proper bins
+- calculating frequencies
+- creating the proper histogram instances
+
+Note that the histogram classes are rather data structures and need data to be computed.
+"""
+from __future__ import annotations
+
+from typing import cast, TYPE_CHECKING
 
 import numpy as np
 
 from physt.util import deprecation_alias
-from physt.histogram1d import Histogram1D, calculate_frequencies
-from physt.histogram_nd import HistogramND, Histogram2D
+from physt.types import Histogram1D, Histogram2D, HistogramND, HistogramCollection
 from physt.binnings import calculate_bins, calculate_bins_nd
-from physt.histogram_collection import HistogramCollection
 from physt.special_histograms import (
     polar,
     azimuthal,
@@ -16,7 +25,11 @@ from physt.special_histograms import (
     spherical,
     spherical_surface,
 )
-from physt.typing_aliases import ArrayLike, DTypeLike
+
+if TYPE_CHECKING:
+    from typing import Optional, Iterable, Type, Tuple
+
+    from physt.typing_aliases import ArrayLike, DTypeLike
 
 
 def h1(
@@ -76,7 +89,7 @@ def h1(
     if isinstance(data, tuple) and isinstance(data[0], str):  # Works for groupby DataSeries
         return h1(data[1], bins, name=data[0], **kwargs)
     if type(data).__name__ == "DataFrame":
-        raise TypeError("Cannot create histogram from a pandas DataFrame. Use Series.")
+        raise TypeError("Cannot create a 1D histogram from a pandas DataFrame. Use Series.")
 
     def _maybe_to_array(data: Optional[ArrayLike], dropna: bool) -> Optional[np.ndarray]:
         if data is not None:
@@ -84,8 +97,7 @@ def h1(
             if dropna:
                 array = array[~np.isnan(array)]
             return array
-        else:
-            return None
+        return None
 
     array = _maybe_to_array(data, dropna=dropna)
 
@@ -93,24 +105,7 @@ def h1(
     binning = calculate_bins(
         array, bins, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs
     )
-    # bins = binning.bins
 
-    # Get frequencies
-    if array is None:
-        frequencies: Optional[np.ndarray] = None
-        errors2: Optional[np.ndarray] = None
-        underflow: float = 0
-        overflow: float = 0
-        stats: Dict[str, Any] = {"sum": 0.0, "sum2": 0.0}
-    else:
-        (frequencies, errors2, underflow, overflow, stats) = calculate_frequencies(
-            array, binning=binning, weights=weights, dtype=dtype
-        )
-
-    # Construct the object
-    if not keep_missed:
-        underflow = 0
-        overflow = 0
     if not axis_name:
         if hasattr(data, "name"):
             axis_name = str(data.name)  # type: ignore
@@ -121,13 +116,12 @@ def h1(
         ):
             # Case of dask fields (examples)
             axis_name = str(data.fields[0])  # type: ignore
-    return Histogram1D(
+
+    # Construct the object
+    return Histogram1D.from_calculate_frequencies(
+        data=array,
         binning=binning,
-        frequencies=frequencies,
-        errors2=errors2,
-        overflow=overflow,
-        underflow=underflow,
-        stats=stats,
+        weights=weights,
         dtype=dtype,
         keep_missed=keep_missed,
         name=name,
@@ -280,8 +274,6 @@ def collection(data, bins=10, **kwargs) -> HistogramCollection:
         data = {column: data[column] for column in data.columns}
     return HistogramCollection.multi_h1(data, bins, **kwargs)
 
-
-del deprecation_alias
 
 __all__ = [
     "azimuthal",

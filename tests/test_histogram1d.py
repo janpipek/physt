@@ -4,6 +4,7 @@ import pytest
 from physt.config import config
 from physt.histogram1d import Histogram1D
 from physt import h1
+from physt.statistics import INVALID_STATISTICS
 
 
 @pytest.fixture
@@ -95,6 +96,7 @@ class TestCopy:
         assert new is not example
         assert new.bins is not example.bins
         assert new.frequencies is not example.frequencies
+        assert new.statistics is not example.statistics
         assert new == example
 
     def test_copy_no_frequencies(self, example):
@@ -229,7 +231,7 @@ class TestArithmetics:
                     assert np.array_equal(result.frequencies, values + array_like)
                     assert np.array_equal(result.errors2, example.errors2 + array_like)
                     assert np.isnan(result.missed)
-                    assert result._stats is None
+                    assert result.statistics == INVALID_STATISTICS
 
                     example += array_like
                     assert example == result
@@ -300,7 +302,7 @@ class TestArithmetics:
                     assert np.array_equal(result.frequencies, values - array_like)
                     assert np.array_equal(result.errors2, example.errors2 + array_like)
                     assert np.isnan(result.missed)
-                    assert result._stats is None
+                    assert result.statistics == INVALID_STATISTICS
 
                     example -= array_like
                     assert example == result
@@ -411,7 +413,7 @@ class TestFill:
 
     def test_fill_dtype(self):
         h = Histogram1D([[0, 1], [1, 2], [2, 3]], [1, 2, 3])
-        assert h.dtype == np.int64
+        assert h.dtype == np.int_
         assert np.allclose(h.frequencies, [1, 2, 3])
 
         h.fill(1.3, weight=2.2)
@@ -422,18 +424,24 @@ class TestFill:
 class TestDtype:
     def test_simple(self, values):
         hist = h1(values)
-        assert hist.dtype == np.int64
+        assert hist.dtype == np.int_
 
     def test_with_weights(self, values):
         hist = h1(values, weights=[1, 2, 2.1, 3.2])
         assert hist.dtype == float
 
-    def test_explicit(self, values):
-        hist = h1(values, dtype=float)
-        assert hist.dtype == float
+    def test_float_weights_in_integer(self, values):
 
         with pytest.raises(ValueError):
             hist = h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
+
+    @pytest.mark.parametrize("dtype", Histogram1D.SUPPORTED_DTYPES)
+    @pytest.mark.parametrize(
+        "values", [pytest.param([0, 1, 1], id="existing"), pytest.param(None, id="none")]
+    )
+    def test_explicit_construction(self, dtype, values):
+        hist = h1(values, dtype=dtype, range=(-1, 1))
+        assert hist.dtype == dtype
 
     def test_copy(self, values):
         hist = h1(values, dtype=np.int32)

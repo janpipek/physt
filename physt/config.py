@@ -58,4 +58,5 @@ class _Config:
 
 config = _Config()
 
-del os
+
+__all__ = ["config"]

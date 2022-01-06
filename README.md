@@ -115,7 +115,7 @@ Using pip:
 * Items / slice selection (including mask arrays)
 * Add new values (fill, fill_n)
 * Cumulative values, densities
-* Simple statistics for original data (mean, std, sem)
+* Simple statistics for original data (mean, std, sem) - only for 1D histograms
 * Plotting with several backends
   - matplotlib (static plots with many options)
   - vega (interactive plots, beta, help wanted!)
