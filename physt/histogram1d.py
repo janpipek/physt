@@ -9,8 +9,8 @@ import numpy as np
 
 from physt import bin_utils
 from physt.histogram_base import HistogramBase
-
 from physt.statistics import Statistics, INVALID_STATISTICS
+from physt.util import deprecation_alias
 
 
 if TYPE_CHECKING:
@@ -156,7 +156,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         name: Name of the histogram (will be displayed as plot title)
         axis_name: Name of the characteristics that is histogrammed (will be displayed on x axis)
         errors2: Quadratic errors of individual bins. If not set, defaults to frequencies.
-        stats: Dictionary of various statistics ("sum", "sum2", "min", "max")
+        stats: The statistics to use. If not set, defaults INVALID_STATISTICS.
         """
         missed = [
             underflow,
@@ -181,6 +181,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             self._missed = np.zeros(3, dtype=self.dtype)
 
     def copy(self, *, include_frequencies: bool = True) -> "Histogram1D":
+        # Overriden to include the statistics as well
         a_copy = super().copy(include_frequencies=include_frequencies)
         if include_frequencies:
             a_copy._stats = dataclasses.replace(self.statistics)
@@ -319,45 +320,24 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     def inner_missed(self, value):
         self._missed[2] = value
 
+    @np.deprecate(message="Please use .statistics.mean instead.")
     def mean(self) -> float:
-        """Statistical mean of all values entered into histogram (weighted)
-
-        This number is precise, because we keep the necessary data
-        separate from bin contents.
-        """
-        # TODO: Warn
         return self.statistics.mean()
 
+    @np.deprecate(message="Please use .statistics.min instead.")
     def min(self) -> float:
-        """Minimum value used to construct the histogram.
-
-        It may be outside of the bin range."""
-        # TODO: Warn
         return self.statistics.min
 
+    @np.deprecate(message="Please use .statistics.max instead.")
     def max(self) -> float:
-        """Maximum value used to construct the histogram.
-
-        It may be outside of the bin range."""
-        # TODO: Warn
         return self.statistics.max
 
+    @np.deprecate(message="Please use .statistics.std instead.")
     def std(self) -> float:  # , ddof=0):
-        """Standard deviation of all values entered into histogram.
-
-        This number is precise, because we keep the necessary data
-        separate from bin contents.
-        """
-        # TODO: Warn
         return self.statistics.std()
 
+    @np.deprecate(message="Please use .statistics.variance instead.")
     def variance(self) -> float:  # , ddof: int = 0) -> float:
-        """Statistical variance of all values entered into histogram.
-
-        This number is precise, because we keep the necessary data
-        separate from bin contents.
-        """
-        # TODO: Warn
         return self.statistics.variance()
 
     def find_bin(self, value: float, axis: Optional[Axis] = None) -> Optional[int]:
@@ -600,8 +580,7 @@ def calculate_frequencies(
     errors2 :  Error squares of the bins
     underflow : Weight of items smaller than the first bin
     overflow : Weight of items larger than the last bin
-    stats: dict
-        { sum: ..., sum2: ..., min: ..., max: ...}
+    stats: The statistics (computed or empty)
 
     Note
     ----

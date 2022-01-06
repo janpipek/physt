@@ -16,10 +16,19 @@ class Statistics:
     """Container of statistics accumulative data."""
 
     sum: float = 0.0
+    """Weighted sum of all values entered into histogram."""
+
     sum2: float = 0.0
+    """Weighted sum of squares of the values used to construct the histogram."""
+
     min: float = np.inf
+    """Minimum value used to construct the histogram."""
+
     max: float = -np.inf
+    """Maximum value used to construct the histogram."""
+
     weight: float = 0.0
+    """The total weight of values used to construct the histogram."""
 
     def mean(self) -> float:
         """Statistical mean of all values entered into histogram (weighted)."""
