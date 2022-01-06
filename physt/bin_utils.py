@@ -2,6 +2,7 @@
 from typing import Optional, Tuple, Union
 
 import numpy as np
+from typing_extensions import Literal
 
 from .typing_aliases import ArrayLike
 
@@ -157,11 +158,12 @@ def is_bin_subset(sub: ArrayLike, sup: ArrayLike) -> bool:
 
 
 def is_bin_superset(sup: ArrayLike, sub: ArrayLike) -> bool:
-    """Inverse of is_bin_subset"""
+    """Inverse of is_bin_subset."""
     return is_bin_subset(sub=sub, sup=sup)
 
 
 def find_human_width_decimal(raw_width: float) -> float:
+    """Find the human bin width un decimal scale close to raw_width."""
     subscales = np.array([0.5, 1, 2, 2.5, 5, 10])
     power = np.floor(np.log10(raw_width)).astype(int)
     best_index = np.argmin(np.abs(np.log(subscales * (10.0 ** power) / raw_width)))
@@ -169,18 +171,21 @@ def find_human_width_decimal(raw_width: float) -> float:
 
 
 def find_human_width_60(raw_width: float) -> int:
+    """Find the best human bin width for seconds and minutes close to raw_width."""
     subscales = np.array([1, 2, 5, 10, 15, 20, 30])
     best_index = np.argmin(np.abs(np.log(subscales / raw_width)))
     return subscales[best_index]
 
 
 def find_human_width_24(raw_width: float) -> int:
+    """Find the best human bin width for hours close to raw_width."""
     subscales = np.array([1, 2, 3, 4, 6, 12])
     best_index = np.argmin(np.abs(np.log(subscales / raw_width)))
     return subscales[best_index]
 
 
-def find_human_width(raw_width: float, kind: Optional[str] = None) -> float:
+def find_human_width(raw_width: float, kind: Optional[Literal["time"]] = None) -> float:
+    """Find the best human width close to a given raw_width."""
     if not kind:
         return find_human_width_decimal(raw_width)
     if kind == "time":

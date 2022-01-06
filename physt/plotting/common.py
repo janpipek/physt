@@ -1,10 +1,9 @@
 """
 Functions that are shared by several (all) plotting backends.
-
 """
 import re
 from functools import wraps
-from typing import Tuple, List, Union, Callable
+from typing import Any, Dict, Tuple, List, Union, Callable
 from datetime import timedelta
 
 import numpy as np
@@ -79,7 +78,12 @@ def get_err_data(
 def get_value_format(
     value_format: Union[Callable[[float], str], str, None]
 ) -> Callable[[float], str]:
-    """Create a formatting function from a generic value_format argument."""
+    """Create a formatting function from a generic value_format argument.
+
+    Parameters
+    ----------
+    value_format : A formatting function or a string.
+    """
     if not value_format:
         return str
 
@@ -97,25 +101,31 @@ def get_value_format(
     raise TypeError("`value_format` must be a string or a callable.")
 
 
-def pop_kwargs_with_prefix(prefix: str, kwargs: dict) -> dict:
+def pop_kwargs_with_prefix(prefix: str, kwargs: Dict[str, Any]) -> Dict[str, Any]:
     """Pop all items from a dictionary that have keys beginning with a prefix.
 
     Parameters
     ----------
-    prefix : str
-    kwargs : dict
+    prefix : The prefix to match.
+    kwargs : The dictionary to be modified.
 
     Returns
     -------
-    kwargs : dict
-        Items popped from the original directory, with prefix removed.
+    kwargs : Items popped from the original directory, with prefix removed.
+
+    Note that the function modifies the original dictionary.
     """
     keys = [key for key in kwargs if key.startswith(prefix)]
     return {key[len(prefix) :]: kwargs.pop(key) for key in keys}
 
 
-def check_ndim(ndim: Union[int, Tuple[int, ...]]):
-    """Decorator checking proper histogram dimension."""
+def check_ndim(ndim: Union[int, Tuple[int, ...]]) -> Callable[[Callable], Callable]:
+    """Decorator checking proper histogram dimension.
+
+    Parameters
+    ----------
+    ndim : The required dimensionality/ies of the histogram.
+    """
 
     def wrapper(f):
         @wraps(f)
@@ -143,7 +153,6 @@ class TimeTickHandler:
 
     def __init__(self, level: str = None):  # , format=None):
         self.level = self.parse_level(level) if level else None
-        # self.format = format  # TODO: Really?
 
     LEVELS = {
         "sec": 1,
@@ -158,6 +167,7 @@ class TimeTickHandler:
     def parse_level(
         cls, value: Union[LevelType, float, str, timedelta]
     ) -> "TimeTickHandler.LevelType":
+        """Parse the level from any of the supported types."""
         if isinstance(value, tuple):
             if len(value) != 2:
                 raise ValueError(f"Invalid level: {value}")
@@ -190,7 +200,8 @@ class TimeTickHandler:
         raise TypeError(f"Invalid level: {value}")
 
     @classmethod
-    def deduce_level(cls, h1: Histogram1D, min_: float, max_: float) -> "TimeTickHandler.LevelType":
+    def deduce_level(cls, min_: float, max_: float) -> "TimeTickHandler.LevelType":
+        """Determine the level of the tick handler from the histogram range."""
         ideal_width = (max_ - min_) / 6
         if ideal_width < 0.8:
             return ("sec", find_human_width_decimal(ideal_width))
@@ -206,6 +217,7 @@ class TimeTickHandler:
     def get_time_ticks(
         self, h1: Histogram1D, level: LevelType, min_: float, max_: float
     ) -> List[float]:
+        """Get ticks for a given level."""
         # TODO: Change to class method?
         if level[0] == "edge":
             return h1.numpy_bins.tolist()
@@ -220,7 +232,8 @@ class TimeTickHandler:
         return list(np.arange(min_factor, max_factor + 1) * width)
 
     @classmethod
-    def split_hms(cls, value) -> Tuple[bool, int, int, Union[int, float]]:
+    def split_hms(cls, value: float) -> Tuple[bool, int, int, Union[int, float]]:
+        """Split the time value into sign, hours, minutes, seconds"""
         value, negative = (value, False) if value >= 0 else (-value, True)
         hm, s = divmod(value, 60)
         h, m = (int(x) for x in divmod(hm, 60))
@@ -240,15 +253,15 @@ class TimeTickHandler:
             include_secs = any(s != 0 for _, _, _, s in hms) or not include_hours
             sign = any(neg for neg, _, _, _ in hms)
 
-            format = ""
-            format += "{0}:" if include_hours else ""
-            format += "{1}" if include_mins else ""
-            format += ":" if include_mins and include_secs else ""
-            format += "{2}" if include_secs else ""
+            format_ = ""
+            format_ += "{0}:" if include_hours else ""
+            format_ += "{1}" if include_mins else ""
+            format_ += ":" if include_mins and include_secs else ""
+            format_ += "{2}" if include_secs else ""
 
             return [
                 (("-" if neg else "+") if sign else "")
-                + format.format(
+                + format_.format(
                     h,
                     m if not include_hours else str(m).zfill(2),
                     s if not include_mins else str(s).zfill(2),
@@ -257,7 +270,7 @@ class TimeTickHandler:
             ]
 
     def __call__(self, h1: Histogram1D, min_: float, max_: float) -> TickCollection:
-        level = self.level or self.deduce_level(h1, min_, max_)
+        level = self.level or self.deduce_level(min_, max_)
         ticks = self.get_time_ticks(h1, level, min_, max_)
         tick_labels = self.format_time_ticks(ticks, level=level)
         return ticks, tick_labels

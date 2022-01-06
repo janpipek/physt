@@ -88,7 +88,7 @@ try:
 
     else:
         VEGA_ERROR = "Not in a an interactive IPython shell."
-except:
+except ImportError:
     VEGA_ERROR = "IPython not installed."
 
 # Declare supported plot types.
@@ -765,7 +765,7 @@ HTML_TEMPLATE = """
         <script src="https://cdn.jsdelivr.net/npm/vega@4.2.0"></script>
         <script src="https://cdn.jsdelivr.net/npm/vega-lite@2.6.0"></script>
         <script src="https://cdn.jsdelivr.net/npm/vega-embed@3.18.1"></script>
-    </head> 
+    </head>
 <script>
     function render(spec) {
             view = new vega.View(vega.parse(spec))

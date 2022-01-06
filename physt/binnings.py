@@ -1120,7 +1120,7 @@ try:
         return StaticBinning(edges, **kwargs)
 
 
-except:
+except ImportError:
     pass  # astropy is not required
 
 

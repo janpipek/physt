@@ -4,7 +4,9 @@ from typing import Iterable, Tuple, Type, Union
 from numpy import ndarray, dtype
 
 RangeTuple = Tuple[float, float]
+
 Axis = Union[int, str]
+"""Identifier for axis - either the numerical order or the name."""
 
 ArrayLike = Union[ndarray, Iterable, int, float]
 DtypeLike = Union[type, dtype, str]
