@@ -95,6 +95,10 @@ Using pip:
 
 `pip install physt`
 
+or conda:
+
+`conda install -c janpipek physt`
+
 ## Features
 
 ### Implemented
