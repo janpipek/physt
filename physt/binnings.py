@@ -1,5 +1,5 @@
 """Different binning algorithms/schemas for the histograms."""
-from typing import cast, Any, Dict, Optional, Tuple, List, Union, Sequence, TYPE_CHECKING
+from typing import Literal, cast, Any, Dict, Optional, Tuple, List, Union, Sequence, TYPE_CHECKING
 
 import numpy as np
 
@@ -722,7 +722,7 @@ def human_binning(
     data: Optional[np.ndarray],
     bin_count: Optional[int] = None,
     *,
-    kind: Optional[str] = None,
+    kind: Optional[Literal["time"]] = None,
     range: Optional[RangeTuple] = None,
     min_bin_width: Optional[float] = None,
     max_bin_width: Optional[float] = None,
