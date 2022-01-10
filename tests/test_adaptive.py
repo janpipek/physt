@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from physt.histogram1d import Histogram1D
 from physt import h1, h2, histogramdd
+from physt.histogram1d import Histogram1D
 
 
 @pytest.fixture

@@ -4,9 +4,8 @@ import pkgutil
 
 import numpy as np
 
-from physt.histogram1d import Histogram1D
-from physt.histogram_nd import Histogram2D, HistogramND
 from physt.facade import h1, h2, h3
+from physt.types import Histogram1D, Histogram2D, HistogramND
 
 
 def normal_h1(size: int = 10000, mean: float = 0, sigma: float = 1) -> Histogram1D:
@@ -88,8 +87,9 @@ try:
 
         # Seaborn datasets?
         try:
-            import seaborn as sns
             import warnings
+
+            import seaborn as sns
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")

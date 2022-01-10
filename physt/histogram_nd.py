@@ -3,19 +3,18 @@ from __future__ import annotations
 
 import warnings
 from numbers import Number
-from typing import cast, overload, TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Tuple, cast, overload
 
 import numpy as np
 
 from physt.histogram_base import HistogramBase
 
-
 if TYPE_CHECKING:
     # TODO: use float?
-    from typing import Optional, List, Any, Sequence, Union, Iterable
+    from typing import Any, Iterable, List, Optional, Sequence, Union
 
     from physt.binnings import BinningBase, BinningLike
-    from physt.typing_aliases import ArrayLike, DTypeLike, Axis
+    from physt.typing_aliases import ArrayLike, Axis, DTypeLike
 
 
 class HistogramND(HistogramBase):

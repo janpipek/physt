@@ -9,8 +9,6 @@ but designed for humans(TM) on steroids(TM).
 See https://github.com/janpipek/physt
 """
 
-from . import binnings
-from . import special_histograms
-from . import compat
+from . import binnings, compat, special_histograms
 from .facade import *
-from .version import __version__, __author__, __author_email__, __url__
+from .version import __author__, __author_email__, __url__, __version__

@@ -1,27 +1,27 @@
 """Different binning algorithms/schemas for the histograms."""
 from __future__ import annotations
 
-from typing import cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
-
 from physt.bin_utils import (
+    find_human_width,
     is_bin_subset,
     is_consecutive,
     is_rising,
     make_bin_array,
     to_numpy_bins,
     to_numpy_bins_with_mask,
-    find_human_width,
 )
 from physt.util import find_subclass
 
 if TYPE_CHECKING:
-    from typing import TypeVar, Any, Dict, Optional, Tuple, List, Union, Sequence
+    from typing import Any, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
+
     from typing_extensions import Literal
 
-    from physt.typing_aliases import RangeTuple, ArrayLike
+    from physt.typing_aliases import ArrayLike, RangeTuple
 
     BinningType = TypeVar("BinningType", bound="BinningBase")
 
@@ -1042,8 +1042,9 @@ try:
     # If possible, import astropy's binning methods
     # See: http://docs.astropy.org/en/stable/visualization/histogram.html
 
-    from astropy.stats.histogram import histogram as _astropy_histogram  # Just check
     import warnings
+
+    from astropy.stats.histogram import histogram as _astropy_histogram  # Just check
 
     warnings.filterwarnings("ignore", module="astropy\\..*")
 

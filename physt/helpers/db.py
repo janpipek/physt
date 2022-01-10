@@ -1,11 +1,14 @@
 """Helper functions to consume DB cursors."""
 # TODO: Add tests with in-memory SQLite
 # TODO: Implement non-adaptive
-from typing import Tuple
+from typing import TYPE_CHECKING
 
 from physt import h1, h2, h3
-from physt.histogram1d import Histogram1D
-from physt.histogram_nd import HistogramND, Histogram2D
+
+if TYPE_CHECKING:
+    from typing import Tuple
+
+    from physt.types import Histogram1D, Histogram2D, HistogramND
 
 
 def _get_axis_names(cursor) -> Tuple[str, ...]:

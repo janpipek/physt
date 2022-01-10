@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 if TYPE_CHECKING:
-    from physt.histogram_nd import Histogram2D
     from physt.histogram1d import Histogram1D
+    from physt.histogram_nd import Histogram2D
 
 
 class AbstractTest(ABC):

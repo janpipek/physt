@@ -11,16 +11,16 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas
 import pandas as pd
-from pandas.core.arrays.masked import BaseMaskedDtype
 from pandas.api.types import is_numeric_dtype
+from pandas.core.arrays.masked import BaseMaskedDtype
 
 from physt.binnings import BinningBase, calculate_bins, static_binning
 from physt.facade import h, h1, h2
-from physt.types import HistogramBase, Histogram2D, Histogram1D
-
+from physt.types import Histogram1D, Histogram2D, HistogramBase
 
 if TYPE_CHECKING:
     from typing import Any, Optional, Union
+
     from physt.typing_aliases import ArrayLike
 
 

@@ -6,7 +6,8 @@ pytest.importorskip("matplotlib")
 from matplotlib.axes import Axes
 
 from physt.plotting import matplotlib
-from .shared import AbstractTest1D, AbstractTest2D, AbstractTest
+
+from .shared import AbstractTest, AbstractTest1D, AbstractTest2D
 
 
 class _TestBase(AbstractTest, ABC):

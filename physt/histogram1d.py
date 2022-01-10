@@ -1,26 +1,25 @@
 """One-dimensional histograms."""
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import dataclasses
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 import numpy as np
 
 from physt import bin_utils
 from physt.histogram_base import HistogramBase
-from physt.statistics import Statistics, INVALID_STATISTICS
+from physt.statistics import INVALID_STATISTICS, Statistics
 from physt.util import deprecation_alias
 
-
 if TYPE_CHECKING:
-    from typing import TypeVar, Any, Dict, Mapping, Optional, Tuple, Type, Union
+    from typing import Any, Dict, Mapping, Optional, Tuple, Type, TypeVar, Union
 
-    import xarray
     import pandas
+    import xarray
 
     from physt.binnings import BinningBase, BinningLike
-    from physt.typing_aliases import ArrayLike, DTypeLike, Axis
+    from physt.typing_aliases import ArrayLike, Axis, DTypeLike
 
     Histogram1DType = TypeVar("Histogram1DType", bound="Histogram1D")
 

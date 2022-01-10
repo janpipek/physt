@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 import physt
-from physt import h2, histogram_nd, binnings
-from physt.binnings import as_binning, BinningBase
+from physt import binnings, h2, histogram_nd
+from physt.binnings import BinningBase, as_binning
 from physt.histogram_nd import Histogram2D
 
 vals = [

@@ -9,25 +9,25 @@ Note that the histogram classes are rather data structures and need data to be c
 """
 from __future__ import annotations
 
-from typing import cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
-from physt.util import deprecation_alias
-from physt.types import Histogram1D, Histogram2D, HistogramND, HistogramCollection
 from physt.binnings import calculate_bins, calculate_bins_nd
 from physt.special_histograms import (
-    polar,
     azimuthal,
-    radial,
     cylindrical,
     cylindrical_surface,
+    polar,
+    radial,
     spherical,
     spherical_surface,
 )
+from physt.types import Histogram1D, Histogram2D, HistogramCollection, HistogramND
+from physt.util import deprecation_alias
 
 if TYPE_CHECKING:
-    from typing import Optional, Iterable, Type, Tuple
+    from typing import Iterable, Optional, Tuple, Type
 
     from physt.typing_aliases import ArrayLike, DTypeLike
 

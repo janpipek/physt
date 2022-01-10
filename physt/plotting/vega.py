@@ -12,9 +12,6 @@ See the `enable_inline_view` wrapper.
 """
 from __future__ import annotations
 
-# TODO: Custom JSON serializer better than conversion?
-
-
 import codecs
 import json
 from functools import wraps
@@ -22,13 +19,16 @@ from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 
-from physt.plotting.common import get_data, get_value_format, check_ndim
+from physt.plotting.common import check_ndim, get_data, get_value_format
 from physt.types import HistogramCollection
 
-if TYPE_CHECKING:
-    from typing import Any, Optional, Union, Dict
+# TODO: Custom JSON serializer better than conversion?
 
-    from physt.types import HistogramBase, Histogram1D, Histogram2D, HistogramND
+
+if TYPE_CHECKING:
+    from typing import Any, Dict, Optional, Union
+
+    from physt.types import Histogram1D, Histogram2D, HistogramBase, HistogramND
 
 
 VEGA_IPYTHON_PLUGIN_ENABLED = False

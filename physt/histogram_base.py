@@ -3,28 +3,24 @@ from __future__ import annotations
 
 import abc
 import warnings
-from typing import (
-    TYPE_CHECKING,
-    cast,
-)
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
-from physt.binnings import as_binning, BinningBase
+from physt.binnings import BinningBase, as_binning
 from physt.config import config
 from physt.statistics import INVALID_STATISTICS
 
-
 if TYPE_CHECKING:
     from typing import (
+        Any,
         ClassVar,
         Collection,
         Dict,
-        List,
-        Optional,
         Iterable,
+        List,
         Mapping,
-        Any,
+        Optional,
         Tuple,
         Type,
         TypeVar,
@@ -32,8 +28,8 @@ if TYPE_CHECKING:
     )
 
     import physt
-    from physt.typing_aliases import Axis, ArrayLike, DTypeLike
     from physt.binnings import BinningLike
+    from physt.typing_aliases import ArrayLike, Axis, DTypeLike
 
     HistogramType = TypeVar("HistogramType", bound="HistogramBase")
 

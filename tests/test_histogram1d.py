@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
 
+from physt import h1
 from physt.config import config
 from physt.histogram1d import Histogram1D
-from physt import h1
 from physt.statistics import INVALID_STATISTICS
 
 

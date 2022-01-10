@@ -19,20 +19,20 @@ from __future__ import annotations
 
 import abc
 from functools import reduce
-from typing import overload, TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 import numpy as np
 
-from physt.histogram_nd import HistogramND
 from physt.histogram1d import Histogram1D
+from physt.histogram_nd import HistogramND
 from physt.util import deprecation_alias
 
-from . import histogram_nd, binnings
+from . import binnings, histogram_nd
 
 if TYPE_CHECKING:
-    from typing import Optional, Type, Union, Tuple, Dict
+    from typing import Dict, Optional, Tuple, Type, Union
 
-    from physt.typing_aliases import Axis, RangeTuple, ArrayLike
+    from physt.typing_aliases import ArrayLike, Axis, RangeTuple
 
 
 FULL_PHI_RANGE: RangeTuple = (0, 2 * np.pi)

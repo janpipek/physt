@@ -4,9 +4,9 @@ Functions that are shared by several (all) plotting backends.
 from __future__ import annotations
 
 import re
+from datetime import timedelta
 from functools import wraps
 from typing import TYPE_CHECKING
-from datetime import timedelta
 
 import numpy as np
 
@@ -17,7 +17,7 @@ from physt.bin_utils import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any, Dict, Tuple, List, Union, Callable, Optional
+    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
     from physt.types import Histogram1D, HistogramBase
 

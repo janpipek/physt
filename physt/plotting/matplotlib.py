@@ -42,9 +42,14 @@ import matplotlib.path as path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from physt.types import HistogramCollection
 from physt.config import config
-from physt.plotting.common import get_data, get_err_data, pop_kwargs_with_prefix, check_ndim
+from physt.plotting.common import (
+    check_ndim,
+    get_data,
+    get_err_data,
+    pop_kwargs_with_prefix,
+)
+from physt.types import HistogramCollection
 
 if TYPE_CHECKING:
     from typing import Any, Collection, Dict, List, Optional, Tuple, Union
@@ -54,8 +59,11 @@ if TYPE_CHECKING:
     from mpl_toolkits.mplot3d import Axes3D
     from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
+    from physt.special_histograms import (
+        CylindricalSurfaceHistogram,
+        SphericalSurfaceHistogram,
+    )
     from physt.types import Histogram1D, Histogram2D
-    from physt.special_histograms import CylindricalSurfaceHistogram, SphericalSurfaceHistogram
 
 
 # To be filled by register function

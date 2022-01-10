@@ -93,7 +93,7 @@ from physt.types import HistogramBase, HistogramCollection
 backends: Dict[str, Any] = {}
 
 if TYPE_CHECKING:
-    from typing import Any, Dict, Optional, Union, Tuple
+    from typing import Any, Dict, Optional, Tuple, Union
 
 # Use variant without exception catching if you want to debug import of backends.
 # from . import matplotlib as mpl_backend

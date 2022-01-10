@@ -1,9 +1,9 @@
 """Support for summary statistics kept in the histogram instances."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import dataclasses
-from typing import cast, TYPE_CHECKING
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 

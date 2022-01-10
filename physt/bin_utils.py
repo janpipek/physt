@@ -7,7 +7,9 @@ import numpy as np
 
 if TYPE_CHECKING:
     from typing import Optional, Tuple, Union
+
     from typing_extensions import Literal
+
     from physt.typing_aliases import ArrayLike
 
 

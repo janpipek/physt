@@ -16,14 +16,15 @@ import plotly.graph_objs as go
 import plotly.offline as pyo
 from plotly.graph_objs import Figure
 
-from physt.util import pop_many
 from physt.types import Histogram2D, HistogramCollection
-from .common import get_data, check_ndim
+from physt.util import pop_many
+
+from .common import check_ndim, get_data
 
 if TYPE_CHECKING:
     from typing import Optional, Union
 
-    from physt.types import HistogramCollection, Histogram1D, Histogram2D
+    from physt.types import Histogram1D, Histogram2D, HistogramCollection
 
     AbstractHistogram1D = Union[HistogramCollection, Histogram1D]
     # TODO: Move this to the typing itself

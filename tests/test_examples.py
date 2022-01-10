@@ -1,11 +1,11 @@
 import sys
 
-import pytest
 import numpy as np
+import pytest
 
 from physt import examples
 from physt.histogram1d import Histogram1D
-from physt.histogram_nd import HistogramND, Histogram2D
+from physt.histogram_nd import Histogram2D, HistogramND
 
 try:
     import pandas as pd

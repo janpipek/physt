@@ -16,7 +16,8 @@ implementing missing features and suggest new one.
 
 import itertools
 import os
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 
 def read_info():

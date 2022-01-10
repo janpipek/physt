@@ -7,9 +7,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from folium import Map, GeoJson
 from branca.colormap import LinearColormap
-
+from folium import GeoJson, Map
 
 if TYPE_CHECKING:
     from typing import Any, Dict, Optional

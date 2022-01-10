@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing import Container, TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Container, cast
 
 import numpy as np
 
-from physt.histogram1d import Histogram1D, ObjectWithBinning
 from physt.binnings import BinningBase, as_binning
+from physt.histogram1d import Histogram1D, ObjectWithBinning
 
 if TYPE_CHECKING:
-    from typing import Optional, Tuple, Dict, Any
+    from typing import Any, Dict, Optional, Tuple
 
     import physt
     from physt.binnings import BinningLike

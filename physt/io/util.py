@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from physt.io.version import require_compatible_version
-from physt.util import find_subclass
 from physt.types import HistogramBase, HistogramCollection
+from physt.util import find_subclass
 
 if TYPE_CHECKING:
-    from typing import Union, Type
+    from typing import Type, Union
 
 
 def create_from_dict(

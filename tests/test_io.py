@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 import physt
 from physt import io

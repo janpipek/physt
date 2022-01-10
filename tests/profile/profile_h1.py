@@ -7,10 +7,12 @@ Usage:
     2) mprof run profile_h1.py
     3) mprof plot     # See the results
 """
-import numpy as np
-import physt
-import time
 import gc
+import time
+
+import numpy as np
+
+import physt
 
 
 def make_big_h1(data):
