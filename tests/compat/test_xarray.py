@@ -29,7 +29,7 @@ class TestFromXarray:
     # TODO: Add tests from a constructed xarray dataset
     # TODO: Add tests for invalid datasets
 
-    def test_to_xarray_inverse(self, simple_h1) -> Dataset:
+    def test_to_xarray_inverse(self, simple_h1):
         h1_xarray = simple_h1.to_xarray()
         h1_from_xarray = Histogram1D.from_xarray(h1_xarray)
         assert_histograms_equal(simple_h1, h1_from_xarray)
