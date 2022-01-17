@@ -26,4 +26,9 @@ except ImportError:
     pass
 
 
-# TODO: Make xarray a compat too.
+try:
+    from . import xarray
+
+    __all__.append("xarray")
+except ImportError:
+    pass

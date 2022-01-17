@@ -15,9 +15,6 @@ from physt.util import deprecation_alias
 if TYPE_CHECKING:
     from typing import Any, Dict, Mapping, Optional, Tuple, Type, TypeVar, Union
 
-    import pandas
-    import xarray
-
     from physt.binnings import BinningBase, BinningLike
     from physt.typing_aliases import ArrayLike, Axis, DTypeLike
 
@@ -465,46 +462,6 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         kwargs = HistogramBase._kwargs_from_dict(a_dict)  # type: ignore
         kwargs["binning"] = kwargs.pop("binnings")[0]
         return kwargs
-
-    def to_xarray(self) -> "xarray.Dataset":
-        """Convert to xarray.Dataset"""
-        # TODO: Move this to physt.compat.xarray
-        import xarray as xr
-
-        data_vars: Dict[str, Any] = {
-            "frequencies": xr.DataArray(self.frequencies, dims="bin"),
-            "errors2": xr.DataArray(self.errors2, dims="bin"),
-            "bins": xr.DataArray(self.bins, dims=("bin", "x01")),
-        }
-        coords: Dict[str, Any] = {}
-        attrs: Dict[str, Any] = {
-            "underflow": self.underflow,
-            "overflow": self.overflow,
-            "inner_missed": self.inner_missed,
-            "keep_missed": self.keep_missed,
-        }
-        attrs.update(self._meta_data)
-        # TODO: Add stats
-        return xr.Dataset(data_vars, coords, attrs)  # type: ignore
-
-    @classmethod
-    def from_xarray(cls, arr: "xarray.Dataset") -> "Histogram1D":
-        """Convert form xarray.Dataset
-
-        Parameters
-        ----------
-        arr: The data in xarray representation
-        """
-        kwargs = {
-            "frequencies": arr["frequencies"],
-            "binning": arr["bins"],
-            "errors2": arr["errors2"],
-            "overflow": arr.attrs["overflow"],
-            "underflow": arr.attrs["underflow"],
-            "keep_missed": arr.attrs["keep_missed"],
-        }
-        # TODO: Add stats
-        return cls(**kwargs)
 
     @classmethod
     def from_calculate_frequencies(
