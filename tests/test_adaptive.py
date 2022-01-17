@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from physt import h1, h2, histogramdd
+from physt import h1, h2
+from physt.facade import histogramdd
 from physt.histogram1d import Histogram1D
 
 

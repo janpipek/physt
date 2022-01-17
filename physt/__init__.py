@@ -30,7 +30,8 @@ __all__ = [
     "__version__",
 ]
 
-from facade import (
+from . import binnings, compat  # noqa: F401
+from .facade import (
     azimuthal,
     collection,
     cylindrical,
@@ -44,6 +45,4 @@ from facade import (
     spherical,
     spherical_surface,
 )
-
-from . import binnings, compat  # noqa: F401
 from .version import __author__, __author_email__, __url__, __version__
