@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from h11 import Data
 from xarray import DataArray, Dataset
 
 from physt.types import Histogram1D
