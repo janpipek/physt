@@ -43,7 +43,6 @@ def _h1_to_xarray(h1: Histogram1D) -> Dataset:
     return Dataset(data_vars, coords, attrs)
 
 
-@classmethod
 def _h1_from_xarray(cls: Type[Histogram1D], arr: Dataset) -> Histogram1D:
     """Convert form xarray.Dataset
 
@@ -56,13 +55,13 @@ def _h1_from_xarray(cls: Type[Histogram1D], arr: Dataset) -> Histogram1D:
         "binning": arr["bins"],
         "errors2": arr["errors2"],
     }
-    kwargs.update(arr.attrs)
+    kwargs.update(arr.attrs)  # type: ignore
     # TODO: Add stats
-    return cls(**kwargs)
+    return cls(**kwargs)  # type: ignore
 
 
 setattr(Histogram1D, "to_xarray", _h1_to_xarray)
-setattr(Histogram1D, "from_xarray", _h1_from_xarray)
+setattr(Histogram1D, "from_xarray", classmethod(_h1_from_xarray))
 
 
 # TODO: Implement multi-dimensional histograms
