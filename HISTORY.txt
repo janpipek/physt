@@ -1,3 +1,7 @@
+---
+- Removed: physt.special (use physt.special_histograms instead)
+
+
 0.5.3 (6 January 2023)
 ----------------------
 - Changed: Distribution to wheels
