@@ -1,5 +1,7 @@
 import pytest
 from numpy.testing import assert_allclose
+
+pytest.importorskip("xarray")
 from xarray import Dataset
 
 from physt.testing import assert_histograms_equal
