@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 
 import dask
 
-from physt import h1 as original_h1
-from physt import histogramdd as original_hdd
+from physt.facade import h1 as original_h1
+from physt.facade import histogramdd as original_hdd
 
 if TYPE_CHECKING:
     import dask.array
