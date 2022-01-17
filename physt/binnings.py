@@ -485,7 +485,10 @@ class FixedWidthBinning(BinningBase):
         self._numpy_bins = None
 
     def __repr__(self):
-        result = f"{self.__class__.__name__}(bin_width={self.bin_width}, bin_count={self.bin_count}, min={self.first_edge}"
+        result = (
+            f"{self.__class__.__name__}(bin_width={self.bin_width}, "
+            f"bin_count={self.bin_count}, min={self.first_edge}"
+        )
         if self.is_adaptive():
             result += ", adaptive=True"
         return result + ")"
@@ -1044,7 +1047,7 @@ try:
 
     import warnings
 
-    from astropy.stats.histogram import histogram as _astropy_histogram  # Just check
+    from astropy.stats.histogram import histogram as _astropy_histogram  # noqa: F401
 
     warnings.filterwarnings("ignore", module="astropy\\..*")
 

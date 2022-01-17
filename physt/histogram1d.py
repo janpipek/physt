@@ -10,7 +10,6 @@ import numpy as np
 from physt import bin_utils
 from physt.histogram_base import HistogramBase
 from physt.statistics import INVALID_STATISTICS, Statistics
-from physt.util import deprecation_alias
 
 if TYPE_CHECKING:
     from typing import Any, Dict, Mapping, Optional, Tuple, Type, TypeVar, Union

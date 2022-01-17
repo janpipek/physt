@@ -3,6 +3,7 @@
 See https://geant4.web.cern.ch/ for the project pages.
 """
 import codecs
+from typing import Union
 
 import numpy as np
 
@@ -10,7 +11,7 @@ from physt.binnings import fixed_width_binning
 from physt.types import Histogram1D, Histogram2D
 
 
-def load_csv(path):
+def load_csv(path: str) -> Union[Histogram1D, Histogram2D]:
     """Loads a histogram as output from Geant4 analysis tools in CSV format.
 
     Parameters
@@ -23,7 +24,7 @@ def load_csv(path):
     physt.histogram1d.Histogram1D or physt.histogram_nd.Histogram2D
     """
     meta = []
-    data = []
+    data_raw = []
     with codecs.open(path, encoding="ASCII") as in_file:
         for line in in_file:
             if line.startswith("#"):
@@ -31,15 +32,17 @@ def load_csv(path):
                 meta.append((key, value))  # TODO: There are duplicit entries :-()
             else:
                 try:
-                    data.append([float(frag) for frag in line.split(",")])
-                except:
+                    data_raw.append([float(frag) for frag in line.split(",")])
+                except:  # noqa: E722  # TODO: Find out why
                     pass
-    data = np.asarray(data)
+    data = np.asarray(data_raw)
     ndim = int(_get(meta, "dimension"))
     if ndim == 1:
         return _create_h1(data, meta)
     elif ndim == 2:
         return _create_h2(data, meta)
+    else:
+        raise ValueError("Cannot handle histograms with dimension > 2")
 
 
 def _get(pseudodict, key, single=True):
@@ -51,7 +54,7 @@ def _get(pseudodict, key, single=True):
         return matches
 
 
-def _create_h1(data, meta):
+def _create_h1(data, meta) -> Histogram1D:
     _, bin_count, min_, max_ = _get(meta, "axis").split()
     bin_count = int(bin_count)
     min_ = float(min_)
@@ -66,7 +69,7 @@ def _create_h1(data, meta):
     return hist
 
 
-def _create_h2(data, meta):
+def _create_h2(data, meta) -> Histogram2D:
     binnings = []
     axes = _get(meta, "axis", False)
     for axis in axes:
@@ -77,13 +80,17 @@ def _create_h2(data, meta):
         binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_))
         binnings.append(binning)
 
-    hist = Histogram2D(binnings, name=_get(meta, "title"))
+    shape = Histogram2D(binnings).shape
 
     # TODO: Are the shapes in correct order?
-    frequencies = data[:, 1].reshape([b + 2 for b in hist.shape])
-    hist._frequencies = frequencies[1:-1, 1:-1]
+    frequencies = data[:, 1].reshape([b + 2 for b in shape])
+    frequencies = frequencies[1:-1, 1:-1]
 
-    errors2 = data[:, 2].reshape([b + 2 for b in hist.shape])
-    hist._errors = errors2[1:-1, 1:-1]
+    errors2 = data[:, 2].reshape([b + 2 for b in shape])
+    errors2 = errors2[1:-1, 1:-1]
+
+    hist = Histogram2D(
+        binnings=binnings, name=_get(meta, "title"), frequencies=frequencies, errors2=errors2
+    )
 
     return hist

@@ -355,9 +355,15 @@ def map(
     transformed = False
     if x is not None or y is not None:
         if not x:
-            x = lambda x, y: x
+
+            def x(x, y):
+                return x
+
         if not y:
-            y = lambda x, y: y
+
+            def y(x, y):
+                return y
+
         transformed = True
 
     # TODO: Implement correctly the text_kwargs
