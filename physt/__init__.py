@@ -9,9 +9,6 @@ but designed for humans(TM) on steroids(TM).
 See https://github.com/janpipek/physt
 """
 __all__ = [
-    "binnings",
-    "compat",
-    "special_histograms",
     "azimuthal",
     "collection",
     "cylindrical_surface",
