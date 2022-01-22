@@ -1,3 +1,8 @@
+"""Support testing.
+
+More detailed comparisons of histograms mostly for unit testing.
+"""
+
 from numpy.testing import assert_allclose
 
 from physt.types import HistogramBase

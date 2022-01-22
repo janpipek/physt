@@ -11,13 +11,15 @@ nice integration into IPython notebook and various plotting options. In short, w
 
 *Note: bokeh plotting backend has been discontinued (due to external library being redesigned.)*
 
-[![Travis](https://travis-ci.com/janpipek/physt.svg?branch=master)](https://travis-ci.com/janpipek/physt/)
 [![ReadTheDocs](https://readthedocs.org/projects/physt/badge/?version=latest)](http://physt.readthedocs.io/en/latest/)
 [![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/physt.svg)](https://gitter.im/physt/physt)
+[![PyPI downloads](https://img.shields.io/pypi/dm/physt)](https://pypi.org/project/physt/)
 [![PyPI version](https://badge.fury.io/py/physt.svg)](https://badge.fury.io/py/physt)
 [![Anaconda-Server Badge](https://anaconda.org/janpipek/physt/badges/version.svg)](https://anaconda.org/janpipek/physt)
 [![Anaconda-Server Badge](https://anaconda.org/janpipek/physt/badges/license.svg)](https://anaconda.org/janpipek/physt)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+
 
 ### Versioning
 
@@ -96,6 +98,10 @@ Using pip:
 
 `pip install physt`
 
+or conda:
+
+`conda install -c janpipek physt`
+
 ## Features
 
 ### Implemented
@@ -115,7 +121,7 @@ Using pip:
 * Items / slice selection (including mask arrays)
 * Add new values (fill, fill_n)
 * Cumulative values, densities
-* Simple statistics for original data (mean, std, sem)
+* Simple statistics for original data (mean, std, sem) - only for 1D histograms
 * Plotting with several backends
   - matplotlib (static plots with many options)
   - vega (interactive plots, beta, help wanted!)

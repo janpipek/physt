@@ -1,6 +1,5 @@
-from pkg_resources import parse_version
-
 from packaging.version import Version
+from pkg_resources import parse_version
 
 from physt import __version__
 

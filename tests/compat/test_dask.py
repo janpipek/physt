@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 pytest.importorskip("dask")
 import dask.array as da

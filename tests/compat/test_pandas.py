@@ -5,14 +5,15 @@ import pytest
 
 from physt.facade import h
 from physt.histogram1d import Histogram1D
-from physt.histogram_nd import HistogramND, Histogram2D
+from physt.histogram_nd import Histogram2D, HistogramND
 
 pytest.importorskip("pandas")
 import pandas as pd
 from pandas import IntervalIndex
-from pandas.testing import assert_index_equal, assert_series_equal, assert_frame_equal
+from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
+
 from physt import h1, h2
-from physt.binnings import static_binning, StaticBinning
+from physt.binnings import StaticBinning, static_binning
 from physt.compat.pandas import binning_to_index, index_to_binning
 from physt.testing import assert_histograms_equal
 

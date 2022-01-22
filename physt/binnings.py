@@ -1,22 +1,27 @@
 """Different binning algorithms/schemas for the histograms."""
-from typing import cast, Any, Dict, Optional, Tuple, List, Union, Sequence, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
 from physt.bin_utils import (
+    find_human_width,
     is_bin_subset,
     is_consecutive,
     is_rising,
     make_bin_array,
     to_numpy_bins,
     to_numpy_bins_with_mask,
-    find_human_width,
 )
-from physt.typing_aliases import RangeTuple, ArrayLike
 from physt.util import find_subclass
 
 if TYPE_CHECKING:
-    from typing import TypeVar
+    from typing import Any, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
+
+    from typing_extensions import Literal
+
+    from physt.typing_aliases import ArrayLike, RangeTuple
 
     BinningType = TypeVar("BinningType", bound="BinningBase")
 
@@ -365,8 +370,9 @@ class BinningBase:
         return f"{self.__class__.__name__}({repr(self.numpy_bins)})"
 
 
-BinningLike = Union[BinningBase, ArrayLike]
-"""Anything that can be converted to a binning."""
+if TYPE_CHECKING:
+    BinningLike = Union[BinningBase, ArrayLike]
+    """Anything that can be converted to a binning."""
 
 
 class StaticBinning(BinningBase):
@@ -722,7 +728,7 @@ def human_binning(
     data: Optional[np.ndarray],
     bin_count: Optional[int] = None,
     *,
-    kind: Optional[str] = None,
+    kind: Optional[Literal["time"]] = None,
     range: Optional[RangeTuple] = None,
     min_bin_width: Optional[float] = None,
     max_bin_width: Optional[float] = None,
@@ -1036,8 +1042,9 @@ try:
     # If possible, import astropy's binning methods
     # See: http://docs.astropy.org/en/stable/visualization/histogram.html
 
-    from astropy.stats.histogram import histogram as _astropy_histogram  # Just check
     import warnings
+
+    from astropy.stats.histogram import histogram as _astropy_histogram  # Just check
 
     warnings.filterwarnings("ignore", module="astropy\\..*")
 
@@ -1131,7 +1138,7 @@ try:
         return StaticBinning(edges, **kwargs)
 
 
-except:
+except ImportError:
     pass  # astropy is not required
 
 

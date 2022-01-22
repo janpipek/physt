@@ -1,6 +1,7 @@
-from physt import binnings
 import numpy as np
 import pytest
+
+from physt import binnings
 
 
 class TestCalculateBinsNd:

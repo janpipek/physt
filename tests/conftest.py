@@ -5,9 +5,9 @@ import pytest
 
 from physt.binnings import FixedWidthBinning
 from physt.examples import normal_h2
-from physt.histogram_base import HistogramBase
-from physt.histogram1d import Histogram1D
-from physt.histogram_nd import Histogram2D, HistogramND
+from physt.statistics import Statistics
+from physt.types import Histogram1D, Histogram2D, HistogramBase, HistogramND
+from physt.typing_aliases import ArrayLike
 
 
 @pytest.fixture
@@ -36,12 +36,35 @@ def create_adaptive():
 
 
 @pytest.fixture
-def simple_h1() -> Histogram1D:
-    edges = [0, 1, 1.5, 2, 3]
+def simple_edges() -> ArrayLike:
+    return [0, 1, 1.5, 2, 3]
+
+
+@pytest.fixture
+def simple_h1(simple_edges) -> Histogram1D:
     frequencies = [1, 25, 0, 12]
     return Histogram1D(
-        binning=edges,
+        binning=simple_edges,
         frequencies=frequencies,
+        axis_name="axis_x",
+        dtype="int64",
+        name="Name",
+        title="Title",
+        stats=Statistics(
+            min=0.5,
+            max=2.87,
+            sum=52,
+            sum2=71,
+            weight=40,  # a bit over 38
+        ),
+    )
+
+
+@pytest.fixture
+def empty_h1(simple_edges) -> Histogram1D:
+    return Histogram1D(
+        binning=simple_edges,
+        frequencies=None,
         axis_name="axis_x",
         name="Name",
         title="Title",

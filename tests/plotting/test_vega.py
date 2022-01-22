@@ -2,6 +2,7 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 from physt.plotting import vega
+
 from .shared import AbstractTest, AbstractTest1D, AbstractTest2D
 
 if TYPE_CHECKING:

@@ -15,17 +15,25 @@ And of course, it is possible to re-use the general transforming functionality
 by adding `TransformedHistogramMixin` among the custom histogram
 class superclasses.
 """
+from __future__ import annotations
+
 import abc
 from functools import reduce
-from typing import Optional, Type, Union, Tuple, Dict, overload
+from typing import TYPE_CHECKING, overload
 
 import numpy as np
 
-from physt.histogram_nd import HistogramND
 from physt.histogram1d import Histogram1D
+from physt.histogram_nd import HistogramND
 from physt.util import deprecation_alias
-from physt.typing_aliases import Axis, RangeTuple, ArrayLike
-from . import histogram_nd, binnings
+
+from . import binnings, histogram_nd
+
+if TYPE_CHECKING:
+    from typing import Dict, Optional, Tuple, Type, Union
+
+    from physt.typing_aliases import ArrayLike, Axis, RangeTuple
+
 
 FULL_PHI_RANGE: RangeTuple = (0, 2 * np.pi)
 FULL_THETA_RANGE: RangeTuple = (0, np.pi)

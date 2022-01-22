@@ -16,7 +16,8 @@ implementing missing features and suggest new one.
 
 import itertools
 import os
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 
 def read_info():
@@ -47,7 +48,7 @@ options = dict(
     author_email=INFO["__author_email__"],
     url=INFO["__url__"],
     package_data={"physt": ["examples/*.csv"]},
-    install_requires=["numpy>=1.20", "packaging"],
+    install_requires=["numpy>=1.20", "packaging", "typing_extensions"],
     python_requires="~=3.7",
     extras_require={
         "all": [

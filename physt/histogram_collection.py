@@ -1,13 +1,18 @@
-from typing import Optional, Container, Tuple, Dict, Any, TYPE_CHECKING, cast
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Container, cast
 
 import numpy as np
 
+from physt.binnings import BinningBase, as_binning
 from physt.histogram1d import Histogram1D, ObjectWithBinning
-from physt.binnings import BinningBase, BinningLike, as_binning
-from physt.typing_aliases import ArrayLike
 
 if TYPE_CHECKING:
+    from typing import Any, Dict, Optional, Tuple
+
     import physt
+    from physt.binnings import BinningLike
+    from physt.typing_aliases import ArrayLike
 
 
 class HistogramCollection(Container[Histogram1D], ObjectWithBinning):

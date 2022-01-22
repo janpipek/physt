@@ -6,9 +6,8 @@ import codecs
 
 import numpy as np
 
-from physt.histogram1d import Histogram1D
-from physt.histogram_nd import Histogram2D
 from physt.binnings import fixed_width_binning
+from physt.types import Histogram1D, Histogram2D
 
 
 def load_csv(path):

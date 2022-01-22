@@ -1,11 +1,11 @@
-from physt.typing_aliases import ArrayLike
 import numpy as np
 import pytest
 
 import physt
-from physt.histogram_nd import Histogram2D, HistogramND
-from physt.histogram1d import Histogram1D
 from physt import h2, h3
+from physt.histogram1d import Histogram1D
+from physt.histogram_nd import Histogram2D, HistogramND
+from physt.typing_aliases import ArrayLike
 
 
 class TestHistogramND:

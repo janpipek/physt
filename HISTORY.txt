@@ -1,7 +1,15 @@
+0.5.3 (6 January 2023)
+----------------------
+- Changed: Distribution to wheels
+- Changed: Statistics have a special class
+- Changed: Statistics are now computed from all values (more options for plot too)
+- Fixed: Sometimes, dtypes were not properly used
+- Added: A lot of typing hints
+
 0.5.2 (5 January 2022)
 ----------------------
 - Fixed: asciiplotlib does not exist anymore => don't use it
-- Changed: Moved from Travis to Github Actions
+- Changed: Moved from Travis to Github Actions (test on Win, Linux, MacOS)
 - Changed: Added pre-commit
 - Changed: More thorough typing
 - Support: Added Python 3.10, removed Python 3.6 and numpy<1.20

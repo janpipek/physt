@@ -4,8 +4,7 @@ from typing import Optional, Union
 
 from physt.io.util import create_from_dict
 from physt.io.version import CURRENT_VERSION
-from physt.histogram_base import HistogramBase
-from physt.histogram_collection import HistogramCollection
+from physt.types import HistogramBase, HistogramCollection
 
 COMPATIBLE_VERSION = "0.3.20"
 COLLECTION_COMPATIBLE_VERSION = "0.4.5"

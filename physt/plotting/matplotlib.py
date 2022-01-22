@@ -29,8 +29,10 @@ Parameters
 ----------
 
 """
+from __future__ import annotations
+
 from functools import wraps
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 import matplotlib
 import matplotlib.cm as cm
@@ -39,20 +41,30 @@ import matplotlib.patches as patches
 import matplotlib.path as path
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-from physt.histogram1d import Histogram1D
-from physt.histogram_nd import Histogram2D
-from physt.histogram_collection import HistogramCollection
 from physt.config import config
-from physt.plotting.common import get_data, get_err_data, pop_kwargs_with_prefix, check_ndim
-from physt.special_histograms import (
-    CylindricalSurfaceHistogram,
-    SphericalSurfaceHistogram,
+from physt.plotting.common import (
+    check_ndim,
+    get_data,
+    get_err_data,
+    pop_kwargs_with_prefix,
 )
+from physt.types import HistogramCollection
+
+if TYPE_CHECKING:
+    from typing import Any, Collection, Dict, List, Optional, Tuple, Union
+
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+    from mpl_toolkits.mplot3d import Axes3D
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+    from physt.special_histograms import (
+        CylindricalSurfaceHistogram,
+        SphericalSurfaceHistogram,
+    )
+    from physt.types import Histogram1D, Histogram2D
+
 
 # To be filled by register function
 types = []
@@ -952,35 +964,69 @@ def _add_colorbar(
     fig.colorbar(mappable, ax=ax)
 
 
-def _add_stats_box(h1: Histogram1D, ax: Axes, stats: Union[str, bool] = "all") -> None:
+def _add_stats_box(
+    h1: Histogram1D, ax: Axes, stats: Union[str, bool, Collection[str]] = "all"
+) -> None:
     """Insert a small legend-like box with statistical information.
 
     Parameters
     ----------
-    stats : "all" | "total" | True
+    stats : False | "all" or True | field | list of fields
         What info to display
 
     Note
     ----
     Very basic implementation.
     """
+    available_stats = [
+        "mean",
+        "min",
+        "max",
+        "underflow",
+        "overflow",
+        "std",
+        "total",
+    ]
 
-    # place a text box in upper left in axes coords
+    if not stats:
+        return
+
     if stats in ["all", True]:
-        text_frags = [f"Total: {h1.total}"]
+        used_stats: List[str] = available_stats
+    elif isinstance(stats, str):
+        used_stats = [stats]
+    else:
+        used_stats = list(stats)  # type: ignore
 
+    text_frags = []
+    if "total" in used_stats:
+        text_frags.append(f"Total: {h1.total}")
+    if "underflow" in used_stats:
+        if h1.underflow:
+            text_frags.append(f"Underflow: {h1.underflow}")
+    if "overflow" in used_stats:
+        if h1.overflow:
+            text_frags.append(f"Overflow: {h1.overflow}")
+    if "mean" in used_stats:
         mean = h1.mean()
         if mean is not None:
             text_frags.append(f"Mean: {mean:.2f}")
+    if "std" in used_stats:
         std = h1.std()
         if std is not None:
             text_frags.append(f"Std.dev: {std:.2f}")
-        text = "\n".join(text_frags)
-    elif stats == "total":
-        text = f"Total: {h1.total}"
-    else:
-        raise ValueError("Invalid stats specification")
+    if "min" in used_stats:
+        min = h1.min()
+        if min is not None:
+            text_frags.append(f"Min.: {min:.2f}")
+    if "max" in used_stats:
+        max = h1.max()
+        if max is not None:
+            text_frags.append(f"Max.: {max:.2f}")
 
+    text = "\n".join(text_frags)
+
+    # The placement
     ax.text(
         0.05,
         0.95,
