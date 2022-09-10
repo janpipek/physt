@@ -39,10 +39,9 @@ def load_csv(path: str) -> Union[Histogram1D, Histogram2D]:
     ndim = int(_get(meta, "dimension"))
     if ndim == 1:
         return _create_h1(data, meta)
-    elif ndim == 2:
+    if ndim == 2:
         return _create_h2(data, meta)
-    else:
-        raise ValueError("Cannot handle histograms with dimension > 2")
+    raise ValueError(f"Cannot handle histograms with dimension > 2: {ndim}")
 
 
 def _get(pseudodict, key, single=True):

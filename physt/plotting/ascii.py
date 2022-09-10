@@ -21,6 +21,7 @@ dims = {
 def hbar(h1: "Histogram1D", width: int = 80, show_values: bool = False) -> None:
     data = (h1.normalize().frequencies * width).round().astype(int)
     for i in range(h1.bin_count):
+        # TODO: Print bin labels somehow
         if show_values:
             print("#" * data[i], h1.frequencies[i])
         else:

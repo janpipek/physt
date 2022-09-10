@@ -1,4 +1,6 @@
----
+0.6.0
+------
+- Moved: xarray support as a separate module in physt.compat
 - Removed: physt.special (use physt.special_histograms instead)
 
 
