@@ -218,7 +218,7 @@ def h(
         if hasattr(data, "columns"):
             try:
                 axis_names = tuple(str(c) for c in data.columns)  # type: ignore
-            except:
+            except:  # noqa: E722
                 pass  # Perhaps columns has different meaning here.
 
     def _maybe_to_array(

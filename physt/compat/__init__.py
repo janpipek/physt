@@ -3,7 +3,7 @@
 __all__ = []
 
 try:
-    from . import pandas
+    from . import pandas  # noqa: F401
 
     __all__.append("pandas")
 except ImportError:
@@ -11,7 +11,7 @@ except ImportError:
 
 
 try:
-    from . import dask
+    from . import dask  # noqa: F401
 
     __all__.append("dask")
 except ImportError:
@@ -19,11 +19,16 @@ except ImportError:
 
 
 try:
-    from . import geant4
+    from . import geant4  # noqa: F401
 
     __all__.append("geant4")
 except ImportError:
     pass
 
 
-# TODO: Make xarray a compat too.
+try:
+    from . import xarray  # noqa: F401
+
+    __all__.append("xarray")
+except ImportError:
+    pass

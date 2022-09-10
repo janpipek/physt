@@ -400,7 +400,7 @@ class HistogramND(HistogramBase):
             raise ValueError("No axis selected for projection")
         if len(axes_) != len(set(axes_)):
             raise ValueError("Duplicate axes in projection")
-        invert = (i for i in range(self.ndim) if not i in axes_)
+        invert = (i for i in range(self.ndim) if i not in axes_)
         return tuple(axes_), tuple(invert)
 
     def _reduce_dimension(self, axes, frequencies, errors2, **kwargs) -> HistogramBase:

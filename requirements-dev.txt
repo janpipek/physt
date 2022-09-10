@@ -1,6 +1,13 @@
+-r requirements.txt
 pylint
 pytest
 black
+
+# Optionals that are testes
+pandas
+xarray
+matplotlib
+plotly
 
 # Mypy
 mypy

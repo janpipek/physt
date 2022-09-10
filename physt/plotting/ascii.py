@@ -42,7 +42,9 @@ try:
         # Value format
         val_format = kwargs.pop("value_format", ".2f")
         if isinstance(val_format, str):
-            value_format = lambda val: (("{0:" + val_format + "}").format(val))
+
+            def value_format(val):
+                return ("{0:" + val_format + "}").format(val)
 
         data = (h2.frequencies / h2.frequencies.max() * 255).astype(int)
 

@@ -24,7 +24,7 @@ from .common import check_ndim, get_data
 if TYPE_CHECKING:
     from typing import Optional, Union
 
-    from physt.types import Histogram1D, Histogram2D, HistogramCollection
+    from physt.types import Histogram1D
 
     AbstractHistogram1D = Union[HistogramCollection, Histogram1D]
     # TODO: Move this to the typing itself

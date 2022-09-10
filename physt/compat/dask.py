@@ -1,13 +1,20 @@
 """Dask-based and dask oriented variants of physt histogram facade functions."""
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import dask
+import numpy as np
 
-from physt import h1 as original_h1
-from physt import histogramdd as original_hdd
+from physt.facade import h1 as original_h1
+from physt.facade import histogramdd as original_hdd
 
 if TYPE_CHECKING:
-    import dask.array
+    from typing import Any, Callable, Union
+
+    from dask.array import Array
+
+    from physt.typing_aliases import ArrayLike
 
 options = {"chunk_split": 16}
 
@@ -15,12 +22,12 @@ options = {"chunk_split": 16}
 def _run_dask(
     *,
     name: str,
-    data: "dask.array.Array",
+    data: Array,
     compute: bool,
-    method,
-    func,
+    method: Union[None, str, Callable],
+    func: Callable,
     expand_arg: bool = False,
-):
+) -> Any:
     """Construct the computation graph and optionally compute it.
 
     :param name: Name of the method (for graph naming purposes).
@@ -49,11 +56,13 @@ def _run_dask(
             return dask.get(graph, result_name)
         if method in ["thread", "threaded", "threading", "threads"]:
             return dask.threaded.get(graph, result_name)
+        if isinstance(method, str):
+            raise ValueError(f"Invalid method name '{method}'.")
         return method(graph, result_name)
     return graph, result_name
 
 
-def histogram1d(data, bins=None, **kwargs):
+def histogram1d(data: Union[Array, ArrayLike], bins: Any = None, *, compute: bool = True, **kwargs):
     """Facade function to create one-dimensional histogram using dask.
 
     Parameters
@@ -65,7 +74,8 @@ def histogram1d(data, bins=None, **kwargs):
     physt.histogram
     """
     if not hasattr(data, "dask"):
-        data = dask.array.from_array(data, chunks=int(data.shape[0] / options["chunk_split"]))
+        data_np = np.asarray(data)
+        data = dask.array.from_array(data_np, chunks=int(data_np.shape[0] / options["chunk_split"]))
 
     if not kwargs.get("adaptive", True):
         raise ValueError("Only adaptive histograms supported for dask (currently).")
@@ -77,7 +87,7 @@ def histogram1d(data, bins=None, **kwargs):
     return _run_dask(
         name="dask_adaptive1d",
         data=data,
-        compute=kwargs.pop("compute", True),
+        compute=compute,
         method=kwargs.pop("dask_method", "threaded"),
         func=block_hist,
     )
@@ -86,7 +96,7 @@ def histogram1d(data, bins=None, **kwargs):
 h1 = histogram1d  # Alias for convenience
 
 
-def histogramdd(data, bins=None, **kwargs):
+def histogramdd(data: Union[Array, ArrayLike], bins: Any = None, **kwargs):
     """Facade function to create multi-dimensional histogram using dask.
 
     Each "column" must be one-dimensional.

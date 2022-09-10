@@ -83,7 +83,6 @@ try:
 
     if get_ipython():
         try:
-            import vega3
             from vega3 import Vega
 
             VEGA_IPYTHON_PLUGIN_ENABLED = True

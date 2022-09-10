@@ -90,6 +90,8 @@ from typing import TYPE_CHECKING
 
 from physt.types import HistogramBase, HistogramCollection
 
+from . import ascii as ascii_backend
+
 backends: Dict[str, Any] = {}
 
 if TYPE_CHECKING:
@@ -133,7 +135,6 @@ try:
 except ImportError:
     pass
 
-from . import ascii as ascii_backend
 
 backends["ascii"] = ascii_backend
 
@@ -150,7 +151,7 @@ def set_default_backend(name: str) -> None:
         raise ValueError(
             "Support for bokeh has been discontinued. At some point, we may return to support holoviews."
         )
-    if not name in backends:
+    if name not in backends:
         raise ValueError(f"Backend '{name}' is not supported and cannot be set as default.")
     _default_backend = name
 

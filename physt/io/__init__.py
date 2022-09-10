@@ -1,3 +1,4 @@
+# noqa: # noqa: F401
 """Input and output for histograms.
 
 JSON format is included by default.
@@ -14,7 +15,7 @@ __all__ = ["save_json", "load_json", "parse_json", "create_from_dict"]
 
 # Optional ROOT support
 try:
-    from .root import save_root, write_root
+    from .root import save_root, write_root  # noqa: F401
 
     __all__.extend(["write_root", "save_root"])
 except ImportError:
