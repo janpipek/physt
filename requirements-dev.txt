@@ -2,6 +2,7 @@
 pylint
 pytest
 black
+hypothesis
 
 # Optionals that are testes
 pandas
