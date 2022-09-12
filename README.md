@@ -9,8 +9,6 @@ and to create one representation that is easily manipulated with from the data p
 nice integration into IPython notebook and various plotting options. In short, whatever you want to do with histograms,
 **physt** aims to be on your side.
 
-*Note: bokeh plotting backend has been discontinued (due to external library being redesigned.)*
-
 [![ReadTheDocs](https://readthedocs.org/projects/physt/badge/?version=latest)](http://physt.readthedocs.io/en/latest/)
 [![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/physt.svg)](https://gitter.im/physt/physt)
 [![PyPI downloads](https://img.shields.io/pypi/dm/physt)](https://pypi.org/project/physt/)
@@ -19,14 +17,6 @@ nice integration into IPython notebook and various plotting options. In short, w
 [![Anaconda-Server Badge](https://anaconda.org/janpipek/physt/badges/license.svg)](https://anaconda.org/janpipek/physt)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-
-
-### Versioning
-
-* Versions 0.3.x support Python 2.7 (no new releases in 2019)
-* Versions 0.4.x support Python 3.5+ while continuing the 0.3 API
-* Versions 0.4.9+ support only Python 3.6+ while continuing the 0.3 API
-* Versions 0.5.x slightly change the interpretation of *args in h1, h2, ...
 
 ## Simple example
 
