@@ -784,7 +784,7 @@ def quantile_binning(
     data: Optional[np.ndarray],
     *,
     bin_count: Optional[int] = None,
-    q: Optional[Sequence[int]] = None,
+    q: Optional[Sequence[float]] = None,
     qrange: Optional[RangeTuple] = None,
     **kwargs,
 ) -> StaticBinning:
@@ -817,7 +817,7 @@ def quantile_binning(
     elif qrange is not None:
         raise ValueError("Cannot set both `q` and `qrange`")
     else:
-        percentiles = np.asarray(q) * 100
+        percentiles = np.asarray(q) * 100.0
     bins = np.percentile(data, percentiles)
     return static_binning(bins=make_bin_array(bins), includes_right_edge=True)
 
