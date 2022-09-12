@@ -675,7 +675,7 @@ class ExponentialBinning(BinningBase):
             return np.ndarray((0,), dtype=float)
         if self._numpy_bins is None:
             log_bins = self._log_min + np.arange(self._bin_count + 1) * self._log_width
-            self._numpy_bins = 10.0 ** log_bins
+            self._numpy_bins = 10.0**log_bins
         return self._numpy_bins
 
     def copy(self) -> "ExponentialBinning":
@@ -720,8 +720,14 @@ def numpy_binning(
     else:
         if data is None:
             raise ValueError("Either `range` or `data` must be set.")
+        if data.size < 2:
+            raise ValueError(f"At least 2 values required to infer bins, {data.size} given")
         start = data.min()
         stop = data.max()
+        if start == stop:
+            raise ValueError(
+                f"At least 2 different values required to infer bins, all are equal to {start}"
+            )
         bins = np.linspace(start, stop, bin_count + 1)
     return NumpyBinning(bins)
 
@@ -1139,7 +1145,6 @@ try:
             data = data[(data >= range[0]) & (data <= range[1])]
         _, edges = freedman_bin_width(data, True)
         return StaticBinning(edges, **kwargs)
-
 
 except ImportError:
     pass  # astropy is not required
