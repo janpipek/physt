@@ -14,12 +14,20 @@ def histograms_1d(draw):
         draw(st.lists(st.floats(allow_nan=False, allow_infinity=False), unique=True, min_size=2))
     )
 
+    # TODO: What about infinities?
+
     values = draw(
         arrays(
             shape=len(bins) - 1,
-            dtype=np.dtype("int64"),
-            elements=from_dtype(np.dtype("int64")).filter(lambda x: x > 0),
+            dtype=np.dtype("float64"),  # TODO: Negative totals with int64!
+            elements=from_dtype(np.dtype("float64")).filter(lambda x: x > 0),
         )
     )
 
-    return Histogram1D(binning=bins, frequencies=values, errors2=None, axis_name=draw(st.text()))
+    return Histogram1D(
+        binning=bins,
+        frequencies=values,
+        errors2=None,
+        axis_name=draw(st.text()),
+        title=draw(st.text()),
+    )

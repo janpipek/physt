@@ -1,8 +1,10 @@
 import numpy as np
 import pytest
+from hypothesis import given
 
 import physt
 from physt import examples, io
+from physt.testing.strategies import histograms_1d
 from physt.types import Histogram1D, HistogramCollection
 
 
@@ -30,9 +32,8 @@ class TestIO:
         read = io.parse_json(json)
         assert h == read
 
-    def test_simple(self):
-        h = physt.h2(None, None, "integer", adaptive=True)
-        h << (0, 1)
+    @given(histograms_1d())
+    def test_reversibility(self, h):
         json = h.to_json()
         read = io.parse_json(json)
         assert h == read
