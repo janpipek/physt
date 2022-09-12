@@ -4,10 +4,14 @@ import numpy as np
 import pytest
 
 from physt.binnings import FixedWidthBinning
-from physt.examples import normal_h2
 from physt.statistics import Statistics
 from physt.types import Histogram1D, Histogram2D, HistogramBase, HistogramND
 from physt.typing_aliases import ArrayLike
+
+
+@pytest.fixture
+def empty_ndarray() -> np.ndarray:
+    return np.asarray([], dtype=float)
 
 
 @pytest.fixture
