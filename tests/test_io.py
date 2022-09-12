@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import physt
-from physt import io
+from physt import examples, io
 from physt.types import Histogram1D, HistogramCollection
 
 
@@ -23,11 +23,9 @@ class TestIO:
         # print(h.to_json())
         # assert False
 
+    @pytest.mark.skipif("munros" not in dir(examples), reason="Pandas required.")
     def test_io_equality_on_examples(self):
-        from physt.examples import munros
-
-        # for example in ALL_EXAMPLES:
-        h = munros()
+        h = examples.munros()
         json = h.to_json()
         read = io.parse_json(json)
         assert h == read
