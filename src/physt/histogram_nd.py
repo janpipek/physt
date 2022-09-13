@@ -333,7 +333,7 @@ class HistogramND(HistogramBase):
             self._missed += weight
         else:
             self._frequencies[ixbin] += weight
-            self._errors2[ixbin] += weight ** 2
+            self._errors2[ixbin] += weight**2
         return ixbin
 
     def fill_n(
@@ -655,7 +655,7 @@ def calculate_frequencies(
     frequencies = frequencies[ixgrid]
     if weights is not None:
         missing = weights.sum() - frequencies.sum()
-        err_freq, _ = np.histogramdd(data, edges, weights=weights ** 2)
+        err_freq, _ = np.histogramdd(data, edges, weights=weights**2)
         errors2 = err_freq[ixgrid].astype(dtype)  # Automatically copy
     else:
         missing = data.shape[0] - frequencies.sum()

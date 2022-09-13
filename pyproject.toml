@@ -56,3 +56,9 @@ profile = "black"
 
 [tool.distutils.bdist_wheel]
 universal = true
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
