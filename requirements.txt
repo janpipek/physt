@@ -1,2 +1,0 @@
-typing_extensions
-numpy>=1.20

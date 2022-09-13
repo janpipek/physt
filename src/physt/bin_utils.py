@@ -172,8 +172,8 @@ def find_human_width_decimal(raw_width: float) -> float:
     """Find the human bin width un decimal scale close to raw_width."""
     subscales = np.array([0.5, 1, 2, 2.5, 5, 10])
     power = np.floor(np.log10(raw_width)).astype(int)
-    best_index = np.argmin(np.abs(np.log(subscales * (10.0 ** power) / raw_width)))
-    return (10.0 ** power) * subscales[best_index]
+    best_index = np.argmin(np.abs(np.log(subscales * (10.0**power) / raw_width)))
+    return (10.0**power) * subscales[best_index]
 
 
 def find_human_width_60(raw_width: float) -> int:

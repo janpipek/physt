@@ -4,7 +4,7 @@ include MANIFEST.in
 include README.md
 include requirements.txt
 
-recursive-include physt/examples *.csv
+recursive-include src/physt/examples *.csv
 recursive-include tests/data *.*
-recursive-exclude physt *.pyc
+recursive-exclude src/physt *.pyc
 recursive-exclude tests *.pyc

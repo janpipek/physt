@@ -918,7 +918,7 @@ class HistogramBase(abc.ABC):
             except ValueError as v:
                 raise TypeError(str(v)) from v
             self.frequencies = self.frequencies * scalar
-            self.errors2 = self.errors2 * scalar ** 2
+            self.errors2 = self.errors2 * scalar**2
             self._missed = self._missed * scalar
             if hasattr(self, "_stats"):
                 self._stats = self._stats * scalar
@@ -926,7 +926,7 @@ class HistogramBase(abc.ABC):
             array = np.asarray(other)
             self._coerce_dtype(array.dtype)
             self.frequencies = self.frequencies * array
-            self.errors2 = self.errors2 * array ** 2
+            self.errors2 = self.errors2 * array**2
             if hasattr(self, "_stats"):
                 self._stats = INVALID_STATISTICS
             self._missed = self._missed * np.nan
@@ -948,7 +948,7 @@ class HistogramBase(abc.ABC):
         elif np.isscalar(other):
             self._coerce_dtype(np.float64)
             self.frequencies = self.frequencies / other
-            self.errors2 = self.errors2 / other ** 2
+            self.errors2 = self.errors2 / other**2
             self._missed /= other
             if hasattr(self, "_stats"):
                 self._stats *= 1 / other
@@ -956,7 +956,7 @@ class HistogramBase(abc.ABC):
             self._coerce_dtype(np.float64)
             array = np.asarray(other)
             self.frequencies = self.frequencies / array
-            self.errors2 = self.errors2 / array ** 2
+            self.errors2 = self.errors2 / array**2
             if hasattr(self, "_stats"):
                 self._stats = INVALID_STATISTICS
             self._missed /= np.nan

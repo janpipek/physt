@@ -51,7 +51,7 @@ class Statistics:
         # TODO: Add DOF
         # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
         if self.weight > 0:
-            return (self.sum2 - self.sum ** 2 / self.weight) / self.weight
+            return (self.sum2 - self.sum**2 / self.weight) / self.weight
         return np.nan
 
     def __add__(self, other: Any) -> Statistics:
@@ -72,7 +72,7 @@ class Statistics:
         return dataclasses.replace(
             self,
             sum=self.sum * other_scalar,
-            sum2=self.sum2 * other_scalar ** 2,
+            sum2=self.sum2 * other_scalar**2,
             weight=self.weight * other_scalar,
         )
 

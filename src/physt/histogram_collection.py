@@ -121,7 +121,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         for h in col.histograms:
             h.set_dtype(float)
             h._frequencies /= sums
-            h._errors2 /= sums ** 2  # TODO: Does this make sense?
+            h._errors2 /= sums**2  # TODO: Does this make sense?
         return col
 
     def normalize_all(self, inplace: bool = False) -> "HistogramCollection":
