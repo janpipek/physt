@@ -46,3 +46,8 @@ build-backend = "setuptools.build_meta"
 line-length = 100
 target-version = ['py36', 'py37', 'py38', 'py39']
 include = '\.pyi?$'
+
+[tool.mypy]
+# TODO: revisit
+ignore_missing_imports = true
+plugins = ["numpy.typing.mypy_plugin"]
