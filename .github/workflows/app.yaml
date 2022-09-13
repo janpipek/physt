@@ -51,7 +51,7 @@ jobs:
           pip install -e .[dev,dask,pandas,xarray,matplotlib,plotly,vega3,folium,root,xtermcolor]
 
       - name: Run mypy (on source)
-        run: mypy code/physt
+        run: mypy src/physt
 
       - name: Run mypy (on tests)
         run: mypy tests
