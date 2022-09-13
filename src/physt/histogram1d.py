@@ -391,12 +391,12 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             self.overflow += weight
         else:
             self._frequencies[ixbin] += weight
-            self._errors2[ixbin] += weight ** 2
+            self._errors2[ixbin] += weight**2
             self._stats = dataclasses.replace(
                 self.statistics,
                 weight=self.statistics.weight + weight,
                 sum=self.statistics.sum + weight * value,
-                sum2=self.statistics.sum2 + weight * value ** 2,
+                sum2=self.statistics.sum2 + weight * value**2,
                 min=min(self.statistics.min, value),
                 max=max(self.statistics.max, value),
             )
@@ -615,7 +615,7 @@ def calculate_frequencies(
     else:
         stats = Statistics(
             sum=(data_array * weights_array).sum(),
-            sum2=(data_array ** 2 * weights_array).sum(),
+            sum2=(data_array**2 * weights_array).sum(),
             min=float(data_array.min()),
             max=float(data_array.max()),
             weight=float(weights_array.sum()),

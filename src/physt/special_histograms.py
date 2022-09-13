@@ -164,7 +164,7 @@ class RadialHistogram(TransformedHistogramMixin, Histogram1D):
 
     @property
     def bin_sizes(self):
-        return (self.bin_right_edges ** 2 - self.bin_left_edges ** 2) * np.pi
+        return (self.bin_right_edges**2 - self.bin_left_edges**2) * np.pi
 
     @classmethod
     def _transform_correct_dimension(cls, value):
