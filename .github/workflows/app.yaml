@@ -50,9 +50,8 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install -e .[dev,dask,pandas,xarray,matplotlib,plotly,vega3,folium,root,xtermcolor]
 
-
       - name: Run mypy (on source)
-        run: mypy physt
+        run: mypy code/physt
 
       - name: Run mypy (on tests)
         run: mypy tests
