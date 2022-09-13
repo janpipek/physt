@@ -1,7 +1,7 @@
 """Dask-based and dask oriented variants of physt histogram facade functions."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import dask
 import numpy as np
@@ -73,7 +73,7 @@ def histogram1d(data: Union[Array, ArrayLike], bins: Any = None, *, compute: boo
     --------
     physt.histogram
     """
-    if not hasattr(data, "dask"):
+    if not isinstance(data, Array):
         data_np = np.asarray(data)
         data = dask.array.from_array(data_np, chunks=int(data_np.shape[0] / options["chunk_split"]))
 
@@ -86,7 +86,7 @@ def histogram1d(data: Union[Array, ArrayLike], bins: Any = None, *, compute: boo
 
     return _run_dask(
         name="dask_adaptive1d",
-        data=data,
+        data=cast(Array, data),
         compute=compute,
         method=kwargs.pop("dask_method", "threaded"),
         func=block_hist,
@@ -106,7 +106,8 @@ def histogramdd(data: Union[Array, ArrayLike], bins: Any = None, **kwargs):
     if isinstance(data, (list, tuple)):
         data = dask.array.stack(data, axis=1)
 
-    if not hasattr(data, "dask"):
+    if not isinstance(data, Array):
+        data = np.asarray(data)
         data = dask.array.from_array(
             data, chunks=(int(data.shape[0] / options["chunk_split"]), data.shape[1])
         )
@@ -128,7 +129,7 @@ def histogramdd(data: Union[Array, ArrayLike], bins: Any = None, **kwargs):
 
     return _run_dask(
         name="dask_adaptive_dd",
-        data=data,
+        data=cast(Array, data),
         compute=kwargs.pop("compute", True),
         method=kwargs.pop("dask_method", "threaded"),
         func=block_hist,
