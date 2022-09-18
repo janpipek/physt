@@ -80,10 +80,10 @@ def to_numpy_bins_with_mask(bins: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
     Examples
     --------
     >>> to_numpy_bins_with_mask([0, 1, 2])
-    (array([0.,   1.,   2.]), array([0, 1]))
+    (array([0, 1, 2]), array([0, 1]))
 
     >>> to_numpy_bins_with_mask([[0, 1], [2, 3]])
-    (array([0, 1, 2, 3]), array([0, 2])
+    (array([0, 1, 2, 3]), array([0, 2]))
     """
     bins = np.asarray(bins)
     if bins.ndim == 1:
