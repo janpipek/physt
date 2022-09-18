@@ -19,17 +19,17 @@ from physt.types import Histogram1D, Histogram2D
 class TestH1:
     class TestNoArgs:
         @given(
-            arrays(
+            array=arrays(
                 dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes(), unique=True
             ).filter(lambda arr: np.isfinite(arr).all() and arr.size > 2)
         )
-        def test_array_at_least_two_different_values(self, arr):
+        def test_array_at_least_two_different_values(self, array):
             # Reasonable defaults for at least two different values
-            histogram = h1(arr)
+            histogram = h1(array)
             assert isinstance(histogram, Histogram1D)
-            assert histogram.bin_right_edges[-1] >= arr.max()
-            assert histogram.bin_left_edges[0] >= arr.min()
-            assert histogram.total == arr.size
+            assert histogram.bin_right_edges[-1] >= array.max()
+            assert histogram.bin_left_edges[0] >= array.min()
+            assert histogram.total == array.size
 
         def test_empty_ndarray(self, empty_ndarray):
             with pytest.raises(ValueError, match="At least 2 values required to infer bins"):
@@ -41,8 +41,8 @@ def two_1d_arrays_of_the_same_length(
     draw, *, min_side=None, max_side=None, dtype=float, **kwargs
 ) -> Tuple[np.ndarray, np.ndarray]:
     array_shape = draw(array_shapes(min_side=min_side, max_side=max_side, min_dims=1, max_dims=1))
-    arr_strategy = arrays(shape=array_shape, dtype=dtype, **kwargs)
-    return draw(arr_strategy), draw(arr_strategy)
+    array_strategy = arrays(shape=array_shape, dtype=dtype, **kwargs)
+    return draw(array_strategy), draw(array_strategy)
 
 
 @st.composite
@@ -54,14 +54,17 @@ def valid_h2_inputs(draw, *, min_side=2, **kwargs):
             min_side=min_side,
             elements=from_dtype(dtype, allow_infinity=False),
             **kwargs,
-        ).filter(lambda arrs: (arrs[0].max() > arrs[0].min()) and (arrs[1].max() > arrs[1].min()))
+        ).filter(
+            lambda arrays: (arrays[0].max() > arrays[0].min())
+            and (arrays[1].max() > arrays[1].min())
+        )
     )
 
 
 class TestH2:
     class TestNoArgs:
-        @given(valid_h2_inputs())
-        def test_array_at_least_two_different_values(self, arrays):
+        @given(arrays=valid_h2_inputs())
+        def test_array_at_least_two_different_values(self, arrays=arrays):
             histogram = h2(arrays[0], arrays[1])
             assert isinstance(histogram, Histogram2D)
 

@@ -1,10 +1,13 @@
+import hypothesis.strategies as st
 import numpy as np
 import pytest
+from hypothesis import given
 
 from physt import h1
 from physt.config import config
 from physt.histogram1d import Histogram1D
 from physt.statistics import INVALID_STATISTICS
+from physt.testing.strategies import histograms_1d
 
 
 @pytest.fixture
@@ -393,6 +396,13 @@ class TestFindBin:
 
 
 class TestFill:
+    @given(histogram=histograms_1d(), value=st.floats())
+    def test_increases_total_by_zero_or_weight(self, value: float, histogram: Histogram1D):
+        pre = histogram.total
+        histogram.fill(value)
+        post = histogram.total
+        assert (post == pre) or (post - pre == pytest.approx(1))
+
     def test_fill(self, example):
         # bins = [1.2, 1.4, 1.5, 1.7, 1.8 ]
         # values = [4, 0, 3, 7.2]

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+import warnings
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -392,14 +393,18 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         else:
             self._frequencies[ixbin] += weight
             self._errors2[ixbin] += weight**2
-            self._stats = dataclasses.replace(
-                self.statistics,
-                weight=self.statistics.weight + weight,
-                sum=self.statistics.sum + weight * value,
-                sum2=self.statistics.sum2 + weight * value**2,
-                min=min(self.statistics.min, value),
-                max=max(self.statistics.max, value),
-            )
+            try:
+                self._stats = dataclasses.replace(
+                    self.statistics,
+                    weight=self.statistics.weight + weight,
+                    sum=self.statistics.sum + weight * value,
+                    sum2=self.statistics.sum2 + weight * value**2,
+                    min=min(self.statistics.min, value),
+                    max=max(self.statistics.max, value),
+                )
+            except OverflowError:
+                warnings.warn("Overflow when updating statistics.")
+                self._stats = INVALID_STATISTICS
 
         return ixbin
 
