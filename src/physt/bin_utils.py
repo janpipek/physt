@@ -192,6 +192,7 @@ def find_human_width_24(raw_width: float) -> int:
 
 def find_human_width(raw_width: float, kind: Optional[Literal["time"]] = None) -> float:
     """Find the best human width close to a given raw_width."""
+    # TODO: Deal with infinity
     if not kind:
         return find_human_width_decimal(raw_width)
     if kind == "time":

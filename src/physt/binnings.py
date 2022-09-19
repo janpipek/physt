@@ -721,14 +721,18 @@ def numpy_binning(
         if data is None:
             raise ValueError("Either `range` or `data` must be set.")
         if data.size < 2:
-            raise ValueError(f"At least 2 values required to infer bins, {data.size} given")
+            raise ValueError(f"At least 2 values required to infer bins, {data.size} given.")
         start = data.min()
         stop = data.max()
         if start == stop:
             raise ValueError(
-                f"At least 2 different values required to infer bins, all are equal to {start}"
+                f"At least 2 different values required to infer bins, all are equal to {start}."
             )
+        if not np.isfinite(stop - start):
+            raise ValueError(f"Range too large to find bins: {start} to {stop}.")
         bins = np.linspace(start, stop, bin_count + 1)
+        if (np.diff(bins) == 0).any():
+            raise ValueError(f"Range too narrow to split into {bin_count} bins: {start} to {stop}.")
     return NumpyBinning(bins)
 
 

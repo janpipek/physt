@@ -3,7 +3,7 @@ from typing import Tuple
 import hypothesis.strategies as st
 import numpy as np
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis.extra.numpy import (
     array_shapes,
     arrays,
@@ -21,10 +21,12 @@ class TestH1:
         @given(
             array=arrays(
                 dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes(), unique=True
-            ).filter(lambda arr: np.isfinite(arr).all() and arr.size > 2)
+            )
         )
         def test_array_at_least_two_different_values(self, array):
             # Reasonable defaults for at least two different values
+            assume(array.size > 2)
+            assume(np.isfinite(array).all())
             histogram = h1(array)
             assert isinstance(histogram, Histogram1D)
             assert histogram.bin_right_edges[-1] >= array.max()
@@ -34,6 +36,11 @@ class TestH1:
         def test_empty_ndarray(self, empty_ndarray):
             with pytest.raises(ValueError, match="At least 2 values required to infer bins"):
                 h1(empty_ndarray)
+
+        def test_infinetesimal_range(self):
+            array = np.array([1, np.nextafter(1, 2)])
+            with pytest.raises(ValueError, match="Range too narrow to split into multiple bins"):
+                histogram = h1(array)
 
 
 @st.composite
@@ -64,9 +71,17 @@ def valid_h2_inputs(draw, *, min_side=2, **kwargs):
 class TestH2:
     class TestNoArgs:
         @given(arrays=valid_h2_inputs())
-        def test_array_at_least_two_different_values(self, arrays=arrays):
+        def test_array_at_least_two_different_values(self, arrays):
+            assume(np.isfinite(arrays[0].max() - arrays[0].min()))
+            assume(np.isfinite(arrays[1].max() - arrays[1].min()))
             histogram = h2(arrays[0], arrays[1])
             assert isinstance(histogram, Histogram2D)
+
+        def test_infinite_range(self):
+            # TODO: Move to numpy bins testing
+            array = np.array([-1e308, 1e308])
+            with pytest.raises(ValueError, match="Range too large to find bins"):
+                h2(array, array)
 
         def test_empty_ndarray(self, empty_ndarray):
             with pytest.raises(ValueError, match="At least 2 values required to infer bins"):
