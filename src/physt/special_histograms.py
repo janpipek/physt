@@ -545,7 +545,7 @@ def spherical(
             **kwargs,
         )
     except ValueError as err:
-        if "Bins not in rising order" in str(err):
+        if "Range too narrow to split" in str(err):
             if data is not None and np.isclose(data[:, 0].min(), data[:, 0].max()):
                 raise ValueError(
                     f"All radii seem to be the same: {data[:,0].min():,.4f}. "

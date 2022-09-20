@@ -148,7 +148,7 @@ class TestSpherical:
             data[i, 1] = data[i, 1] / scale
             data[i, 2] = data[i, 2] / scale
 
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(ValueError, match="All radii seem to be the same: ") as exc:
             special_histograms.spherical(data, theta_bins=20, phi_bins=20)
         assert exc.match("All radii seem to be the same")
 
