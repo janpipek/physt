@@ -133,7 +133,7 @@ def _extract_axis_name(axis_name: Optional[str], data: Any) -> Optional[str]:
         ):
             # Case of dask fields (examples)
             return str(data.fields[0])  # type: ignore
-    return None
+    return axis_name
 
 
 def h2(data1: Optional[ArrayLike], data2: Optional[ArrayLike], bins=10, **kwargs) -> Histogram2D:
@@ -156,7 +156,8 @@ def h2(data1: Optional[ArrayLike], data2: Optional[ArrayLike], bins=10, **kwargs
         data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
     else:
         data = None
-    return cast(Histogram2D, h(data, bins, dim=2, **kwargs))
+    result = h(data, bins, dim=2, **kwargs)
+    return cast(Histogram2D, result)
 
 
 def h3(data: Optional[ArrayLike], bins=None, **kwargs) -> HistogramND:
