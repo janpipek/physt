@@ -27,7 +27,7 @@ from physt.types import Histogram1D, Histogram2D, HistogramCollection, Histogram
 from physt.util import deprecation_alias
 
 if TYPE_CHECKING:
-    from typing import Iterable, Optional, Tuple, Type
+    from typing import Any, Iterable, Optional, Tuple, Type
 
     from physt.typing_aliases import ArrayLike, DTypeLike
 
@@ -86,36 +86,19 @@ def h1(
     numpy.histogram
     """
 
+    # Extra treatment for pandas types
     if isinstance(data, tuple) and isinstance(data[0], str):  # Works for groupby DataSeries
         return h1(data[1], bins, name=data[0], **kwargs)
     if type(data).__name__ == "DataFrame":
         raise TypeError("Cannot create a 1D histogram from a pandas DataFrame. Use Series.")
 
-    def _maybe_to_array(data: Optional[ArrayLike], dropna: bool) -> Optional[np.ndarray]:
-        if data is not None:
-            array: np.ndarray = np.asarray(data)
-            if dropna:
-                array = array[~np.isnan(array)]
-            return array
-        return None
+    array = _maybe_to_1d_array(data, dropna=dropna)
 
-    array = _maybe_to_array(data, dropna=dropna)
-
-    # Get binning
     binning = calculate_bins(
         array, bins, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs
     )
 
-    if not axis_name:
-        if hasattr(data, "name"):
-            axis_name = str(data.name)  # type: ignore
-        elif (
-            hasattr(data, "fields")
-            and len(data.fields) == 1  # type: ignore
-            and isinstance(data.fields[0], str)  # type: ignore
-        ):
-            # Case of dask fields (examples)
-            axis_name = str(data.fields[0])  # type: ignore
+    axis_name = _extract_axis_name(axis_name=axis_name, data=data)
 
     # Construct the object
     return Histogram1D.from_calculate_frequencies(
@@ -128,6 +111,29 @@ def h1(
         axis_name=axis_name,
         title=title,
     )
+
+
+def _maybe_to_1d_array(data: Optional[ArrayLike], dropna: bool) -> Optional[np.ndarray]:
+    if data is not None:
+        array: np.ndarray = np.asarray(data)
+        if dropna:
+            array = array[~np.isnan(array)]
+        return array
+    return None
+
+
+def _extract_axis_name(axis_name: Optional[str], data: Any) -> Optional[str]:
+    if not axis_name:
+        if hasattr(data, "name"):
+            return str(data.name)  # type: ignore
+        elif (
+            hasattr(data, "fields")
+            and len(data.fields) == 1  # type: ignore
+            and isinstance(data.fields[0], str)  # type: ignore
+        ):
+            # Case of dask fields (examples)
+            return str(data.fields[0])  # type: ignore
+    return None
 
 
 def h2(data1: Optional[ArrayLike], data2: Optional[ArrayLike], bins=10, **kwargs) -> Histogram2D:
@@ -177,7 +183,7 @@ def h(
     data: Optional[ArrayLike],
     bins=10,
     *,
-    adaptive=False,
+    adaptive: bool = False,
     dropna: bool = True,
     name: Optional[str] = None,
     title: Optional[str] = None,
@@ -221,27 +227,9 @@ def h(
             except:  # noqa: E722
                 pass  # Perhaps columns has different meaning here.
 
-    def _maybe_to_array(
-        data: Optional[ArrayLike], dim: Optional[int], dropna: bool
-    ) -> Tuple[int, Optional[np.ndarray]]:
-        if data is not None:
-            array: np.ndarray = np.asarray(data)
-            if array.ndim != 2:
-                raise ValueError(f"Array must have shape (n, d), {array.shape} encountered.")
-            if dim is not None and dim != array.shape[1]:
-                raise ValueError(f"Dimension mismatch: {dim} != {array.shape[1]}")
-            _, dim = array.shape
-            if dropna:
-                array = array[~np.isnan(array).any(axis=1)]
-            return dim, array
-        else:
-            if dim is None:
-                raise ValueError("You have to specify either data or its dimension.")
-            return dim, None
-
     check_nan = data is not None and not dropna
 
-    dim, array = _maybe_to_array(data, dim=dim, dropna=dropna)
+    dim, array = _maybe_to_nd_array(data, dim=dim, dropna=dropna)
 
     # Prepare and check data
     # Convert to array
@@ -273,6 +261,25 @@ def collection(data, bins=10, **kwargs) -> HistogramCollection:
     if hasattr(data, "columns"):
         data = {column: data[column] for column in data.columns}
     return HistogramCollection.multi_h1(data, bins, **kwargs)
+
+
+def _maybe_to_nd_array(
+    data: Optional[ArrayLike], dim: Optional[int], dropna: bool
+) -> Tuple[int, Optional[np.ndarray]]:
+    if data is not None:
+        array: np.ndarray = np.asarray(data)
+        if array.ndim != 2:
+            raise ValueError(f"Array must have shape (n, d), {array.shape} encountered.")
+        if dim is not None and dim != array.shape[1]:
+            raise ValueError(f"Dimension mismatch: {dim} != {array.shape[1]}")
+        _, dim = array.shape
+        if dropna:
+            array = array[~np.isnan(array).any(axis=1)]
+        return dim, array
+    else:
+        if dim is None:
+            raise ValueError("You have to specify either data or its dimension.")
+        return dim, None
 
 
 __all__ = [

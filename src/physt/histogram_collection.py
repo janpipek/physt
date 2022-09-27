@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Container, cast
+from typing import TYPE_CHECKING, Container, Mapping, cast
 
 import numpy as np
 
@@ -152,7 +152,9 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         return PlottingProxy(self)
 
     @classmethod
-    def multi_h1(cls, a_dict: Dict[str, ArrayLike], bins=None, **kwargs) -> "HistogramCollection":
+    def multi_h1(
+        cls, a_dict: Mapping[str, ArrayLike], bins=None, **kwargs
+    ) -> "HistogramCollection":
         """Create a collection from multiple datasets."""
         from physt.binnings import calculate_bins
 
