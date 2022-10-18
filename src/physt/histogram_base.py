@@ -127,7 +127,7 @@ class HistogramBase(abc.ABC):
 
         Parameters
         ----------
-        binnings : Iterable of something that can be turned into binnnings
+        binnings : Iterable of something that can be turned into binnings
         frequencies : Frequencies to fill bins with (default to zeros if not present)
         errors2 : Squared errors for bins (default is equal to frequencies)
         dtype : Dtype for bin contents

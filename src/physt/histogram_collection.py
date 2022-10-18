@@ -156,6 +156,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         cls, a_dict: Mapping[str, ArrayLike], bins=None, **kwargs
     ) -> "HistogramCollection":
         """Create a collection from multiple datasets."""
+        # TODO: Change into a function in facade
         from physt.binnings import calculate_bins
 
         mega_values: np.ndarray = np.concatenate(list(a_dict.values()))  # type: ignore
