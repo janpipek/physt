@@ -88,7 +88,7 @@ def deprecation_alias(f: Callable, deprecated_name: str) -> Callable:
 
 
 @singledispatch
-def extract_1d_array(data: Any, dropna: bool = True) -> Optional[np.ndarray]:
+def extract_1d_array(data: Any, *, dropna: bool = True) -> Optional[np.ndarray]:
     array: np.ndarray = np.asarray(data)
     if dropna:
         array = array[~np.isnan(array)]
@@ -96,7 +96,7 @@ def extract_1d_array(data: Any, dropna: bool = True) -> Optional[np.ndarray]:
 
 
 @extract_1d_array.register
-def _(data: None, dropna=True):
+def _(data: None, *, dropna=True):
     return None
 
 

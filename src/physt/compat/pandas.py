@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas
@@ -15,8 +15,9 @@ from pandas.api.types import is_numeric_dtype
 from pandas.core.arrays.masked import BaseMaskedDtype
 
 from physt.binnings import BinningBase, calculate_bins, static_binning
-from physt.facade import h, h1, h2
-from physt.types import Histogram1D, Histogram2D, HistogramBase
+from physt.facade import h, h1
+from physt.types import Histogram1D, Histogram2D, HistogramND
+from physt.util import extract_1d_array
 
 if TYPE_CHECKING:
     from typing import Any, Optional, Union
@@ -24,12 +25,15 @@ if TYPE_CHECKING:
     from physt.typing_aliases import ArrayLike
 
 
-def _extract_values(series: pandas.Series, dropna: bool = True) -> np.ndarray:
+@extract_1d_array.register
+def _(series: pandas.Series, *, dropna: bool = True) -> np.ndarray:
     if isinstance(series.dtype, BaseMaskedDtype):
         array = series.array
         if not dropna and any(array._mask):
             raise ValueError("Cannot histogram series with NA's. Set `dropna` to True to override.")
         return array._data[~array._mask]
+    if dropna:
+        series = series.dropna()
     return series.values
 
 
@@ -45,15 +49,15 @@ class PhystSeriesAccessor:
             raise AttributeError(f"Series must be of a numeric type, not {series.dtype}")
         self._series = series
 
-    def h1(self, bins=None, *, dropna: bool = True, **kwargs) -> Histogram1D:
-        values = _extract_values(self._series, dropna=dropna)
-        return h1(data=values, name=self._series.name, bins=bins, dropna=False, **kwargs)
+    def h1(self, bins=None, **kwargs) -> Histogram1D:
+        # values = extract_1d_array(self._series, dropna=dropna)
+        return h1(self._series, bins=bins, **kwargs)
 
     histogram = h1
 
     def cut(self, bins=None, *, dropna: bool = True, **kwargs) -> pd.Series:
         warnings.warn("This method is experimental, only partially implemented and may removed.")
-        binning = calculate_bins(_extract_values(self._series, dropna=dropna), bins)
+        binning = calculate_bins(extract_1d_array(self._series, dropna=dropna), bins)
         return pd.cut(self._series, binning.numpy_bins)
 
 
@@ -98,13 +102,9 @@ class PhystDataFrameAccessor:
             weights = self._df[weights]
         if not is_numeric_dtype(data):
             raise ValueError(f"Column '{column}' is not numeric.")
-        if "axis_name" not in kwargs:
-            kwargs["axis_name"] = column
         return data.physt.h1(bins=bins, weights=weights, **kwargs)
 
-    def h2(
-        self, column1: Any = None, column2: Any = None, bins=None, *, dropna: bool = True, **kwargs
-    ) -> Histogram2D:
+    def h2(self, column1: Any = None, column2: Any = None, bins=None, **kwargs) -> Histogram2D:
         """Create 2D histogram from two columns.
 
         Parameters
@@ -124,30 +124,11 @@ class PhystDataFrameAccessor:
             column1, column2 = self._df.columns
         elif column1 is None or column2 is None:
             raise ValueError("Arguments `column1` and `column2` must be set.")
-        try:
-            data = self._df[[column1, column2]]
-        # TODO: Enable weights to be a name of the column
-        except KeyError as exc:
-            raise KeyError(f"Column(s) '{column1}' and/or '{column2}' could not be found.") from exc
-        if not is_numeric_dtype(data[column1]):
-            raise ValueError(f"Column '{column1}' is not numeric.")
-        if not is_numeric_dtype(data[column2]):
-            raise ValueError(f"Column '{column2}' is not numeric.")
-        if dropna:
-            data = data.dropna()
-        if "axis_names" not in kwargs:
-            kwargs["axis_names"] = (column1, column2)
-        return h2(
-            data1=_extract_values(data[column1], dropna=False),
-            data2=_extract_values(data[column2], dropna=False),
-            bins=bins,
-            dropna=False,  # Already done
-            **kwargs,
-        )
+        return cast(Histogram2D, self.histogram([column1, column2], bins=bins, **kwargs))
 
     def histogram(
         self, columns: Any = None, bins: Any = None, *, dropna: bool = True, **kwargs
-    ) -> HistogramBase:
+    ) -> HistogramND:
         """Create a histogram.
 
         Parameters
