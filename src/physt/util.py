@@ -110,6 +110,7 @@ def extract_nd_array(
     if dim is not None and dim != array.shape[1]:
         raise ValueError(f"Dimension mismatch: {dim} != {array.shape[1]}")
     _, dim = array.shape
+    # TODO: This might not work with weights!
     if dropna:
         array = array[~np.isnan(array).any(axis=1)]
     return dim, array

@@ -12,7 +12,7 @@ import numpy as np
 import pandas
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
-from pandas.core.arrays.masked import BaseMaskedDtype
+from pandas.core.arrays.masked import BaseMaskedArray, BaseMaskedDtype
 
 from physt.binnings import BinningBase, calculate_bins, static_binning
 from physt.facade import h, h1
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 @extract_1d_array.register
 def _(series: pandas.Series, *, dropna: bool = True) -> np.ndarray:
     if isinstance(series.dtype, BaseMaskedDtype):
-        array = series.array
+        array = cast(BaseMaskedArray, series.array)
         if not dropna and any(array._mask):
             raise ValueError("Cannot histogram series with NA's. Set `dropna` to True to override.")
         return array._data[~array._mask]
@@ -50,7 +50,6 @@ class PhystSeriesAccessor:
         self._series = series
 
     def h1(self, bins=None, **kwargs) -> Histogram1D:
-        # values = extract_1d_array(self._series, dropna=dropna)
         return h1(self._series, bins=bins, **kwargs)
 
     histogram = h1
@@ -99,6 +98,7 @@ class PhystDataFrameAccessor:
         if not isinstance(data, pd.Series):
             raise ValueError(f"Argument `column` must select a single series: {column}")
         if isinstance(weights, str) and weights in self._df.columns:
+            # TODO: This might be wrong if NAs are in play
             weights = self._df[weights]
         if not is_numeric_dtype(data):
             raise ValueError(f"Column '{column}' is not numeric.")
@@ -126,9 +126,7 @@ class PhystDataFrameAccessor:
             raise ValueError("Arguments `column1` and `column2` must be set.")
         return cast(Histogram2D, self.histogram([column1, column2], bins=bins, **kwargs))
 
-    def histogram(
-        self, columns: Any = None, bins: Any = None, *, dropna: bool = True, **kwargs
-    ) -> HistogramND:
+    def histogram(self, columns: Any = None, bins: Any = None, **kwargs) -> HistogramND:
         """Create a histogram.
 
         Parameters
@@ -152,20 +150,17 @@ class PhystDataFrameAccessor:
         except KeyError as exc:
             raise KeyError(f"At least one of the columns '{columns}' could not be found.") from exc
         if isinstance(data, pd.Series) or data.shape[1] == 1:
-            return data.physt.h1(bins, dropna=dropna, **kwargs)
+            return data.physt.h1(bins, **kwargs)
         if not isinstance(data, pd.DataFrame):
             raise TypeError(f"Argument `columns` does not select a DataFrame: '{columns}'")
-        if dropna:
-            data = data.dropna()
         if not data.shape[1]:
             raise ValueError("Cannot make histogram from DataFrame with no columns.")
         for column in data.columns:
             if not is_numeric_dtype(data[column]):
                 raise ValueError(f"Column '{column}' is not numeric")
         # TODO: Enable weights to be a name of the column
-        if "axis_names" not in kwargs:
-            kwargs["axis_names"] = data.columns.tolist()
-        return h(data=data.astype(float).values, bins=bins, **kwargs)
+        # TODO: Unify for masked arrays
+        return h(data=data.astype(float), bins=bins, **kwargs)
 
 
 def binning_to_index(binning: BinningBase, name: Optional[str] = None) -> pandas.IntervalIndex:
