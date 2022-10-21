@@ -27,6 +27,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest", "mypy", "types-setuptools"]
 # doc = ["sphinx", "sphinx_rtd_theme", "sphixncontrib-apidoc", "nbsphinx"]
+astropy = ["astropy"]
 dask = ["dask[array]"]
 pandas = ["pandas"]
 xarray = ["xarray"]
@@ -35,9 +36,10 @@ plotly = ["plotly"]
 vega3 = ["vega3"]
 folium = ["folium"]
 root = ["uproot3"]  # TODO: Update to uproot4
+scipy = ["scipy"]
 xtermcolor = ["xtermcolor"]
 all = [
-    "physt[dev,dask,pandas,xarray,matplotlib,plotly,vega3,folium,root,xtermcolor]"
+    "physt[astropy,dev,dask,pandas,xarray,matplotlib,plotly,vega3,folium,root,scipy,xtermcolor]"
 ]
 
 [build-system]

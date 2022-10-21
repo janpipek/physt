@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import warnings
+from contextlib import suppress
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
@@ -1167,10 +1168,13 @@ def ideal_bin_count(data: np.ndarray, method: str = "default") -> int:
     if method == "doane":
         if value_count < 3:
             return 1
-        from scipy.stats import skew
-
-        sigma = np.sqrt(6 * (value_count - 2) / (value_count + 1) * (value_count + 3))
-        return int(np.ceil(1 + np.log2(value_count) + np.log2(1 + np.abs(skew(data)) / sigma)))
+        try:
+            from scipy.stats import skew
+        except ImportError:
+            warnings.warn("Please install scipy to support 'doane' method")
+        else:
+            sigma = np.sqrt(6 * (value_count - 2) / (value_count + 1) * (value_count + 3))
+            return int(np.ceil(1 + np.log2(value_count) + np.log2(1 + np.abs(skew(data)) / sigma)))
     if method == "rice":
         return int(np.ceil(2 * np.power(value_count, 1 / 3)))
     raise ValueError(f"Unknown bin count method: {method}")

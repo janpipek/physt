@@ -41,6 +41,7 @@ import matplotlib.patches as patches
 import matplotlib.path as path
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 from physt.config import config
 from physt.plotting.common import (
@@ -57,7 +58,6 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from mpl_toolkits.mplot3d import Axes3D
-    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
     from physt.special_histograms import (
         CylindricalSurfaceHistogram,
