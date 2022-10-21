@@ -632,9 +632,6 @@ def globe_map(
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
-
-    if matplotlib.__version__ < "2":
-        ax.plot_surface([], [], [], color="b")
     ax.set_xlim(-1.1, 1.1)
     ax.set_ylim(-1.1, 1.1)
     ax.set_zlim(-1.1, 1.1)
@@ -676,9 +673,6 @@ def cylinder_map(
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
-
-    if matplotlib.__version__ < "2":
-        ax.plot_surface([], [], [], color="b")
     ax.set_xlim(-r * 1.1, r * 1.1)
     ax.set_ylim(-r * 1.1, r * 1.1)
     ax.set_zlim(zs.min(), zs.max())
@@ -753,9 +747,6 @@ def surface_map(
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
-
-    if matplotlib.__version__ < "2":
-        ax.plot_surface([], [], [], color="b")  # Dummy plot
     ax.set_xlim(xs.min(), xs.max())
     ax.set_ylim(ys.min(), ys.max())
     ax.set_zlim(zs.min(), zs.max())

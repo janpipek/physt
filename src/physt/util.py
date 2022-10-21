@@ -87,6 +87,10 @@ def deprecation_alias(f: Callable, deprecated_name: str) -> Callable:
     return inner
 
 
+# TODO: The following functions enable to structure h1,h2 ... as a set of individual
+#   separately tested steps. Think about where it belongs.
+
+
 @singledispatch
 def extract_1d_array(data: Any, *, dropna: bool = True) -> Optional[np.ndarray]:
     array: np.ndarray = np.asarray(data)
@@ -125,6 +129,7 @@ def _(data: None, *, dim: int, dropna: bool = True):
 
 @singledispatch
 def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional[str]:
+    """For input data, find the axis name."""
     if not axis_name:
         if hasattr(data, "name"):
             return str(data.name)  # type: ignore
@@ -142,10 +147,7 @@ def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional
 def extract_axis_names(
     data: Any, *, axis_names: Optional[Iterable[str]] = None
 ) -> Optional[Tuple[str, ...]]:
-    """For input data, find the names for axes.
-
-    This typically
-    """
+    """For input data, find the names for axes."""
     if axis_names is not None:
         return tuple(axis_names)
     if hasattr(data, "columns"):
