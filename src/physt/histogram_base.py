@@ -824,6 +824,17 @@ class HistogramBase(abc.ABC):
             f"{self.__class__.__name__}(bins={self.shape}, total={self.total}, dtype={self.dtype})"
         )
 
+    def __rich_repr__(self):
+        """Support pretty printing using the `rich` library."""
+        yield "name", self.name, None
+        yield "shape", self.shape
+        yield "total", self.total
+        yield "axes", self.axis_names, tuple(f"axis{i}" for i in range(self.ndim))
+        yield "adaptive", self.adaptive, False
+        yield "dtype", self.dtype
+
+    __rich_repr__.angular = True
+
     def __add__(self, other):
         new = self.copy()
         new += other
