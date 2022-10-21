@@ -740,7 +740,7 @@ class HistogramBase(abc.ABC):
         If a descendant class needs to update the dictionary in some way
         (put some more information), override the _update_dict method.
         """
-        result: Dict[str, Any] = dict()
+        result: Dict[str, Any] = {}
         result["histogram_type"] = type(self).__name__
         result["binnings"] = [binning.to_dict() for binning in self._binnings]
         if self.frequencies is not None:

@@ -104,8 +104,7 @@ class BinningBase:
             new_binning = self.as_static()
             new_binning._bins = new_binning.bins[index]
             return new_binning
-        else:
-            return self.bins[index]
+        return self.bins[index]
 
     @staticmethod
     def from_dict(a_dict):
@@ -161,8 +160,7 @@ class BinningBase:
                     self._consecutive = True
                 self._consecutive = is_consecutive(self.bins, rtol, atol)
             return self._consecutive
-        else:
-            return True
+        return True
 
     def is_adaptive(self) -> bool:
         """Whether the binning can be adapted to include values not currently spanned."""
@@ -367,7 +365,7 @@ class BinningBase:
         return binning
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.numpy_bins)})"
+        return f"{self.__class__.__name__}({self.numpy_bins!r})"
 
 
 if TYPE_CHECKING:
@@ -420,7 +418,7 @@ class StaticBinning(BinningBase):
             return None, list(enumerate(indices))
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.bins)})"
+        return f"{self.__class__.__name__}({self.bins!r})"
 
 
 class NumpyBinning(BinningBase):
@@ -632,8 +630,7 @@ class FixedWidthBinning(BinningBase):
     def as_fixed_width(self, copy: bool = True) -> "FixedWidthBinning":
         if copy:
             return self.copy()
-        else:
-            return self
+        return self
 
     def _update_dict(self, a_dict: Dict[str, Any]) -> None:
         # TODO: Fix to be instantiable from JSON

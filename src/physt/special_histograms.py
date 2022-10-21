@@ -170,8 +170,7 @@ class RadialHistogram(TransformedHistogramMixin, Histogram1D):
     def _transform_correct_dimension(cls, value):
         if value.shape[-1] == 2:
             return np.hypot(value[..., 1], value[..., 0])
-        else:
-            return np.hypot(np.hypot(value[..., 1], value[..., 0]), value[..., 2])
+        return np.hypot(np.hypot(value[..., 1], value[..., 0]), value[..., 2])
 
 
 class AzimuthalHistogram(TransformedHistogramMixin, Histogram1D):

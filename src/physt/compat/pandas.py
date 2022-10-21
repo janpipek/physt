@@ -56,7 +56,7 @@ class PhystSeriesAccessor:
 
     def cut(self, bins=None, *, dropna: bool = True, **kwargs) -> pd.Series:
         warnings.warn("This method is experimental, only partially implemented and may removed.")
-        binning = calculate_bins(extract_1d_array(self._series, dropna=dropna), bins)
+        binning = calculate_bins(extract_1d_array(self._series, dropna=dropna), bins, **kwargs)
         return pd.cut(self._series, binning.numpy_bins)
 
 

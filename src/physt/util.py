@@ -33,7 +33,7 @@ def find_subclass(base: type, name: str) -> type:
     Uses only the class name without namespace.
     """
     class_candidates = [klass for klass in all_subclasses(base) if klass.__name__ == name]
-    if len(class_candidates) == 0:
+    if not class_candidates:
         raise TypeError(f"No '{base.__name__}' subclass of '{name}'.")
     if len(class_candidates) > 1:
         raise TypeError(f"Multiple '{base.__name__}' subclasses of '{name}'.")

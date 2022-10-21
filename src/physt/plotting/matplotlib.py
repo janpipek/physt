@@ -860,14 +860,12 @@ def _get_cmap(kwargs: dict) -> colors.Colormap:
         try:
             return plt.get_cmap(cmap)
         except BaseException:
-            try:
+            with suppress(ImportError):
                 # Try to use seaborn palette
                 import seaborn as sns
 
                 sns_palette = sns.color_palette(cmap, n_colors=256)
                 return ListedColormap(sns_palette, name=cmap)
-            except ImportError:
-                pass
         raise ValueError(f"Cmap '{cmap}' could not be found.")
     return cmap
 
@@ -997,7 +995,7 @@ def _add_stats_box(
     if not stats:
         return
 
-    if stats in ["all", True]:
+    if stats in ("all", True):
         used_stats: List[str] = available_stats
     elif isinstance(stats, str):
         used_stats = [stats]

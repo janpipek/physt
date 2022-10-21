@@ -53,7 +53,7 @@ def _run_dask(
     if compute:
         if not method:
             return dask.get(graph, result_name)
-        if method in ["thread", "threaded", "threading", "threads"]:
+        if method in ("thread", "threaded", "threading", "threads"):
             return dask.threaded.get(graph, result_name)
         if isinstance(method, str):
             raise ValueError(f"Invalid method name '{method}'.")

@@ -49,8 +49,7 @@ def _get(pseudodict, key, single=True):
     matches = [item[1] for item in pseudodict if item[0] == key]
     if single:
         return matches[0]
-    else:
-        return matches
+    return matches
 
 
 def _create_h1(data, meta) -> Histogram1D:
