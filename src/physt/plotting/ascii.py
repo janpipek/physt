@@ -6,6 +6,7 @@ The plots are printed directly to standard output.
 from __future__ import annotations
 
 import typing
+from contextlib import suppress
 
 if typing.TYPE_CHECKING:
     from physt.types import Histogram1D, Histogram2D
@@ -28,7 +29,7 @@ def hbar(h1: "Histogram1D", width: int = 80, show_values: bool = False) -> None:
             print("#" * data[i])
 
 
-try:
+with suppress(ImportError):
     import xtermcolor
 
     SUPPORTED_CMAPS = ("Greys", "Greys_r")
@@ -86,5 +87,3 @@ try:
 
     types = types + ("map",)
     dims["map"] = [2]
-except ImportError:
-    pass

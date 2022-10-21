@@ -1,6 +1,7 @@
 """Different binning algorithms/schemas for the histograms."""
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
 
     from typing_extensions import Literal
 
-    from physt.typing_aliases import ArrayLike, RangeTuple
+    from physt.typing_aliases import ArrayLike, RangeTuple, Self
 
     BinningType = TypeVar("BinningType", bound="BinningBase")
 
@@ -40,8 +41,7 @@ def register_binning(f=None, *, name: Optional[str] = None):
 
     if f:
         return decorator(f)
-    else:
-        return decorator
+    return decorator
 
 
 # TODO: Locking and edit operations (like numpy read-only)
@@ -107,7 +107,7 @@ class BinningBase:
         return self.bins[index]
 
     @staticmethod
-    def from_dict(a_dict):
+    def from_dict(a_dict: Dict[str, Any]) -> BinningBase:
         binning_type = a_dict.pop("binning_type", "StaticBinning")
         klass = find_subclass(BinningBase, binning_type)
         return klass(**a_dict)
@@ -290,16 +290,14 @@ class BinningBase:
         """The left edge of the first bin."""
         if self._numpy_bins is not None:
             return self._numpy_bins[0]
-        else:
-            return self.bins[0][0]
+        return self.bins[0][0]
 
     @property
     def last_edge(self) -> float:
         """The right edge of the last bin."""
         if self._numpy_bins is not None:
             return self._numpy_bins[-1]
-        else:
-            return self.bins[-1][1]
+        return self.bins[-1][1]
 
     def as_static(self, copy: bool = True) -> "StaticBinning":  # pylint: disable=unused-argument
         """Convert binning to a static form.
@@ -394,14 +392,11 @@ class StaticBinning(BinningBase):
         copy : if True, returns itself (already satisfying conditions).
         """
         if copy:
-            return StaticBinning(
-                bins=self.bins.copy(), includes_right_edge=self.includes_right_edge
-            )
-        else:
-            return self
+            return self.copy()
+        return self
 
     def copy(self):
-        return self.as_static(True)
+        return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
 
     def __getitem__(self, item):
         copy = self.copy()
@@ -944,7 +939,7 @@ def calculate_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> Binn
         if kwargs.pop("check_nan", True):
             if np.any(np.isnan(array)):
                 raise ValueError("Cannot calculate bins in presence of NaN's.")
-        if kwargs.get("range", None):  # TODO: re-consider the usage of this parameter
+        if kwargs.get("range"):  # TODO: re-consider the usage of this parameter
             array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
         bin_count = 10  # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
@@ -1044,11 +1039,9 @@ def calculate_bins_nd(
     return bins
 
 
-try:
+with suppress(ImportError):
     # If possible, import astropy's binning methods
     # See: http://docs.astropy.org/en/stable/visualization/histogram.html
-
-    import warnings
 
     from astropy.stats.histogram import histogram as _astropy_histogram  # noqa: F401
 
@@ -1142,9 +1135,6 @@ try:
             data = data[(data >= range[0]) & (data <= range[1])]
         _, edges = freedman_bin_width(data, True)
         return StaticBinning(edges, **kwargs)
-
-except ImportError:
-    pass  # astropy is not required
 
 
 def ideal_bin_count(data: np.ndarray, method: str = "default") -> int:

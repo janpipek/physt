@@ -142,11 +142,12 @@ def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional
 def extract_axis_names(
     data: Any, *, axis_names: Optional[Iterable[str]] = None
 ) -> Optional[Tuple[str, ...]]:
+    """For input data, find the names for axes.
+
+    This typically
+    """
     if axis_names is not None:
         return tuple(axis_names)
     if hasattr(data, "columns"):
-        try:
-            return tuple(str(c) for c in data.columns)  # type: ignore
-        except:  # noqa: E722
-            pass  # Perhaps columns has different meaning here.
+        return tuple(str(c) for c in data.columns)  # type: ignore
     return None

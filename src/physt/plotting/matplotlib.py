@@ -197,7 +197,7 @@ def scatter(
         _, cmap_data = _get_cmap_data(data, kwargs)
         kwargs["color"] = cmap(cmap_data)
     elif "color" in kwargs or "c" in kwargs:
-        kwargs["color"] = kwargs.pop("color", kwargs.get("c", None))
+        kwargs["color"] = kwargs.pop("color", kwargs.get("c"))
 
     _apply_xy_lims(ax, h1, data, kwargs)
     _add_ticks(ax, h1, kwargs)
@@ -376,7 +376,7 @@ def map(
     if "zorder" in kwargs:
         rect_args["zorder"] = kwargs.pop("zorder")
 
-    data = get_data(h2, cumulative=False, flatten=True, density=kwargs.pop("density", False))
+    data = get_data(h2, flatten=True, density=kwargs.pop("density", False))
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -451,7 +451,7 @@ def map(
                 text = value_format(data[i])
                 yiq_y = np.dot(bin_color[:3], [0.299, 0.587, 0.114])
 
-                text_color = kwargs.get("text_color", None)
+                text_color = kwargs.get("text_color")
                 if not text_color:
                     if yiq_y > 0.5:
                         text_color = (0.0, 0.0, 0.0, kwargs.get("text_alpha", alpha))
@@ -475,7 +475,7 @@ def map(
 @register(2, use_3d=True)
 def bar3d(h2: Histogram2D, ax: Axes3D, *, density: bool = False, **kwargs):
     """Plot of 2D histograms as 3D boxes."""
-    data = get_data(h2, cumulative=False, flatten=True, density=density)
+    data = get_data(h2, flatten=True, density=density)
 
     if "cmap" in kwargs:
         cmap = _get_cmap(kwargs)
@@ -498,6 +498,7 @@ def image(
     h2: Histogram2D,
     ax: Axes,
     *,
+    density: bool = False,
     show_colorbar: bool = True,
     interpolation: str = "nearest",
     **kwargs,
@@ -514,7 +515,7 @@ def image(
     interpolation: interpolation parameter passed to imshow, default: "nearest" (creates rectangles)
     """
     cmap = _get_cmap(kwargs)  # h2 as well?
-    data = get_data(h2, cumulative=False, density=kwargs.pop("density", False))
+    data = get_data(h2, density=density)
     norm, cmap_data = _get_cmap_data(data, kwargs)
     # zorder = kwargs.pop("zorder", None)
 
@@ -554,7 +555,7 @@ def polar_map(
     """Polar map of polar histograms.
 
     Similar to map, but supports less parameters."""
-    data = get_data(hist, cumulative=False, flatten=True, density=kwargs.pop("density", False))
+    data = get_data(hist, flatten=True, density=kwargs.pop("density", False))
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -603,7 +604,7 @@ def globe_map(
     **kwargs,
 ):
     """Heat map plotted on the surface of a sphere."""
-    data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
+    data = get_data(hist, density=kwargs.pop("density", False))
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -648,7 +649,7 @@ def cylinder_map(
     **kwargs,
 ) -> None:
     """Heat map plotted on the surface of a cylinder."""
-    data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
+    data = get_data(hist, density=kwargs.pop("density", False))
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -718,7 +719,7 @@ def surface_map(
     --------
     map, cylinder_map, globe_map
     """
-    data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
+    data = get_data(hist, density=kwargs.pop("density", False))
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)

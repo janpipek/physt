@@ -31,7 +31,7 @@ def load_csv(path: str) -> Union[Histogram1D, Histogram2D]:
                 key, value = line[1:].strip().split(" ", 1)
                 meta.append((key, value))  # TODO: There are duplicit entries :-()
             else:
-                try:
+                try:  # noqa: FURB107
                     data_raw.append([float(frag) for frag in line.split(",")])
                 except:  # noqa: E722  # TODO: Find out why
                     pass

@@ -200,7 +200,7 @@ class HistogramBase(abc.ABC):
     @property
     def name(self) -> Optional[str]:
         """Name of the histogram (stored in meta-data)."""
-        return self._meta_data.get("name", None)
+        return self._meta_data.get("name")
 
     @name.setter
     def name(self, value: str):
@@ -208,7 +208,7 @@ class HistogramBase(abc.ABC):
 
         In plotting, this will be used as label.
         """
-        self._meta_data["name"] = str(value)
+        self._meta_data["name"] = value
 
     @property
     def title(self) -> Optional[str]:
@@ -224,7 +224,7 @@ class HistogramBase(abc.ABC):
 
         In plotting, this will be used as plot title.
         """
-        self._meta_data["title"] = str(value)
+        self._meta_data["title"] = value
 
     @property
     def axis_names(self) -> Tuple[str, ...]:
@@ -235,7 +235,7 @@ class HistogramBase(abc.ABC):
     @axis_names.setter
     def axis_names(self, value: Iterable[str]):
         # TODO: Check dimension for this
-        self._meta_data["axis_names"] = tuple(str(name) for name in value)
+        self._meta_data["axis_names"] = tuple(value)
 
     def _get_axis(self, name_or_index: Axis) -> int:
         """Get a zero-based index of an axis and check its existence."""
@@ -414,8 +414,7 @@ class HistogramBase(abc.ABC):
         if inplace:
             self /= self.total * (0.01 if percent else 1)
             return self
-        else:
-            return self / self.total * (100 if percent else 1)
+        return self / self.total * (100 if percent else 1)
 
     @property
     def errors2(self) -> np.ndarray:

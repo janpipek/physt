@@ -80,12 +80,10 @@ with suppress(ImportError):
         Physt also includes some datasets in CSV format.
         """
         # Our custom datasets:
-        try:
+        with suppress(FileNotFoundError):
             binary_data = pkgutil.get_data("physt", f"examples/{name}.csv")
             if binary_data:
                 return pd.read_csv(io.BytesIO(binary_data))
-        except FileNotFoundError:
-            pass
 
         # Seaborn datasets?
         import seaborn as sns
