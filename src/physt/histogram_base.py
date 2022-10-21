@@ -833,7 +833,7 @@ class HistogramBase(abc.ABC):
         yield "adaptive", self.adaptive, False
         yield "dtype", self.dtype
 
-    __rich_repr__.angular = True
+    __rich_repr__.angular = True  # type: ignore
 
     def __add__(self, other):
         new = self.copy()

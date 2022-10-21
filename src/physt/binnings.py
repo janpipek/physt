@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
     from typing_extensions import Literal
 
-    from physt.typing_aliases import ArrayLike, RangeTuple, Self
+    from physt.typing_aliases import ArrayLike, RangeTuple
 
     BinningType = TypeVar("BinningType", bound="BinningBase")
 
