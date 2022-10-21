@@ -101,8 +101,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
             if not candidates:
                 raise KeyError(f"Collection does not contain histogram named '{item}'.")
             return candidates[0]
-        else:
-            return self.histograms[item]
+        return self.histograms[item]
 
     def __eq__(self, other) -> bool:
         return (

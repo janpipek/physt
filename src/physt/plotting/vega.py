@@ -184,8 +184,7 @@ def display_vega(vega_data: dict, display: bool = True) -> Union["Vega", dict]:
     """
     if VEGA_IPYTHON_PLUGIN_ENABLED and display:
         return Vega(vega_data)
-    else:
-        return vega_data
+    return vega_data
 
 
 @enable_inline_view

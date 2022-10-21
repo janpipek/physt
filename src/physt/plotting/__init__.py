@@ -86,6 +86,7 @@ lw (or linewidth) : int
 """
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 from physt.types import HistogramBase, HistogramCollection
@@ -107,33 +108,27 @@ if TYPE_CHECKING:
 # from . import plotly as plotly_backend
 # backends["plotly"] = plotly_backend
 
-try:
+with suppress(ImportError):
     from . import matplotlib as mpl_backend
 
     backends["matplotlib"] = mpl_backend
-except ImportError:
-    pass
 
-try:
+
+with suppress(ImportError):
     from . import vega as vega_backend
 
     backends["vega"] = vega_backend
-except ImportError:
-    pass
 
-try:
+with suppress(ImportError):
     from . import plotly as plotly_backend
 
     backends["plotly"] = plotly_backend
-except ImportError:
-    pass
 
-try:
+
+with suppress(ImportError):
     from . import folium as folium_backend
 
     backends["folium"] = folium_backend
-except ImportError:
-    pass
 
 
 backends["ascii"] = ascii_backend
@@ -175,7 +170,7 @@ def _get_backend(name: Optional[str] = None) -> Tuple[str, Any]:
         if not name:
             raise RuntimeError("No backend for physt plotting.")
     if name == "bokeh":
-        raise RuntimeError(
+        raise NotImplementedError(
             "Support for bokeh has been discontinued. At some point, we may return to support holoviews."
         )
     backend = backends.get(name)

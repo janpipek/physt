@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import abc
 from functools import reduce
+from numbers import Real
 from typing import TYPE_CHECKING, overload
 
 import numpy as np
@@ -340,7 +341,7 @@ class CylindricalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         return self._meta_data.get("radius", 1)
 
     @radius.setter
-    def radius(self, value: float):
+    def radius(self, value: Real):
         self._meta_data["radius"] = float(value)
 
     @property

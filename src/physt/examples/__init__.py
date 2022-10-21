@@ -1,6 +1,8 @@
 """A set of examples used for demonstrating the physt capabilities / in tests."""
 import io
 import pkgutil
+import warnings
+from contextlib import suppress
 
 import numpy as np
 
@@ -68,7 +70,7 @@ def fist() -> Histogram1D:
 ALL_EXAMPLES = [normal_h1, normal_h2, normal_h3, fist]
 
 
-try:
+with suppress(ImportError):
     import pandas as pd
 
     def load_dataset(name: str) -> pd.DataFrame:
@@ -86,17 +88,12 @@ try:
             pass
 
         # Seaborn datasets?
-        try:
-            import warnings
+        import seaborn as sns
 
-            import seaborn as sns
-
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                if name in sns.get_dataset_names():
-                    return sns.load_dataset(name)
-        except ImportError:
-            pass
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            if name in sns.get_dataset_names():
+                return sns.load_dataset(name)
 
         # Fall through
         raise KeyError(f"Dataset '{name}' not available.")
@@ -124,7 +121,3 @@ try:
         )
 
     ALL_EXAMPLES.append(munros)
-
-except ImportError:
-    # Either pandas or seaborn not present
-    pass

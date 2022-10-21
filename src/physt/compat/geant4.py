@@ -57,7 +57,7 @@ def _create_h1(data, meta) -> Histogram1D:
     bin_count = int(bin_count)
     min_ = float(min_)
     max_ = float(max_)
-    binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_))
+    binning = fixed_width_binning(bin_width=(max_ - min_) / bin_count, range=(min_, max_))
     hist = Histogram1D(binning, name=_get(meta, "title"))
     hist._frequencies = data[1:-1, 1]
     hist._errors2 = data[1:-1, 2]
@@ -75,7 +75,7 @@ def _create_h2(data, meta) -> Histogram2D:
         bin_count = int(bin_count)
         min_ = float(min_)
         max_ = float(max_)
-        binning = fixed_width_binning(None, bin_width=(max_ - min_) / bin_count, range=(min_, max_))
+        binning = fixed_width_binning(bin_width=(max_ - min_) / bin_count, range=(min_, max_))
         binnings.append(binning)
 
     shape = Histogram2D(binnings).shape
