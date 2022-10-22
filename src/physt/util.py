@@ -92,7 +92,9 @@ def deprecation_alias(f: Callable, deprecated_name: str) -> Callable:
 
 
 @singledispatch
-def extract_1d_array(data: Any, *, dropna: bool = True) -> Optional[np.ndarray]:
+def extract_1d_array(
+    data: Any, *, dropna: bool = True
+) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
     array: np.ndarray = np.asarray(data)
     if dropna:
         array_mask = ~np.isnan(array)
@@ -117,7 +119,6 @@ def extract_nd_array(
     if dim is not None and dim != array.shape[1]:
         raise ValueError(f"Dimension mismatch: {dim} != {array.shape[1]}")
     _, dim = array.shape
-    # TODO: This might not work with weights!
     if dropna:
         array_mask = ~np.isnan(array).any(axis=1)
         array = array[array_mask]
@@ -127,7 +128,7 @@ def extract_nd_array(
 
 
 @extract_nd_array.register
-def _(data: None, *, dim: int, dropna: bool = True):
+def _(data: None, *, dim, dropna=True):
     if dim is None:
         raise ValueError("You have to specify either data or its dimension.")
     return dim, None, None

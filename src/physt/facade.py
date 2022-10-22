@@ -5,7 +5,7 @@ This involves:
 - calculating frequencies
 - creating the proper histogram instances
 
-Note that the histogram classes are rather data structures and need data to be computed.
+Note that the histogram classes are rather data structures and need computed data to be created.
 """
 from __future__ import annotations
 
@@ -144,11 +144,10 @@ def h2(data1: Optional[ArrayLike], data2: Optional[ArrayLike], bins=10, **kwargs
     """
     # guess axis names
     if "axis_names" not in kwargs:
-        if hasattr(data1, "name") and hasattr(data2, "name"):
-            kwargs["axis_names"] = [str(data1.name), str(data2.name)]  # type: ignore
+        kwargs["axis_names"] = tuple(extract_axis_name(data) for data in (data1, data2))
     if data1 is not None and data2 is not None:
-        data1 = np.asarray(data1)
-        data2 = np.asarray(data2)
+        data1, _ = extract_1d_array(data1, dropna=False)
+        data2, _ = extract_1d_array(data2, dropna=False)
         data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
     else:
         data = None
@@ -235,7 +234,7 @@ def h(
     if title:
         kwargs["title"] = title
     return klass.from_calculate_frequencies(
-        array, binnings=bin_schemas, weights=weights, axis_names=axis_names, **kwargs
+        array, binnings=bin_schemas, weights=weights, axis_names=axis_names, name=name, title=title
     )
 
 

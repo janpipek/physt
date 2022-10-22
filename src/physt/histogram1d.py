@@ -570,7 +570,7 @@ def calculate_frequencies_1d(
     # Prepare 1D numpy array of weights
     if weights is not None:
         # TODO: It should be an array already
-        weights_array: np.ndarray = np.asarray(weights)
+        weights_array = weights
         if weights_array.ndim > 1:
             weights_array = weights_array.flatten()
 

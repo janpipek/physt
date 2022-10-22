@@ -19,7 +19,18 @@ from physt.bin_utils import (
 from physt.util import find_subclass
 
 if TYPE_CHECKING:
-    from typing import Any, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
+    from typing import (
+        Any,
+        Callable,
+        ClassVar,
+        Dict,
+        List,
+        Optional,
+        Sequence,
+        Tuple,
+        TypeVar,
+        Union,
+    )
 
     from typing_extensions import Literal
 
@@ -32,16 +43,14 @@ binning_methods = {}
 """Dictionary of available binnnings."""
 
 
-def register_binning(f=None, *, name: Optional[str] = None):
+def register_binning(name: Optional[str] = None):
     """Decorator to register among available binning methods."""
 
-    def decorator(f):
+    def decorator(f: Callable) -> Callable:
         key = name or f.__name__[:-8]
         binning_methods[key] = f
         return f
 
-    if f:
-        return decorator(f)
     return decorator
 
 
@@ -59,16 +68,13 @@ class BinningBase:
     - if you want to support adaptive histogram, override _force_bin_existence
     - implement _update_dict to contain the binning representation
     - the constructor (and facade methods) must accept any kwargs (and ignores those that are not used).
-
-    Attributes
-    ----------
-    adaptive_allowed : bool
-        Whether is possible to update the bins dynamically
-    inconsecutive_allowed : bool
-        Whether it is possible to have bins with gaps
-
-    TODO: Check the last point (does it make sense?)
     """
+
+    adaptive_allowed: ClassVar[bool] = False
+    """Whether it is possible to update the bins dynamically."""
+
+    inconsecutive_allowed: ClassVar[bool] = False
+    """Whether it is possible to have bins with gaps."""
 
     def __init__(
         self,
@@ -112,10 +118,6 @@ class BinningBase:
         binning_type = a_dict.pop("binning_type", "StaticBinning")
         klass = find_subclass(BinningBase, binning_type)
         return klass(**a_dict)
-
-    adaptive_allowed: bool = False
-    inconsecutive_allowed: bool = False
-    # TODO: adding allowed?
 
     def to_dict(self) -> Dict[str, Any]:
         """Dictionary representation of the binning schema.
@@ -682,7 +684,7 @@ class ExponentialBinning(BinningBase):
         a_dict["bin_count"] = self._bin_count
 
 
-@register_binning
+@register_binning()
 def numpy_binning(
     data: Optional[np.ndarray] = None,
     bin_count: int = 10,
@@ -725,7 +727,7 @@ def numpy_binning(
     return NumpyBinning(bins)
 
 
-@register_binning
+@register_binning()
 def human_binning(
     data: Optional[np.ndarray],
     bin_count: Optional[int] = None,
@@ -772,7 +774,7 @@ def human_binning(
     return fixed_width_binning(bin_width=bin_width, data=data, range=range, **kwargs)
 
 
-@register_binning
+@register_binning()
 def quantile_binning(
     data: Optional[np.ndarray],
     *,
@@ -815,7 +817,7 @@ def quantile_binning(
     return static_binning(bins=make_bin_array(bins), includes_right_edge=True)
 
 
-@register_binning
+@register_binning()
 def static_binning(
     data: Optional[np.ndarray] = None, *, bins: ArrayLike, **kwargs
 ) -> StaticBinning:
@@ -824,7 +826,7 @@ def static_binning(
     return StaticBinning(bins=make_bin_array(bins), **kwargs)
 
 
-@register_binning
+@register_binning()
 def integer_binning(data: Optional[np.ndarray] = None, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width binning schema with bins centered around integers.
 
@@ -846,7 +848,7 @@ def integer_binning(data: Optional[np.ndarray] = None, **kwargs) -> FixedWidthBi
     )
 
 
-@register_binning
+@register_binning()
 def fixed_width_binning(
     data: Optional[np.ndarray] = None,
     bin_width: Union[float, int] = 1,
@@ -881,7 +883,7 @@ def fixed_width_binning(
     return result
 
 
-@register_binning
+@register_binning()
 def exponential_binning(
     data: Optional[np.ndarray] = None,
     bin_count: Optional[int] = None,
@@ -920,15 +922,12 @@ def calculate_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> Binn
 
     Parameters
     ----------
-    array: arraylike
-        Data from which the bins should be decided (sometimes used, sometimes not)
+    array: Data from which the bins should be decided (sometimes used, sometimes not)
     _: int or str or Callable or arraylike or Iterable or BinningBase
         To-be-guessed parameter that specifies what kind of binning should be done
     check_nan: bool
         Check for the presence of nan's in array? Default: True
-    range: tuple
-        Limit values to a range. Some of the binning methods also (subsequently)
-        use this parameter for the bin shape.
+    range: Limit values to a range. Some binning methods also (subsequently) use this parameter for the bin shape.
 
     Returns
     -------
@@ -1070,7 +1069,7 @@ with suppress(ImportError):
         edges = bayesian_blocks(data)
         return StaticBinning(edges, **kwargs)
 
-    @register_binning
+    @register_binning()
     def knuth_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Knuth's rule (from astropy).
 
@@ -1094,7 +1093,7 @@ with suppress(ImportError):
         _, edges = knuth_bin_width(data, True)
         return StaticBinning(edges, **kwargs)
 
-    @register_binning
+    @register_binning()
     def scott_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Scott's rule (from astropy).
 
@@ -1115,7 +1114,7 @@ with suppress(ImportError):
         _, edges = scott_bin_width(data, True)
         return StaticBinning(edges, **kwargs)
 
-    @register_binning
+    @register_binning()
     def freedman_binning(data, range=None, **kwargs) -> StaticBinning:
         """Binning schema based on Freedman-Diaconis rule (from astropy).
 
