@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import physt
-from physt.facade import h1
+from physt._facade import h1
 from physt.histogram1d import Statistics
 from physt.types import Histogram1D
 from physt.typing_aliases import ArrayLike

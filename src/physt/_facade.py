@@ -13,8 +13,17 @@ from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
-from physt.binnings import calculate_bins, calculate_bins_nd
-from physt.histogram1d import calculate_frequencies_1d
+from physt._construction import (
+    calculate_bins,
+    calculate_bins_nd,
+    calculate_frequencies_1d,
+    extract_1d_array,
+    extract_axis_name,
+    extract_axis_names,
+    extract_nd_array,
+    extract_weights,
+)
+from physt._util import deprecation_alias
 from physt.special_histograms import (
     azimuthal,
     cylindrical,
@@ -25,14 +34,6 @@ from physt.special_histograms import (
     spherical_surface,
 )
 from physt.types import Histogram1D, Histogram2D, HistogramCollection, HistogramND
-from physt.util import (
-    deprecation_alias,
-    extract_1d_array,
-    extract_axis_name,
-    extract_axis_names,
-    extract_nd_array,
-    extract_weights,
-)
 
 if TYPE_CHECKING:
     from typing import Iterable, Optional, Type

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from physt._util import find_subclass
 from physt.io.version import require_compatible_version
 from physt.types import HistogramBase, HistogramCollection
-from physt.util import find_subclass
 
 if TYPE_CHECKING:
     from typing import Type, Union

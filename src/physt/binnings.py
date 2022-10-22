@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
-from physt.bin_utils import (
+from physt._bin_utils import (
     find_human_width,
     is_bin_subset,
     is_consecutive,
@@ -16,7 +16,7 @@ from physt.bin_utils import (
     to_numpy_bins,
     to_numpy_bins_with_mask,
 )
-from physt.util import find_subclass
+from physt._util import find_subclass
 
 if TYPE_CHECKING:
     from typing import (
@@ -915,128 +915,6 @@ def exponential_binning(
         range = (np.log10(data.min()), np.log10(data.max()))
     log_width = (range[1] - range[0]) / bin_count
     return ExponentialBinning(log_min=range[0], log_width=log_width, bin_count=bin_count, **kwargs)
-
-
-def calculate_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> BinningBase:
-    """Find optimal binning from arguments.
-
-    Parameters
-    ----------
-    array: Data from which the bins should be decided (sometimes used, sometimes not)
-    _: int or str or Callable or arraylike or Iterable or BinningBase
-        To-be-guessed parameter that specifies what kind of binning should be done
-    check_nan: bool
-        Check for the presence of nan's in array? Default: True
-    range: Limit values to a range. Some binning methods also (subsequently) use this parameter for the bin shape.
-
-    Returns
-    -------
-    BinningBase
-        A two-dimensional array with pairs of bin edges (not necessarily consecutive).
-
-    """
-    if array is not None:
-        if kwargs.pop("check_nan", True):
-            if np.any(np.isnan(array)):
-                raise ValueError("Cannot calculate bins in presence of NaN's.")
-        if kwargs.get("range"):  # TODO: re-consider the usage of this parameter
-            array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
-    if _ is None:
-        bin_count = 10  # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
-        binning = numpy_binning(array, bin_count, **kwargs)
-    elif isinstance(_, BinningBase):
-        binning = _
-    elif isinstance(_, int):
-        binning = numpy_binning(array, _, **kwargs)
-    elif isinstance(_, str):
-        # What about the ranges???
-        if _ in bincount_methods:
-            # TODO: Do we really want this?
-            if array is None:
-                raise ValueError(
-                    f"Cannot find the ideal number of bins without data (method='{_}')"
-                )
-            bin_count = ideal_bin_count(array, method=_)
-            binning = numpy_binning(array, bin_count, **kwargs)
-        elif _ in binning_methods:
-            method = binning_methods[_]
-            binning = method(array, **kwargs)
-        else:
-            raise ValueError(f"No binning method '{_}' available.")
-    elif callable(_):
-        binning = _(array, **kwargs)
-    elif np.iterable(_):
-        if isinstance(_, list):
-            warnings.warn(
-                "Using `list` for bins not recommended, it has different meaning with N-D histograms."
-            )
-        binning = static_binning(array, bins=_, **kwargs)
-    else:
-        raise ValueError(f"Binning {_} not understood.")
-    return binning
-
-
-def calculate_bins_nd(
-    array: Optional[np.ndarray],
-    bins=None,
-    dim: Optional[int] = None,
-    check_nan: bool = True,
-    **kwargs,
-) -> List[BinningBase]:
-    """Find optimal binning from arguments (n-dimensional variant)
-
-    Usage similar to `calculate_bins`.
-    """
-    if array is not None:
-        if dim and array.shape[-1] != dim:
-            raise ValueError(f"The array must be of shape (N, {dim}), {array.shape} found.")
-        _, dim = array.shape
-
-        if check_nan:
-            if np.any(np.isnan(array)):
-                raise ValueError("Cannot calculate bins in presence of NaN's.")
-
-    # Prepare bins
-    if isinstance(bins, list):
-        if dim:
-            if len(bins) != dim:
-                raise ValueError(
-                    f"List of bins not understood, expected {dim} items, got {len(bins)}."
-                )
-        else:
-            dim = len(bins)
-    else:
-        if not dim:
-            raise ValueError("Unknown dimension.")
-        bins = [bins] * dim
-
-    # Prepare arguments
-    # TODO: Lists = argument for multiple axes, tuples = array argument
-    range_ = kwargs.pop("range", None)
-    if range_:
-        if len(range_) == 2 and all(np.isscalar(i) for i in range_):
-            range_ = dim * [range_]
-        elif len(range_) != dim:
-            raise ValueError("Wrong dimensionality of range")
-    for key in list(kwargs.keys()):
-        if isinstance(kwargs[key], list):
-            if len(kwargs[key]) != dim:
-                raise ValueError("Argument not understood.")
-        else:
-            kwargs[key] = dim * [kwargs[key]]
-
-    if range_:
-        kwargs["range"] = range_
-
-    bins = [
-        calculate_bins(
-            array[:, i] if array is not None else None,
-            bins[i],
-            **{k: kwarg[i] for k, kwarg in kwargs.items() if kwarg[i] is not None},
-        )
-        for i in range(dim)
-    ]
-    return bins
 
 
 with suppress(ImportError):

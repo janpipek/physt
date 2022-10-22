@@ -14,10 +14,10 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 from pandas.core.arrays.masked import BaseMaskedArray, BaseMaskedDtype
 
-from physt.binnings import BinningBase, calculate_bins, static_binning
-from physt.facade import h, h1
+from physt._construction import calculate_bins, extract_1d_array
+from physt._facade import h, h1
+from physt.binnings import BinningBase, static_binning
 from physt.types import Histogram1D, Histogram2D, HistogramND
-from physt.util import extract_1d_array
 
 if TYPE_CHECKING:
     from typing import Any, Optional, Union

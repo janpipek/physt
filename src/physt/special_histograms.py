@@ -24,11 +24,12 @@ from typing import TYPE_CHECKING, overload
 
 import numpy as np
 
+from physt._construction import calculate_bins, calculate_bins_nd
+from physt._util import deprecation_alias
 from physt.histogram1d import Histogram1D
 from physt.histogram_nd import HistogramND
-from physt.util import deprecation_alias
 
-from . import binnings, histogram_nd
+from . import histogram_nd
 
 if TYPE_CHECKING:
     from typing import Dict, Optional, Tuple, Type, Union
@@ -421,7 +422,7 @@ def polar(
     if isinstance(phi_bins, int):
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
-    bin_schemas = binnings.calculate_bins_nd(
+    bin_schemas = calculate_bins_nd(
         data,
         [radial_bins, phi_bins],
         range=[radial_range, None],
@@ -458,7 +459,7 @@ def azimuthal(
     data = _prepare_data(data, transformed=False, klass=AzimuthalHistogram, dropna=dropna)
     if isinstance(bins, int):
         bins = np.linspace(*range, bins + 1)
-    bin_schema = binnings.calculate_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
+    bin_schema = calculate_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
     return AzimuthalHistogram.from_calculate_frequencies(
         data=data, binning=bin_schema, weights=weights
     )
@@ -502,7 +503,7 @@ def radial(
             )
 
     data = _prepare_data(data, transformed=transformed, klass=RadialHistogram, dropna=dropna)
-    bin_schema = binnings.calculate_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
+    bin_schema = calculate_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
     return RadialHistogram.from_calculate_frequencies(
         data=data, binning=bin_schema, weights=weights
     )
@@ -537,7 +538,7 @@ def spherical(
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
     try:
-        bin_schemas = binnings.calculate_bins_nd(
+        bin_schemas = calculate_bins_nd(
             data,
             [radial_bins, theta_bins, phi_bins],
             range=[radial_range, None, None],
@@ -587,7 +588,7 @@ def spherical_surface(
     if isinstance(phi_bins, int):
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
-    bin_schemas = binnings.calculate_bins_nd(
+    bin_schemas = calculate_bins_nd(
         transformed_data, [theta_bins, phi_bins], check_nan=not dropna, **kwargs
     )
     return SphericalSurfaceHistogram.from_calculate_frequencies(
@@ -620,7 +621,7 @@ def cylindrical(
     if isinstance(phi_bins, int):
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
-    bin_schemas = binnings.calculate_bins_nd(
+    bin_schemas = calculate_bins_nd(
         data,
         [rho_bins, phi_bins, z_bins],
         range=[rho_range, None, z_range],
@@ -662,7 +663,7 @@ def cylindrical_surface(
     if isinstance(phi_bins, int):
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
-    bin_schemas = binnings.calculate_bins_nd(
+    bin_schemas = calculate_bins_nd(
         transformed_data,
         [phi_bins, z_bins],
         range=[None, z_range],

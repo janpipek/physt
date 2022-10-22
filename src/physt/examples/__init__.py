@@ -6,7 +6,7 @@ from contextlib import suppress
 
 import numpy as np
 
-from physt.facade import h1, h2, h3
+from physt._facade import h1, h2, h3
 from physt.types import Histogram1D, Histogram2D, HistogramND
 
 
