@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 
 from physt.binnings import calculate_bins, calculate_bins_nd
+from physt.histogram1d import calculate_frequencies_1d
 from physt.special_histograms import (
     azimuthal,
     cylindrical,
@@ -30,10 +31,11 @@ from physt.util import (
     extract_axis_name,
     extract_axis_names,
     extract_nd_array,
+    extract_weights,
 )
 
 if TYPE_CHECKING:
-    from typing import Any, Iterable, Optional, Tuple, Type
+    from typing import Iterable, Optional, Type
 
     from physt.typing_aliases import ArrayLike, DTypeLike
 
@@ -98,7 +100,9 @@ def h1(
     if type(data).__name__ == "DataFrame":
         raise TypeError("Cannot create a 1D histogram from a pandas DataFrame. Use Series.")
 
-    array = extract_1d_array(data, dropna=dropna)
+    array, array_mask = extract_1d_array(data, dropna=dropna)
+
+    weights = extract_weights(weights, array_mask=array_mask)
 
     binning = calculate_bins(
         array, bins, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs
@@ -106,12 +110,21 @@ def h1(
 
     axis_name = extract_axis_name(data, axis_name=axis_name)
 
-    # Construct the object
-    return Histogram1D.from_calculate_frequencies(
+    frequencies, errors2, underflow, overflow, stats = calculate_frequencies_1d(
         data=array,
         binning=binning,
         weights=weights,
         dtype=dtype,
+    )
+
+    return Histogram1D(
+        binning=binning,
+        frequencies=frequencies,
+        errors2=errors2,
+        underflow=underflow,
+        overflow=overflow,
+        dtype=dtype,
+        stats=stats,
         keep_missed=keep_missed,
         name=name,
         axis_name=axis_name,
@@ -207,12 +220,10 @@ def h(
     axis_names = extract_axis_names(data, axis_names=axis_names)
     check_nan = data is not None and not dropna
 
-    dim, array = extract_nd_array(data, dim=dim, dropna=dropna)
+    dim, array, array_mask = extract_nd_array(data, dim=dim, dropna=dropna)
 
-    # Prepare and check data
-    # Convert to array
+    weights = extract_weights(weights, array_mask=array_mask)
 
-    # Prepare bins
     bin_schemas = calculate_bins_nd(
         array, bins, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs
     )
@@ -235,7 +246,7 @@ histogramdd = deprecation_alias(h, "histogramdd")
 
 
 def collection(data, bins=10, **kwargs) -> HistogramCollection:
-    """Create histogram collection with shared binnning."""
+    """Create histogram collection with shared binning."""
     if hasattr(data, "columns"):
         data = {column: data[column] for column in data.columns}
     return HistogramCollection.multi_h1(data, bins, **kwargs)

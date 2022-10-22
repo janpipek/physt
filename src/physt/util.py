@@ -95,19 +95,22 @@ def deprecation_alias(f: Callable, deprecated_name: str) -> Callable:
 def extract_1d_array(data: Any, *, dropna: bool = True) -> Optional[np.ndarray]:
     array: np.ndarray = np.asarray(data)
     if dropna:
-        array = array[~np.isnan(array)]
-    return array
+        array_mask = ~np.isnan(array)
+        array = array[array_mask]
+    else:
+        array_mask = None
+    return array, array_mask
 
 
 @extract_1d_array.register
 def _(data: None, *, dropna=True):
-    return None
+    return None, None
 
 
 @singledispatch
 def extract_nd_array(
-    data: Any, *, dim: Optional[int], dropna: bool
-) -> Tuple[int, Optional[np.ndarray]]:
+    data: Any, *, dim: Optional[int], dropna: bool = True
+) -> Tuple[int, Optional[np.ndarray], Optional[np.ndarray]]:
     array: np.ndarray = np.asarray(data)
     if array.ndim != 2:
         raise ValueError(f"Array must have shape (n, d), {array.shape} encountered.")
@@ -116,15 +119,18 @@ def extract_nd_array(
     _, dim = array.shape
     # TODO: This might not work with weights!
     if dropna:
-        array = array[~np.isnan(array).any(axis=1)]
-    return dim, array
+        array_mask = ~np.isnan(array).any(axis=1)
+        array = array[array_mask]
+    else:
+        array_mask = None
+    return dim, array, array_mask
 
 
 @extract_nd_array.register
 def _(data: None, *, dim: int, dropna: bool = True):
     if dim is None:
         raise ValueError("You have to specify either data or its dimension.")
-    return dim, None
+    return dim, None, None
 
 
 @singledispatch
@@ -153,3 +159,13 @@ def extract_axis_names(
     if hasattr(data, "columns"):
         return tuple(str(c) for c in data.columns)  # type: ignore
     return None
+
+
+@singledispatch
+def extract_weights(weights: Any, array_mask: Optional[np.ndarray] = None) -> Optional[np.ndarray]:
+    if weights is None:
+        return None
+    weights_array = np.asarray(weights)
+    if array_mask is not None:
+        weights_array = weights_array[array_mask]
+    return weights_array

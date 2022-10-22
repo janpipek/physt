@@ -6,15 +6,17 @@ from physt import binnings, h2, histogram_nd
 from physt.binnings import BinningBase, as_binning
 from physt.histogram_nd import Histogram2D
 
-vals = [
-    [0.1, 2.0],
-    [-0.1, 0.7],
-    [0.2, 1.5],
-    [0.2, -1.5],
-    [0.2, 1.47],
-    [1.2, 1.23],
-    [0.7, 0.5],
-]
+vals = np.asarray(
+    [
+        [0.1, 2.0],
+        [-0.1, 0.7],
+        [0.2, 1.5],
+        [0.2, -1.5],
+        [0.2, 1.47],
+        [1.2, 1.23],
+        [0.7, 0.5],
+    ]
+)
 
 np.random.seed(42)
 
@@ -39,7 +41,9 @@ class TestCalculateFrequencies:
     def test_simple(self):
         bins = [[0, 1, 2], [0, 1, 2]]
         schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
-        frequencies, errors2, missing = histogram_nd.calculate_frequencies(vals, binnings=schemas)
+        frequencies, errors2, missing = histogram_nd.calculate_frequencies_nd(
+            vals, binnings=schemas
+        )
         assert np.array_equal([[1, 3], [0, 1]], frequencies)
         assert missing == 2
         assert errors2 is None
@@ -47,16 +51,18 @@ class TestCalculateFrequencies:
     def test_gap(self):
         bins = [[[-1, 0], [1, 2]], [[-2, -1], [1, 2]]]
         schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
-        frequencies, errors2, missing = histogram_nd.calculate_frequencies(vals, binnings=schemas)
+        frequencies, errors2, missing = histogram_nd.calculate_frequencies_nd(
+            vals, binnings=schemas
+        )
         assert np.array_equal([[0, 0], [0, 1]], frequencies)
         assert missing == 6
         assert errors2 is None
 
     def test_errors(self):
         bins = [[[-1, 0], [1, 2]], [[-2, -1], [1, 2]]]
-        weights = [2, 1, 1, 1, 1, 2, 1]
+        weights = np.asarray([2, 1, 1, 1, 1, 2, 1])
         schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
-        frequencies, errors2, missing = histogram_nd.calculate_frequencies(
+        frequencies, errors2, missing = histogram_nd.calculate_frequencies_nd(
             vals, binnings=schemas, weights=weights
         )
         assert np.array_equal([[0, 0], [0, 2]], frequencies)

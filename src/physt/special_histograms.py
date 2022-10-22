@@ -669,7 +669,7 @@ def cylindrical_surface(
         check_nan=not dropna,
         **kwargs,
     )
-    frequencies, errors2, missed = histogram_nd.calculate_frequencies(
+    frequencies, errors2, missed = histogram_nd.calculate_frequencies_nd(
         data, binnings=bin_schemas, weights=weights
     )
     return CylindricalSurfaceHistogram(

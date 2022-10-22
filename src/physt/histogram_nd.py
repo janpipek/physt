@@ -379,7 +379,7 @@ class HistogramND(HistogramBase):
             if binning.is_adaptive():
                 bin_map = binning.force_bin_existence(values_array[:, i])  # TODO: Add to some test
                 self._reshape_data(binning.bin_count, bin_map, i)
-        frequencies, errors2, missed = calculate_frequencies(
+        frequencies, errors2, missed = calculate_frequencies_nd(
             values_array, self._binnings, weights=weights
         )
         self._frequencies += frequencies
@@ -501,7 +501,7 @@ class HistogramND(HistogramBase):
 
     @classmethod
     def from_calculate_frequencies(cls, data, binnings, weights=None, *, dtype=None, **kwargs):
-        frequencies, errors2, missing = calculate_frequencies(
+        frequencies, errors2, missing = calculate_frequencies_nd(
             data=data, binnings=binnings, weights=weights, dtype=dtype
         )
         return cls(
@@ -572,7 +572,7 @@ class Histogram2D(HistogramND):
 
 
 @overload
-def calculate_frequencies(
+def calculate_frequencies_nd(
     data: ArrayLike,
     binnings: Iterable[BinningBase],
     weights: Optional[ArrayLike] = None,
@@ -583,7 +583,7 @@ def calculate_frequencies(
 
 
 @overload
-def calculate_frequencies(
+def calculate_frequencies_nd(
     data: None,
     binnings: Iterable[BinningBase],
     weights: Optional[ArrayLike] = None,
@@ -593,10 +593,10 @@ def calculate_frequencies(
     ...
 
 
-def calculate_frequencies(
-    data: Optional[ArrayLike],
+def calculate_frequencies_nd(
+    data: Optional[np.ndarray],
     binnings: Iterable[BinningBase],
-    weights: Optional[ArrayLike] = None,
+    weights: Optional[np.ndarray] = None,
     *,
     dtype: Optional[DTypeLike] = None,
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float]:
@@ -621,7 +621,6 @@ def calculate_frequencies(
         return None, None, 0
 
     # Prepare numpy array of data
-    data = np.asarray(data)
     if data.ndim != 2:
         raise ValueError(f"calculate_frequencies requires 2D input data, dim={data.ndim} found.")
 
@@ -630,7 +629,6 @@ def calculate_frequencies(
         if not dtype:
             dtype = np.int64
     else:
-        weights = np.asarray(weights)
         if data is None:
             raise ValueError("Weights specified but data not.")
         if data.shape[0] != weights.shape[0]:

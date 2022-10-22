@@ -416,7 +416,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         if weights is not None:
             weights = np.asarray(weights)
             self._coerce_dtype(weights.dtype)
-        (frequencies, errors2, underflow, overflow, stats) = calculate_frequencies(
+        (frequencies, errors2, underflow, overflow, stats) = calculate_frequencies_1d(
             values,
             self._binning,
             dtype=self.dtype,
@@ -476,6 +476,8 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         **kwargs,
     ) -> "Histogram1DType":
         """Construct the histogram from values and bins."""
+        # TODO: Remove this method
+
         if data is None:
             frequencies: Optional[np.ndarray] = None
             errors2: Optional[np.ndarray] = None
@@ -483,7 +485,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             overflow: float = 0.0
             stats: Optional[Statistics] = None
         else:
-            frequencies, errors2, underflow, overflow, stats = calculate_frequencies(
+            frequencies, errors2, underflow, overflow, stats = calculate_frequencies_1d(
                 data=data,
                 binning=binning,
                 weights=weights,
@@ -508,15 +510,15 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         )
 
 
-def calculate_frequencies(
-    data: ArrayLike,
+def calculate_frequencies_1d(
+    data: Optional[np.ndarray],
     binning: BinningBase,
-    weights: Optional[ArrayLike] = None,
+    weights: Optional[np.ndarray] = None,
     *,
     validate_bins: bool = True,
     already_sorted: bool = False,
     dtype: Optional[DTypeLike] = None,
-) -> Tuple[np.ndarray, np.ndarray, float, float, Statistics]:
+) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float, float, Optional[Statistics]]:
     """Get frequencies and bin errors from the data.
 
     Parameters
@@ -543,6 +545,9 @@ def calculate_frequencies(
     Does not check for numerical overflows in bins.
     """
 
+    if data is None:
+        return None, None, 0.0, 0.0, None
+
     # TODO: Is it possible to merge with histogram_nd.calculate_frequencies?
 
     underflow = np.nan
@@ -557,13 +562,14 @@ def calculate_frequencies(
             raise ValueError("Bins must be rising.")
 
     # Prepare 1D numpy array of data
-    data_array: np.ndarray = np.asarray(data)
+    data_array = data
     if data_array.ndim > 1:
         # TODO: Perhaps disallow this?
         data_array = data_array.flatten()
 
     # Prepare 1D numpy array of weights
     if weights is not None:
+        # TODO: It should be an array already
         weights_array: np.ndarray = np.asarray(weights)
         if weights_array.ndim > 1:
             weights_array = weights_array.flatten()

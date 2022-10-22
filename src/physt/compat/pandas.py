@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Optional, Tuple, cast
 
 import numpy as np
 import pandas
@@ -26,15 +26,20 @@ if TYPE_CHECKING:
 
 
 @extract_1d_array.register
-def _(series: pandas.Series, *, dropna: bool = True) -> np.ndarray:
+def _(series: pandas.Series, *, dropna: bool = True) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     if isinstance(series.dtype, BaseMaskedDtype):
         array = cast(BaseMaskedArray, series.array)
         if not dropna and any(array._mask):
             raise ValueError("Cannot histogram series with NA's. Set `dropna` to True to override.")
-        return array._data[~array._mask]
-    if dropna:
-        series = series.dropna()
-    return series.values
+        array_mask = ~array._mask
+        array = array._data[~array._mask]
+    elif dropna:
+        array_mask = series.notna().values
+        array = series.dropna().values
+    else:
+        array_mask = None
+        array = series.values
+    return array, array_mask
 
 
 @pandas.api.extensions.register_series_accessor("physt")
