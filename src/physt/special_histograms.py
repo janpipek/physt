@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import abc
 from functools import reduce
+from numbers import Real
 from typing import TYPE_CHECKING, overload
 
 import numpy as np
@@ -170,8 +171,7 @@ class RadialHistogram(TransformedHistogramMixin, Histogram1D):
     def _transform_correct_dimension(cls, value):
         if value.shape[-1] == 2:
             return np.hypot(value[..., 1], value[..., 0])
-        else:
-            return np.hypot(np.hypot(value[..., 1], value[..., 0]), value[..., 2])
+        return np.hypot(np.hypot(value[..., 1], value[..., 0]), value[..., 2])
 
 
 class AzimuthalHistogram(TransformedHistogramMixin, Histogram1D):
@@ -341,7 +341,7 @@ class CylindricalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         return self._meta_data.get("radius", 1)
 
     @radius.setter
-    def radius(self, value: float):
+    def radius(self, value: Real):
         self._meta_data["radius"] = float(value)
 
     @property

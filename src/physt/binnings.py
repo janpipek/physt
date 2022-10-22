@@ -1,6 +1,8 @@
 """Different binning algorithms/schemas for the histograms."""
 from __future__ import annotations
 
+import warnings
+from contextlib import suppress
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
@@ -40,8 +42,7 @@ def register_binning(f=None, *, name: Optional[str] = None):
 
     if f:
         return decorator(f)
-    else:
-        return decorator
+    return decorator
 
 
 # TODO: Locking and edit operations (like numpy read-only)
@@ -104,11 +105,10 @@ class BinningBase:
             new_binning = self.as_static()
             new_binning._bins = new_binning.bins[index]
             return new_binning
-        else:
-            return self.bins[index]
+        return self.bins[index]
 
     @staticmethod
-    def from_dict(a_dict):
+    def from_dict(a_dict: Dict[str, Any]) -> BinningBase:
         binning_type = a_dict.pop("binning_type", "StaticBinning")
         klass = find_subclass(BinningBase, binning_type)
         return klass(**a_dict)
@@ -161,8 +161,7 @@ class BinningBase:
                     self._consecutive = True
                 self._consecutive = is_consecutive(self.bins, rtol, atol)
             return self._consecutive
-        else:
-            return True
+        return True
 
     def is_adaptive(self) -> bool:
         """Whether the binning can be adapted to include values not currently spanned."""
@@ -292,16 +291,14 @@ class BinningBase:
         """The left edge of the first bin."""
         if self._numpy_bins is not None:
             return self._numpy_bins[0]
-        else:
-            return self.bins[0][0]
+        return self.bins[0][0]
 
     @property
     def last_edge(self) -> float:
         """The right edge of the last bin."""
         if self._numpy_bins is not None:
             return self._numpy_bins[-1]
-        else:
-            return self.bins[-1][1]
+        return self.bins[-1][1]
 
     def as_static(self, copy: bool = True) -> "StaticBinning":  # pylint: disable=unused-argument
         """Convert binning to a static form.
@@ -367,7 +364,7 @@ class BinningBase:
         return binning
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.numpy_bins)})"
+        return f"{self.__class__.__name__}({self.numpy_bins!r})"
 
 
 if TYPE_CHECKING:
@@ -396,14 +393,11 @@ class StaticBinning(BinningBase):
         copy : if True, returns itself (already satisfying conditions).
         """
         if copy:
-            return StaticBinning(
-                bins=self.bins.copy(), includes_right_edge=self.includes_right_edge
-            )
-        else:
-            return self
+            return self.copy()
+        return self
 
     def copy(self):
-        return self.as_static(True)
+        return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
 
     def __getitem__(self, item):
         copy = self.copy()
@@ -420,7 +414,7 @@ class StaticBinning(BinningBase):
             return None, list(enumerate(indices))
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.bins)})"
+        return f"{self.__class__.__name__}({self.bins!r})"
 
 
 class NumpyBinning(BinningBase):
@@ -632,8 +626,7 @@ class FixedWidthBinning(BinningBase):
     def as_fixed_width(self, copy: bool = True) -> "FixedWidthBinning":
         if copy:
             return self.copy()
-        else:
-            return self
+        return self
 
     def _update_dict(self, a_dict: Dict[str, Any]) -> None:
         # TODO: Fix to be instantiable from JSON
@@ -951,7 +944,7 @@ def calculate_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> Binn
         if kwargs.pop("check_nan", True):
             if np.any(np.isnan(array)):
                 raise ValueError("Cannot calculate bins in presence of NaN's.")
-        if kwargs.get("range", None):  # TODO: re-consider the usage of this parameter
+        if kwargs.get("range"):  # TODO: re-consider the usage of this parameter
             array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
         bin_count = 10  # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
@@ -1051,11 +1044,9 @@ def calculate_bins_nd(
     return bins
 
 
-try:
+with suppress(ImportError):
     # If possible, import astropy's binning methods
     # See: http://docs.astropy.org/en/stable/visualization/histogram.html
-
-    import warnings
 
     from astropy.stats.histogram import histogram as _astropy_histogram  # noqa: F401
 
@@ -1150,9 +1141,6 @@ try:
         _, edges = freedman_bin_width(data, True)
         return StaticBinning(edges, **kwargs)
 
-except ImportError:
-    pass  # astropy is not required
-
 
 def ideal_bin_count(data: np.ndarray, method: str = "default") -> int:
     """A theoretically ideal bin count.
@@ -1184,10 +1172,13 @@ def ideal_bin_count(data: np.ndarray, method: str = "default") -> int:
     if method == "doane":
         if value_count < 3:
             return 1
-        from scipy.stats import skew
-
-        sigma = np.sqrt(6 * (value_count - 2) / (value_count + 1) * (value_count + 3))
-        return int(np.ceil(1 + np.log2(value_count) + np.log2(1 + np.abs(skew(data)) / sigma)))
+        try:
+            from scipy.stats import skew
+        except ImportError:
+            warnings.warn("Please install scipy to support 'doane' method")
+        else:
+            sigma = np.sqrt(6 * (value_count - 2) / (value_count + 1) * (value_count + 3))
+            return int(np.ceil(1 + np.log2(value_count) + np.log2(1 + np.abs(skew(data)) / sigma)))
     if method == "rice":
         return int(np.ceil(2 * np.power(value_count, 1 / 3)))
     raise ValueError(f"Unknown bin count method: {method}")

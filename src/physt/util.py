@@ -6,8 +6,10 @@ for numerical computing, histogramming, etc.
 from __future__ import annotations
 
 import warnings
-from functools import wraps
-from typing import TYPE_CHECKING
+from functools import singledispatch, wraps
+from typing import TYPE_CHECKING, Iterable, List, Optional
+
+import numpy as np
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Dict, Tuple
@@ -31,7 +33,7 @@ def find_subclass(base: type, name: str) -> type:
     Uses only the class name without namespace.
     """
     class_candidates = [klass for klass in all_subclasses(base) if klass.__name__ == name]
-    if len(class_candidates) == 0:
+    if not class_candidates:
         raise TypeError(f"No '{base.__name__}' subclass of '{name}'.")
     if len(class_candidates) > 1:
         raise TypeError(f"Multiple '{base.__name__}' subclasses of '{name}'.")
@@ -83,3 +85,71 @@ def deprecation_alias(f: Callable, deprecated_name: str) -> Callable:
         return f(*args, **kwargs)
 
     return inner
+
+
+# TODO: The following functions enable to structure h1,h2 ... as a set of individual
+#   separately tested steps. Think about where it belongs.
+
+
+@singledispatch
+def extract_1d_array(data: Any, *, dropna: bool = True) -> Optional[np.ndarray]:
+    array: np.ndarray = np.asarray(data)
+    if dropna:
+        array = array[~np.isnan(array)]
+    return array
+
+
+@extract_1d_array.register
+def _(data: None, *, dropna=True):
+    return None
+
+
+@singledispatch
+def extract_nd_array(
+    data: Any, *, dim: Optional[int], dropna: bool
+) -> Tuple[int, Optional[np.ndarray]]:
+    array: np.ndarray = np.asarray(data)
+    if array.ndim != 2:
+        raise ValueError(f"Array must have shape (n, d), {array.shape} encountered.")
+    if dim is not None and dim != array.shape[1]:
+        raise ValueError(f"Dimension mismatch: {dim} != {array.shape[1]}")
+    _, dim = array.shape
+    # TODO: This might not work with weights!
+    if dropna:
+        array = array[~np.isnan(array).any(axis=1)]
+    return dim, array
+
+
+@extract_nd_array.register
+def _(data: None, *, dim: int, dropna: bool = True):
+    if dim is None:
+        raise ValueError("You have to specify either data or its dimension.")
+    return dim, None
+
+
+@singledispatch
+def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional[str]:
+    """For input data, find the axis name."""
+    if not axis_name:
+        if hasattr(data, "name"):
+            return str(data.name)  # type: ignore
+        elif (
+            hasattr(data, "fields")
+            and len(data.fields) == 1  # type: ignore
+            and isinstance(data.fields[0], str)  # type: ignore
+        ):
+            # Case of dask fields (examples)
+            return str(data.fields[0])  # type: ignore
+    return axis_name
+
+
+@singledispatch
+def extract_axis_names(
+    data: Any, *, axis_names: Optional[Iterable[str]] = None
+) -> Optional[Tuple[str, ...]]:
+    """For input data, find the names for axes."""
+    if axis_names is not None:
+        return tuple(axis_names)
+    if hasattr(data, "columns"):
+        return tuple(str(c) for c in data.columns)  # type: ignore
+    return None

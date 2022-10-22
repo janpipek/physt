@@ -218,7 +218,7 @@ class TimeTickHandler:
         elif ideal_width < 70000:
             return ("hour", find_human_width_24(ideal_width / 3600))
         else:
-            return ("day", find_human_width_decimal(ideal_width / 86400))
+            return ("day", find_human_width_decimal(ideal_width / 86400))  # # noqa: FURB126
 
     def get_time_ticks(
         self, h1: Histogram1D, level: LevelType, min_: float, max_: float

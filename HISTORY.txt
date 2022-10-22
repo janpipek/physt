@@ -2,7 +2,9 @@
 ------
 - Moved: xarray support as a separate module in physt.compat
 - Removed: physt.special (use physt.special_histograms instead)
+- Added: Pretty printing with rich library
 - Changed: Moved most configuration to pyproject.toml
+- Support: Removed Python 3.7 (requiring numpy 1.22)
 
 0.5.3 (6 January 2023)
 ----------------------

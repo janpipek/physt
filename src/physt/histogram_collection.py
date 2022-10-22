@@ -98,11 +98,10 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
     def __getitem__(self, item) -> Histogram1D:
         if isinstance(item, str):
             candidates = [h for h in self.histograms if h.name == item]
-            if len(candidates) == 0:
+            if not candidates:
                 raise KeyError(f"Collection does not contain histogram named '{item}'.")
             return candidates[0]
-        else:
-            return self.histograms[item]
+        return self.histograms[item]
 
     def __eq__(self, other) -> bool:
         return (
@@ -156,6 +155,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         cls, a_dict: Mapping[str, ArrayLike], bins=None, **kwargs
     ) -> "HistogramCollection":
         """Create a collection from multiple datasets."""
+        # TODO: Change into a function in facade
         from physt.binnings import calculate_bins
 
         mega_values: np.ndarray = np.concatenate(list(a_dict.values()))  # type: ignore

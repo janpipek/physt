@@ -180,8 +180,7 @@ class HistogramND(HistogramBase):
         if axis is not None:
             axis = self._get_axis(axis)
             return self.get_bin_right_edges(axis) - self.get_bin_left_edges(axis)
-        else:
-            return np.meshgrid(*[self.get_bin_widths(i) for i in range(self.ndim)], indexing="ij")
+        return np.meshgrid(*[self.get_bin_widths(i) for i in range(self.ndim)], indexing="ij")
 
     @property
     def bin_sizes(self) -> np.ndarray:

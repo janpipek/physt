@@ -3,7 +3,7 @@ name = "physt"
 version = "0.6.0a1"
 description = "P(i/y)thon h(i/y)stograms."
 readme = "README.md"
-requires-python = "~=3.7"
+requires-python = "~=3.8"
 license = {file = "LICENSE"}
 authors = [
     {name = "Jan Pipek", email="jan.pipek@gmail.com"}
@@ -18,7 +18,7 @@ classifiers = [
         "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "numpy>=1.20",
+    "numpy>=1.22",
     "packaging",
     "typing_extensions",
     "hypothesis"
@@ -27,17 +27,19 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest", "mypy", "types-setuptools"]
 # doc = ["sphinx", "sphinx_rtd_theme", "sphixncontrib-apidoc", "nbsphinx"]
+astropy = ["astropy"]
 dask = ["dask[array]"]
 pandas = ["pandas"]
 xarray = ["xarray"]
-matplotlib = ["matplotlib"]
+matplotlib = ["matplotlib>=2.0"]
 plotly = ["plotly"]
 vega3 = ["vega3"]
 folium = ["folium"]
 root = ["uproot3"]  # TODO: Update to uproot4
+scipy = ["scipy"]
 xtermcolor = ["xtermcolor"]
 all = [
-    "physt[dev,dask,pandas,xarray,matplotlib,plotly,vega3,folium,root,xtermcolor]"
+    "physt[astropy,dev,dask,pandas,xarray,matplotlib,plotly,vega3,folium,root,scipy,xtermcolor]"
 ]
 
 [build-system]
@@ -46,7 +48,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 100
-target-version = ['py37', 'py38', 'py39', 'py310']
+target-version = ['py38', 'py39', 'py310']
 include = '\.pyi?$'
 
 [tool.mypy]

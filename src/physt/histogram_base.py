@@ -127,7 +127,7 @@ class HistogramBase(abc.ABC):
 
         Parameters
         ----------
-        binnings : Iterable of something that can be turned into binnnings
+        binnings : Iterable of something that can be turned into binnings
         frequencies : Frequencies to fill bins with (default to zeros if not present)
         errors2 : Squared errors for bins (default is equal to frequencies)
         dtype : Dtype for bin contents
@@ -200,7 +200,7 @@ class HistogramBase(abc.ABC):
     @property
     def name(self) -> Optional[str]:
         """Name of the histogram (stored in meta-data)."""
-        return self._meta_data.get("name", None)
+        return self._meta_data.get("name")
 
     @name.setter
     def name(self, value: str):
@@ -208,7 +208,7 @@ class HistogramBase(abc.ABC):
 
         In plotting, this will be used as label.
         """
-        self._meta_data["name"] = str(value)
+        self._meta_data["name"] = value
 
     @property
     def title(self) -> Optional[str]:
@@ -224,7 +224,7 @@ class HistogramBase(abc.ABC):
 
         In plotting, this will be used as plot title.
         """
-        self._meta_data["title"] = str(value)
+        self._meta_data["title"] = value
 
     @property
     def axis_names(self) -> Tuple[str, ...]:
@@ -235,7 +235,7 @@ class HistogramBase(abc.ABC):
     @axis_names.setter
     def axis_names(self, value: Iterable[str]):
         # TODO: Check dimension for this
-        self._meta_data["axis_names"] = tuple(str(name) for name in value)
+        self._meta_data["axis_names"] = tuple(value)
 
     def _get_axis(self, name_or_index: Axis) -> int:
         """Get a zero-based index of an axis and check its existence."""
@@ -414,8 +414,7 @@ class HistogramBase(abc.ABC):
         if inplace:
             self /= self.total * (0.01 if percent else 1)
             return self
-        else:
-            return self / self.total * (100 if percent else 1)
+        return self / self.total * (100 if percent else 1)
 
     @property
     def errors2(self) -> np.ndarray:
@@ -740,7 +739,7 @@ class HistogramBase(abc.ABC):
         If a descendant class needs to update the dictionary in some way
         (put some more information), override the _update_dict method.
         """
-        result: Dict[str, Any] = dict()
+        result: Dict[str, Any] = {}
         result["histogram_type"] = type(self).__name__
         result["binnings"] = [binning.to_dict() for binning in self._binnings]
         if self.frequencies is not None:
@@ -824,6 +823,17 @@ class HistogramBase(abc.ABC):
         return (
             f"{self.__class__.__name__}(bins={self.shape}, total={self.total}, dtype={self.dtype})"
         )
+
+    def __rich_repr__(self):
+        """Support pretty printing using the `rich` library."""
+        yield "name", self.name, None
+        yield "shape", self.shape
+        yield "total", self.total
+        yield "axes", self.axis_names, tuple(f"axis{i}" for i in range(self.ndim))
+        yield "adaptive", self.adaptive, False
+        yield "dtype", self.dtype
+
+    __rich_repr__.angular = True  # type: ignore
 
     def __add__(self, other):
         new = self.copy()

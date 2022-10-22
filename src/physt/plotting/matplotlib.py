@@ -31,6 +31,7 @@ Parameters
 """
 from __future__ import annotations
 
+from contextlib import suppress
 from functools import wraps
 from typing import TYPE_CHECKING
 
@@ -41,6 +42,7 @@ import matplotlib.patches as patches
 import matplotlib.path as path
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 from physt.config import config
 from physt.plotting.common import (
@@ -57,7 +59,6 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from mpl_toolkits.mplot3d import Axes3D
-    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
     from physt.special_histograms import (
         CylindricalSurfaceHistogram,
@@ -197,7 +198,7 @@ def scatter(
         _, cmap_data = _get_cmap_data(data, kwargs)
         kwargs["color"] = cmap(cmap_data)
     elif "color" in kwargs or "c" in kwargs:
-        kwargs["color"] = kwargs.pop("color", kwargs.get("c", None))
+        kwargs["color"] = kwargs.pop("color", kwargs.get("c"))
 
     _apply_xy_lims(ax, h1, data, kwargs)
     _add_ticks(ax, h1, kwargs)
@@ -376,7 +377,7 @@ def map(
     if "zorder" in kwargs:
         rect_args["zorder"] = kwargs.pop("zorder")
 
-    data = get_data(h2, cumulative=False, flatten=True, density=kwargs.pop("density", False))
+    data = get_data(h2, flatten=True, density=kwargs.pop("density", False))
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -451,7 +452,7 @@ def map(
                 text = value_format(data[i])
                 yiq_y = np.dot(bin_color[:3], [0.299, 0.587, 0.114])
 
-                text_color = kwargs.get("text_color", None)
+                text_color = kwargs.get("text_color")
                 if not text_color:
                     if yiq_y > 0.5:
                         text_color = (0.0, 0.0, 0.0, kwargs.get("text_alpha", alpha))
@@ -475,7 +476,7 @@ def map(
 @register(2, use_3d=True)
 def bar3d(h2: Histogram2D, ax: Axes3D, *, density: bool = False, **kwargs):
     """Plot of 2D histograms as 3D boxes."""
-    data = get_data(h2, cumulative=False, flatten=True, density=density)
+    data = get_data(h2, flatten=True, density=density)
 
     if "cmap" in kwargs:
         cmap = _get_cmap(kwargs)
@@ -498,6 +499,7 @@ def image(
     h2: Histogram2D,
     ax: Axes,
     *,
+    density: bool = False,
     show_colorbar: bool = True,
     interpolation: str = "nearest",
     **kwargs,
@@ -514,7 +516,7 @@ def image(
     interpolation: interpolation parameter passed to imshow, default: "nearest" (creates rectangles)
     """
     cmap = _get_cmap(kwargs)  # h2 as well?
-    data = get_data(h2, cumulative=False, density=kwargs.pop("density", False))
+    data = get_data(h2, density=density)
     norm, cmap_data = _get_cmap_data(data, kwargs)
     # zorder = kwargs.pop("zorder", None)
 
@@ -554,7 +556,7 @@ def polar_map(
     """Polar map of polar histograms.
 
     Similar to map, but supports less parameters."""
-    data = get_data(hist, cumulative=False, flatten=True, density=kwargs.pop("density", False))
+    data = get_data(hist, flatten=True, density=kwargs.pop("density", False))
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -603,7 +605,7 @@ def globe_map(
     **kwargs,
 ):
     """Heat map plotted on the surface of a sphere."""
-    data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
+    data = get_data(hist, density=kwargs.pop("density", False))
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -631,9 +633,6 @@ def globe_map(
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
-
-    if matplotlib.__version__ < "2":
-        ax.plot_surface([], [], [], color="b")
     ax.set_xlim(-1.1, 1.1)
     ax.set_ylim(-1.1, 1.1)
     ax.set_zlim(-1.1, 1.1)
@@ -648,7 +647,7 @@ def cylinder_map(
     **kwargs,
 ) -> None:
     """Heat map plotted on the surface of a cylinder."""
-    data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
+    data = get_data(hist, density=kwargs.pop("density", False))
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -675,9 +674,6 @@ def cylinder_map(
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
-
-    if matplotlib.__version__ < "2":
-        ax.plot_surface([], [], [], color="b")
     ax.set_xlim(-r * 1.1, r * 1.1)
     ax.set_ylim(-r * 1.1, r * 1.1)
     ax.set_zlim(zs.min(), zs.max())
@@ -718,7 +714,7 @@ def surface_map(
     --------
     map, cylinder_map, globe_map
     """
-    data = get_data(hist, cumulative=False, flatten=False, density=kwargs.pop("density", False))
+    data = get_data(hist, density=kwargs.pop("density", False))
 
     cmap = _get_cmap(kwargs)
     norm, cmap_data = _get_cmap_data(data, kwargs)
@@ -752,9 +748,6 @@ def surface_map(
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
-
-    if matplotlib.__version__ < "2":
-        ax.plot_surface([], [], [], color="b")  # Dummy plot
     ax.set_xlim(xs.min(), xs.max())
     ax.set_ylim(ys.min(), ys.max())
     ax.set_zlim(zs.min(), zs.max())
@@ -860,14 +853,12 @@ def _get_cmap(kwargs: dict) -> colors.Colormap:
         try:
             return plt.get_cmap(cmap)
         except BaseException:
-            try:
+            with suppress(ImportError):
                 # Try to use seaborn palette
                 import seaborn as sns
 
                 sns_palette = sns.color_palette(cmap, n_colors=256)
                 return ListedColormap(sns_palette, name=cmap)
-            except ImportError:
-                pass
         raise ValueError(f"Cmap '{cmap}' could not be found.")
     return cmap
 
@@ -997,7 +988,7 @@ def _add_stats_box(
     if not stats:
         return
 
-    if stats in ["all", True]:
+    if stats in ("all", True):
         used_stats: List[str] = available_stats
     elif isinstance(stats, str):
         used_stats = [stats]
