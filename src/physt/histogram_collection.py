@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Container, Mapping, cast
 
 import numpy as np
 
+from physt._construction import calculate_1d_bins
 from physt.binnings import BinningBase, as_binning
 from physt.histogram1d import Histogram1D, ObjectWithBinning
 
@@ -156,10 +157,8 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
     ) -> "HistogramCollection":
         """Create a collection from multiple datasets."""
         # TODO: Change into a function in facade
-        from physt.binnings import calculate_bins
-
         mega_values: np.ndarray = np.concatenate(list(a_dict.values()))  # type: ignore
-        binning = calculate_bins(mega_values, bins, **kwargs)
+        binning = calculate_1d_bins(mega_values, bins, **kwargs)
 
         title = kwargs.pop("title", None)
         name = kwargs.pop("name", None)

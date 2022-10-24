@@ -14,7 +14,7 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 from pandas.core.arrays.masked import BaseMaskedArray, BaseMaskedDtype
 
-from physt._construction import calculate_bins, extract_1d_array
+from physt._construction import calculate_1d_bins, extract_1d_array
 from physt._facade import h, h1
 from physt.binnings import BinningBase, static_binning
 from physt.types import Histogram1D, Histogram2D, HistogramND
@@ -55,13 +55,15 @@ class PhystSeriesAccessor:
         self._series = series
 
     def h1(self, bins=None, **kwargs) -> Histogram1D:
+        """Create a histogram from the series."""
         return h1(self._series, bins=bins, **kwargs)
 
     histogram = h1
 
-    def cut(self, bins=None, *, dropna: bool = True, **kwargs) -> pd.Series:
+    def cut(self, bins=None, **kwargs) -> pd.Series:
+        """Bin values using physt binning (eq. to pd.cut)."""
         warnings.warn("This method is experimental, only partially implemented and may removed.")
-        binning = calculate_bins(extract_1d_array(self._series, dropna=dropna), bins, **kwargs)
+        binning = calculate_1d_bins(extract_1d_array(self._series, dropna=True)[0], bins, **kwargs)
         return pd.cut(self._series, binning.numpy_bins)
 
 
@@ -139,6 +141,7 @@ class PhystDataFrameAccessor:
         columns: The column(s) to apply on. Uses all columns if not set. It can be
             a `str` for one column, `tuple` for a multi-level index, `list` for
             more columns, everything that pandas item selection supports.
+        bins: Argument to be passed to find the proper binnings.
 
         Returns
         -------

@@ -24,7 +24,12 @@ from typing import TYPE_CHECKING, overload
 
 import numpy as np
 
-from physt._construction import calculate_bins, calculate_bins_nd
+from physt._construction import (
+    calculate_1d_bins,
+    calculate_nd_bins,
+    extract_nd_array,
+    extract_weights,
+)
 from physt._util import deprecation_alias
 from physt.histogram1d import Histogram1D
 from physt.histogram_nd import HistogramND
@@ -417,12 +422,14 @@ def polar(
     ydata = np.asarray(ydata)
 
     data: np.ndarray = np.concatenate([xdata[:, np.newaxis], ydata[:, np.newaxis]], axis=1)
-    data = _prepare_data(data, transformed=transformed, klass=PolarHistogram, dropna=dropna)
+    data, array_mask = extract_transformed_data(
+        data, transformed=transformed, klass=PolarHistogram, dropna=dropna
+    )
 
     if isinstance(phi_bins, int):
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
-    bin_schemas = calculate_bins_nd(
+    bin_schemas = calculate_nd_bins(
         data,
         [radial_bins, phi_bins],
         range=[radial_range, None],
@@ -456,10 +463,12 @@ def azimuthal(
         data = np.concatenate(
             [np.asarray(xdata)[:, np.newaxis], np.asarray(ydata)[:, np.newaxis]], axis=1
         )
-    data = _prepare_data(data, transformed=False, klass=AzimuthalHistogram, dropna=dropna)
+    data, array_mask = extract_transformed_data(
+        data, transformed=False, klass=AzimuthalHistogram, dropna=dropna
+    )
     if isinstance(bins, int):
         bins = np.linspace(*range, bins + 1)
-    bin_schema = calculate_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
+    bin_schema = calculate_1d_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
     return AzimuthalHistogram.from_calculate_frequencies(
         data=data, binning=bin_schema, weights=weights
     )
@@ -502,8 +511,11 @@ def radial(
                 [xdata[:, np.newaxis], ydata[:, np.newaxis], zdata[:, np.newaxis]], axis=1
             )
 
-    data = _prepare_data(data, transformed=transformed, klass=RadialHistogram, dropna=dropna)
-    bin_schema = calculate_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
+    data, array_mask = extract_transformed_data(
+        data, transformed=transformed, klass=RadialHistogram, dropna=dropna
+    )
+    bin_schema = calculate_1d_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
+    weights = extract_weights(weights, array_mask)
     return RadialHistogram.from_calculate_frequencies(
         data=data, binning=bin_schema, weights=weights
     )
@@ -529,7 +541,9 @@ def spherical(
             "Please, use `radial_range`, `theta_range` and `phi_range` arguments instead of `range`"
         )
 
-    data = _prepare_data(data, transformed=transformed, klass=SphericalHistogram, dropna=dropna)
+    transformed_array, array_mask = extract_transformed_data(
+        data, transformed=transformed, klass=SphericalHistogram, dropna=dropna
+    )
 
     if isinstance(theta_bins, int):
         theta_bins = np.linspace(*theta_range, theta_bins + 1)
@@ -538,8 +552,8 @@ def spherical(
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
     try:
-        bin_schemas = calculate_bins_nd(
-            data,
+        bin_schemas = calculate_nd_bins(
+            transformed_array,
             [radial_bins, theta_bins, phi_bins],
             range=[radial_range, None, None],
             check_nan=not dropna,
@@ -547,14 +561,16 @@ def spherical(
         )
     except ValueError as err:
         if "Bins not in rising order" in str(err):
-            if data is not None and np.isclose(data[:, 0].min(), data[:, 0].max()):
+            if transformed_array is not None and np.isclose(
+                transformed_array[:, 0].min(), transformed_array[:, 0].max()
+            ):
                 raise ValueError(
-                    f"All radii seem to be the same: {data[:,0].min():,.4f}. "
+                    f"All radii seem to be the same: {transformed_array[:,0].min():,.4f}. "
                     "Perhaps you wanted to use `spherical_surface_histogram` instead or set radius bins explicitly?"
                 )
         raise
     return SphericalHistogram.from_calculate_frequencies(
-        data, binnings=bin_schemas, weights=weights
+        transformed_array, binnings=bin_schemas, weights=weights
     )
 
 
@@ -572,7 +588,7 @@ def spherical_surface(
     **kwargs,
 ) -> SphericalSurfaceHistogram:
     """Facade construction function for the SphericalSurfaceHistogram."""
-    transformed_data = _prepare_data(
+    transformed_array, array_mask = extract_transformed_data(
         data, transformed=transformed, klass=SphericalSurfaceHistogram, dropna=dropna
     )
 
@@ -588,11 +604,15 @@ def spherical_surface(
     if isinstance(phi_bins, int):
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
-    bin_schemas = calculate_bins_nd(
-        transformed_data, [theta_bins, phi_bins], check_nan=not dropna, **kwargs
+    bin_schemas = calculate_nd_bins(
+        transformed_array, [theta_bins, phi_bins], check_nan=not dropna, **kwargs
     )
     return SphericalSurfaceHistogram.from_calculate_frequencies(
-        transformed_data, binnings=bin_schemas, weights=weights, radius=radius, **kwargs
+        transformed_array,
+        binnings=bin_schemas,
+        weights=extract_weights(weights, array_mask=array_mask),
+        radius=radius,
+        **kwargs,
     )
 
 
@@ -616,20 +636,25 @@ def cylindrical(
             "Please, use `rho_range`, `phi_range` and `z_range` arguments instead of `range`"
         )
 
-    data = _prepare_data(data, transformed=transformed, klass=CylindricalHistogram, dropna=dropna)
+    transformed_array, array_mask = extract_transformed_data(
+        data, transformed=transformed, klass=CylindricalHistogram, dropna=dropna
+    )
 
     if isinstance(phi_bins, int):
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
-    bin_schemas = calculate_bins_nd(
-        data,
+    bin_schemas = calculate_nd_bins(
+        transformed_array,
         [rho_bins, phi_bins, z_bins],
         range=[rho_range, None, z_range],
         check_nan=not dropna,
         **kwargs,
     )
     return CylindricalHistogram.from_calculate_frequencies(
-        data, binnings=bin_schemas, weights=weights, **kwargs
+        transformed_array,
+        binnings=bin_schemas,
+        weights=extract_weights(weights, array_mask=array_mask),
+        **kwargs,
     )
 
 
@@ -650,11 +675,11 @@ def cylindrical_surface(
     if "range" in kwargs:
         raise ValueError("Please, use `phi_range` and `z_range` arguments instead of `range`")
 
-    transformed_data = _prepare_data(
+    transformed_array, array_mask = extract_transformed_data(
         data, transformed=transformed, klass=CylindricalHistogram, dropna=dropna
     )
 
-    if transformed_data is not None:
+    if transformed_array is not None:
         if not transformed and radius is None:
             radius = np.hypot(data[:, 0], data[:, 1])
     if radius is None:
@@ -663,15 +688,15 @@ def cylindrical_surface(
     if isinstance(phi_bins, int):
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
-    bin_schemas = calculate_bins_nd(
-        transformed_data,
+    bin_schemas = calculate_nd_bins(
+        transformed_array,
         [phi_bins, z_bins],
         range=[None, z_range],
         check_nan=not dropna,
         **kwargs,
     )
-    frequencies, errors2, missed = histogram_nd.calculate_frequencies_nd(
-        data, binnings=bin_schemas, weights=weights
+    frequencies, errors2, missed = histogram_nd.calculate_nd_frequencies(
+        data, binnings=bin_schemas, weights=extract_weights(weights, array_mask=array_mask)
     )
     return CylindricalSurfaceHistogram(
         binnings=bin_schemas,
@@ -694,37 +719,34 @@ cylindrical_surface_histogram = deprecation_alias(
 
 
 @overload
-def _prepare_data(
+def extract_transformed_data(
     data: ArrayLike,
     transformed: bool,
     klass: Type[TransformedHistogramMixin],
     *,
     dropna: bool = False,
-) -> np.ndarray:
+) -> Tuple[np.ndarray, np.ndarray]:
     ...
 
 
 @overload
-def _prepare_data(
+def extract_transformed_data(
     data: None, transformed: bool, klass: Type[TransformedHistogramMixin], *, dropna: bool = False
-) -> None:
+) -> Tuple[None, None]:
     ...
 
 
-def _prepare_data(
+def extract_transformed_data(
     data: Optional[ArrayLike],
     transformed: bool,
     klass: Type[TransformedHistogramMixin],
     *,
     dropna: bool = False,
-) -> Optional[np.ndarray]:
-    """Transform data for binning."""
+) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+    """Extract and potentially transform data for binning."""
     if data is None:
-        return None
-    data_: np.ndarray = np.asarray(data)
-    if dropna:
-        data_ = data_[~np.isnan(data_).any(axis=1)]
+        return None, None
+    _, array, array_mask = extract_nd_array(data, dim=None, dropna=dropna)
     if not transformed:
-        # TODO: Perhaps we should be able to disi
-        data_ = klass.transform(data_)  # type: ignore
-    return data_
+        array = klass.transform(array)  # type: ignore
+    return array, array_mask

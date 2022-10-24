@@ -14,10 +14,11 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 
 from physt._construction import (
-    calculate_bins,
-    calculate_bins_nd,
-    calculate_frequencies_1d,
+    calculate_1d_bins,
+    calculate_1d_frequencies,
+    calculate_nd_bins,
     extract_1d_array,
+    extract_and_concat_arrays,
     extract_axis_name,
     extract_axis_names,
     extract_nd_array,
@@ -105,13 +106,13 @@ def h1(
 
     weights = extract_weights(weights, array_mask=array_mask)
 
-    binning = calculate_bins(
+    binning = calculate_1d_bins(
         array, bins, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs
     )
 
     axis_name = extract_axis_name(data, axis_name=axis_name)
 
-    frequencies, errors2, underflow, overflow, stats = calculate_frequencies_1d(
+    frequencies, errors2, underflow, overflow, stats = calculate_1d_frequencies(
         data=array,
         binning=binning,
         weights=weights,
@@ -146,12 +147,7 @@ def h2(data1: Optional[ArrayLike], data2: Optional[ArrayLike], bins=10, **kwargs
     # guess axis names
     if "axis_names" not in kwargs:
         kwargs["axis_names"] = tuple(extract_axis_name(data) for data in (data1, data2))
-    if data1 is not None and data2 is not None:
-        data1, _ = extract_1d_array(data1, dropna=False)
-        data2, _ = extract_1d_array(data2, dropna=False)
-        data = np.concatenate([data1[:, np.newaxis], data2[:, np.newaxis]], axis=1)
-    else:
-        data = None
+    data, _ = extract_and_concat_arrays(data1, data2, dropna=False)
     result = h(data, bins, dim=2, **kwargs)
     return cast(Histogram2D, result)
 
@@ -224,7 +220,7 @@ def h(
 
     weights = extract_weights(weights, array_mask=array_mask)
 
-    bin_schemas = calculate_bins_nd(
+    bin_schemas = calculate_nd_bins(
         array, bins, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs
     )
 

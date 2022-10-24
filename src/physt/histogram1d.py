@@ -8,7 +8,11 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from physt import _bin_utils
-from physt._construction import calculate_frequencies_1d
+from physt._construction import (
+    calculate_1d_frequencies,
+    extract_1d_array,
+    extract_weights,
+)
 from physt.histogram_base import HistogramBase
 from physt.statistics import INVALID_STATISTICS, Statistics
 
@@ -408,20 +412,18 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True
     ) -> None:
         # TODO: Unify with HistogramBase
-        values = np.asarray(values)
-        if dropna:
-            values = values[~np.isnan(values)]
+        values_array, array_mask = extract_1d_array(values, dropna=dropna)
         if self._binning.is_adaptive():
-            map = self._binning.force_bin_existence(values)
+            map = self._binning.force_bin_existence(values_array)
             self._reshape_data(self._binning.bin_count, map)
-        if weights is not None:
-            weights = np.asarray(weights)
-            self._coerce_dtype(weights.dtype)
-        (frequencies, errors2, underflow, overflow, stats) = calculate_frequencies_1d(
-            values,
+        weights_array = extract_weights(weights, array_mask=array_mask)
+        if weights_array is not None:
+            self._coerce_dtype(weights_array.dtype)
+        (frequencies, errors2, underflow, overflow, stats) = calculate_1d_frequencies(
+            values_array,
             self._binning,
             dtype=self.dtype,
-            weights=weights,
+            weights=weights_array,
             validate_bins=False,
         )
         self._frequencies += frequencies
@@ -468,7 +470,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         cls: Type["Histogram1DType"],
         data: Optional[np.ndarray],
         binning: BinningBase,
-        weights: Optional[ArrayLike] = None,
+        weights: Optional[np.ndarray] = None,
         *,
         validate_bins: bool = True,
         already_sorted: bool = False,
@@ -486,7 +488,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             overflow: float = 0.0
             stats: Optional[Statistics] = None
         else:
-            frequencies, errors2, underflow, overflow, stats = calculate_frequencies_1d(
+            frequencies, errors2, underflow, overflow, stats = calculate_1d_frequencies(
                 data=data,
                 binning=binning,
                 weights=weights,

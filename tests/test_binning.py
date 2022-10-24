@@ -2,14 +2,14 @@ import numpy as np
 import pytest
 
 from physt import binnings
-from physt._construction import calculate_bins_nd
+from physt._construction import calculate_nd_bins
 
 
 class TestCalculateBinsNd:
     def test_range(self):
         data1 = np.linspace(0, 10, 100)
         data = np.array([data1, data1]).T
-        bins1, bins2 = calculate_bins_nd(data, range=(4, 5))
+        bins1, bins2 = calculate_nd_bins(data, range=(4, 5))
         assert bins1.first_edge == 4
         assert bins1.last_edge == 5
         assert bins2.first_edge == 4
@@ -19,7 +19,7 @@ class TestCalculateBinsNd:
         data1 = np.linspace(0, 10, 100)
         data = np.array([data1, data1]).T
 
-        bins1, bins2 = calculate_bins_nd(data, range=((4, 5), None))
+        bins1, bins2 = calculate_nd_bins(data, range=((4, 5), None))
         assert bins1.first_edge == 4
         assert bins1.last_edge == 5
         assert bins2.first_edge == 0

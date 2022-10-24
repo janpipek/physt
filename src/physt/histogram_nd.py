@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Tuple, cast, overload
 
 import numpy as np
 
-from physt._construction import calculate_frequencies_nd
+from physt._construction import calculate_nd_frequencies
 from physt.histogram_base import HistogramBase
 
 if TYPE_CHECKING:
@@ -380,7 +380,7 @@ class HistogramND(HistogramBase):
             if binning.is_adaptive():
                 bin_map = binning.force_bin_existence(values_array[:, i])  # TODO: Add to some test
                 self._reshape_data(binning.bin_count, bin_map, i)
-        frequencies, errors2, missed = calculate_frequencies_nd(
+        frequencies, errors2, missed = calculate_nd_frequencies(
             values_array, self._binnings, weights=weights
         )
         self._frequencies += frequencies
@@ -502,7 +502,7 @@ class HistogramND(HistogramBase):
 
     @classmethod
     def from_calculate_frequencies(cls, data, binnings, weights=None, *, dtype=None, **kwargs):
-        frequencies, errors2, missing = calculate_frequencies_nd(
+        frequencies, errors2, missing = calculate_nd_frequencies(
             data=data, binnings=binnings, weights=weights, dtype=dtype
         )
         return cls(

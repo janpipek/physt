@@ -1,7 +1,7 @@
 """Functions for individual steps of histogram and binning creation."""
 import warnings
 from functools import singledispatch
-from typing import Any, Iterable, List, Optional, Tuple, overload
+from typing import Any, Iterable, List, Optional, Tuple, cast, overload
 
 import numpy as np
 
@@ -54,6 +54,24 @@ def extract_nd_array(
     return dim, array, array_mask
 
 
+def extract_and_concat_arrays(
+    *data: Optional[Any], dropna: bool = True
+) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+    none_count = sum(item is None for item in data)
+    if none_count == len(data):
+        return None, None
+    if 1 <= none_count < len(data):
+        raise ValueError(f"{none_count} None's on the input, 0 or {len(data)} expected.")
+    array_list = [cast(np.ndarray, extract_1d_array(item, dropna=False)[0]) for item in data]
+    array = np.concatenate([arr[:, np.newaxis] for arr in array_list], axis=1)
+    if dropna:
+        array_mask = ~np.isnan(array).any(axis=1)
+        array = array[array_mask]
+    else:
+        array_mask = None
+    return array, array_mask
+
+
 @extract_nd_array.register
 def _(data: None, *, dim, dropna=True):
     if dim is None:
@@ -95,15 +113,19 @@ def extract_weights(weights: Any, array_mask: Optional[np.ndarray] = None) -> Op
         return None
     weights_array = np.asarray(weights)
     if array_mask is not None:
+        if array_mask.shape != weights_array.shape:
+            raise ValueError(
+                f"Weights array shape ({weights_array.shape}) != expected ({array_mask.shape})."
+            )
         weights_array = weights_array[array_mask]
     return weights_array
 
 
 @overload
-def calculate_frequencies_nd(
-    data: ArrayLike,
+def calculate_nd_frequencies(
+    data: np.ndarray,
     binnings: Iterable[BinningBase],
-    weights: Optional[ArrayLike] = None,
+    weights: Optional[np.ndarray] = None,
     *,
     dtype: Optional[DTypeLike] = None,
 ) -> Tuple[np.ndarray, np.ndarray, float]:
@@ -111,24 +133,24 @@ def calculate_frequencies_nd(
 
 
 @overload
-def calculate_frequencies_nd(
+def calculate_nd_frequencies(
     data: None,
     binnings: Iterable[BinningBase],
-    weights: Optional[ArrayLike] = None,
+    weights: Optional[np.ndarray] = None,
     *,
     dtype: Optional[DTypeLike] = None,
 ) -> Tuple[None, None, float]:
     ...
 
 
-def calculate_frequencies_nd(
+def calculate_nd_frequencies(
     data: Optional[np.ndarray],
     binnings: Iterable[BinningBase],
     weights: Optional[np.ndarray] = None,
     *,
     dtype: Optional[DTypeLike] = None,
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float]:
-    """ "Get frequencies and bin errors from the data (n-dimensional variant).
+    """Get frequencies and bin errors from the data (n-dimensional variant).
 
     Parameters
     ----------
@@ -189,7 +211,7 @@ def calculate_frequencies_nd(
     return frequencies, errors2, missing
 
 
-def calculate_frequencies_1d(
+def calculate_1d_frequencies(
     data: Optional[np.ndarray],
     binning: BinningBase,
     weights: Optional[np.ndarray] = None,
@@ -308,7 +330,7 @@ def calculate_frequencies_1d(
     return frequencies, errors2, underflow, overflow, stats
 
 
-def calculate_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> BinningBase:
+def calculate_1d_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> BinningBase:
     """Find optimal binning from arguments.
 
     Parameters
@@ -367,7 +389,7 @@ def calculate_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> Binn
     return binning
 
 
-def calculate_bins_nd(
+def calculate_nd_bins(
     array: Optional[np.ndarray],
     bins=None,
     dim: Optional[int] = None,
@@ -420,7 +442,7 @@ def calculate_bins_nd(
         kwargs["range"] = range_
 
     bins = [
-        calculate_bins(
+        calculate_1d_bins(
             array[:, i] if array is not None else None,
             bins[i],
             **{k: kwarg[i] for k, kwarg in kwargs.items() if kwarg[i] is not None},

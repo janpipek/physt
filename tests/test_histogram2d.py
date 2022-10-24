@@ -41,7 +41,7 @@ class TestCalculateFrequencies:
     def test_simple(self):
         bins = [[0, 1, 2], [0, 1, 2]]
         schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
-        frequencies, errors2, missing = histogram_nd.calculate_frequencies_nd(
+        frequencies, errors2, missing = histogram_nd.calculate_nd_frequencies(
             vals, binnings=schemas
         )
         assert np.array_equal([[1, 3], [0, 1]], frequencies)
@@ -51,7 +51,7 @@ class TestCalculateFrequencies:
     def test_gap(self):
         bins = [[[-1, 0], [1, 2]], [[-2, -1], [1, 2]]]
         schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
-        frequencies, errors2, missing = histogram_nd.calculate_frequencies_nd(
+        frequencies, errors2, missing = histogram_nd.calculate_nd_frequencies(
             vals, binnings=schemas
         )
         assert np.array_equal([[0, 0], [0, 1]], frequencies)
@@ -62,7 +62,7 @@ class TestCalculateFrequencies:
         bins = [[[-1, 0], [1, 2]], [[-2, -1], [1, 2]]]
         weights = np.asarray([2, 1, 1, 1, 1, 2, 1])
         schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
-        frequencies, errors2, missing = histogram_nd.calculate_frequencies_nd(
+        frequencies, errors2, missing = histogram_nd.calculate_nd_frequencies(
             vals, binnings=schemas, weights=weights
         )
         assert np.array_equal([[0, 0], [0, 2]], frequencies)
