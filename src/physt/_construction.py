@@ -22,11 +22,16 @@ from physt.typing_aliases import ArrayLike, DTypeLike
 def extract_1d_array(
     data: Any, *, dropna: bool = True
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+    """Extract 1D array from any input.
+
+    Note: the output is always 1D even if input is not
+    """
     array: np.ndarray = np.asarray(data)
     if dropna:
         array_mask = ~np.isnan(array)
         array = array[array_mask]
     else:
+        array = array.flatten()
         array_mask = None
     return array, array_mask
 
@@ -118,6 +123,8 @@ def extract_weights(weights: Any, array_mask: Optional[np.ndarray] = None) -> Op
                 f"Weights array shape ({weights_array.shape}) != expected ({array_mask.shape})."
             )
         weights_array = weights_array[array_mask]
+    else:
+        weights_array = weights_array.flatten()
     return weights_array
 
 
