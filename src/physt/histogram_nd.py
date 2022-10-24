@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Tuple, cast, overload
 
 import numpy as np
 
+from physt._construction import calculate_nd_frequencies
 from physt.histogram_base import HistogramBase
 
 if TYPE_CHECKING:
@@ -379,7 +380,7 @@ class HistogramND(HistogramBase):
             if binning.is_adaptive():
                 bin_map = binning.force_bin_existence(values_array[:, i])  # TODO: Add to some test
                 self._reshape_data(binning.bin_count, bin_map, i)
-        frequencies, errors2, missed = calculate_frequencies(
+        frequencies, errors2, missed = calculate_nd_frequencies(
             values_array, self._binnings, weights=weights
         )
         self._frequencies += frequencies
@@ -501,7 +502,7 @@ class HistogramND(HistogramBase):
 
     @classmethod
     def from_calculate_frequencies(cls, data, binnings, weights=None, *, dtype=None, **kwargs):
-        frequencies, errors2, missing = calculate_frequencies(
+        frequencies, errors2, missing = calculate_nd_frequencies(
             data=data, binnings=binnings, weights=weights, dtype=dtype
         )
         return cls(
@@ -569,95 +570,3 @@ class Histogram2D(HistogramND):
     def numpy_like(self) -> Tuple[np.ndarray, ...]:
         """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins[0], self.numpy_bins[1]
-
-
-@overload
-def calculate_frequencies(
-    data: ArrayLike,
-    binnings: Iterable[BinningBase],
-    weights: Optional[ArrayLike] = None,
-    *,
-    dtype: Optional[DTypeLike] = None,
-) -> Tuple[np.ndarray, np.ndarray, float]:
-    ...
-
-
-@overload
-def calculate_frequencies(
-    data: None,
-    binnings: Iterable[BinningBase],
-    weights: Optional[ArrayLike] = None,
-    *,
-    dtype: Optional[DTypeLike] = None,
-) -> Tuple[None, None, float]:
-    ...
-
-
-def calculate_frequencies(
-    data: Optional[ArrayLike],
-    binnings: Iterable[BinningBase],
-    weights: Optional[ArrayLike] = None,
-    *,
-    dtype: Optional[DTypeLike] = None,
-) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float]:
-    """ "Get frequencies and bin errors from the data (n-dimensional variant).
-
-    Parameters
-    ----------
-    data : 2D array with ndim columns and row for each entry.
-    binnings: Binnings to apply in all axes.
-    weights : 1D array of weights to assign to values.
-        (If present, must have same length as the number of rows.)
-    dtype : Underlying type for the histogram.
-        (If weights are specified, default is float. Otherwise int64.)
-
-    Returns
-    -------
-    frequencies : Frequencies (if data supplied)
-    errors2 : Errors squared if different from frequencies
-    missing : scalar[dtype]
-    """
-    if data is None:
-        return None, None, 0
-
-    # Prepare numpy array of data
-    data = np.asarray(data)
-    if data.ndim != 2:
-        raise ValueError(f"calculate_frequencies requires 2D input data, dim={data.ndim} found.")
-
-    # Guess correct dtype and apply to weights
-    if weights is None:
-        if not dtype:
-            dtype = np.int64
-    else:
-        weights = np.asarray(weights)
-        if data is None:
-            raise ValueError("Weights specified but data not.")
-        if data.shape[0] != weights.shape[0]:
-            raise ValueError("Different number of entries in data and weights.")
-        if dtype:
-            dtype = np.dtype(dtype)
-            if dtype.kind in "iu" and weights.dtype.kind == "f":
-                raise ValueError("Integer histogram requested but float weights entered.")
-        else:
-            dtype = weights.dtype
-
-    edges_and_mask = [binning.numpy_bins_with_mask for binning in binnings]
-    edges = [em[0] for em in edges_and_mask]
-    masks = [em[1] for em in edges_and_mask]
-
-    ixgrid = np.ix_(*masks)  # Indexer to select parts we want
-
-    # TODO: Right edges are not taken into account because they fall into inf bin
-    frequencies, _ = np.histogramdd(data, edges, weights=weights)
-    frequencies = frequencies.astype(dtype)  # Automatically copy
-    frequencies = frequencies[ixgrid]
-    if weights is not None:
-        missing = weights.sum() - frequencies.sum()
-        err_freq, _ = np.histogramdd(data, edges, weights=weights**2)
-        errors2 = err_freq[ixgrid].astype(dtype)  # Automatically copy
-    else:
-        missing = data.shape[0] - frequencies.sum()
-        errors2 = None
-
-    return frequencies, errors2, missing

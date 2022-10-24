@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from physt.bin_utils import (
+from physt._bin_utils import (
     find_human_width_24,
     find_human_width_60,
     find_human_width_decimal,

@@ -8,7 +8,12 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from physt import bin_utils
+from physt import _bin_utils
+from physt._construction import (
+    calculate_1d_frequencies,
+    extract_1d_array,
+    extract_weights,
+)
 from physt.histogram_base import HistogramBase
 from physt.statistics import INVALID_STATISTICS, Statistics
 
@@ -412,20 +417,18 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True
     ) -> None:
         # TODO: Unify with HistogramBase
-        values = np.asarray(values)
-        if dropna:
-            values = values[~np.isnan(values)]
+        values_array, array_mask = extract_1d_array(values, dropna=dropna)
         if self._binning.is_adaptive():
-            map = self._binning.force_bin_existence(values)
+            map = self._binning.force_bin_existence(values_array)
             self._reshape_data(self._binning.bin_count, map)
-        if weights is not None:
-            weights = np.asarray(weights)
-            self._coerce_dtype(weights.dtype)
-        (frequencies, errors2, underflow, overflow, stats) = calculate_frequencies(
-            values,
+        weights_array = extract_weights(weights, array_mask=array_mask)
+        if weights_array is not None:
+            self._coerce_dtype(weights_array.dtype)
+        (frequencies, errors2, underflow, overflow, stats) = calculate_1d_frequencies(
+            values_array,
             self._binning,
             dtype=self.dtype,
-            weights=weights,
+            weights=weights_array,
             validate_bins=False,
         )
         self._frequencies += frequencies
@@ -472,7 +475,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         cls: Type["Histogram1DType"],
         data: Optional[np.ndarray],
         binning: BinningBase,
-        weights: Optional[ArrayLike] = None,
+        weights: Optional[np.ndarray] = None,
         *,
         validate_bins: bool = True,
         already_sorted: bool = False,
@@ -481,6 +484,8 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         **kwargs,
     ) -> "Histogram1DType":
         """Construct the histogram from values and bins."""
+        # TODO: Remove this method
+
         if data is None:
             frequencies: Optional[np.ndarray] = None
             errors2: Optional[np.ndarray] = None
@@ -488,7 +493,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             overflow: float = 0.0
             stats: Optional[Statistics] = None
         else:
-            frequencies, errors2, underflow, overflow, stats = calculate_frequencies(
+            frequencies, errors2, underflow, overflow, stats = calculate_1d_frequencies(
                 data=data,
                 binning=binning,
                 weights=weights,
@@ -511,118 +516,3 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             dtype=dtype,
             **kwargs,
         )
-
-
-def calculate_frequencies(
-    data: ArrayLike,
-    binning: BinningBase,
-    weights: Optional[ArrayLike] = None,
-    *,
-    validate_bins: bool = True,
-    already_sorted: bool = False,
-    dtype: Optional[DTypeLike] = None,
-) -> Tuple[np.ndarray, np.ndarray, float, float, Statistics]:
-    """Get frequencies and bin errors from the data.
-
-    Parameters
-    ----------
-    data : Data items to work on.
-    binning : A set of bins.
-    weights : Weights of the items.
-    validate_bins : If True (default), bins are validated to be in ascending order.
-    already_sorted : If True, the data being entered are already sorted, no need to sort them once more.
-    dtype: Underlying type for the histogram.
-        (If weights are specified, default is float. Otherwise long.)
-
-    Returns
-    -------
-    frequencies : Bin contents
-    errors2 :  Error squares of the bins
-    underflow : Weight of items smaller than the first bin
-    overflow : Weight of items larger than the last bin
-    stats: The statistics (computed or empty)
-
-    Note
-    ----
-    Checks that the bins are in a correct order (not necessarily consecutive).
-    Does not check for numerical overflows in bins.
-    """
-
-    # TODO: Is it possible to merge with histogram_nd.calculate_frequencies?
-
-    underflow = np.nan
-    overflow = np.nan
-
-    # Ensure correct binning
-    bins = binning.bins  # bin_utils.make_bin_array(bins)
-    if validate_bins:
-        if bins.shape[0] == 0:
-            raise ValueError("Cannot have histogram with 0 bins.")
-        if not bin_utils.is_rising(bins):
-            raise ValueError("Bins must be rising.")
-
-    # Prepare 1D numpy array of data
-    data_array: np.ndarray = np.asarray(data)
-    if data_array.ndim > 1:
-        # TODO: Perhaps disallow this?
-        data_array = data_array.flatten()
-
-    # Prepare 1D numpy array of weights
-    if weights is not None:
-        weights_array: np.ndarray = np.asarray(weights)
-        if weights_array.ndim > 1:
-            weights_array = weights_array.flatten()
-
-        # Check compatibility of weights
-        if weights_array.shape != data_array.shape:
-            raise ValueError(
-                f"Weights must have the same shape as data, {weights_array.shape} != {data_array.shape}"
-            )
-    else:
-        weights_array = np.ones_like(data_array, dtype=int)
-
-    # Prepare dtype
-    inferred_dtype: np.dtype = np.dtype(dtype or weights_array.dtype)
-    if inferred_dtype.kind in "iu" and weights_array.dtype.kind == "f":
-        raise ValueError("Integer histogram requested but float weights entered.")
-
-    # Data sorting
-    if not already_sorted:
-        sort_order = np.argsort(data_array)  # Memory: another copy
-        data_array = data_array[sort_order]  # Memory: another copy
-        weights_array = weights_array[sort_order]
-        del sort_order
-
-    # Fill frequencies and errors
-    frequencies = np.zeros(bins.shape[0], dtype=inferred_dtype)
-    errors2 = np.zeros(bins.shape[0], dtype=inferred_dtype)
-    for xbin, bin in enumerate(bins):
-        start = np.searchsorted(data_array, bin[0], side="left")
-        stop = np.searchsorted(data_array, bin[1], side="left")
-
-        if xbin == 0:
-            underflow = weights_array[0:start].sum()
-        if xbin == len(bins) - 1:
-            stop = np.searchsorted(data_array, bin[1], side="right")  # TODO: Understand and explain
-            overflow = weights_array[stop:].sum()
-
-        frequencies[xbin] = weights_array[start:stop].sum()
-        errors2[xbin] = (weights_array[start:stop] ** 2).sum()
-
-    # Underflow and overflow don't make sense for unconsecutive binning.
-    if not bin_utils.is_consecutive(bins):
-        underflow = np.nan
-        overflow = np.nan
-
-    # Statistics
-    if not data_array.size:
-        stats = Statistics()
-    else:
-        stats = Statistics(
-            sum=(data_array * weights_array).sum(),
-            sum2=(data_array**2 * weights_array).sum(),
-            min=float(data_array.min()),
-            max=float(data_array.max()),
-            weight=float(weights_array.sum()),
-        )
-    return frequencies, errors2, underflow, overflow, stats

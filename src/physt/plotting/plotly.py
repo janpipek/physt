@@ -16,8 +16,8 @@ import plotly.graph_objs as go
 import plotly.offline as pyo
 from plotly.graph_objs import Figure
 
+from physt._util import pop_many
 from physt.types import Histogram2D, HistogramCollection
-from physt.util import pop_many
 
 from .common import check_ndim, get_data
 

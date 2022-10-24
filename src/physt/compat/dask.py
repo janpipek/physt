@@ -7,8 +7,8 @@ import dask
 import numpy as np
 from dask.array import Array
 
-from physt.facade import h1 as original_h1
-from physt.facade import histogramdd as original_hdd
+from physt._facade import h1 as original_h1
+from physt._facade import histogramdd as original_hdd
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Union

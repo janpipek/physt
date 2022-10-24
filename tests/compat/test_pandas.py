@@ -3,7 +3,7 @@ from typing import Any, Dict, Iterable
 import numpy as np
 import pytest
 
-from physt.facade import h
+from physt._facade import h
 from physt.histogram1d import Histogram1D
 from physt.histogram_nd import Histogram2D, HistogramND
 
