@@ -12,7 +12,7 @@ from hypothesis.extra.numpy import (
     integer_dtypes,
 )
 
-from physt.facade import h1, h2
+from physt._facade import h1, h2
 from physt.types import Histogram1D, Histogram2D
 
 
