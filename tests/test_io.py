@@ -1,9 +1,11 @@
 import numpy as np
 import pytest
+from hypothesis import given
 
 import physt
 from physt import examples, io
-from physt.types import Histogram1D, HistogramCollection
+from physt.testing.strategies import histograms_1d, histograms_nd
+from physt.types import Histogram1D, HistogramBase, HistogramCollection
 
 
 class TestIO:
@@ -23,19 +25,24 @@ class TestIO:
         # print(h.to_json())
         # assert False
 
-    @pytest.mark.skipif("munros" not in dir(examples), reason="Pandas required.")
-    def test_io_equality_on_examples(self):
-        h = examples.munros()
+    @staticmethod
+    def _assert_reversibility(h: HistogramBase):
         json = h.to_json()
         read = io.parse_json(json)
         assert h == read
 
-    def test_simple(self):
-        h = physt.h2(None, None, "integer", adaptive=True)
-        h << (0, 1)
-        json = h.to_json()
-        read = io.parse_json(json)
-        assert h == read
+    @pytest.mark.skipif("munros" not in dir(examples), reason="Pandas required.")
+    def test_io_equality_on_examples(self):
+        h = examples.munros()
+        self._assert_reversibility(h)
+
+    @given(histograms_1d())
+    def test_reversibility_1d(self, h):
+        self._assert_reversibility(h)
+
+    @given(histograms_nd())
+    def test_reversibility_nd(self, h):
+        self._assert_reversibility(h)
 
 
 class TestCollectionIO:

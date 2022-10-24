@@ -80,10 +80,10 @@ def to_numpy_bins_with_mask(bins: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
     Examples
     --------
     >>> to_numpy_bins_with_mask([0, 1, 2])
-    (array([0.,   1.,   2.]), array([0, 1]))
+    (array([0, 1, 2]), array([0, 1]))
 
     >>> to_numpy_bins_with_mask([[0, 1], [2, 3]])
-    (array([0, 1, 2, 3]), array([0, 2])
+    (array([0, 1, 2, 3]), array([0, 2]))
     """
     bins = np.asarray(bins)
     if bins.ndim == 1:
@@ -192,6 +192,7 @@ def find_human_width_24(raw_width: float) -> int:
 
 def find_human_width(raw_width: float, kind: Optional[Literal["time"]] = None) -> float:
     """Find the best human width close to a given raw_width."""
+    # TODO: Deal with infinity
     if not kind:
         return find_human_width_decimal(raw_width)
     if kind == "time":

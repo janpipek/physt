@@ -560,7 +560,7 @@ def spherical(
             **kwargs,
         )
     except ValueError as err:
-        if "Bins not in rising order" in str(err):
+        if "Range too narrow to split" in str(err):
             if transformed_array is not None and np.isclose(
                 transformed_array[:, 0].min(), transformed_array[:, 0].max()
             ):
