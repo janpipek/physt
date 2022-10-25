@@ -24,11 +24,23 @@ def extract_1d_array(
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
     """Extract 1D array from any input.
 
-    Note: the output is always 1D and float even if input is not
+    Parameters
+    ----------
+    data : Whatever array-like or iterable
+    dropna : Whether to remove any NA values
+
+    Returns
+    -------
+    array : None if no data, else 1-d float array
+    array_mask : None if no data or not required, else a boolean array
+          to mark all indices of the original array that are non-na.
+
+    Note
+    ----
+    To implement for another type, register via the singledispatch mechanism.
     """
-    # TODO: Improve docstring
     if isinstance(data, Iterator):
-        # Numpy cannot convert directly
+        # Numpy cannot iterators convert directly
         data = list(data)
     array: np.ndarray = np.asarray(data, dtype=float)
     if dropna:
@@ -49,7 +61,29 @@ def _(data: None, *, dropna=True):
 def extract_nd_array(
     data: Any, *, dim: Optional[int], dropna: bool = True
 ) -> Tuple[int, Optional[np.ndarray], Optional[np.ndarray]]:
-    # TODO: Add docstring
+    """Extract 2D tabular-like array from any input.
+
+    Parameters
+    ----------
+    data : Whatever array-like or iterable with rows as observations
+    dim : If no data, used to provide dim info
+    dropna : Whether to remove any NA values
+
+    Returns
+    -------
+    dim : dimension of the data
+    array :None if no data, else 2-d float array (dim columns, N rows)
+    array_mask : None if no data or not required, else a boolean array
+          to mark all indices of the original array that are non-na.
+
+    Raises
+    ------
+    ValueError: TODO - describe
+
+    Note
+    ----
+    To implement for another type, register via the singledispatch mechanism.
+    """
 
     array: np.ndarray = np.asarray(data, dtype=float)
     if array.ndim != 2:
@@ -68,6 +102,8 @@ def extract_nd_array(
 def extract_and_concat_arrays(
     *data: Optional[Any], dropna: bool = True
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+    """Align multiple data arrays as columns into a single one."""
+    # TODO: Improve docstring
     none_count = sum(item is None for item in data)
     if none_count == len(data):
         return None, None
@@ -92,7 +128,13 @@ def _(data: None, *, dim, dropna=True):
 
 @singledispatch
 def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional[str]:
-    """For input data, find the axis name."""
+    """For input data, find the axis name.
+
+    Typically, this is the name of the data object (Series, ...)
+
+    To implement for another type, register via the singledispatch mechanism.
+    """
+    # TODO: Improve docstring
     if not axis_name:
         if hasattr(data, "name"):
             return str(data.name)  # type: ignore
@@ -110,7 +152,15 @@ def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional
 def extract_axis_names(
     data: Any, *, axis_names: Optional[Iterable[str]] = None
 ) -> Optional[Tuple[str, ...]]:
-    """For input data, find the names for axes."""
+    """For input data, find the names of the axes.
+
+    This attempts to extract
+
+    Note
+    ----
+    To implement for another type, register via the singledispatch mechanism.
+    """
+    # TODO: Improve docstring
     if axis_names is not None:
         return tuple(axis_names)
     if hasattr(data, "columns"):
@@ -120,6 +170,13 @@ def extract_axis_names(
 
 @singledispatch
 def extract_weights(weights: Any, array_mask: Optional[np.ndarray] = None) -> Optional[np.ndarray]:
+    """Extract weights from the provided object.
+
+    Note
+    ----
+    To implement for another type, register via the singledispatch mechanism.
+    """
+    # TODO: Improve docstring
     if weights is None:
         return None
     weights_array = np.asarray(weights)
