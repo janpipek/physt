@@ -128,9 +128,18 @@ def _(data: None, *, dim, dropna=True):
 
 @singledispatch
 def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional[str]:
-    """For input data, find the axis name.
+    """For input data, find the axis name (if there is any).
 
     Typically, this is the name of the data object (Series, ...)
+
+    Parameters
+    ----------
+    data : Input data of the histogram
+    axis_name : Explicitly set name that takes precedence
+
+    Returns
+    -------
+    A name or None (no default set)
 
     To implement for another type, register via the singledispatch mechanism.
     """
@@ -152,15 +161,23 @@ def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional
 def extract_axis_names(
     data: Any, *, axis_names: Optional[Iterable[str]] = None
 ) -> Optional[Tuple[str, ...]]:
-    """For input data, find the names of the axes.
+    """For input data, find the names of the axes (if there are any).
 
-    This attempts to extract
+    Typically, these are column names for dataframes etc.
+
+    Parameters
+    ----------
+    data : Input data of the histogram
+    axis_names : Explicitly set names that take precedence
+
+    Returns
+    -------
+    A tuple of names or None's (no defaults provided)
 
     Note
     ----
     To implement for another type, register via the singledispatch mechanism.
     """
-    # TODO: Improve docstring
     if axis_names is not None:
         return tuple(axis_names)
     if hasattr(data, "columns"):

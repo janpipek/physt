@@ -1,5 +1,6 @@
 import hypothesis.strategies as st
 import numpy as np
+import pandas as pd
 import pytest
 from hypothesis import given
 from hypothesis.extra.numpy import array_shapes, arrays, floating_dtypes, integer_dtypes
@@ -40,8 +41,15 @@ class TestExtract1DArray:
         def test_extracts_values(self, data):
             pass
 
+        @pytest.mark.parametrize("dtype", ["string", "object", "datetime64[ns]"])
+        @pytest.mark.parametrize("dropna", [False, True])
+        def test_wrong_dtype(self, dtype, dropna):
+            # TODO: Add more types
+            data = pd.Series([], dtype=dtype)
+            extract_1d_array(data, dropna=dropna)
+
     class TestIterables:
-        @given(data=st.iterables(st.floats() | st.integers(), min_size=3))
+        @given(data=st.iterables(st.floats() | st.integers()))
         def test_extracts_arrays(self, data):
             array, array_mask = extract_1d_array(data)
             assert isinstance(array, np.ndarray)
