@@ -24,8 +24,9 @@ def extract_1d_array(
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
     """Extract 1D array from any input.
 
-    Note: the output is always 1D even if input is not
+    Note: the output is always 1D and float even if input is not
     """
+    # TODO: Improve docstring
     if isinstance(data, Iterator):
         # Numpy cannot convert directly
         data = list(data)
@@ -48,6 +49,8 @@ def _(data: None, *, dropna=True):
 def extract_nd_array(
     data: Any, *, dim: Optional[int], dropna: bool = True
 ) -> Tuple[int, Optional[np.ndarray], Optional[np.ndarray]]:
+    # TODO: Add docstring
+
     array: np.ndarray = np.asarray(data, dtype=float)
     if array.ndim != 2:
         raise ValueError(f"Array must have shape (n, d), {array.shape} encountered.")
@@ -111,7 +114,7 @@ def extract_axis_names(
     if axis_names is not None:
         return tuple(axis_names)
     if hasattr(data, "columns"):
-        return tuple(str(c) for c in data.columns)  # type: ignore
+        return tuple(str(c) if c else None for c in data.columns)  # type: ignore
     return None
 
 
