@@ -1,7 +1,7 @@
 """Functions for individual steps of histogram and binning creation."""
 import warnings
 from functools import singledispatch
-from typing import Any, Iterable, List, Optional, Tuple, cast, overload
+from typing import Any, Iterable, Iterator, List, Optional, Tuple, cast, overload
 
 import numpy as np
 
@@ -15,7 +15,7 @@ from physt.binnings import (
     static_binning,
 )
 from physt.statistics import Statistics
-from physt.typing_aliases import ArrayLike, DTypeLike
+from physt.typing_aliases import DTypeLike
 
 
 @singledispatch
@@ -26,7 +26,10 @@ def extract_1d_array(
 
     Note: the output is always 1D even if input is not
     """
-    array: np.ndarray = np.asarray(data)
+    if isinstance(data, Iterator):
+        # Numpy cannot convert directly
+        data = list(data)
+    array: np.ndarray = np.asarray(data, dtype=float)
     if dropna:
         array_mask = ~np.isnan(array)
         array = array[array_mask]
@@ -45,7 +48,7 @@ def _(data: None, *, dropna=True):
 def extract_nd_array(
     data: Any, *, dim: Optional[int], dropna: bool = True
 ) -> Tuple[int, Optional[np.ndarray], Optional[np.ndarray]]:
-    array: np.ndarray = np.asarray(data)
+    array: np.ndarray = np.asarray(data, dtype=float)
     if array.ndim != 2:
         raise ValueError(f"Array must have shape (n, d), {array.shape} encountered.")
     if dim is not None and dim != array.shape[1]:

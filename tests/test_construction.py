@@ -3,8 +3,9 @@ import numpy as np
 import pytest
 from hypothesis import given
 from hypothesis.extra.numpy import array_shapes, arrays, floating_dtypes, integer_dtypes
+from hypothesis.extra.pandas import series
 
-from physt._construction import extract_1d_array
+from physt._construction import extract_1d_array, extract_axis_name
 
 
 class TestExtract1DArray:
@@ -27,3 +28,54 @@ class TestExtract1DArray:
             array, array_mask = extract_1d_array(data, dropna=True)
             assert array.size <= data.size
             assert array.ndim == 1
+
+    class TestPandasSeries:
+        @given(data=series(dtype=float), dropna=st.booleans())
+        def test_uses_values_of_the_series(self, data, dropna):
+            result = extract_1d_array(data, dropna=dropna)
+            # TODO: Finish
+
+        @pytest.mark.skip(reason="Not supported by hypothesis yet.")
+        @given(data=series(dtype="Int64"))
+        def test_extracts_values(self, data):
+            pass
+
+    class TestIterables:
+        @given(data=st.iterables(st.floats() | st.integers(), min_size=3))
+        def test_extracts_arrays(self, data):
+            array, array_mask = extract_1d_array(data)
+            assert isinstance(array, np.ndarray)
+
+    # TODO: Test lists
+    # TODO:
+
+
+class TestExtractNDArray:
+    pass
+
+
+class TestExtractAndConcatArrays:
+    pass
+
+
+class TestExtractAxisName:
+    @given(
+        data=arrays(dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes())
+        | st.iterables(st.floats() | st.integers())
+    )
+    def test_no_name_for_arrays_and_lists(self, data):
+        assert extract_axis_name(data) is None
+
+    @given(
+        data=series(dtype=float),
+    )
+    def test_uses_pandas_series_name(self, data):
+        assert data.name == extract_axis_name(data)
+
+
+class TestExtractAxisNames:
+    pass
+
+
+class TestExtractWeigths:
+    pass
