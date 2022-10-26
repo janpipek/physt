@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Optional, Tuple, cast
+from typing import TYPE_CHECKING, NoReturn, Optional, Tuple, cast
 
 import numpy as np
 import pandas
@@ -27,6 +27,8 @@ if TYPE_CHECKING:
 
 @extract_1d_array.register
 def _(series: pandas.Series, *, dropna: bool = True) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    if not pd.api.types.is_numeric_dtype(series):
+        raise ValueError(f"Cannot extract suitable array from non-numeric dtype: {series.dtype}")
     if isinstance(series.dtype, BaseMaskedDtype):
         array = cast(BaseMaskedArray, series.array)
         if not dropna and any(array._mask):
@@ -40,6 +42,15 @@ def _(series: pandas.Series, *, dropna: bool = True) -> Tuple[np.ndarray, Option
         array_mask = None
         array = series.values
     return array, array_mask
+
+
+@extract_1d_array.register
+def _(dataframe: pd.DataFrame, **kwargs) -> NoReturn:
+    # TODO: What about dataframes with just one column?
+    raise ValueError(
+        "Cannot extract 1D array suitable for histogramming from a dataframe."
+        "Either select a Series or extract multidimensional data."
+    )
 
 
 @pandas.api.extensions.register_series_accessor("physt")

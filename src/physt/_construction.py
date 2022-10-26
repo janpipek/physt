@@ -26,12 +26,13 @@ def extract_1d_array(
 
     Parameters
     ----------
-    data : Whatever array-like or iterable
+    data : Whatever array-like or iterable where each item is one observation.
+        No shape is prescribed
     dropna : Whether to remove any NA values
 
     Returns
     -------
-    array : None if no data, else 1-d float array
+    array : None if no data, else 1-d float array (flattened)
     array_mask : None if no data or not required, else a boolean array
           to mark all indices of the original array that are non-na.
 
@@ -42,6 +43,8 @@ def extract_1d_array(
     if isinstance(data, Iterator):
         # Numpy cannot iterators convert directly
         data = list(data)
+    if np.isscalar(data):
+        raise ValueError(f"Cannot extract array data from scalar {data}.")
     array: np.ndarray = np.asarray(data, dtype=float)
     if dropna:
         array_mask = ~np.isnan(array)
@@ -65,8 +68,9 @@ def extract_nd_array(
 
     Parameters
     ----------
-    data : Whatever array-like or iterable with rows as observations
-    dim : If no data, used to provide dim info
+    data : Whatever 2D array-like or iterable with rows as observations
+        and columns for the dimension of the histogram
+    dim : If no data, used to provide dim info, but can be also used to check data
     dropna : Whether to remove any NA values
 
     Returns
@@ -78,7 +82,7 @@ def extract_nd_array(
 
     Raises
     ------
-    ValueError: TODO - describe
+    ValueError: If the dimensions don't agree
 
     Note
     ----
@@ -97,6 +101,13 @@ def extract_nd_array(
     else:
         array_mask = None
     return dim, array, array_mask
+
+
+@extract_nd_array.register
+def _(data: None, *, dim, dropna=True):
+    if dim is None:
+        raise ValueError("You have to specify either data or its dimension.")
+    return dim, None, None
 
 
 def extract_and_concat_arrays(
@@ -119,13 +130,6 @@ def extract_and_concat_arrays(
     return array, array_mask
 
 
-@extract_nd_array.register
-def _(data: None, *, dim, dropna=True):
-    if dim is None:
-        raise ValueError("You have to specify either data or its dimension.")
-    return dim, None, None
-
-
 @singledispatch
 def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional[str]:
     """For input data, find the axis name (if there is any).
@@ -143,7 +147,6 @@ def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional
 
     To implement for another type, register via the singledispatch mechanism.
     """
-    # TODO: Improve docstring
     if not axis_name:
         if hasattr(data, "name"):
             return str(data.name)  # type: ignore
@@ -188,6 +191,9 @@ def extract_axis_names(
 @singledispatch
 def extract_weights(weights: Any, array_mask: Optional[np.ndarray] = None) -> Optional[np.ndarray]:
     """Extract weights from the provided object.
+
+    Returns
+    -------
 
     Note
     ----
