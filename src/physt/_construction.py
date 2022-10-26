@@ -28,7 +28,7 @@ def extract_1d_array(
     ----------
     data : Whatever array-like or iterable where each item is one observation.
         No shape is prescribed
-    dropna : Whether to remove any NA values
+    dropna : Whether to remove any NA values and construct the mask
 
     Returns
     -------
@@ -71,7 +71,7 @@ def extract_nd_array(
     data : Whatever 2D array-like or iterable with rows as observations
         and columns for the dimension of the histogram
     dim : If no data, used to provide dim info, but can be also used to check data
-    dropna : Whether to remove any NA values
+    dropna : Whether to remove any NA values and construct the mask
 
     Returns
     -------
@@ -113,14 +113,32 @@ def _(data: None, *, dim, dropna=True):
 def extract_and_concat_arrays(
     *data: Optional[Any], dropna: bool = True
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
-    """Align multiple data arrays as columns into a single one."""
-    # TODO: Improve docstring
+    """Align multiple data arrays as columns into a single one.
+
+    Parameters
+    ----------
+    data : Sequence of array-like or None's
+    dropna : Whether to remove any NA values and construct the mask
+
+    Returns
+    -------
+    array : None or a 2D float array with rows as observations
+    array_mask : None or a boolean array marking rows with non-na values
+
+    Raises
+    ------
+    ValueError : If the dimensions do not match
+
+    """
     none_count = sum(item is None for item in data)
     if none_count == len(data):
         return None, None
     if 1 <= none_count < len(data):
         raise ValueError(f"{none_count} None's on the input, 0 or {len(data)} expected.")
     array_list = [cast(np.ndarray, extract_1d_array(item, dropna=False)[0]) for item in data]
+    array_shapes = set(array.shape for array in array_list)
+    if len(array_shapes) > 1:
+        raise ValueError(f"Array shapes do not match: {list(array_shapes)}")
     array = np.concatenate([arr[:, np.newaxis] for arr in array_list], axis=1)
     if dropna:
         array_mask = ~np.isnan(array).any(axis=1)
@@ -259,6 +277,10 @@ def calculate_nd_frequencies(
     frequencies : Frequencies (if data supplied)
     errors2 : Errors squared if different from frequencies
     missing : scalar[dtype]
+
+    Raises
+    ------
+    ValueError
     """
     if data is None:
         return None, None, 0

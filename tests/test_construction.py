@@ -4,11 +4,15 @@ import hypothesis.strategies as st
 import numpy as np
 import pandas as pd
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis.extra.numpy import array_shapes, arrays, floating_dtypes, integer_dtypes
 from hypothesis.extra.pandas import data_frames, series
 
-from physt._construction import extract_1d_array, extract_axis_name
+from physt._construction import (
+    extract_1d_array,
+    extract_and_concat_arrays,
+    extract_axis_name,
+)
 
 
 class TestExtract1DArray:
@@ -115,7 +119,21 @@ class TestExtractNDArray:
 
 
 class TestExtractAndConcatArrays:
-    pass
+    @given(
+        data1=arrays(
+            dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes(min_dims=1, max_dims=1)
+        ),
+        data2=arrays(
+            dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes(min_dims=1, max_dims=1)
+        ),
+    )
+    def test_fails_with_non_matching_size(self, data1: np.ndarray, data2: np.ndarray):
+        assume(data1.shape != data2.shape)
+        with pytest.raises(ValueError, match="Array shapes do not match"):
+            extract_and_concat_arrays(data1, data2)
+
+    def test_fails_with_nd_array(self):
+        pass
 
 
 class TestExtractAxisName:
@@ -137,5 +155,5 @@ class TestExtractAxisNames:
     pass
 
 
-class TestExtractWeigths:
+class TestExtractWeights:
     pass
