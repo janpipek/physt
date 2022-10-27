@@ -45,7 +45,10 @@ def extract_1d_array(
         data = list(data)
     if np.isscalar(data):
         raise ValueError(f"Cannot extract array data from scalar {data}.")
-    array: np.ndarray = np.asarray(data, dtype=float)
+    try:
+        array: np.ndarray = np.asarray(data, dtype=float)
+    except (ValueError, TypeError) as exc:
+        raise ValueError(f"Cannot extract array data from {type(data)}") from exc
     if dropna:
         array_mask = ~np.isnan(array)
         array = array[array_mask]
@@ -163,11 +166,15 @@ def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional
     -------
     A name or None (no default set)
 
-    To implement for another type, register via the singledispatch mechanism.
+    Notes
+    -----
+    - To implement for another type, register via the singledispatch mechanism.
+    - For data that are not handled by extract_1d_array, the result is not defined.
+
     """
     if not axis_name:
         if hasattr(data, "name"):
-            return str(data.name)  # type: ignore
+            return None if data.name is None else str(data.name)  # type: ignore
         elif (
             hasattr(data, "fields")
             and len(data.fields) == 1  # type: ignore
@@ -195,9 +202,11 @@ def extract_axis_names(
     -------
     A tuple of names or None's (no defaults provided)
 
-    Note
-    ----
-    To implement for another type, register via the singledispatch mechanism.
+    Notes
+    -----
+    - To implement for another type, register via the singledispatch mechanism.
+    - For data that are not handled by extract_nd_array, the result is not defined.
+
     """
     if axis_names is not None:
         return tuple(axis_names)

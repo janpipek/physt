@@ -105,12 +105,11 @@ class TestExtract1DArray:
     @pytest.mark.parametrize(
         "data",
         [
-            {"a_string": "a"},
+            {"a_string": [17]},
         ],
     )
     def test_invalid_container_objects(self, data):
-        with pytest.raises(ValueError):
-            # TODO: Improve the error message
+        with pytest.raises(ValueError, match="Cannot extract array data from"):
             extract_1d_array(data)
 
 
@@ -145,7 +144,7 @@ class TestExtractAxisName:
         assert extract_axis_name(data) is None
 
     @given(
-        data=series(dtype=float),
+        data=series(dtype=float, name=st.text() | st.none()),
     )
     def test_uses_pandas_series_name(self, data):
         assert data.name == extract_axis_name(data)
