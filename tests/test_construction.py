@@ -12,6 +12,7 @@ from physt._construction import (
     extract_1d_array,
     extract_and_concat_arrays,
     extract_axis_name,
+    extract_nd_array,
 )
 
 
@@ -114,7 +115,21 @@ class TestExtract1DArray:
 
 
 class TestExtractNDArray:
-    pass
+    @pytest.mark.parametrize("dropna", [False, True])
+    @given(
+        data=arrays(
+            dtype=integer_dtypes() | floating_dtypes(), shape=array_shapes(min_dims=1, max_dims=1)
+        )
+    )
+    def test_low_dimension(self, data, dropna):
+        with pytest.raises(ValueError, match=r"Data must have a 2D shape"):
+            extract_nd_array(data, dropna=dropna)
+
+    @pytest.mark.parametrize("dropna", [False, True])
+    @given(data=arrays(dtype=integer_dtypes() | floating_dtypes(), shape=array_shapes(min_dims=3)))
+    def test_high_dimension(self, data, dropna):
+        with pytest.raises(ValueError, match=r"Data must have a 2D shape"):
+            extract_nd_array(data, dropna=dropna)
 
 
 class TestExtractAndConcatArrays:

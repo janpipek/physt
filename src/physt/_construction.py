@@ -65,7 +65,7 @@ def _(data: None, *, dropna=True):
 
 @singledispatch
 def extract_nd_array(
-    data: Any, *, dim: Optional[int], dropna: bool = True
+    data: Any, *, dim: Optional[int] = None, dropna: bool = True
 ) -> Tuple[int, Optional[np.ndarray], Optional[np.ndarray]]:
     """Extract 2D tabular-like array from any input.
 
@@ -94,7 +94,7 @@ def extract_nd_array(
 
     array: np.ndarray = np.asarray(data, dtype=float)
     if array.ndim != 2:
-        raise ValueError(f"Array must have shape (n, d), {array.shape} encountered.")
+        raise ValueError(f"Data must have a 2D shape of (n, d), {array.shape} encountered.")
     if dim is not None and dim != array.shape[1]:
         raise ValueError(f"Dimension mismatch: {dim} != {array.shape[1]}")
     _, dim = array.shape
