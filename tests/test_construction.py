@@ -1,4 +1,5 @@
 from itertools import tee
+from typing import Tuple
 
 import hypothesis.strategies as st
 import numpy as np
@@ -133,6 +134,12 @@ class TestExtractNDArray:
 
 
 class TestExtractAndConcatArrays:
+    @staticmethod
+    @st.composite
+    def two_array_of_the_same_shape(draw, shape, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+        shape_ = draw(shape)
+        return (draw(arrays(shape=shape_, **kwargs)), draw(arrays(shape=shape_, **kwargs)))
+
     @given(
         data1=arrays(
             dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes(min_dims=1, max_dims=1)
@@ -146,8 +153,17 @@ class TestExtractAndConcatArrays:
         with pytest.raises(ValueError, match="Array shapes do not match"):
             extract_and_concat_arrays(data1, data2)
 
-    def test_fails_with_nd_array(self):
-        pass
+    @given(
+        data=two_array_of_the_same_shape(
+            shape=array_shapes(min_dims=2), dtype=floating_dtypes() | integer_dtypes()
+        )
+    )
+    def test_works_with_nd_array(self, data):
+        array, mask = extract_and_concat_arrays(data[0], data[1], dropna=False)
+        assert array.shape == (data[0].size, 2)
+
+    # TODO: Test correct values
+    # TODO: Test dropna
 
 
 class TestExtractAxisName:

@@ -120,7 +120,7 @@ def extract_and_concat_arrays(
 
     Parameters
     ----------
-    data : Sequence of array-like or None's
+    data : Sequence of array-like or None's (not necessarily one-dimensional)
     dropna : Whether to remove any NA values and construct the mask
 
     Returns
