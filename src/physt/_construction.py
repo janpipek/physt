@@ -112,9 +112,11 @@ def extract_nd_array(
 
 
 @extract_nd_array.register
-def _(data: None, *, dim, dropna=True):
+def _(data: None, *, dim=None, dropna=True):
     if dim is None:
         raise ValueError("You have to specify either data or its dimension.")
+    if dim < 2:
+        raise ValueError(f"Dimension too small: {dim}. At least 2 required.")
     return dim, None, None
 
 
