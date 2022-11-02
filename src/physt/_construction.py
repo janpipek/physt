@@ -92,7 +92,12 @@ def extract_nd_array(
     To implement for another type, register via the singledispatch mechanism.
     """
 
-    array: np.ndarray = np.asarray(data, dtype=float)
+    try:
+        array: np.ndarray = np.asarray(data, dtype=float)
+    except ValueError as exc:
+        if "The requested array has an inhomogeneous shape" in str(exc):
+            raise ValueError(f"Data must have a regular 2D shape of (n, d)") from exc
+        raise
     if array.ndim != 2:
         raise ValueError(f"Data must have a 2D shape of (n, d), {array.shape} encountered.")
     if dim is not None and dim != array.shape[1]:

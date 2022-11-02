@@ -1,3 +1,4 @@
+import random
 from itertools import tee
 from typing import Tuple
 
@@ -131,6 +132,20 @@ class TestExtractNDArray:
     def test_high_dimension(self, data, dropna):
         with pytest.raises(ValueError, match=r"Data must have a 2D shape"):
             extract_nd_array(data, dropna=dropna)
+
+    @pytest.mark.parametrize("dropna", [False, True])
+    @given(
+        dim1=st.integers(min_value=2, max_value=10),
+        dim2=st.integers(min_value=2, max_value=10),
+    )
+    def test_jagged_lists(self, dim1, dim2, dropna):
+        assume(dim1 != dim2)
+        data = [[random.random() for i in range(dim1)], [random.random() for i in range(dim2)]]
+        with pytest.raises(ValueError, match="Data must have a regular 2D shape"):
+            extract_nd_array(data, dropna=dropna)
+
+    def test_list_of_lists(self):
+        pass
 
 
 class TestExtractAndConcatArrays:
