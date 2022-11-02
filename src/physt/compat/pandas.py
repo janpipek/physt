@@ -14,7 +14,7 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 from pandas.core.arrays.masked import BaseMaskedArray, BaseMaskedDtype
 
-from physt._construction import calculate_1d_bins, extract_1d_array
+from physt._construction import calculate_1d_bins, extract_1d_array, extract_nd_array
 from physt._facade import h, h1
 from physt.binnings import BinningBase, static_binning
 from physt.types import Histogram1D, Histogram2D, HistogramND
@@ -29,13 +29,14 @@ if TYPE_CHECKING:
 def _(series: pandas.Series, *, dropna: bool = True) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     if not pd.api.types.is_numeric_dtype(series):
         raise ValueError(f"Cannot extract suitable array from non-numeric dtype: {series.dtype}")
-    if isinstance(series.dtype, BaseMaskedDtype):
-        array = cast(BaseMaskedArray, series.array)
-        if not dropna and any(array._mask):
-            raise ValueError("Cannot histogram series with NA's. Set `dropna` to True to override.")
-        array_mask = ~array._mask
-        array = array._data[~array._mask]
-    elif dropna:
+    series = series.astype(float)
+    # if isinstance(series.dtype, BaseMaskedDtype):
+    #     array = cast(BaseMaskedArray, series.array)
+    #     if not dropna and any(array.mask):
+    #         raise ValueError("Cannot histogram series with NA's. Set `dropna` to True to override.")
+    #     array_mask = ~array._mask
+    #     array = array._data[~array._mask]
+    if dropna:
         array_mask = series.notna().values
         array = series.dropna().values
     else:
@@ -48,9 +49,34 @@ def _(series: pandas.Series, *, dropna: bool = True) -> Tuple[np.ndarray, Option
 def _(dataframe: pd.DataFrame, **kwargs) -> NoReturn:
     # TODO: What about dataframes with just one column?
     raise ValueError(
-        "Cannot extract 1D array suitable for histogramming from a dataframe."
+        "Cannot extract 1D array suitable for histogramming from a dataframe. "
         "Either select a Series or extract multidimensional data."
     )
+
+
+@extract_nd_array.register
+def _(series: pd.Series, **kwargs) -> NoReturn:
+    raise ValueError(
+        "Cannot extract multidimensional array suitable for histogramming from a series. "
+        "Either select a DataFrame or extract 1D data."
+    )
+
+
+@extract_nd_array.register
+def _(
+    data_frame: pd.DataFrame, *, dropna: bool = True
+) -> Tuple[int, np.ndarray, Optional[np.ndarray]]:
+    if non_numeric_columns := [
+        name for name, series in data_frame.items() if not is_numeric_dtype(series)
+    ]:
+        raise ValueError(f"Cannot histogram non-numeric columns: {non_numeric_columns}")
+    if dropna:
+        array_mask = data_frame.isna().any().values
+        data_frame = data_frame.dropna()
+    else:
+        array_mask = None
+    array = data_frame.astype(float).values
+    return data_frame.shape[1], array, array_mask
 
 
 @pandas.api.extensions.register_series_accessor("physt")

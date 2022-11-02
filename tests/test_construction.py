@@ -8,7 +8,8 @@ import pandas as pd
 import pytest
 from hypothesis import assume, given
 from hypothesis.extra.numpy import array_shapes, arrays, floating_dtypes, integer_dtypes
-from hypothesis.extra.pandas import data_frames, series
+from hypothesis.extra.pandas import column, data_frames, series
+from numpy.testing import assert_array_equal
 
 from physt._construction import (
     extract_1d_array,
@@ -94,14 +95,14 @@ class TestExtract1DArray:
         @given(data=st.iterables(st.floats() | st.integers()), dropna=st.booleans())
         def test_extracts_arrays(self, data, dropna):
             iter1, iter2 = tee(data)
-            data_list = list(iter2)
+            data_list = list(iter1)
 
             array, array_mask = extract_1d_array(iter2, dropna=dropna)
             assert isinstance(array, np.ndarray)
             if dropna:
-                assert array.size == len(data_list)
-            else:
                 assert array.size <= len(data_list)
+            else:
+                assert array.size == len(data_list)
 
     @pytest.mark.parametrize("data", ["a_string", 42])
     def test_invalid_scalar_objects(self, data):
@@ -159,7 +160,42 @@ class TestExtractNDArray:
                 extract_nd_array(data, dropna=dropna)
 
     class TestPandas:
-        pass
+        @given(data=series(dtype=float), dropna=st.booleans())
+        def test_series(self, data, dropna):
+            with pytest.raises(
+                ValueError,
+                match="Cannot extract multidimensional array suitable for histogramming from a series",
+            ):
+                extract_nd_array(data, dropna=dropna)
+
+        @given(
+            data=data_frames(
+                columns=(
+                    column(name=st.text() | st.integers(), dtype=float),
+                    column(name=st.text() | st.integers(), dtype=float),
+                )
+            ),
+            dropna=st.booleans(),
+        )
+        def test_data_frame_with_numerical_columns(self, data, dropna):
+            dim, array, array_mask = extract_nd_array(data, dropna=dropna)
+            if not dropna:
+                assert_array_equal(array, data.values)
+            else:
+                assert_array_equal(array, data.dropna().values)
+
+        @given(
+            data=data_frames(
+                columns=(
+                    column(name=st.text() | st.integers(), dtype=float),
+                    column(name=st.text() | st.integers(), dtype=str),
+                )
+            ),
+            dropna=st.booleans(),
+        )
+        def test_data_frame_with_invalid_columns(self, data, dropna):
+            with pytest.raises(ValueError, match="Cannot histogram non-numeric columns"):
+                extract_nd_array(data, dropna=dropna)
 
     class TestIterables:
         @staticmethod
@@ -178,7 +214,9 @@ class TestExtractNDArray:
             cols = draw(st.integers(min_value=min_cols, max_value=max_cols))
             return draw(
                 st.lists(
-                    st.lists(elements, min_size=cols, max_size=cols), min_size=rows, max_size=rows
+                    st.lists(elements, min_size=cols, max_size=cols, **kwargs),
+                    min_size=rows,
+                    max_size=rows,
                 )
             )
 
@@ -237,7 +275,7 @@ class TestExtractAndConcatArrays:
     )
     def test_works_with_nd_array(self, data):
         array, mask = extract_and_concat_arrays(data[0], data[1], dropna=False)
-        assert array.shape[0](data[0].size, 2)
+        assert array.shape[0] == data[0].size
 
     # TODO: Test correct values
     # TODO: Test dropna
