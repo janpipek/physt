@@ -44,7 +44,7 @@ def extract_1d_array(
         # Numpy cannot iterators convert directly
         data = list(data)
     if np.isscalar(data):
-        raise ValueError(f"Cannot extract array data from scalar {data}.")
+        raise ValueError(f"Cannot extract array data from scalar {data!r}.")
     try:
         array: np.ndarray = np.asarray(data, dtype=float)
     except (ValueError, TypeError) as exc:

@@ -297,7 +297,9 @@ class TestExtractAxisName:
 
 
 class TestExtractAxisNames:
-    pass
+    class TestDataFrame:
+        def test_multiindex(self):
+            pass
 
 
 class TestExtractWeights:
