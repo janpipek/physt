@@ -138,6 +138,26 @@ class TestExtractNDArray:
             with pytest.raises(ValueError, match="Dimension too small"):
                 extract_nd_array(None, dim=dim, dropna=dropna)
 
+    class TestArrays:
+        @given(
+            data=arrays(
+                dtype=integer_dtypes() | floating_dtypes(),
+                shape=array_shapes(min_dims=1, max_dims=1),
+            ),
+            dropna=st.booleans(),
+        )
+        def test_low_dimension(self, data, dropna):
+            with pytest.raises(ValueError, match=r"Data must have a 2D shape"):
+                extract_nd_array(data, dropna=dropna)
+
+        @given(
+            data=arrays(dtype=integer_dtypes() | floating_dtypes(), shape=array_shapes(min_dims=3)),
+            dropna=st.booleans(),
+        )
+        def test_high_dimension(self, data, dropna):
+            with pytest.raises(ValueError, match=r"Data must have a 2D shape"):
+                extract_nd_array(data, dropna=dropna)
+
     class TestPandas:
         pass
 
@@ -171,6 +191,11 @@ class TestExtractNDArray:
             else:
                 assert array.shape[0] == len(data)
 
+        @given(data=st.lists(st.floats()), dropna=st.booleans())
+        def test_list_of_values(self, data, dropna):
+            with pytest.raises(ValueError, match="Data must have a 2D shape"):
+                extract_nd_array(data, dropna=dropna)
+
         @given(
             dim1=st.integers(min_value=2, max_value=10),
             dim2=st.integers(min_value=2, max_value=10),
@@ -181,24 +206,6 @@ class TestExtractNDArray:
             data = [[random.random() for i in range(dim1)], [random.random() for i in range(dim2)]]
             with pytest.raises(ValueError, match="Data must have a regular 2D shape"):
                 extract_nd_array(data, dropna=dropna)
-
-    @given(
-        data=arrays(
-            dtype=integer_dtypes() | floating_dtypes(), shape=array_shapes(min_dims=1, max_dims=1)
-        ),
-        dropna=st.booleans(),
-    )
-    def test_low_dimension(self, data, dropna):
-        with pytest.raises(ValueError, match=r"Data must have a 2D shape"):
-            extract_nd_array(data, dropna=dropna)
-
-    @given(
-        data=arrays(dtype=integer_dtypes() | floating_dtypes(), shape=array_shapes(min_dims=3)),
-        dropna=st.booleans(),
-    )
-    def test_high_dimension(self, data, dropna):
-        with pytest.raises(ValueError, match=r"Data must have a 2D shape"):
-            extract_nd_array(data, dropna=dropna)
 
     # TODO: Check the 1D case
 
