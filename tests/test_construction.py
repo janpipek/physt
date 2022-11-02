@@ -117,26 +117,46 @@ class TestExtract1DArray:
 
 
 class TestExtractNDArray:
-    @pytest.mark.parametrize("dropna", [False, True])
+    @staticmethod
+    @st.composite
+    def lists_of_lists(
+        draw,
+        elements=st.integers() | st.floats(),
+        *,
+        min_rows=0,
+        max_rows=5,
+        min_cols=0,
+        max_cols=5,
+        **kwargs,
+    ):
+        rows = draw(st.integers(min_value=min_rows, max_value=max_rows))
+        cols = draw(st.integers(min_value=min_cols, max_value=max_cols))
+        return draw(
+            st.lists(st.lists(elements, min_size=cols, max_size=cols), min_size=rows, max_size=rows)
+        )
+
     @given(
         data=arrays(
             dtype=integer_dtypes() | floating_dtypes(), shape=array_shapes(min_dims=1, max_dims=1)
-        )
+        ),
+        dropna=st.booleans(),
     )
     def test_low_dimension(self, data, dropna):
         with pytest.raises(ValueError, match=r"Data must have a 2D shape"):
             extract_nd_array(data, dropna=dropna)
 
-    @pytest.mark.parametrize("dropna", [False, True])
-    @given(data=arrays(dtype=integer_dtypes() | floating_dtypes(), shape=array_shapes(min_dims=3)))
+    @given(
+        data=arrays(dtype=integer_dtypes() | floating_dtypes(), shape=array_shapes(min_dims=3)),
+        dropna=st.booleans(),
+    )
     def test_high_dimension(self, data, dropna):
         with pytest.raises(ValueError, match=r"Data must have a 2D shape"):
             extract_nd_array(data, dropna=dropna)
 
-    @pytest.mark.parametrize("dropna", [False, True])
     @given(
         dim1=st.integers(min_value=2, max_value=10),
         dim2=st.integers(min_value=2, max_value=10),
+        dropna=st.booleans(),
     )
     def test_jagged_lists(self, dim1, dim2, dropna):
         assume(dim1 != dim2)
@@ -144,8 +164,16 @@ class TestExtractNDArray:
         with pytest.raises(ValueError, match="Data must have a regular 2D shape"):
             extract_nd_array(data, dropna=dropna)
 
-    def test_list_of_lists(self):
-        pass
+    # TODO: Check the 1D case
+
+    @given(data=lists_of_lists(min_cols=2, min_rows=1), dropna=st.booleans())
+    def test_list_of_lists(self, data, dropna):
+        dim, array, array_mask = extract_nd_array(data, dropna=False)
+        assert dim == len(data[0]) == array.shape[1]
+        if dropna:
+            assert array.shape[0] <= len(data)
+        else:
+            assert array.shape[0] == len(data)
 
 
 class TestExtractAndConcatArrays:
@@ -175,7 +203,7 @@ class TestExtractAndConcatArrays:
     )
     def test_works_with_nd_array(self, data):
         array, mask = extract_and_concat_arrays(data[0], data[1], dropna=False)
-        assert array.shape == (data[0].size, 2)
+        assert array.shape[0](data[0].size, 2)
 
     # TODO: Test correct values
     # TODO: Test dropna
