@@ -15,7 +15,9 @@ from physt._construction import (
     extract_1d_array,
     extract_and_concat_arrays,
     extract_axis_name,
+    extract_axis_names,
     extract_nd_array,
+    extract_weights,
 )
 
 
@@ -298,9 +300,44 @@ class TestExtractAxisName:
 
 class TestExtractAxisNames:
     class TestDataFrame:
+        @given(df_axis_names=st.tuples(st.text() | st.integers()))
+        def test_any_df(self, df_axis_names):
+            # TODO: What about min size
+            df = pd.DataFrame([], columns=df_axis_names)
+            result = extract_axis_names(df)
+            assert result == tuple(str(x) for x in df_axis_names)
+
         def test_multiindex(self):
-            pass
+            df = pd.DataFrame([], columns=pd.MultiIndex.from_tuples([("a", 1), ("a", 2), ("b", 1)]))
+            result = extract_axis_names(df, axis_names=None)
+            assert result == ("a, 1", "a, 2", "b, 1")
 
 
 class TestExtractWeights:
+    @pytest.mark.parametrize("array_mask", [None, np.asarray([1.0])])
+    def test_none(self, array_mask):
+        result = extract_weights(None, array_mask=array_mask)
+        assert result is None
+
+    class TestArray:
+        def test_correct_shape(self):
+            pass
+
+        def test_incorrect_shape(self):
+            pass
+
+
+class TestCalculate1dBins:
+    pass
+
+
+class TestCalculateNdBins:
+    pass
+
+
+class TestCalculate1dFrequencies:
+    pass
+
+
+class TestCalculateNdFrequencies:
     pass

@@ -181,12 +181,13 @@ def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional
     """
     if not axis_name:
         if hasattr(data, "name"):
-            return None if data.name is None else str(data.name)  # type: ignore
+            return _normalize_axis_name(data.name)  # type: ignore
         elif (
             hasattr(data, "fields")
             and len(data.fields) == 1  # type: ignore
             and isinstance(data.fields[0], str)  # type: ignore
         ):
+            # TODO: Move to dask or something
             # Case of dask fields (examples)
             return str(data.fields[0])  # type: ignore
     return axis_name
@@ -218,8 +219,16 @@ def extract_axis_names(
     if axis_names is not None:
         return tuple(axis_names)
     if hasattr(data, "columns"):
-        return tuple(str(c) if c else None for c in data.columns)  # type: ignore
+        return tuple(_normalize_axis_name(c) for c in data.columns)  # type: ignore
     return None
+
+
+def _normalize_axis_name(axis_name: Any) -> Optional[str]:
+    if axis_name is None:
+        return None
+    if isinstance(axis_name, (list, tuple)):
+        return ", ".join(str(item) for item in axis_name)
+    return str(axis_name)
 
 
 @singledispatch
@@ -228,6 +237,7 @@ def extract_weights(weights: Any, array_mask: Optional[np.ndarray] = None) -> Op
 
     Returns
     -------
+    weights: A 1d array with the values not in the mask removed.
 
     Note
     ----
