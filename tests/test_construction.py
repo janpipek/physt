@@ -1,10 +1,12 @@
 import random
+from importlib.util import find_spec
 from itertools import tee
 from typing import Tuple
 
 import hypothesis.strategies as st
 import numpy as np
 import pandas as pd
+import polars
 import pytest
 from hypothesis import assume, given
 from hypothesis.extra.numpy import array_shapes, arrays, floating_dtypes, integer_dtypes
@@ -53,6 +55,7 @@ class TestExtract1DArray:
                 assert array.size == data.size
             assert array.ndim == 1
 
+    # @pytest.mark.skipif(find_spec("pandas") is None, reason="Pandas not installed.")
     class TestPandas:
         # Note: this is implemented in physt.compat.pandas
 
@@ -89,6 +92,31 @@ class TestExtract1DArray:
             with pytest.raises(ValueError):
                 extract_1d_array(data)
 
+    @pytest.mark.skipif(find_spec("polars") is None, reason="Polars not installed.")
+    class TestPolars:
+        @given(
+            values=st.lists(
+                st.integers(min_value=-1_000_000_000, max_value=1_000_000_000) | st.floats()
+            ),
+            dropna=st.booleans(),
+        )
+        def test_with_series(self, dropna, values):
+            # TODO: Change to a strategy
+            series = polars.Series(values=values)
+            array, mask = extract_1d_array(series, dropna=dropna)
+
+        def test_fails_with_dataframes(self):
+            import polars
+
+            df = polars.DataFrame()
+            # TODO: Or should it be a type error?
+            with pytest.raises(
+                ValueError,
+                match="Cannot extract 1D array suitable for histogramming from a polars dataframe",
+            ):
+                extract_1d_array(df)
+
+    # @pytest.mark.skipif(find_spec("xarray") is None, reason="Xarray not installed.")
     class TestXarray:
         # TODO: pip install hypothesis-gufunc[xarray] ?
         pass
