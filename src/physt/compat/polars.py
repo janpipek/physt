@@ -24,8 +24,8 @@ def _(data: polars.DataFrame, **kwargs) -> NoReturn:
 
 
 @extract_1d_array.register
-def _(data: polars.Series, *, dropna: bool = True) -> tuple[np.ndarray, Optional[np.ndarray]]:
-    if polars.datatypes.dtype_to_py_type(data.dtype) not in [int, float]:
+def _(data: polars.Series, *, dropna: bool = True) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    if polars.datatypes.dtype_to_py_type(data.dtype) not in (int, float):
         raise ValueError(
             f"Cannot extract float array from type {data.dtype}, must be int-like or float-like"
         )
@@ -51,7 +51,7 @@ def _(data: polars.Series, **kwargs) -> NoReturn:
 @extract_nd_array.register
 def _(
     data: polars.DataFrame, *, dim: Optional[int] = None, dropna: bool = True
-) -> tuple[int, np.ndarray, Optional[np.ndarray]]:
+) -> Tuple[int, np.ndarray, Optional[np.ndarray]]:
     pandas_df = data.to_pandas().astype(float)
     return extract_nd_array(pandas_df, dim=dim, dropna=dropna)
 
@@ -59,7 +59,7 @@ def _(
 @extract_axis_names.register
 def _(
     data: polars.DataFrame, *, axis_names: Optional[Iterable[str]] = None
-) -> Optional[tuple[str, ...]]:
+) -> Optional[Tuple[str, ...]]:
     if axis_names is not None:
         result = tuple(axis_names)
         if (given_length := len(result)) != (expected_length := data.shape[1]):
