@@ -1,5 +1,6 @@
 0.6.0
 ------
+- Added: Support for pola.rs series/dataframes
 - Moved: xarray support as a separate module in physt.compat
 - Removed: physt.special (use physt.special_histograms instead)
 - Added: Pretty printing with rich library
@@ -7,7 +8,7 @@
 - Improved: Much more testing and edge-case bug fixes
 - Support: Removed Python 3.7 and numpy <1.22, added 3.11
 
-0.5.3 (6 January 2023)
+0.5.3 (6 January 2022)
 ----------------------
 - Changed: Distribution to wheels
 - Changed: Statistics have a special class
