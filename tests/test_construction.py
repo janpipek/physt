@@ -21,6 +21,34 @@ from physt._construction import (
 )
 
 
+@st.composite
+def two_array_of_the_same_shape(draw, shape, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+    shape_ = draw(shape)
+    return (draw(arrays(shape=shape_, **kwargs)), draw(arrays(shape=shape_, **kwargs)))
+
+
+@st.composite
+def lists_of_lists(
+    draw,
+    elements=st.integers() | st.floats(),
+    *,
+    min_rows=0,
+    max_rows=5,
+    min_cols=0,
+    max_cols=5,
+    **kwargs,
+):
+    rows = draw(st.integers(min_value=min_rows, max_value=max_rows))
+    cols = draw(st.integers(min_value=min_cols, max_value=max_cols))
+    return draw(
+        st.lists(
+            st.lists(elements, min_size=cols, max_size=cols, **kwargs),
+            min_size=rows,
+            max_size=rows,
+        )
+    )
+
+
 class TestExtract1DArray:
     @pytest.mark.parametrize("dropna", [False, True])
     def test_none(self, dropna):
@@ -200,28 +228,6 @@ class TestExtractNDArray:
                 extract_nd_array(data, dropna=dropna)
 
     class TestIterables:
-        @staticmethod
-        @st.composite
-        def lists_of_lists(
-            draw,
-            elements=st.integers() | st.floats(),
-            *,
-            min_rows=0,
-            max_rows=5,
-            min_cols=0,
-            max_cols=5,
-            **kwargs,
-        ):
-            rows = draw(st.integers(min_value=min_rows, max_value=max_rows))
-            cols = draw(st.integers(min_value=min_cols, max_value=max_cols))
-            return draw(
-                st.lists(
-                    st.lists(elements, min_size=cols, max_size=cols, **kwargs),
-                    min_size=rows,
-                    max_size=rows,
-                )
-            )
-
         @given(data=lists_of_lists(min_cols=2, min_rows=1), dropna=st.booleans())
         def test_list_of_lists(self, data, dropna):
             dim, array, array_mask = extract_nd_array(data, dropna=False)
@@ -251,12 +257,6 @@ class TestExtractNDArray:
 
 
 class TestExtractAndConcatArrays:
-    @staticmethod
-    @st.composite
-    def two_array_of_the_same_shape(draw, shape, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
-        shape_ = draw(shape)
-        return (draw(arrays(shape=shape_, **kwargs)), draw(arrays(shape=shape_, **kwargs)))
-
     @given(
         data1=arrays(
             dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes(min_dims=1, max_dims=1)
