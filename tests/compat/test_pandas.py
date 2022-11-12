@@ -150,7 +150,7 @@ class TestPhystSeriesAccessors:
             assert_histograms_equal(output, expected, check_metadata=False)
 
         def test_raise_nullable_with_no_dropna(self, series_of_nullable_int: pd.Series) -> None:
-            with pytest.raises(ValueError, match="Cannot histogram series with NA's"):
+            with pytest.raises(ValueError, match="Cannot calculate bins in presence of NaN"):
                 series_of_nullable_int.physt.h1(dropna=False)
 
 

@@ -64,12 +64,14 @@ def _(series: pd.Series, **kwargs) -> NoReturn:
 
 @extract_nd_array.register
 def _(
-    data_frame: pd.DataFrame, *, dropna: bool = True
+    data_frame: pd.DataFrame, *, dim: Optional[int] = None, dropna: bool = True
 ) -> Tuple[int, np.ndarray, Optional[np.ndarray]]:
     if non_numeric_columns := [
         name for name, series in data_frame.items() if not is_numeric_dtype(series)
     ]:
         raise ValueError(f"Cannot histogram non-numeric columns: {non_numeric_columns}")
+    if dim and dim != data_frame.shape[1]:
+        raise ValueError(f"Invalid dim {data_frame.shape[1]}, {dim} expected.")
     if dropna:
         array_mask = data_frame.isna().any().values
         data_frame = data_frame.dropna()
