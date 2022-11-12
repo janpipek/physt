@@ -232,7 +232,9 @@ def _normalize_axis_name(axis_name: Any) -> Optional[str]:
 
 
 @singledispatch
-def extract_weights(weights: Any, array_mask: Optional[np.ndarray] = None) -> Optional[np.ndarray]:
+def extract_weights(
+    weights: Any, *, array_mask: Optional[np.ndarray] = None
+) -> Optional[np.ndarray]:
     """Extract weights from the provided object.
 
     Returns

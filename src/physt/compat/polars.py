@@ -8,6 +8,7 @@ from physt._construction import (
     extract_axis_name,
     extract_axis_names,
     extract_nd_array,
+    extract_weights,
 )
 
 
@@ -72,3 +73,20 @@ def _(
 @extract_axis_names.register
 def _(data: polars.Series, **kwargs) -> NoReturn:
     raise ValueError("Cannot extract axis names from a single polars Series.")
+
+
+@extract_weights.register
+def _(data: polars.Series, array_mask: Optional[np.ndarray] = None) -> np.ndarray:
+    if polars.datatypes.dtype_to_py_type(data.dtype) not in (int, float):
+        raise ValueError(
+            f"Cannot extract weights from type {data.dtype}, must be int-like or float-like"
+        )
+    array = data.to_numpy()
+    if array_mask is not None:
+        return array[array_mask]
+    return array
+
+
+@extract_weights.register
+def _(data: polars.DataFrame, **kwargs) -> NoReturn:
+    raise ValueError("Cannot extract weights from a polars DataFrame.")
