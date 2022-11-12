@@ -1,12 +1,14 @@
 import random
+from datetime import date, datetime
 from importlib.util import find_spec
 from itertools import tee
 from typing import Tuple
 
 import hypothesis.strategies as st
 import numpy as np
-import pandas as pd
-import polars
+import pandas as pd  # TODO: Make conditional
+import polars  # TODO: Make conditional
+import polars.testing.parametric
 import pytest
 from hypothesis import assume, given
 from hypothesis.extra.numpy import array_shapes, arrays, floating_dtypes, integer_dtypes
@@ -129,9 +131,32 @@ class TestExtract1DArray:
             dropna=st.booleans(),
         )
         def test_with_series(self, dropna, values):
-            # TODO: Change to a strategy
-            series = polars.Series(values=values)
-            array, mask = extract_1d_array(series, dropna=dropna)
+            pl_input = polars.Series(values=values)
+            nd_input = np.array(values)
+
+            pl_array, pl_mask = extract_1d_array(pl_input, dropna=dropna)
+            nd_array, nd_mask = extract_1d_array(nd_input, dropna=dropna)
+
+            assert_array_equal(pl_array, nd_array)
+            if dropna:
+                assert_array_equal(pl_mask, nd_mask)
+            else:
+                assert pl_mask is None
+
+        @pytest.mark.parametrize(
+            "data",
+            [
+                pytest.param(["abc", "def"], id="Utf8"),
+                pytest.param([datetime(2020, 1, 1)], id="Datetime"),
+                pytest.param([date(2020, 1, 1)], id="Date"),
+                pytest.param([[1, 2], [1, 3]], id="List"),
+            ],
+        )
+        def test_fails_with_wrong_type(self, data):
+            # See https://pola-rs.github.io/polars/py-polars/html/reference/datatypes.html
+            series = polars.Series(data)
+            with pytest.raises(ValueError, match="Cannot extract float array from type"):
+                extract_1d_array(series)
 
         def test_fails_with_dataframes(self):
             import polars
@@ -254,6 +279,28 @@ class TestExtractNDArray:
         def test_data_frame_with_invalid_columns(self, data, dropna):
             with pytest.raises(ValueError, match="Cannot histogram non-numeric columns"):
                 extract_nd_array(data, dropna=dropna)
+
+    class TestPolars:
+        NUMERIC_POLARS_DTYPES = [
+            dtype
+            for dtype, py_type in polars.datatypes.DataTypeMappings.DTYPE_TO_PY_TYPE.items()
+            if py_type in (int, float)
+        ]
+
+        @given(data=polars.testing.parametric.dataframes(allowed_dtypes=NUMERIC_POLARS_DTYPES))
+        def test_same_result_as_with_arrays(self, data):
+            extract_nd_array(data)
+
+        def test_fails_with_wrong_types(self):
+            pass
+
+        def test_fails_with_series(self):
+            series = polars.Series(values=[1, 2, 3, 4, 5])
+            with pytest.raises(
+                ValueError,
+                match="Cannot extract multidimensional array suitable for histogramming from a polars series",
+            ):
+                extract_nd_array(series)
 
     class TestIterables:
         @given(data=lists_of_lists(min_cols=2, min_rows=1), dropna=st.booleans())

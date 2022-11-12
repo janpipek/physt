@@ -18,6 +18,10 @@ def _(data: polars.Series) -> Optional[str]:
 
 @extract_1d_array.register
 def _(data: polars.Series, *, dropna: bool = True) -> tuple[np.ndarray, Optional[np.ndarray]]:
+    if polars.datatypes.dtype_to_py_type(data.dtype) not in [int, float]:
+        raise ValueError(
+            f"Cannot extract float array from type {data.dtype}, must be int-like or float-like"
+        )
     return extract_1d_array(data.view(), dropna=dropna)
 
 
