@@ -29,7 +29,7 @@ def _(data: polars.Series, *, dropna: bool = True) -> Tuple[np.ndarray, Optional
         raise ValueError(
             f"Cannot extract float array from type {data.dtype}, must be int-like or float-like"
         )
-    return extract_1d_array(data.view(), dropna=dropna)
+    return extract_1d_array(data.view(), dropna=dropna)  # type: ignore
 
 
 @extract_1d_array.register
@@ -53,7 +53,7 @@ def _(
     data: polars.DataFrame, *, dim: Optional[int] = None, dropna: bool = True
 ) -> Tuple[int, np.ndarray, Optional[np.ndarray]]:
     pandas_df = data.to_pandas().astype(float)
-    return extract_nd_array(pandas_df, dim=dim, dropna=dropna)
+    return extract_nd_array(pandas_df, dim=dim, dropna=dropna)  # type: ignore
 
 
 @extract_axis_names.register
