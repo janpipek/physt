@@ -6,6 +6,7 @@ from typing import Tuple
 
 import hypothesis.strategies as st
 import numpy as np
+import pandas
 import pandas as pd  # TODO: Make conditional
 import polars  # TODO: Make conditional
 import polars.testing.parametric
@@ -363,20 +364,35 @@ class TestExtractAxisName:
         data=arrays(dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes())
         | st.iterables(st.floats() | st.integers())
     )
-    def test_no_name_for_arrays_and_lists(self, data):
+    def test_no_name_for_arrays_and_lists(self, data: np.ndarray):
         assert extract_axis_name(data) is None
 
     @given(
         data=series(dtype=float, name=st.text() | st.none()),
     )
-    def test_uses_pandas_series_name(self, data):
+    def test_uses_pandas_series_name(self, data: pandas.Series):
         assert data.name == extract_axis_name(data)
+
+    class TestPolars:
+        @given(data=polars.testing.parametric.series())
+        def test_uses_polars_names(self, data: polars.Series):
+            assert data.name == extract_axis_name(data)
+
+        @given(data=polars.testing.parametric.dataframes())
+        def test_fails_with_dataframe(self, data):
+            with pytest.raises(
+                ValueError, match="Cannot extract axis name from a polars DataFrame."
+            ):
+                extract_axis_name(data)
 
 
 class TestExtractAxisNames:
     class TestDataFrame:
-        @given(df_axis_names=st.tuples(st.text() | st.integers()))
+        @given(
+            df_axis_names=st.tuples(st.text() | st.integers()),
+        )
         def test_any_df(self, df_axis_names):
+            # TODO: Test with explicit axis_names
             # TODO: What about min size
             df = pd.DataFrame([], columns=df_axis_names)
             result = extract_axis_names(df)
@@ -386,6 +402,19 @@ class TestExtractAxisNames:
             df = pd.DataFrame([], columns=pd.MultiIndex.from_tuples([("a", 1), ("a", 2), ("b", 1)]))
             result = extract_axis_names(df, axis_names=None)
             assert result == ("a, 1", "a, 2", "b, 1")
+
+    class TestPolars:
+        @given(data=polars.testing.parametric.series())
+        def test_fails_with_series(self, data):
+            with pytest.raises(
+                ValueError, match="Cannot extract axis names from a single polars Series"
+            ):
+                extract_axis_names(data)
+
+        @given(data=polars.testing.parametric.dataframes())
+        def test_uses_polars_names(self, data: polars.DataFrame):
+            # TODO: Test with explicit axis_names
+            assert tuple(data.columns) == extract_axis_names(data)
 
 
 class TestExtractWeights:
