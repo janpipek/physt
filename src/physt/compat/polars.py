@@ -12,7 +12,7 @@ from physt._construction import (
 
 
 @extract_axis_name.register
-def _(data: polars.Series, *, axis_name: str) -> Optional[str]:
+def _(data: polars.Series, *, axis_name: Optional[str] = None) -> Optional[str]:
     if axis_name is not None:
         return axis_name
     return data.name
