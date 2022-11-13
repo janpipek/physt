@@ -1,13 +1,13 @@
-from datetime import date, datetime
+from typing import Tuple
 
 import hypothesis.strategies as st
 import numpy as np
 import polars
-import polars.testing.parametric
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis.extra.numpy import array_shapes, arrays
 from numpy.testing import assert_array_equal
+from polars.testing.parametric import dataframes, series
 
 from physt._construction import (
     extract_1d_array,
@@ -16,16 +16,11 @@ from physt._construction import (
     extract_nd_array,
     extract_weights,
 )
-
-NUMERIC_POLARS_DTYPES = [
-    dtype
-    for dtype, py_type in polars.datatypes.DataTypeMappings.DTYPE_TO_PY_TYPE.items()
-    if py_type in (int, float)
-]
+from physt.compat.polars import NUMERIC_POLARS_DTYPES
 
 
 class TestExtraNDArray:
-    @given(data=polars.testing.parametric.dataframes(allowed_dtypes=NUMERIC_POLARS_DTYPES))
+    @given(data=dataframes(allowed_dtypes=NUMERIC_POLARS_DTYPES))
     def test_same_result_as_with_arrays(self, data):
         extract_nd_array(data)
 
@@ -61,15 +56,7 @@ class TestExtract1DArray:
         else:
             assert pl_mask is None
 
-    @pytest.mark.parametrize(
-        "data",
-        [
-            pytest.param(["abc", "def"], id="Utf8"),
-            pytest.param([datetime(2020, 1, 1)], id="Datetime"),
-            pytest.param([date(2020, 1, 1)], id="Date"),
-            pytest.param([[1, 2], [1, 3]], id="List"),
-        ],
-    )
+    @given(data=series(excluded_dtypes=NUMERIC_POLARS_DTYPES))
     def test_fails_with_wrong_type(self, data):
         # See https://pola-rs.github.io/polars/py-polars/html/reference/datatypes.html
         series = polars.Series(data)
@@ -89,38 +76,63 @@ class TestExtract1DArray:
 
 
 class TestExtractAxisName:
-    @given(data=polars.testing.parametric.series())
+    @given(data=series())
     def test_uses_polars_names(self, data: polars.Series):
         assert data.name == extract_axis_name(data)
 
-    @given(data=polars.testing.parametric.dataframes())
+    @given(data=dataframes())
     def test_fails_with_dataframe(self, data):
         with pytest.raises(ValueError, match="Cannot extract axis name from a polars DataFrame."):
             extract_axis_name(data)
 
 
-class TestExtractAxisName:
-    @given(data=polars.testing.parametric.series())
+class TestExtractAxisNames:
+    @given(data=series())
     def test_fails_with_series(self, data):
         with pytest.raises(
             ValueError, match="Cannot extract axis names from a single polars Series"
         ):
             extract_axis_names(data)
 
-    @given(data=polars.testing.parametric.dataframes())
+    @given(data=dataframes())
     def test_uses_polars_names(self, data: polars.DataFrame):
         # TODO: Test with explicit axis_names
         assert tuple(data.columns) == extract_axis_names(data)
 
 
+@st.composite
+def series_and_mask(
+    draw, *, min_length: int = 0, max_length: int = 10, allowed_dtypes=NUMERIC_POLARS_DTYPES
+) -> Tuple[polars.Series, np.ndarray]:
+    length = draw(st.integers(min_value=min_length, max_value=max_length))
+    mask = draw(arrays(shape=length, dtype=bool))
+    s = draw(series(size=length, allowed_dtypes=allowed_dtypes))
+    return s, mask
+
+
 class TestExtractWeights:
-    @given(data=polars.testing.parametric.series(allowed_dtypes=NUMERIC_POLARS_DTYPES))
+    @given(data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES))
     def test_selects_full_series_without_mask(self, data: polars.Series):
         result = extract_weights(data, array_mask=None)
         assert_array_equal(result, data.to_numpy())
 
+    @given(data_and_mask=series_and_mask())
+    def test_selects_with_mask(self, data_and_mask):
+        data, array_mask = data_and_mask
+        result = extract_weights(data, array_mask=array_mask)
+        assert isinstance(result, np.ndarray)
+
     @given(
-        data=polars.testing.parametric.dataframes(),
+        data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES),
+        array_mask=arrays(dtype=bool, shape=array_shapes(min_dims=1, max_dims=1)),
+    )
+    def test_fails_with_shape_mismatch(self, data: polars.Series, array_mask: np.ndarray):
+        assume(array_mask.shape != data.shape)
+        with pytest.raises(ValueError, match="Weights array shape"):
+            extract_weights(data, array_mask=array_mask)
+
+    @given(
+        data=dataframes(),
         array_mask=st.none() | arrays(dtype=bool, shape=array_shapes(max_dims=1)),
     )
     def test_fails_with_dataframe(self, data: polars.DataFrame, array_mask):

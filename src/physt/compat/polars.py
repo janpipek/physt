@@ -11,6 +11,12 @@ from physt._construction import (
     extract_weights,
 )
 
+NUMERIC_POLARS_DTYPES = tuple(
+    dtype
+    for dtype, py_type in polars.datatypes.DataTypeMappings.DTYPE_TO_PY_TYPE.items()
+    if py_type in (int, float)
+)
+
 
 @extract_axis_name.register
 def _(data: polars.Series, *, axis_name: Optional[str] = None) -> Optional[str]:
@@ -26,7 +32,7 @@ def _(data: polars.DataFrame, **kwargs) -> NoReturn:
 
 @extract_1d_array.register
 def _(data: polars.Series, *, dropna: bool = True) -> Tuple[np.ndarray, Optional[np.ndarray]]:
-    if polars.datatypes.dtype_to_py_type(data.dtype) not in (int, float):
+    if data.dtype not in NUMERIC_POLARS_DTYPES:
         raise ValueError(
             f"Cannot extract float array from type {data.dtype}, must be int-like or float-like"
         )
@@ -75,16 +81,19 @@ def _(data: polars.Series, **kwargs) -> NoReturn:
     raise ValueError("Cannot extract axis names from a single polars Series.")
 
 
-@extract_weights.register
-def _(data: polars.Series, array_mask: Optional[np.ndarray] = None) -> np.ndarray:
-    if polars.datatypes.dtype_to_py_type(data.dtype) not in (int, float):
-        raise ValueError(
-            f"Cannot extract weights from type {data.dtype}, must be int-like or float-like"
-        )
-    array = data.to_numpy()
-    if array_mask is not None:
-        return array[array_mask]
-    return array
+# @extract_weights.register
+# def _(data: polars.Series, array_mask: Optional[np.ndarray] = None) -> np.ndarray:
+#     array = extract_1d_array(data, dropna=False)
+#     return extract_weights(array, array_mask=array_mask)
+
+# if polars.datatypes.dtype_to_py_type(data.dtype) not in (int, float):
+#     raise ValueError(
+#         f"Cannot extract weights from type {data.dtype}, must be int-like or float-like"
+#     )
+# array = data.to_numpy()
+# if array_mask is not None:
+#     return array[array_mask]
+# return array
 
 
 @extract_weights.register
