@@ -535,7 +535,7 @@ def spherical(
     weights=None,
     **kwargs,
 ) -> SphericalHistogram:
-    """Facade function to create a speherical histogram."""
+    """Facade function to create a spherical histogram."""
     if "range" in kwargs:
         raise ValueError(
             "Please, use `radial_range`, `theta_range` and `phi_range` arguments instead of `range`"

@@ -1,6 +1,4 @@
 import random
-from datetime import date, datetime
-from importlib.util import find_spec
 from itertools import tee
 from typing import Tuple
 
@@ -8,8 +6,6 @@ import hypothesis.strategies as st
 import numpy as np
 import pandas
 import pandas as pd  # TODO: Make conditional
-import polars  # TODO: Make conditional
-import polars.testing.parametric
 import pytest
 from hypothesis import assume, given
 from hypothesis.extra.numpy import array_shapes, arrays, floating_dtypes, integer_dtypes
@@ -123,53 +119,6 @@ class TestExtract1DArray:
             with pytest.raises(ValueError):
                 extract_1d_array(data)
 
-    @pytest.mark.skipif(find_spec("polars") is None, reason="Polars not installed.")
-    class TestPolars:
-        @given(
-            values=st.lists(
-                st.integers(min_value=-1_000_000_000, max_value=1_000_000_000) | st.floats()
-            ),
-            dropna=st.booleans(),
-        )
-        def test_with_series(self, dropna, values):
-            pl_input = polars.Series(values=values)
-            nd_input = np.array(values)
-
-            pl_array, pl_mask = extract_1d_array(pl_input, dropna=dropna)
-            nd_array, nd_mask = extract_1d_array(nd_input, dropna=dropna)
-
-            assert_array_equal(pl_array, nd_array)
-            if dropna:
-                assert_array_equal(pl_mask, nd_mask)
-            else:
-                assert pl_mask is None
-
-        @pytest.mark.parametrize(
-            "data",
-            [
-                pytest.param(["abc", "def"], id="Utf8"),
-                pytest.param([datetime(2020, 1, 1)], id="Datetime"),
-                pytest.param([date(2020, 1, 1)], id="Date"),
-                pytest.param([[1, 2], [1, 3]], id="List"),
-            ],
-        )
-        def test_fails_with_wrong_type(self, data):
-            # See https://pola-rs.github.io/polars/py-polars/html/reference/datatypes.html
-            series = polars.Series(data)
-            with pytest.raises(ValueError, match="Cannot extract float array from type"):
-                extract_1d_array(series)
-
-        def test_fails_with_dataframes(self):
-            import polars
-
-            df = polars.DataFrame()
-            # TODO: Or should it be a type error?
-            with pytest.raises(
-                ValueError,
-                match="Cannot extract 1D array suitable for histogramming from a polars dataframe",
-            ):
-                extract_1d_array(df)
-
     # @pytest.mark.skipif(find_spec("xarray") is None, reason="Xarray not installed.")
     class TestXarray:
         # TODO: pip install hypothesis-gufunc[xarray] ?
@@ -281,28 +230,6 @@ class TestExtractNDArray:
             with pytest.raises(ValueError, match="Cannot histogram non-numeric columns"):
                 extract_nd_array(data, dropna=dropna)
 
-    class TestPolars:
-        NUMERIC_POLARS_DTYPES = [
-            dtype
-            for dtype, py_type in polars.datatypes.DataTypeMappings.DTYPE_TO_PY_TYPE.items()
-            if py_type in (int, float)
-        ]
-
-        @given(data=polars.testing.parametric.dataframes(allowed_dtypes=NUMERIC_POLARS_DTYPES))
-        def test_same_result_as_with_arrays(self, data):
-            extract_nd_array(data)
-
-        def test_fails_with_wrong_types(self):
-            pass
-
-        def test_fails_with_series(self):
-            series = polars.Series(values=[1, 2, 3, 4, 5])
-            with pytest.raises(
-                ValueError,
-                match="Cannot extract multidimensional array suitable for histogramming from a polars series",
-            ):
-                extract_nd_array(series)
-
     class TestIterables:
         @given(data=lists_of_lists(min_cols=2, min_rows=1), dropna=st.booleans())
         def test_list_of_lists(self, data, dropna):
@@ -373,18 +300,6 @@ class TestExtractAxisName:
     def test_uses_pandas_series_name(self, data: pandas.Series):
         assert data.name == extract_axis_name(data)
 
-    class TestPolars:
-        @given(data=polars.testing.parametric.series())
-        def test_uses_polars_names(self, data: polars.Series):
-            assert data.name == extract_axis_name(data)
-
-        @given(data=polars.testing.parametric.dataframes())
-        def test_fails_with_dataframe(self, data):
-            with pytest.raises(
-                ValueError, match="Cannot extract axis name from a polars DataFrame."
-            ):
-                extract_axis_name(data)
-
 
 class TestExtractAxisNames:
     class TestDataFrame:
@@ -402,19 +317,6 @@ class TestExtractAxisNames:
             df = pd.DataFrame([], columns=pd.MultiIndex.from_tuples([("a", 1), ("a", 2), ("b", 1)]))
             result = extract_axis_names(df, axis_names=None)
             assert result == ("a, 1", "a, 2", "b, 1")
-
-    class TestPolars:
-        @given(data=polars.testing.parametric.series())
-        def test_fails_with_series(self, data):
-            with pytest.raises(
-                ValueError, match="Cannot extract axis names from a single polars Series"
-            ):
-                extract_axis_names(data)
-
-        @given(data=polars.testing.parametric.dataframes())
-        def test_uses_polars_names(self, data: polars.DataFrame):
-            # TODO: Test with explicit axis_names
-            assert tuple(data.columns) == extract_axis_names(data)
 
 
 class TestExtractWeights:
