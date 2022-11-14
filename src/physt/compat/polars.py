@@ -81,19 +81,10 @@ def _(data: polars.Series, **kwargs) -> NoReturn:
     raise ValueError("Cannot extract axis names from a single polars Series.")
 
 
-# @extract_weights.register
-# def _(data: polars.Series, array_mask: Optional[np.ndarray] = None) -> np.ndarray:
-#     array = extract_1d_array(data, dropna=False)
-#     return extract_weights(array, array_mask=array_mask)
-
-# if polars.datatypes.dtype_to_py_type(data.dtype) not in (int, float):
-#     raise ValueError(
-#         f"Cannot extract weights from type {data.dtype}, must be int-like or float-like"
-#     )
-# array = data.to_numpy()
-# if array_mask is not None:
-#     return array[array_mask]
-# return array
+@extract_weights.register
+def _(data: polars.Series, array_mask: Optional[np.ndarray] = None) -> np.ndarray:
+    array, _ = extract_1d_array(data, dropna=False)
+    return extract_weights(array, array_mask=array_mask)
 
 
 @extract_weights.register

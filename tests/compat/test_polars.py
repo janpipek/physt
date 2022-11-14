@@ -9,6 +9,7 @@ from hypothesis.extra.numpy import array_shapes, arrays
 from numpy.testing import assert_array_equal
 from polars.testing.parametric import dataframes, series
 
+from physt import h, h1
 from physt._construction import (
     extract_1d_array,
     extract_axis_name,
@@ -17,6 +18,23 @@ from physt._construction import (
     extract_weights,
 )
 from physt.compat.polars import NUMERIC_POLARS_DTYPES
+from physt.types import Histogram1D, HistogramND
+
+
+class TestH1:
+    @given(data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_infinities=False))
+    def test_with_series(self, data):
+        assume(polars.n_unique(data) >= 2)
+        result = h1(data)
+        assert isinstance(result, Histogram1D)
+
+
+class TestH:
+    @given(data=dataframes(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_infinities=False))
+    def test_with_dataframe(self, data):
+        assume(all(polars.n_unique(data[col]) >= 2 for col in data.columns))
+        result = h(data)
+        assert isinstance(result, HistogramND)
 
 
 class TestExtraNDArray:
@@ -105,7 +123,7 @@ def series_and_mask(
     draw, *, min_length: int = 0, max_length: int = 10, allowed_dtypes=NUMERIC_POLARS_DTYPES
 ) -> Tuple[polars.Series, np.ndarray]:
     length = draw(st.integers(min_value=min_length, max_value=max_length))
-    mask = draw(arrays(shape=length, dtype=bool))
+    mask = draw(arrays(shape=(length,), dtype=bool))
     s = draw(series(size=length, allowed_dtypes=allowed_dtypes))
     return s, mask
 
@@ -130,6 +148,11 @@ class TestExtractWeights:
         assume(array_mask.shape != data.shape)
         with pytest.raises(ValueError, match="Weights array shape"):
             extract_weights(data, array_mask=array_mask)
+
+    @given(data=series(excluded_dtypes=NUMERIC_POLARS_DTYPES))
+    def test_fails_with_wrong_type(self, data):
+        with pytest.raises(ValueError, match="Cannot extract float array from type"):
+            extract_weights(data)
 
     @given(
         data=dataframes(),
