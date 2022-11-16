@@ -22,6 +22,9 @@ from physt.types import Histogram1D, HistogramND
 
 
 class TestH1:
+    # Just check that the whole construction works.
+    # More detailed tests for individual steps below.
+
     @given(data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_infinities=False))
     def test_with_series(self, data):
         assume(polars.n_unique(data) >= 2)
@@ -30,6 +33,9 @@ class TestH1:
 
 
 class TestH:
+    # Just check that the whole construction works.
+    # More detailed tests for individual steps below.
+
     @given(data=dataframes(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_infinities=False))
     def test_with_dataframe(self, data):
         assume(all(polars.n_unique(data[col]) >= 2 for col in data.columns))
@@ -38,12 +44,18 @@ class TestH:
 
 
 class TestExtraNDArray:
-    @given(data=dataframes(allowed_dtypes=NUMERIC_POLARS_DTYPES))
-    def test_same_result_as_with_arrays(self, data):
-        extract_nd_array(data)
+    @given(data=dataframes(allowed_dtypes=NUMERIC_POLARS_DTYPES), dropna=st.booleans())
+    def test_same_result_as_with_arrays(self, data: polars.DataFrame, dropna: bool):
+        # With equality, we do not have to look at specific cases
+        _, result, _ = extract_nd_array(data, dropna=dropna)
+        array = data.to_numpy()
+        _, array_result, _ = extract_nd_array(array, dropna=dropna)
+        assert_array_equal(result, array_result)
 
-    def test_fails_with_wrong_types(self):
-        pass
+    @given(data=dataframes(excluded_dtypes=NUMERIC_POLARS_DTYPES), dropna=st.booleans())
+    def test_fails_with_wrong_types(self, data: polars.DataFrame, dropna: bool):
+        with pytest.raises(ValueError, match=""):
+            extract_nd_array(data, dropna=dropna)
 
     def test_fails_with_series(self):
         series = polars.Series(values=[1, 2, 3, 4, 5])

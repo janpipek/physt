@@ -1,6 +1,7 @@
 from typing import Iterable, NoReturn, Optional, Tuple
 
 import numpy as np
+import pandas as pd
 import polars
 
 from physt._construction import (
@@ -59,7 +60,9 @@ def _(data: polars.Series, **kwargs) -> NoReturn:
 def _(
     data: polars.DataFrame, *, dim: Optional[int] = None, dropna: bool = True
 ) -> Tuple[int, np.ndarray, Optional[np.ndarray]]:
-    pandas_df = data.to_pandas().astype(float)
+    pandas_df = pd.DataFrame(
+        {key: extract_1d_array(data[key], dropna=False)[0] for key in data.columns}
+    )
     return extract_nd_array(pandas_df, dim=dim, dropna=dropna)  # type: ignore
 
 
