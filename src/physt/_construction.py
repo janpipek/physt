@@ -232,7 +232,9 @@ def _normalize_axis_name(axis_name: Any) -> Optional[str]:
 
 
 @singledispatch
-def extract_weights(weights: Any, array_mask: Optional[np.ndarray] = None) -> Optional[np.ndarray]:
+def extract_weights(
+    weights: Any, *, array_mask: Optional[np.ndarray] = None
+) -> Optional[np.ndarray]:
     """Extract weights from the provided object.
 
     Returns
@@ -552,7 +554,7 @@ def calculate_nd_bins(
 
     # Prepare bins
     if isinstance(bins, list):
-        if dim:
+        if dim is not None:
             if len(bins) != dim:
                 raise ValueError(
                     f"List of bins not understood, expected {dim} items, got {len(bins)}."
@@ -561,7 +563,7 @@ def calculate_nd_bins(
             dim = len(bins)
     else:
         if not dim:
-            raise ValueError("Unknown dimension.")
+            raise ValueError(f"Required dim > 0: {dim}.")
         bins = [bins] * dim
 
     # Prepare arguments

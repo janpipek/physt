@@ -22,3 +22,9 @@ with suppress(ImportError):
     from . import xarray  # noqa: F401
 
     __all__.append("xarray")
+
+
+with suppress(ImportError):
+    from . import polars  # noqa: F401
+
+    __all__.append("polars")

@@ -515,7 +515,7 @@ def radial(
         data, transformed=transformed, klass=RadialHistogram, dropna=dropna
     )
     bin_schema = calculate_1d_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
-    weights = extract_weights(weights, array_mask)
+    weights = extract_weights(weights, array_mask=array_mask)
     return RadialHistogram.from_calculate_frequencies(
         data=data, binning=bin_schema, weights=weights
     )
@@ -535,7 +535,7 @@ def spherical(
     weights=None,
     **kwargs,
 ) -> SphericalHistogram:
-    """Facade function to create a speherical histogram."""
+    """Facade function to create a spherical histogram."""
     if "range" in kwargs:
         raise ValueError(
             "Please, use `radial_range`, `theta_range` and `phi_range` arguments instead of `range`"

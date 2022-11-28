@@ -4,7 +4,8 @@ from typing import Tuple
 
 import hypothesis.strategies as st
 import numpy as np
-import pandas as pd
+import pandas
+import pandas as pd  # TODO: Make conditional
 import pytest
 from hypothesis import assume, given
 from hypothesis.extra.numpy import array_shapes, arrays, floating_dtypes, integer_dtypes
@@ -81,6 +82,7 @@ class TestExtract1DArray:
                 assert array.size == data.size
             assert array.ndim == 1
 
+    # @pytest.mark.skipif(find_spec("pandas") is None, reason="Pandas not installed.")
     class TestPandas:
         # Note: this is implemented in physt.compat.pandas
 
@@ -117,6 +119,7 @@ class TestExtract1DArray:
             with pytest.raises(ValueError):
                 extract_1d_array(data)
 
+    # @pytest.mark.skipif(find_spec("xarray") is None, reason="Xarray not installed.")
     class TestXarray:
         # TODO: pip install hypothesis-gufunc[xarray] ?
         pass
@@ -288,20 +291,23 @@ class TestExtractAxisName:
         data=arrays(dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes())
         | st.iterables(st.floats() | st.integers())
     )
-    def test_no_name_for_arrays_and_lists(self, data):
+    def test_no_name_for_arrays_and_lists(self, data: np.ndarray):
         assert extract_axis_name(data) is None
 
     @given(
         data=series(dtype=float, name=st.text() | st.none()),
     )
-    def test_uses_pandas_series_name(self, data):
+    def test_uses_pandas_series_name(self, data: pandas.Series):
         assert data.name == extract_axis_name(data)
 
 
 class TestExtractAxisNames:
     class TestDataFrame:
-        @given(df_axis_names=st.tuples(st.text() | st.integers()))
+        @given(
+            df_axis_names=st.tuples(st.text() | st.integers()),
+        )
         def test_any_df(self, df_axis_names):
+            # TODO: Test with explicit axis_names
             # TODO: What about min size
             df = pd.DataFrame([], columns=df_axis_names)
             result = extract_axis_names(df)

@@ -30,6 +30,7 @@ dev = ["pytest", "mypy", "types-setuptools"]
 astropy = ["astropy"]
 dask = ["dask[array]"]
 pandas = ["pandas"]
+polars = ["polars", "pyarrow", "physt[pandas]"]
 xarray = ["xarray"]
 matplotlib = ["matplotlib>=2.0"]
 plotly = ["plotly"]
@@ -39,7 +40,7 @@ root = ["uproot3"]  # TODO: Update to uproot4
 scipy = ["scipy"]
 xtermcolor = ["xtermcolor"]
 all = [
-    "physt[astropy,dev,dask,pandas,xarray,matplotlib,plotly,vega3,folium,root,scipy,xtermcolor]"
+    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,vega3,folium,root,scipy,xtermcolor]"
 ]
 
 [build-system]
