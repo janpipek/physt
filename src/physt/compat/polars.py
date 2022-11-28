@@ -1,3 +1,15 @@
+"""Support for pola.rs library.
+
+pola.rs Series and DataFrames can be passed to h1, ..., h
+in the same way as their pandas equivalents.
+
+Examples:
+    >>> import polars, physt
+    >>> series = polars.Series("x", range(100))
+    >>> physt.h1(series)
+    Histogram1D(bins=(10,), total=100, dtype=int64)
+"""
+
 from typing import Iterable, NoReturn, Optional, Tuple
 
 import numpy as np
