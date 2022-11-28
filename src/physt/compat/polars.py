@@ -60,6 +60,8 @@ def _(data: polars.Series, **kwargs) -> NoReturn:
 def _(
     data: polars.DataFrame, *, dim: Optional[int] = None, dropna: bool = True
 ) -> Tuple[int, np.ndarray, Optional[np.ndarray]]:
+    if data.shape[1] == 0:
+        raise ValueError("Must have at least one column.")
     pandas_df = pd.DataFrame(
         {key: extract_1d_array(data[key], dropna=False)[0] for key in data.columns}
     )

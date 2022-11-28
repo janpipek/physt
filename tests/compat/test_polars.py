@@ -40,6 +40,7 @@ class TestH:
         data=dataframes(
             allowed_dtypes=NUMERIC_POLARS_DTYPES,
             allow_infinities=False,
+            min_cols=1,
             max_cols=4,
         )
     )
@@ -58,18 +59,25 @@ class TestExtraNDArray:
         _, array_result, _ = extract_nd_array(array, dropna=dropna)
         assert_array_equal(result, array_result)
 
+    @pytest.mark.parametrize("dropna", [False, True])
+    def test_with_empty_data_frame(self, dropna: bool):
+        empty_df = polars.DataFrame()
+        with pytest.raises(ValueError, match="Must have at least one column"):
+            extract_nd_array(empty_df, dropna=dropna)
+
     @given(data=dataframes(excluded_dtypes=NUMERIC_POLARS_DTYPES), dropna=st.booleans())
     def test_fails_with_wrong_types(self, data: polars.DataFrame, dropna: bool):
         with pytest.raises(ValueError, match=""):
             extract_nd_array(data, dropna=dropna)
 
-    def test_fails_with_series(self):
-        series = polars.Series(values=[1, 2, 3, 4, 5])
+    @given(data=series())
+    def test_fails_with_series(self, data):
+        # series = polars.Series(values=[1, 2, 3, 4, 5])
         with pytest.raises(
             ValueError,
             match="Cannot extract multidimensional array suitable for histogramming from a polars series",
         ):
-            extract_nd_array(series)
+            extract_nd_array(data)
 
 
 class TestExtract1DArray:
