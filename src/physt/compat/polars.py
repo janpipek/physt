@@ -90,7 +90,7 @@ def _(data: polars.Series, **kwargs) -> NoReturn:
 @extract_weights.register
 def _(data: polars.Series, array_mask: Optional[np.ndarray] = None) -> np.ndarray:
     array, _ = extract_1d_array(data, dropna=False)
-    return extract_weights(array, array_mask=array_mask)
+    return extract_weights(array, array_mask=array_mask)  # type: ignore
 
 
 @extract_weights.register
