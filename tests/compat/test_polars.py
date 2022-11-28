@@ -36,7 +36,13 @@ class TestH:
     # Just check that the whole construction works.
     # More detailed tests for individual steps below.
 
-    @given(data=dataframes(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_infinities=False))
+    @given(
+        data=dataframes(
+            allowed_dtypes=NUMERIC_POLARS_DTYPES,
+            allow_infinities=False,
+            max_cols=4,
+        )
+    )
     def test_with_dataframe(self, data):
         assume(all(polars.n_unique(data[col]) >= 2 for col in data.columns))
         result = h(data)
@@ -73,7 +79,7 @@ class TestExtract1DArray:
         ),
         dropna=st.booleans(),
     )
-    def test_with_series(self, dropna, values):
+    def test_with_series(self, dropna: bool, values):
         pl_input = polars.Series(values=values)
         nd_input = np.array(values)
 
@@ -94,8 +100,6 @@ class TestExtract1DArray:
             extract_1d_array(series)
 
     def test_fails_with_dataframes(self):
-        import polars
-
         df = polars.DataFrame()
         # TODO: Or should it be a type error?
         with pytest.raises(
@@ -115,6 +119,28 @@ class TestExtractAxisName:
         with pytest.raises(ValueError, match="Cannot extract axis name from a polars DataFrame."):
             extract_axis_name(data)
 
+    @given(data=series(), explicit_name=st.text())
+    def test_uses_explicit_value(self, data, explicit_name):
+        assert explicit_name == extract_axis_name(data, axis_name=explicit_name)
+
+
+@st.composite
+def dataframes_and_axis_names(
+    draw, *, min_length: int = 1, max_length: int = 6, equal_length: bool = True
+):
+    df_length = draw(st.integers(min_value=min_length, max_value=max_length))
+    if equal_length:
+        names_length = df_length
+    else:
+        if min_length == max_length:
+            raise ValueError("Cannot create examples.")
+        while (names_length := draw(st.integers(min_value=0, max_value=max_length))) == df_length:
+            pass
+    return (
+        draw(dataframes(cols=df_length)),
+        draw(st.lists(st.text(), min_size=names_length, max_size=names_length)),
+    )
+
 
 class TestExtractAxisNames:
     @given(data=series())
@@ -126,8 +152,19 @@ class TestExtractAxisNames:
 
     @given(data=dataframes())
     def test_uses_polars_names(self, data: polars.DataFrame):
-        # TODO: Test with explicit axis_names
         assert tuple(data.columns) == extract_axis_names(data)
+
+    @given(data_and_names=dataframes_and_axis_names(equal_length=True))
+    def test_explicit_with_correct_length(self, data_and_names):
+        data, names = data_and_names
+        result = extract_axis_names(data, axis_names=names)
+        assert result == tuple(names)
+
+    @given(data_and_names=dataframes_and_axis_names(equal_length=False))
+    def test_explicit_with_incorrect_length(self, data_and_names):
+        data, names = data_and_names
+        with pytest.raises(ValueError, match="Explicit axis_names.*invalid length"):
+            extract_axis_names(data, axis_names=names)
 
 
 @st.composite

@@ -76,6 +76,7 @@ def _(
             raise ValueError(
                 f"Explicit {axis_names=} has invalid length {given_length}, {expected_length} expected."
             )
+        return result
     return tuple(data.columns)
 
 
