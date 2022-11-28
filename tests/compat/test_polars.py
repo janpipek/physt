@@ -25,9 +25,9 @@ class TestH1:
     # Just check that the whole construction works.
     # More detailed tests for individual steps below.
 
-    @given(data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_infinities=False))
+    @given(data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_infinities=False, min_size=2))
     def test_with_series(self, data):
-        assume(polars.n_unique(data) >= 2)
+        assume(np.inf > (data.max() - data.min()) > 0)
         result = h1(data)
         assert isinstance(result, Histogram1D)
 
@@ -42,10 +42,12 @@ class TestH:
             allow_infinities=False,
             min_cols=1,
             max_cols=4,
+            min_size=2,
+            max_size=6,
         )
     )
     def test_with_dataframe(self, data):
-        assume(all(polars.n_unique(data[col]) >= 2 for col in data.columns))
+        assume(all((np.inf > (data[col].max() - data[col].min()) > 0) for col in data.columns))
         result = h(data)
         assert isinstance(result, HistogramND)
 
