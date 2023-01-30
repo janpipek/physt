@@ -65,3 +65,8 @@ universal = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+# Be a bit tolerant
+line-length = 100
+target-version = "py310"
