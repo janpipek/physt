@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     # TODO: use float?
     from typing import Any, Iterable, List, Optional, Sequence, Union
 
-    from physt.binnings import BinningBase, BinningLike
-    from physt.typing_aliases import ArrayLike, Axis, DTypeLike
+    from physt.binnings import BinningLike
+    from physt.typing_aliases import ArrayLike, Axis
 
 
 class HistogramND(HistogramBase):
@@ -61,9 +61,10 @@ class HistogramND(HistogramBase):
 
         HistogramBase.__init__(self, binnings, frequencies, axis_names=axis_names, **kwargs)
 
-        if len(self.axis_names) != self.ndim:
+        if (axis_count := len(self.axis_names)) != self.ndim:
             raise ValueError(
-                f"The length of axis names ({len(self.axis_names)}) must be equal to histogram dimension ({self.ndim})."
+                f"The length of axis names ({axis_count}) must be equal"
+                f" to histogram dimension ({self.ndim})."
             )
 
         # Missed values

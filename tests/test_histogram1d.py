@@ -1,14 +1,8 @@
 import hypothesis.strategies as st
 import numpy as np
 import pytest
-from hypothesis import assume, example, given, note
-from hypothesis.extra.numpy import (
-    array_shapes,
-    arrays,
-    floating_dtypes,
-    from_dtype,
-    integer_dtypes,
-)
+from hypothesis import assume, given, note
+from hypothesis.extra.numpy import array_shapes, arrays, floating_dtypes
 
 from physt import h1
 from physt.config import config
@@ -72,7 +66,7 @@ class TestConstructor:
         bins = [[0, 1], [1, 2]]
         values = [1, 2]
         errors2 = [-1, 1]
-        with pytest.raises(ValueError) as ex:
+        with pytest.raises(ValueError):
             _ = Histogram1D(bins, values, errors2=errors2)
 
 
@@ -282,9 +276,9 @@ class TestArithmetics:
             e2.name = "b"
             e3.name = "a"
             e4.name = None
-            assert (e1 + e2).name == None
+            assert (e1 + e2).name is None
             assert (e1 + e3).name == "a"
-            assert (e1 + e4).name == None
+            assert (e1 + e4).name is None
 
     class TestSubtraction:
         def test_subtract_wrong_histograms(self, example_histogram):
@@ -338,7 +332,7 @@ class TestArithmetics:
                     example_histogram *= array_like
                     assert example_histogram == new
                 else:
-                    with pytest.raises(TypeError) as ex:
+                    with pytest.raises(TypeError):
                         _ = example_histogram * array_like
 
         def test_multiplication_hist(self, example_histogram):
@@ -362,18 +356,16 @@ class TestArithmetics:
                     example_histogram /= array_like
                     assert example_histogram == new
                 else:
-                    with pytest.raises(TypeError) as ex:
-                        _ = example_histogram * array_like
+                    with pytest.raises(TypeError):
+                        example_histogram * array_like
 
         def test_division_two_hist(self, example_histogram):
-            with pytest.raises(TypeError) as ex:
-                _ = example_histogram / example_histogram
-            assert ex.match("^Division of two histograms is not supported.$")
+            with pytest.raises(TypeError, match="^Division of two histograms is not supported.$"):
+                example_histogram / example_histogram
 
         def test_division_scalar_hist(self, example_histogram):
-            with pytest.raises(TypeError) as ex:
-                _ = 1 / example_histogram
-            assert ex.match("unsupported operand type")
+            with pytest.raises(TypeError, match="unsupported operand type"):
+                1 / example_histogram
 
 
 class TestMerging:
@@ -473,7 +465,7 @@ class TestDtype:
     def test_float_weights_in_integer(self, values):
 
         with pytest.raises(ValueError):
-            hist = h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
+            h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
 
     @pytest.mark.parametrize("dtype", Histogram1D.SUPPORTED_DTYPES)
     @pytest.mark.parametrize(

@@ -163,9 +163,9 @@ class TestPartialNormalizing:
         freqs = [[1, 0], [1, 2]]
         h = Histogram2D(binnings=(range(3), range(3)), frequencies=freqs)
         with pytest.raises(ValueError):
-            h0 = h.partial_normalize(2)
+            h.partial_normalize(2)
         with pytest.raises(ValueError):
-            h0 = h.partial_normalize(-2)
+            h.partial_normalize(-2)
 
     def test_axis_names(self):
         freqs = [[1, 0], [1, 2]]
@@ -177,7 +177,7 @@ class TestPartialNormalizing:
         h1 = h.partial_normalize("second_axis")
         assert np.allclose(h1.frequencies, [[1, 0], [0.333333333333, 0.6666666666]])
         with pytest.raises(ValueError):
-            h0 = h.partial_normalize("third_axis")
+            h.partial_normalize("third_axis")
 
     def test_inplace(self):
         freqs = [[1, 0], [1, 2]]

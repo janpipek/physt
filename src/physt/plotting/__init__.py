@@ -144,7 +144,8 @@ def set_default_backend(name: str) -> None:
     global _default_backend  # pylint: disable=global-statement
     if name == "bokeh":
         raise ValueError(
-            "Support for bokeh has been discontinued. At some point, we may return to support holoviews."
+            "Support for bokeh has been discontinued."
+            "At some point, we may return to support holoviews."
         )
     if name not in backends:
         raise ValueError(f"Backend '{name}' is not supported and cannot be set as default.")
@@ -163,7 +164,8 @@ def _get_backend(name: Optional[str] = None) -> Tuple[str, Any]:
     """
     if not backends:
         raise RuntimeError(
-            "No plotting backend available. Please, install matplotlib (preferred), plotly or vega (more limited)."
+            "No plotting backend available. Please, install matplotlib (preferred),"
+            " plotly or vega (more limited)."
         )
     if not name:
         name = _default_backend
@@ -171,7 +173,8 @@ def _get_backend(name: Optional[str] = None) -> Tuple[str, Any]:
             raise RuntimeError("No backend for physt plotting.")
     if name == "bokeh":
         raise NotImplementedError(
-            "Support for bokeh has been discontinued. At some point, we may return to support holoviews."
+            "Support for bokeh has been discontinued."
+            " At some point, we may return to support holoviews."
         )
     backend = backends.get(name)
     if not backend:
@@ -194,14 +197,14 @@ def plot(
     ----------
     kind: Type of the plot (like "scatter", "line", ...), similar to pandas
     """
-    backend_name, backend_impl = _get_backend(backend)
+    backend_name, impl = _get_backend(backend)
     if kind is None:
-        kinds = [t for t in backend_impl.types if histogram.ndim in backend_impl.dims[t]]  # type: ignore
+        kinds = [t for t in impl.types if histogram.ndim in impl.dims[t]]  # type: ignore
         if not kinds:
             raise RuntimeError(f"No plot type is supported for {histogram.__class__.__name__}")
         kind = kinds[0]
-    if kind in backend_impl.types:
-        method = getattr(backend_impl, kind)
+    if kind in impl.types:
+        method = getattr(impl, kind)
         return method(histogram, **kwargs)
     else:
         raise RuntimeError(f"Histogram type error: {kind} missing in backend {backend_name}.")

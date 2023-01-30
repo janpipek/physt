@@ -566,7 +566,8 @@ def spherical(
             ):
                 raise ValueError(
                     f"All radii seem to be the same: {transformed_array[:,0].min():,.4f}. "
-                    "Perhaps you wanted to use `spherical_surface_histogram` instead or set radius bins explicitly?"
+                    "Perhaps you wanted to use `spherical_surface_histogram`"
+                    " instead or set radius bins explicitly?"
                 )
         raise
     return SphericalHistogram.from_calculate_frequencies(

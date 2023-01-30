@@ -77,7 +77,7 @@ class TestExtraNDArray:
         # series = polars.Series(values=[1, 2, 3, 4, 5])
         with pytest.raises(
             ValueError,
-            match="Cannot extract multidimensional array suitable for histogramming from a polars series",
+            match="Cannot extract .* from a polars series",
         ):
             extract_nd_array(data)
 

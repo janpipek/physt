@@ -96,7 +96,7 @@ def extract_nd_array(
         array: np.ndarray = np.asarray(data, dtype=float)
     except ValueError as exc:
         if "The requested array has an inhomogeneous shape" in str(exc):
-            raise ValueError(f"Data must have a regular 2D shape of (n, d)") from exc
+            raise ValueError("Data must have a regular 2D shape of (n, d)") from exc
         raise
     if array.ndim != 2:
         raise ValueError(f"Data must have a 2D shape of (n, d), {array.shape} encountered.")
@@ -371,7 +371,8 @@ def calculate_1d_frequencies(
     binning : A set of bins.
     weights : Weights of the items.
     validate_bins : If True (default), bins are validated to be in ascending order.
-    already_sorted : If True, the data being entered are already sorted, no need to sort them once more.
+    already_sorted : If True, the data being entered are already sorted,
+        no need to sort them once more.
     dtype: Underlying type for the histogram.
         (If weights are specified, default is float. Otherwise long.)
 
@@ -421,7 +422,8 @@ def calculate_1d_frequencies(
         # Check compatibility of weights
         if weights_array.shape != data_array.shape:
             raise ValueError(
-                f"Weights must have the same shape as data, {weights_array.shape} != {data_array.shape}"
+                "Weights must have the same shape as data,"
+                f" {weights_array.shape} != {data_array.shape}"
             )
     else:
         weights_array = np.ones_like(data_array, dtype=int)
@@ -483,7 +485,8 @@ def calculate_1d_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> B
         To-be-guessed parameter that specifies what kind of binning should be done
     check_nan: bool
         Check for the presence of nan's in array? Default: True
-    range: Limit values to a range. Some binning methods also (subsequently) use this parameter for the bin shape.
+    range: Limit values to a range. Some binning methods also (subsequently)
+        use this parameter for the bin shape.
 
     Returns
     -------
@@ -524,7 +527,8 @@ def calculate_1d_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> B
     elif np.iterable(_):
         if isinstance(_, list):
             warnings.warn(
-                "Using `list` for bins not recommended, it has different meaning with N-D histograms."
+                "Using `list` for bins not recommended,"
+                " it has different meaning with N-D histograms."
             )
         binning = static_binning(array, bins=_, **kwargs)
     else:

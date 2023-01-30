@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from physt import _bin_utils
 from physt._construction import (
     calculate_1d_frequencies,
     extract_1d_array,

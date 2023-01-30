@@ -1,30 +1,12 @@
-import numpy as np
 import pytest
 from hypothesis import given
 
-import physt
 from physt import examples, io
 from physt.testing.strategies import histograms_1d, histograms_nd
 from physt.types import Histogram1D, HistogramBase, HistogramCollection
 
 
 class TestIO:
-    def test_json_write_string(self):
-        bins = [1.2, 1.4, 1.5, 1.7, 1.8]
-        values = [4, 0, 3, 7.2]
-        example = Histogram1D(bins, values, overflow=1, underflow=2)
-        output = io.save_json(example)
-        # print(output)
-        # assert False
-
-    def test_json_write_2d(self):
-        from physt import h2
-
-        values = np.random.rand(500, 2)
-        h = h2(values[:, 0], values[:, 1], 3)
-        # print(h.to_json())
-        # assert False
-
     @staticmethod
     def _assert_reversibility(h: HistogramBase):
         json = h.to_json()

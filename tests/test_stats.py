@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-import physt
 from physt._facade import h1
 from physt.histogram1d import Statistics
 from physt.types import Histogram1D

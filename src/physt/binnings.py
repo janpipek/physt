@@ -24,7 +24,6 @@ if TYPE_CHECKING:
         Callable,
         ClassVar,
         Dict,
-        List,
         Optional,
         Sequence,
         Tuple,
@@ -67,7 +66,7 @@ class BinningBase:
     - checking of proper bins should be done in __init__
     - if you want to support adaptive histogram, override _force_bin_existence
     - implement _update_dict to contain the binning representation
-    - the constructor (and facade methods) must accept any kwargs (and ignores those that are not used).
+    - the constructor (and facade methods) must accept any kwargs (ignores those that are not used).
     """
 
     adaptive_allowed: ClassVar[bool] = False
@@ -742,7 +741,7 @@ def human_binning(
     max_bin_width: Optional[float] = None,
     **kwargs,
 ) -> FixedWidthBinning:
-    """Construct fixed-width ninning schema with bins automatically optimized to human-friendly widths.
+    """Construct fixed-width binning schema with bins automatically optimized to nice widths.
 
     Typical widths are: 1.0, 25,0, 0.02, 500, 2.5e-7, ...
 

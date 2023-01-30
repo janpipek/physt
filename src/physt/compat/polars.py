@@ -88,7 +88,8 @@ def _(
         result = tuple(axis_names)
         if (given_length := len(result)) != (expected_length := data.shape[1]):
             raise ValueError(
-                f"Explicit {axis_names=} has invalid length {given_length}, {expected_length} expected."
+                f"Explicit {axis_names=} has invalid length {given_length},"
+                f" {expected_length} expected."
             )
         return result
     return tuple(data.columns)

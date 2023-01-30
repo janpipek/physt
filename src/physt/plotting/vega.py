@@ -3,7 +3,8 @@
 The JSON can be produced without any external dependency, the ability
 to show plots in-line in IPython requires 'vega3' library.
 
-Implementation note: Values passed to JSON cannot be of type np.int64 (solution: explicit cast to float)
+Implementation note: Values passed to JSON cannot be of type np.int64
+    (solution: explicit cast to float)
 
 Common parameters
 -----------------

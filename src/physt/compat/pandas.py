@@ -12,7 +12,6 @@ import numpy as np
 import pandas
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
-from pandas.core.arrays.masked import BaseMaskedArray, BaseMaskedDtype
 
 from physt._construction import calculate_1d_bins, extract_1d_array, extract_nd_array
 from physt._facade import h, h1
@@ -20,7 +19,7 @@ from physt.binnings import BinningBase, static_binning
 from physt.types import Histogram1D, Histogram2D, HistogramND
 
 if TYPE_CHECKING:
-    from typing import Any, Optional, Union
+    from typing import Any, Union
 
     from physt.typing_aliases import ArrayLike
 
@@ -30,12 +29,6 @@ def _(series: pandas.Series, *, dropna: bool = True) -> Tuple[np.ndarray, Option
     if not pd.api.types.is_numeric_dtype(series):
         raise ValueError(f"Cannot extract suitable array from non-numeric dtype: {series.dtype}")
     series = series.astype(float)
-    # if isinstance(series.dtype, BaseMaskedDtype):
-    #     array = cast(BaseMaskedArray, series.array)
-    #     if not dropna and any(array.mask):
-    #         raise ValueError("Cannot histogram series with NA's. Set `dropna` to True to override.")
-    #     array_mask = ~array._mask
-    #     array = array._data[~array._mask]
     if dropna:
         array_mask = series.notna().values
         array = series.dropna().values

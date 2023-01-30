@@ -88,7 +88,7 @@ class TestExtract1DArray:
 
         @given(data=series(dtype=float), dropna=st.booleans())
         def test_uses_values_of_the_series(self, data, dropna):
-            result = extract_1d_array(data, dropna=dropna)
+            extract_1d_array(data, dropna=dropna)
             # TODO: Finish
 
         @pytest.mark.skip(reason="Not supported by hypothesis yet.")
@@ -197,7 +197,7 @@ class TestExtractNDArray:
         def test_series(self, data, dropna):
             with pytest.raises(
                 ValueError,
-                match="Cannot extract multidimensional array suitable for histogramming from a series",
+                match="Cannot extract .* from a series",
             ):
                 extract_nd_array(data, dropna=dropna)
 

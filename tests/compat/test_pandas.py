@@ -13,7 +13,7 @@ from pandas import IntervalIndex
 from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 from physt import h1, h2
-from physt.binnings import StaticBinning, static_binning
+from physt.binnings import static_binning
 from physt.compat.pandas import binning_to_index, index_to_binning
 from physt.testing import assert_histograms_equal
 
@@ -202,7 +202,7 @@ class TestPhystDataFrameAccessors:
         ) -> None:
             try:
                 data = df_two_columns[column_name]
-            except:
+            except:  # noqa: E722
                 with pytest.raises(KeyError, match=f"Column '{column_name}' not found"):
                     df_two_columns.physt.h1(column_name, bin_arg)
             else:
@@ -218,7 +218,7 @@ class TestPhystDataFrameAccessors:
         ) -> None:
             try:
                 data = df_multilevel_column_index[index]
-            except:
+            except:  # noqa: E722
                 with pytest.raises(KeyError):
                     df_multilevel_column_index.physt.h1(index)
             else:
@@ -241,10 +241,11 @@ class TestPhystDataFrameAccessors:
         def test_two_columns(self, df_two_columns: pd.DataFrame) -> None:
             output = df_two_columns.physt.h2()
             expected = h2(df_two_columns["a"], df_two_columns["b"])
+            assert_histograms_equal(output, expected)
 
         def test_three_columns_no_arg(self, df_three_columns: pd.DataFrame) -> None:
             with pytest.raises(ValueError, match="Arguments `column1` and `column2` must be set"):
-                output = df_three_columns.physt.h2()
+                df_three_columns.physt.h2()
 
         def test_invalid_dtype(self, df_with_str: pd.DataFrame) -> None:
             with pytest.raises(ValueError, match="Column 'str' is not numeric"):
