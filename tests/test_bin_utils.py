@@ -87,6 +87,6 @@ class TestFindHumanWidth:
 
     def test_time(self):
         invalues = [1.1, 2.4, 32, 57, 2000, 3621, 85000]
-        expected = [1.0, 2.0, 30, 60, 1800, 3600, 86400]
+        expected = np.asarray([1.0, 2.0, 30, 60, 1800, 3600, 86400], dtype=float)
         result = [find_human_width(x, kind="time") for x in invalues]
         assert np.array_equal(result, expected)
