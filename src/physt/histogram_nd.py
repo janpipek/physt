@@ -151,12 +151,13 @@ class HistogramND(HistogramBase):
 
             # Scalar case => return (bin edges), (frequency)
             if len(index) == self.ndim and all((isinstance(i, int) for i in index)):
+                bin_content: float = self._frequencies[index]  # type: ignore
                 return (
                     tuple(
                         (self.get_bin_left_edges(i)[j], self.get_bin_right_edges(i)[j])
                         for i, j in enumerate(index)
                     ),
-                    self._frequencies[index],
+                    bin_content,
                 )
             current: Any = self
             for i, subindex in enumerate(index):
