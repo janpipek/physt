@@ -178,14 +178,14 @@ def find_human_width_decimal(raw_width: float) -> float:
 
 def find_human_width_60(raw_width: float) -> int:
     """Find the best human bin width for seconds and minutes close to raw_width."""
-    subscales = np.array([1, 2, 5, 10, 15, 20, 30])
+    subscales = np.array([1, 2, 5, 10, 15, 20, 30], dtype=float)
     best_index = np.argmin(np.abs(np.log(subscales / raw_width)))
     return subscales[best_index]
 
 
 def find_human_width_24(raw_width: float) -> int:
     """Find the best human bin width for hours close to raw_width."""
-    subscales = np.array([1, 2, 3, 4, 6, 12])
+    subscales = np.array([1, 2, 3, 4, 6, 12], dtype=float)
     best_index = np.argmin(np.abs(np.log(subscales / raw_width)))
     return subscales[best_index]
 
