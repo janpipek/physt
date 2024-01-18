@@ -364,7 +364,7 @@ class HistogramBase(abc.ABC):
         if self._dtype is None:
             new_dtype = np.dtype(other_dtype)
         else:
-            new_dtype = np.find_common_type([self._dtype, np.dtype(other_dtype)], [])
+            new_dtype = np.promote_types(self._dtype, other_dtype)
         if new_dtype != self.dtype:
             self.set_dtype(new_dtype)
 
@@ -372,7 +372,7 @@ class HistogramBase(abc.ABC):
     def bin_count(self) -> int:
         """Total number of bins."""
         # TODO: Rename to size (in parallel with numpy/pandas)?
-        return int(np.product(self.shape))
+        return int(np.prod(self.shape))
 
     @property
     def frequencies(self) -> np.ndarray:
