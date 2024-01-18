@@ -29,6 +29,11 @@ class TestH1:
             # Reasonable defaults for at least two different values
             assume(array.size > 2)
             assume(np.isfinite(array).all())
+
+            # Avoid too narrow ranges in float precision
+            array_range = array.max() - array.min()
+            assume(array_range > np.spacing(array.min()) * 20)
+
             histogram = h1(array)
             assert isinstance(histogram, Histogram1D)
             assert histogram.bin_right_edges[-1] >= array.max()
@@ -80,8 +85,16 @@ class TestH2:
     class TestNoArgs:
         @given(arrays=valid_h2_inputs())
         def test_array_at_least_two_different_values(self, arrays):
-            assume(np.isfinite(arrays[0].max() - arrays[0].min()))
-            assume(np.isfinite(arrays[1].max() - arrays[1].min()))
+            array1_range = arrays[0].max() - arrays[0].min()
+            array2_range = arrays[1].max() - arrays[1].min()
+
+            # Ensure that we can safely create the bins from a very
+            # narrow float range
+            min_diff1 = np.spacing(arrays[0].min()) * 20
+            min_diff2 = np.spacing(arrays[1].min()) * 20
+
+            assume(np.isfinite(array1_range) and array1_range > min_diff1)
+            assume(np.isfinite(array2_range) and array2_range > min_diff2)
             histogram = h2(arrays[0], arrays[1])
             assert isinstance(histogram, Histogram2D)
 
