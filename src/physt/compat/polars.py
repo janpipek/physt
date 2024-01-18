@@ -58,7 +58,7 @@ def _(
         raise ValueError(
             f"Cannot extract float array from type {data.dtype}, must be int-like or float-like"
         )
-    return extract_1d_array(data.view(), dropna=dropna)  # type: ignore
+    return extract_1d_array(data.to_numpy(zero_copy_only=True), dropna=dropna)  # type: ignore
 
 
 @extract_1d_array.register

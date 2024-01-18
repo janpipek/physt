@@ -94,12 +94,17 @@ class TestExtraNDArray:
 class TestExtract1DArray:
     @given(
         values=st.lists(
-            st.integers(min_value=-1_000_000_000, max_value=1_000_000_000) | st.floats()
+            st.integers(min_value=-1_000_000_000, max_value=1_000_000_000)
+            | st.floats(),
         ),
         dropna=st.booleans(),
     )
     def test_with_series(self, dropna: bool, values):
-        pl_input = polars.Series(values=values)
+        if not values:
+            # Null type was a bit of problem
+            pl_input = polars.Series([], dtype=polars.Float64)
+        else:
+            pl_input = polars.Series(values=values)
         nd_input = np.array(values)
 
         pl_array, pl_mask = extract_1d_array(pl_input, dropna=dropna)
