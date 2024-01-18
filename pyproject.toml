@@ -25,7 +25,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "mypy", "types-setuptools"]
+dev = ["pytest", "mypy>=1.8", "types-setuptools"]
 # doc = ["sphinx", "sphinx_rtd_theme", "sphixncontrib-apidoc", "nbsphinx"]
 astropy = ["astropy"]
 dask = ["dask[array]"]

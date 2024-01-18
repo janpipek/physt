@@ -127,7 +127,7 @@ class HistogramND(HistogramBase):
 
     def __getitem__(
         self, index: Union[int, slice, Iterable[int]]
-    ) -> Union["HistogramBase", Tuple[Tuple[Tuple[int, int], ...], float]]:
+    ) -> Union["HistogramBase", Tuple[Tuple[Tuple[float, float], ...], float]]:
         """Select subset of histogram.
 
         Parameters
@@ -155,10 +155,13 @@ class HistogramND(HistogramBase):
             if len(index) == self.ndim and all((isinstance(i, int) for i in index)):
                 return (
                     tuple(
-                        (self.get_bin_left_edges(i)[j], self.get_bin_right_edges(i)[j])
+                        (
+                            self.get_bin_left_edges(i)[j].item(),
+                            self.get_bin_right_edges(i)[j].item(),
+                        )
                         for i, j in enumerate(index)
                     ),
-                    self._frequencies[index],
+                    self._frequencies[index].item(),
                 )
             current: Any = self
             for i, subindex in enumerate(index):
