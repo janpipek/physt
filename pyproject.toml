@@ -74,3 +74,19 @@ target-version = "py38"
 
 [tool.ruff.per-file-ignores]
 "tests/*.py" = ["E402"]
+
+
+[tool.bumpver]
+current_version = "0.6.0a1"
+version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
+commit_message = "Bump version: {old_version} → {new_version}"
+commit = true
+tag = true
+push = true
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'current_version = "{version}"',
+    'version = "{pep440_version}"']
+"src/physt/version.py" = [
+    '__version__ = "{pep440_version}"']
