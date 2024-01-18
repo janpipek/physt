@@ -89,7 +89,9 @@ class TestPolar:
 
 class TestRadial:
     def test_simple_create(self):
-        data = np.array([[0.01, 0.01, 1], [0.01, 0.99, 1], [-1, 0.01, 1], [-1, -0.01, 1]])
+        data = np.array(
+            [[0.01, 0.01, 1], [0.01, 0.99, 1], [-1, 0.01, 1], [-1, -0.01, 1]]
+        )
         x = data[:, 0]
         y = data[:, 1]
         z = data[:, 2]
@@ -108,7 +110,7 @@ class TestRadial:
         t = special_histograms.RadialHistogram.transform([1, 1, 1])
         assert np.allclose(t, np.sqrt(3))
 
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(ValueError):
             special_histograms.RadialHistogram.transform([1, 1, 1, 1])
 
 
@@ -127,12 +129,18 @@ class TestSpherical:
         expected = np.asarray(
             [[3, np.pi / 2, 0], [0, 0, 0], [np.sqrt(0.5), 0.75 * np.pi, np.pi / 2]]
         )
-        assert np.allclose(expected, special_histograms.SphericalHistogram.transform(data))
+        assert np.allclose(
+            expected, special_histograms.SphericalHistogram.transform(data)
+        )
 
     def test_projection_types(self):
         h = special_histograms.spherical([[1, 2, 3], [2, 3, 4]])
-        assert special_histograms.SphericalSurfaceHistogram == type(h.projection("phi", "theta"))
-        assert special_histograms.SphericalSurfaceHistogram == type(h.projection("theta", "phi"))
+        assert special_histograms.SphericalSurfaceHistogram == type(
+            h.projection("phi", "theta")
+        )
+        assert special_histograms.SphericalSurfaceHistogram == type(
+            h.projection("theta", "phi")
+        )
 
     def test_equal_radius(self):
         """Issue #62"""
@@ -162,7 +170,8 @@ class TestSphericalSurface:
         data[:, 1] = np.random.normal(0, 1, n)
         data[:, 2] = np.random.normal(0, 1, n)
 
-        h = special_histograms.spherical_surface(data, theta_bins=10, phi_bins=20)
+        special_histograms.spherical_surface(data, theta_bins=10, phi_bins=20)
+        # TODO: Check a condition?
 
 
 class TestCylindricalSurface:
@@ -187,11 +196,17 @@ class TestCylindrical:
 
         data = np.asarray([[3, 0, 0], [0, 0, 0], [0, 0.5, -0.5]])
         expected = np.asarray([[3, 0, 0], [0, 0, 0], [0.5, np.pi / 2, -0.5]])
-        assert np.allclose(expected, special_histograms.CylindricalHistogram.transform(data))
+        assert np.allclose(
+            expected, special_histograms.CylindricalHistogram.transform(data)
+        )
 
     def test_projection_types(self):
         h = special_histograms.cylindrical([[1, 2, 3], [2, 3, 4]])
-        assert special_histograms.CylindricalSurfaceHistogram == type(h.projection("phi", "z"))
-        assert special_histograms.CylindricalSurfaceHistogram == type(h.projection("z", "phi"))
+        assert special_histograms.CylindricalSurfaceHistogram == type(
+            h.projection("phi", "z")
+        )
+        assert special_histograms.CylindricalSurfaceHistogram == type(
+            h.projection("z", "phi")
+        )
         assert special_histograms.PolarHistogram == type(h.projection("rho", "phi"))
         assert special_histograms.PolarHistogram == type(h.projection("phi", "rho"))

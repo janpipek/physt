@@ -1,4 +1,4 @@
-import sys
+from importlib.util import find_spec
 
 import numpy as np
 import pytest
@@ -7,16 +7,6 @@ from physt import examples
 from physt.histogram1d import Histogram1D
 from physt.histogram_nd import Histogram2D, HistogramND
 
-try:
-    import pandas as pd
-except ImportError:
-    pass
-
-try:
-    import seaborn as sns
-except ImportError:
-    pass
-
 
 class TestExamples:
     def test_normal(self):
@@ -24,7 +14,7 @@ class TestExamples:
         assert isinstance(examples.normal_h2(), Histogram2D)
         assert isinstance(examples.normal_h3(), HistogramND)
 
-    @pytest.mark.skipif("pandas" not in sys.modules, reason="requires the pandas library")
+    @pytest.mark.skipif(not find_spec("pandas"), reason="requires the pandas library")
     def test_munros(self):
         h1 = examples.munros()
         assert h1.total == 282

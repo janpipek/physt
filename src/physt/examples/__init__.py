@@ -64,7 +64,9 @@ def fist() -> Histogram1D:
     widths = [0, 1.2, 0.2, 1, 0.1, 1, 0.1, 0.9, 0.1, 0.8]
     edges = np.cumsum(widths)
     heights = np.asarray([4, 1, 7.5, 6, 7.6, 6, 7.5, 6, 7.2]) + 5
-    return Histogram1D(edges, heights, axis_name="Is this a fist?", title='Physt "logo"')
+    return Histogram1D(
+        edges, heights, axis_name="Is this a fist?", title='Physt "logo"'
+    )
 
 
 ALL_EXAMPLES = [normal_h1, normal_h2, normal_h3, fist]

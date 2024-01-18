@@ -56,7 +56,9 @@ def enable_collection(f: Callable) -> Callable:
     return new_f
 
 
-def _add_ticks(xaxis: go.layout.XAxis, histogram: AbstractHistogram1D, kwargs: dict) -> None:
+def _add_ticks(
+    xaxis: go.layout.XAxis, histogram: AbstractHistogram1D, kwargs: dict
+) -> None:
     """Customize ticks for an axis (1D histogram)."""
     ticks = kwargs.pop("ticks", None)
     tick_handler = kwargs.pop("tick_handler", None)

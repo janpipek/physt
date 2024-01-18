@@ -68,7 +68,9 @@ class TransformedHistogramMixin(abc.ABC):
     def _transform_correct_dimension(cls, value: np.ndarray):
         ...
 
-    def find_bin(self, value: ArrayLike, axis: Optional[Axis] = None, transformed: bool = False):
+    def find_bin(
+        self, value: ArrayLike, axis: Optional[Axis] = None, transformed: bool = False
+    ):
         """
 
         Parameters
@@ -133,7 +135,9 @@ class TransformedHistogramMixin(abc.ABC):
 
     @classmethod
     def _validate_source_dimension(cls, value: np.ndarray) -> None:
-        source_ndims = [cls.source_ndim] if isinstance(cls.source_ndim, int) else cls.source_ndim
+        source_ndims = (
+            [cls.source_ndim] if isinstance(cls.source_ndim, int) else cls.source_ndim
+        )
         if not len(value.shape) <= 2 or value.shape[-1] not in source_ndims:
             raise ValueError(
                 f"{cls.__name__} can transform only arrays with shape (N, {cls.source_ndim})"
@@ -225,7 +229,9 @@ class PolarHistogram(TransformedHistogramMixin, HistogramND):
 
     @property
     def bin_sizes(self):
-        sizes = 0.5 * (self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2)
+        sizes = 0.5 * (
+            self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2
+        )
         sizes = np.outer(sizes, self.get_bin_widths(1))
         return sizes
 
@@ -249,7 +255,9 @@ class SphericalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
 
     @property
     def bin_sizes(self):
-        sizes1 = np.cos(self.get_bin_left_edges(0)) - np.cos(self.get_bin_right_edges(0))
+        sizes1 = np.cos(self.get_bin_left_edges(0)) - np.cos(
+            self.get_bin_right_edges(0)
+        )
         sizes2 = self.get_bin_widths(1)
         return reduce(np.multiply, np.ix_(sizes1, sizes2))
 
@@ -303,8 +311,12 @@ class SphericalHistogram(TransformedHistogramMixin, HistogramND):
 
     @property
     def bin_sizes(self):
-        sizes1 = (self.get_bin_right_edges(0) ** 3 - self.get_bin_left_edges(0) ** 3) / 3
-        sizes2 = np.cos(self.get_bin_left_edges(1)) - np.cos(self.get_bin_right_edges(1))
+        sizes1 = (
+            self.get_bin_right_edges(0) ** 3 - self.get_bin_left_edges(0) ** 3
+        ) / 3
+        sizes2 = np.cos(self.get_bin_left_edges(1)) - np.cos(
+            self.get_bin_right_edges(1)
+        )
         sizes3 = self.get_bin_widths(2)
         # Hopefully correct
         return reduce(np.multiply, np.ix_(sizes1, sizes2, sizes3))
@@ -382,7 +394,9 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
 
     @property
     def bin_sizes(self):
-        sizes1 = 0.5 * (self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2)
+        sizes1 = 0.5 * (
+            self.get_bin_right_edges(0) ** 2 - self.get_bin_left_edges(0) ** 2
+        )
         sizes2 = self.get_bin_widths(1)
         sizes3 = self.get_bin_widths(2)
         return reduce(np.multiply, np.ix_(sizes1, sizes2, sizes3))
@@ -416,12 +430,16 @@ def polar(
 ) -> PolarHistogram:
     """Facade construction function for the PolarHistogram."""
     if "range" in kwargs:
-        raise ValueError("Please, use `radial_range` and `phi_range` arguments instead of `range`")
+        raise ValueError(
+            "Please, use `radial_range` and `phi_range` arguments instead of `range`"
+        )
 
     xdata = np.asarray(xdata)
     ydata = np.asarray(ydata)
 
-    data: np.ndarray = np.concatenate([xdata[:, np.newaxis], ydata[:, np.newaxis]], axis=1)
+    data: np.ndarray = np.concatenate(
+        [xdata[:, np.newaxis], ydata[:, np.newaxis]], axis=1
+    )
     data, array_mask = extract_transformed_data(
         data, transformed=transformed, klass=PolarHistogram, dropna=dropna
     )
@@ -468,7 +486,9 @@ def azimuthal(
     )
     if isinstance(bins, int):
         bins = np.linspace(*range, bins + 1)
-    bin_schema = calculate_1d_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
+    bin_schema = calculate_1d_bins(
+        data, bins, range=range, check_nan=not dropna, **kwargs
+    )
     return AzimuthalHistogram.from_calculate_frequencies(
         data=data, binning=bin_schema, weights=weights
     )
@@ -508,13 +528,16 @@ def radial(
         else:
             zdata = np.asarray(zdata)
             data = np.concatenate(
-                [xdata[:, np.newaxis], ydata[:, np.newaxis], zdata[:, np.newaxis]], axis=1
+                [xdata[:, np.newaxis], ydata[:, np.newaxis], zdata[:, np.newaxis]],
+                axis=1,
             )
 
     data, array_mask = extract_transformed_data(
         data, transformed=transformed, klass=RadialHistogram, dropna=dropna
     )
-    bin_schema = calculate_1d_bins(data, bins, range=range, check_nan=not dropna, **kwargs)
+    bin_schema = calculate_1d_bins(
+        data, bins, range=range, check_nan=not dropna, **kwargs
+    )
     weights = extract_weights(weights, array_mask=array_mask)
     return RadialHistogram.from_calculate_frequencies(
         data=data, binning=bin_schema, weights=weights
@@ -593,7 +616,9 @@ def spherical_surface(
     )
 
     if "range" in kwargs:
-        raise ValueError("Please, use `theta_range` and `phi_range` arguments instead of `range`")
+        raise ValueError(
+            "Please, use `theta_range` and `phi_range` arguments instead of `range`"
+        )
 
     if radius is None:
         radius = 1
@@ -673,7 +698,9 @@ def cylindrical_surface(
 ) -> CylindricalSurfaceHistogram:
     """Facade function to create a cylindrical surface histogram."""
     if "range" in kwargs:
-        raise ValueError("Please, use `phi_range` and `z_range` arguments instead of `range`")
+        raise ValueError(
+            "Please, use `phi_range` and `z_range` arguments instead of `range`"
+        )
 
     transformed_array, array_mask = extract_transformed_data(
         data, transformed=transformed, klass=CylindricalHistogram, dropna=dropna
@@ -696,7 +723,9 @@ def cylindrical_surface(
         **kwargs,
     )
     frequencies, errors2, missed = histogram_nd.calculate_nd_frequencies(
-        data, binnings=bin_schemas, weights=extract_weights(weights, array_mask=array_mask)
+        data,
+        binnings=bin_schemas,
+        weights=extract_weights(weights, array_mask=array_mask),
     )
     return CylindricalSurfaceHistogram(
         binnings=bin_schemas,
@@ -731,7 +760,11 @@ def extract_transformed_data(
 
 @overload
 def extract_transformed_data(
-    data: None, transformed: bool, klass: Type[TransformedHistogramMixin], *, dropna: bool = False
+    data: None,
+    transformed: bool,
+    klass: Type[TransformedHistogramMixin],
+    *,
+    dropna: bool = False,
 ) -> Tuple[None, None]:
     ...
 

@@ -41,7 +41,9 @@ class TestNumpyBinsWithMask:
 
     def test_nonsense(self):
         arr = np.array([[0, 1], [0.1, 2.1]])
-        with pytest.raises(ValueError, match="to_numpy_bins_with_mask: edges array not monotone"):
+        with pytest.raises(
+            ValueError, match="to_numpy_bins_with_mask: edges array not monotone"
+        ):
             to_numpy_bins_with_mask(arr)
         arr = np.array([[[0, 1], [0.1, 2.1]], [[0, 1], [0.1, 2.1]]])
         with pytest.raises(

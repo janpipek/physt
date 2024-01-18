@@ -156,7 +156,9 @@ class HistogramBase(abc.ABC):
                 elif np.issubdtype(frequencies.dtype, np.floating):
                     frequencies = frequencies.astype(np.float64)
                 else:
-                    raise ValueError(f"Frequencies of type {frequencies.dtype} not understood")
+                    raise ValueError(
+                        f"Frequencies of type {frequencies.dtype} not understood"
+                    )
             dtype = frequencies.dtype
             self.frequencies = frequencies
         self._dtype, _ = self._eval_dtype(dtype)  # type: ignore
@@ -179,7 +181,9 @@ class HistogramBase(abc.ABC):
     _errors2: np.ndarray
     _missed: np.ndarray
 
-    SUPPORTED_DTYPES: ClassVar[Collection[Type[np.number]]] = tuple(_FREQUENCY_SUPPORTED_DTYPES)
+    SUPPORTED_DTYPES: ClassVar[Collection[Type[np.number]]] = tuple(
+        _FREQUENCY_SUPPORTED_DTYPES
+    )
 
     @property
     def default_axis_names(self) -> List[str]:
@@ -242,7 +246,9 @@ class HistogramBase(abc.ABC):
         # TODO: Add unit test
         if isinstance(name_or_index, int):
             if name_or_index < 0 or name_or_index >= self.ndim:
-                raise ValueError(f"No axis {name_or_index}, must be from 0 to {self.ndim - 1}")
+                raise ValueError(
+                    f"No axis {name_or_index}, must be from 0 to {self.ndim - 1}"
+                )
             return name_or_index
         if isinstance(name_or_index, str):
             if name_or_index not in self.axis_names:
@@ -276,7 +282,9 @@ class HistogramBase(abc.ABC):
         return len(self._binnings)
 
     @classmethod
-    def _eval_dtype(cls, value: DTypeLike) -> Tuple[np.dtype, Union[np.iinfo, np.finfo]]:
+    def _eval_dtype(
+        cls, value: DTypeLike
+    ) -> Tuple[np.dtype, Union[np.iinfo, np.finfo]]:
         """Convert dtype into canonical form, check its applicability and return info.
 
         Parameters
@@ -294,7 +302,9 @@ class HistogramBase(abc.ABC):
         elif dtype.kind == "f":
             type_info = np.finfo(dtype)
         else:
-            raise ValueError("Unsupported dtype. Only integer/floating-point types are supported.")
+            raise ValueError(
+                "Unsupported dtype. Only integer/floating-point types are supported."
+            )
         return dtype, type_info
 
     @property
@@ -394,7 +404,9 @@ class HistogramBase(abc.ABC):
     def bin_sizes(self) -> np.ndarray:
         raise NotImplementedError
 
-    def normalize(self, inplace: bool = False, percent: bool = False) -> "HistogramBase":
+    def normalize(
+        self, inplace: bool = False, percent: bool = False
+    ) -> "HistogramBase":
         """Normalize the histogram, so that the total weight is equal to 1.
 
         Parameters
@@ -511,11 +523,15 @@ class HistogramBase(abc.ABC):
         """
         if not inplace:
             histogram = self.copy()
-            histogram.merge_bins(amount, min_frequency=min_frequency, axis=axis, inplace=True)
+            histogram.merge_bins(
+                amount, min_frequency=min_frequency, axis=axis, inplace=True
+            )
             return histogram
         elif axis is None:
             for i in range(self.ndim):
-                self.merge_bins(amount=amount, min_frequency=min_frequency, axis=i, inplace=True)
+                self.merge_bins(
+                    amount=amount, min_frequency=min_frequency, axis=i, inplace=True
+                )
         else:
             axis = self._get_axis(axis)
             if amount is not None:
@@ -607,17 +623,23 @@ class HistogramBase(abc.ABC):
         """
         if old_frequencies is not None and old_frequencies.shape[axis] > 0:
             if isinstance(bin_map, int):
-                new_index: List[Union[int, slice]] = [slice(None) for i in range(self.ndim)]
+                new_index: List[Union[int, slice]] = [
+                    slice(None) for i in range(self.ndim)
+                ]
                 new_index[axis] = slice(bin_map, bin_map + old_frequencies.shape[axis])
                 new_frequencies[tuple(new_index)] += old_frequencies
                 new_errors2[tuple(new_index)] += old_errors2
             else:
-                for (old, new) in bin_map:  # Generic enough
+                for old, new in bin_map:  # Generic enough
                     new_index = [slice(None) for i in range(self.ndim)]
                     new_index[axis] = new
-                    old_index: List[Union[int, slice]] = [slice(None) for i in range(self.ndim)]
+                    old_index: List[Union[int, slice]] = [
+                        slice(None) for i in range(self.ndim)
+                    ]
                     old_index[axis] = old
-                    new_frequencies[tuple(new_index)] += old_frequencies[tuple(old_index)]
+                    new_frequencies[tuple(new_index)] += old_frequencies[
+                        tuple(old_index)
+                    ]
                     new_errors2[tuple(new_index)] += old_errors2[tuple(old_index)]
 
     def has_same_bins(self, other: "HistogramBase") -> bool:
@@ -631,7 +653,9 @@ class HistogramBase(abc.ABC):
                 return False
         return True
 
-    def copy(self: "HistogramType", *, include_frequencies: bool = True) -> "HistogramType":
+    def copy(
+        self: "HistogramType", *, include_frequencies: bool = True
+    ) -> "HistogramType":
         """Copy the histogram.
 
         Parameters
@@ -657,7 +681,9 @@ class HistogramBase(abc.ABC):
         return a_copy
 
     @abc.abstractmethod
-    def select(self, axis: Axis, index: Union[int, slice], *, force_copy: bool = False) -> Any:
+    def select(
+        self, axis: Axis, index: Union[int, slice], *, force_copy: bool = False
+    ) -> Any:
         """Select in an axis.
 
         Parameters
@@ -681,7 +707,9 @@ class HistogramBase(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def fill(self, value: float, weight: float = 1, **kwargs) -> Union[None, int, Tuple[int, ...]]:
+    def fill(
+        self, value: float, weight: float = 1, **kwargs
+    ) -> Union[None, int, Tuple[int, ...]]:
         """Update histogram with a new value.
 
         It is an in-place operation.
@@ -700,7 +728,11 @@ class HistogramBase(abc.ABC):
 
     @abc.abstractmethod
     def fill_n(
-        self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True
+        self,
+        values: ArrayLike,
+        weights: Optional[ArrayLike] = None,
+        *,
+        dropna: bool = True,
     ):
         """Update histogram with more values at once.
 
@@ -776,7 +808,8 @@ class HistogramBase(abc.ABC):
         """
         kwargs: Dict[str, Any] = {
             "binnings": [
-                BinningBase.from_dict(binning_data) for binning_data in a_dict["binnings"]
+                BinningBase.from_dict(binning_data)
+                for binning_data in a_dict["binnings"]
             ],
             "dtype": np.dtype(a_dict["dtype"]),
             "frequencies": a_dict.get("frequencies"),
@@ -820,9 +853,7 @@ class HistogramBase(abc.ABC):
                 f"{self.__class__.__name__}('{self.name}', bins={self.shape}, "
                 f"total={self.total}, dtype={self.dtype})"
             )
-        return (
-            f"{self.__class__.__name__}(bins={self.shape}, total={self.total}, dtype={self.dtype})"
-        )
+        return f"{self.__class__.__name__}(bins={self.shape}, total={self.total}, dtype={self.dtype})"
 
     def __rich_repr__(self):
         """Support pretty printing using the `rich` library."""
@@ -886,7 +917,9 @@ class HistogramBase(abc.ABC):
             self._missed = self._missed * np.nan  # TODO: Any reasonable interpretation?
             self._stats = INVALID_STATISTICS
         else:
-            raise TypeError(f"Only histograms can be added together. {type(other)} found instead.")
+            raise TypeError(
+                f"Only histograms can be added together. {type(other)} found instead."
+            )
         return self
 
     def __sub__(self, other):

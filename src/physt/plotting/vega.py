@@ -124,8 +124,9 @@ def enable_inline_view(f: Callable) -> Callable:
     """
 
     @wraps(f)
-    def wrapper(hist, write_to=None, write_format="auto", display="auto", indent=2, **kwargs):
-
+    def wrapper(
+        hist, write_to=None, write_format="auto", display="auto", indent=2, **kwargs
+    ):
         vega_data = f(hist, **kwargs)
 
         if display is True and not VEGA_IPYTHON_PLUGIN_ENABLED:
@@ -149,7 +150,12 @@ def enable_inline_view(f: Callable) -> Callable:
 
 
 def write_vega(
-    vega_data, *, title: Optional[str], write_to: str, write_format: str = "auto", indent: int = 2
+    vega_data,
+    *,
+    title: Optional[str],
+    write_to: str,
+    write_format: str = "auto",
+    indent: int = 2,
 ) -> None:
     """Write vega dictionary to an external file.
 
@@ -166,7 +172,9 @@ def write_vega(
         output = HTML_TEMPLATE.replace("{{ title }}", title or "Histogram").replace(
             "{{ spec }}", spec
         )
-    elif write_format == "json" or write_format == "auto" and write_to.endswith(".json"):
+    elif (
+        write_format == "json" or write_format == "auto" and write_to.endswith(".json")
+    ):
         output = spec
     else:
         raise ValueError(f"Format not understood: '{write_format}'")
@@ -211,7 +219,9 @@ def bar(h1: "Histogram1D", **kwargs) -> dict:  # pylint: disable=blacklisted-nam
     _create_scales(h1, vega, kwargs)
     _create_axes(h1, vega, kwargs)
 
-    data = get_data(h1, kwargs.pop("density", None), kwargs.pop("cumulative", None)).tolist()
+    data = get_data(
+        h1, kwargs.pop("density", None), kwargs.pop("cumulative", None)
+    ).tolist()
     lefts = h1.bin_left_edges.astype(float).tolist()
     rights = h1.bin_right_edges.astype(float).tolist()
 
@@ -334,11 +344,15 @@ def line(h1: Histogram1D, **kwargs) -> dict:
 
 @enable_inline_view
 @check_ndim(2)
-def map(h2: "Histogram2D", *, show_zero: bool = True, show_values: bool = False, **kwargs) -> dict:
+def map(
+    h2: "Histogram2D", *, show_zero: bool = True, show_values: bool = False, **kwargs
+) -> dict:
     """Heat-map of two-dimensional histogram."""
     vega = _create_figure(kwargs)
 
-    values_arr = get_data(h2, kwargs.pop("density", None), kwargs.pop("cumulative", None))
+    values_arr = get_data(
+        h2, kwargs.pop("density", None), kwargs.pop("cumulative", None)
+    )
     values = values_arr.tolist()
     value_format = get_value_format(kwargs.pop("value_format", None))
 
@@ -432,7 +446,9 @@ def map_with_slider(
     """
     vega = _create_figure(kwargs)
 
-    values_arr = get_data(h3, kwargs.pop("density", None), kwargs.pop("cumulative", None))
+    values_arr = get_data(
+        h3, kwargs.pop("density", None), kwargs.pop("cumulative", None)
+    )
     values = values_arr.tolist()
     value_format = get_value_format(kwargs.pop("value_format", None))
 
@@ -566,7 +582,8 @@ def _scatter_or_line(h1: Histogram1D, mark_template: list, kwargs: dict) -> dict
             histogram, kwargs.pop("density", None), kwargs.pop("cumulative", None)
         ).tolist()
         vega["data"][0]["values"] += [
-            {"x": centers[i], "y": data[i], "c": hist_i} for i in range(histogram.bin_count)
+            {"x": centers[i], "y": data[i], "c": hist_i}
+            for i in range(histogram.bin_count)
         ]
 
     _add_title(collection, vega, kwargs)
@@ -700,10 +717,14 @@ def _create_cmap_scale(values_arr: np.ndarray, vega: dict, kwargs: dict) -> None
     )
 
 
-def _create_axes(hist: Union[HistogramCollection, HistogramBase], vega: dict, kwargs: dict) -> None:
+def _create_axes(
+    hist: Union[HistogramCollection, HistogramBase], vega: dict, kwargs: dict
+) -> None:
     """Create axes in the figure."""
     xlabel = kwargs.pop("xlabel", hist.axis_names[0])
-    ylabel = kwargs.pop("ylabel", hist.axis_names[1] if len(hist.axis_names) >= 2 else None)
+    ylabel = kwargs.pop(
+        "ylabel", hist.axis_names[1] if len(hist.axis_names) >= 2 else None
+    )
     vega["axes"] = [
         {"orient": "bottom", "scale": "xscale", "title": xlabel},
         {"orient": "left", "scale": "yscale", "title": ylabel},
@@ -756,7 +777,9 @@ def _create_tooltips(hist: Histogram1D, vega: dict, kwargs: dict) -> None:
         )
 
 
-def _add_title(hist: Union[HistogramBase, HistogramCollection], vega: dict, kwargs: dict) -> None:
+def _add_title(
+    hist: Union[HistogramBase, HistogramCollection], vega: dict, kwargs: dict
+) -> None:
     """Display plot title if available."""
     title = kwargs.pop("title", hist.title)
     if title:

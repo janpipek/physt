@@ -44,7 +44,9 @@ def _(data: polars.DataFrame, **kwargs) -> NoReturn:
 
 
 @extract_1d_array.register
-def _(data: polars.Series, *, dropna: bool = True) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+def _(
+    data: polars.Series, *, dropna: bool = True
+) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     if data.dtype not in NUMERIC_POLARS_DTYPES:
         raise ValueError(
             f"Cannot extract float array from type {data.dtype}, must be int-like or float-like"

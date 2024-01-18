@@ -20,7 +20,9 @@ class TestH1:
     class TestNoArgs:
         @given(
             array=arrays(
-                dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes(), unique=True
+                dtype=floating_dtypes() | integer_dtypes(),
+                shape=array_shapes(),
+                unique=True,
             )
         )
         def test_array_at_least_two_different_values(self, array):
@@ -34,20 +36,26 @@ class TestH1:
             assert histogram.total == array.size
 
         def test_empty_ndarray(self, empty_ndarray):
-            with pytest.raises(ValueError, match="At least 2 values required to infer bins"):
+            with pytest.raises(
+                ValueError, match="At least 2 values required to infer bins"
+            ):
                 h1(empty_ndarray)
 
         def test_infinitesimal_range(self):
             array = np.array([1, np.nextafter(1, 2)])
-            with pytest.raises(ValueError, match="Range too narrow to split into [0-9]+ bins"):
-                histogram = h1(array)
+            with pytest.raises(
+                ValueError, match="Range too narrow to split into [0-9]+ bins"
+            ):
+                h1(array)
 
 
 @st.composite
 def two_1d_arrays_of_the_same_length(
     draw, *, min_side=None, max_side=None, dtype=float, **kwargs
 ) -> Tuple[np.ndarray, np.ndarray]:
-    array_shape = draw(array_shapes(min_side=min_side, max_side=max_side, min_dims=1, max_dims=1))
+    array_shape = draw(
+        array_shapes(min_side=min_side, max_side=max_side, min_dims=1, max_dims=1)
+    )
     array_strategy = arrays(shape=array_shape, dtype=dtype, **kwargs)
     return draw(array_strategy), draw(array_strategy)
 
@@ -84,5 +92,7 @@ class TestH2:
                 h2(array, array)
 
         def test_empty_ndarray(self, empty_ndarray):
-            with pytest.raises(ValueError, match="At least 2 values required to infer bins"):
+            with pytest.raises(
+                ValueError, match="At least 2 values required to infer bins"
+            ):
                 h2(empty_ndarray, empty_ndarray)

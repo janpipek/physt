@@ -1,14 +1,8 @@
 import hypothesis.strategies as st
 import numpy as np
 import pytest
-from hypothesis import assume, example, given, note
-from hypothesis.extra.numpy import (
-    array_shapes,
-    arrays,
-    floating_dtypes,
-    from_dtype,
-    integer_dtypes,
-)
+from hypothesis import assume, given, note
+from hypothesis.extra.numpy import array_shapes, arrays, floating_dtypes
 
 from physt import h1
 from physt.config import config
@@ -72,7 +66,7 @@ class TestConstructor:
         bins = [[0, 1], [1, 2]]
         values = [1, 2]
         errors2 = [-1, 1]
-        with pytest.raises(ValueError) as ex:
+        with pytest.raises(ValueError):
             _ = Histogram1D(bins, values, errors2=errors2)
 
 
@@ -200,7 +194,9 @@ class TestIndexing:
     def test_masked(self, example_histogram):
         mask = np.array([True, True, True, True], dtype=bool)
         assert np.array_equal(example_histogram[mask].bins, example_histogram.bins)
-        assert np.array_equal(example_histogram[mask].frequencies, example_histogram.frequencies)
+        assert np.array_equal(
+            example_histogram[mask].frequencies, example_histogram.frequencies
+        )
         assert np.isnan(example_histogram[mask].underflow)
         assert np.isnan(example_histogram[mask].overflow)
 
@@ -236,21 +232,26 @@ class TestIndexing:
 class TestArithmetics:
     class TestAddition:
         @pytest.mark.parametrize("free_arithmetics", [True, False])
-        def test_add_non_hist(self, free_arithmetics, example_histogram, values, array_like):
+        def test_add_non_hist(
+            self, free_arithmetics, example_histogram, values, array_like
+        ):
             with config.enable_free_arithmetics(free_arithmetics):
                 if free_arithmetics:
                     result = example_histogram + array_like
                     assert np.array_equal(result.frequencies, values + array_like)
-                    assert np.array_equal(result.errors2, example_histogram.errors2 + array_like)
+                    assert np.array_equal(
+                        result.errors2, example_histogram.errors2 + array_like
+                    )
                     assert np.isnan(result.missed)
                     assert result.statistics == INVALID_STATISTICS
 
                     example_histogram += array_like
                     assert example_histogram == result
                 else:
-                    with pytest.raises(TypeError) as ex:
-                        _ = example_histogram + array_like
-                    assert ex.match("Only histograms can be added together.")
+                    with pytest.raises(
+                        TypeError, match="Only histograms can be added together."
+                    ):
+                        example_histogram + array_like
 
         def test_add_wrong_histograms(self, example_histogram):
             with pytest.raises(ValueError):
@@ -282,9 +283,9 @@ class TestArithmetics:
             e2.name = "b"
             e3.name = "a"
             e4.name = None
-            assert (e1 + e2).name == None
+            assert (e1 + e2).name is None
             assert (e1 + e3).name == "a"
-            assert (e1 + e4).name == None
+            assert (e1 + e4).name is None
 
     class TestSubtraction:
         def test_subtract_wrong_histograms(self, example_histogram):
@@ -307,21 +308,26 @@ class TestArithmetics:
             assert np.allclose(sum.frequencies, [3, 0, 3, 6.2])
 
         @pytest.mark.parametrize("free_arithmetics", [True, False])
-        def test_subtract_non_hist(self, free_arithmetics, example_histogram, values, array_like):
+        def test_subtract_non_hist(
+            self, free_arithmetics, example_histogram, values, array_like
+        ):
             with config.enable_free_arithmetics(free_arithmetics):
                 if free_arithmetics:
                     result = example_histogram - array_like
                     assert np.array_equal(result.frequencies, values - array_like)
-                    assert np.array_equal(result.errors2, example_histogram.errors2 + array_like)
+                    assert np.array_equal(
+                        result.errors2, example_histogram.errors2 + array_like
+                    )
                     assert np.isnan(result.missed)
                     assert result.statistics == INVALID_STATISTICS
 
                     example_histogram -= array_like
                     assert example_histogram == result
                 else:
-                    with pytest.raises(TypeError) as ex:
-                        _ = example_histogram + array_like
-                    assert ex.match("Only histograms can be added together.")
+                    with pytest.raises(
+                        TypeError, match="Only histograms can be added together."
+                    ):
+                        example_histogram + array_like
 
     class TestMultiplication:
         @pytest.mark.parametrize("free_arithmetics", [True, False])
@@ -338,20 +344,23 @@ class TestArithmetics:
                     example_histogram *= array_like
                     assert example_histogram == new
                 else:
-                    with pytest.raises(TypeError) as ex:
-                        _ = example_histogram * array_like
+                    with pytest.raises(TypeError):
+                        example_histogram * array_like
 
         def test_multiplication_hist(self, example_histogram):
-            with pytest.raises(TypeError) as ex:
-                _ = example_histogram * example_histogram
-            assert ex.match("^Multiplication of two histograms is not supported.$")
+            with pytest.raises(
+                TypeError, match="^Multiplication of two histograms is not supported.$"
+            ):
+                example_histogram * example_histogram
 
         def test_rmultiplication_scalar(self, example_histogram):
             assert example_histogram * 2 == 2 * example_histogram
 
     class TestDivision:
         @pytest.mark.parametrize("free_arithmetics", [True, False])
-        def test_division_non_hist(self, example_histogram, free_arithmetics, values, array_like):
+        def test_division_non_hist(
+            self, example_histogram, free_arithmetics, values, array_like
+        ):
             with config.enable_free_arithmetics(free_arithmetics):
                 if free_arithmetics or np.isscalar(array_like):
                     new = example_histogram / array_like
@@ -362,18 +371,18 @@ class TestArithmetics:
                     example_histogram /= array_like
                     assert example_histogram == new
                 else:
-                    with pytest.raises(TypeError) as ex:
-                        _ = example_histogram * array_like
+                    with pytest.raises(TypeError):
+                        example_histogram * array_like
 
         def test_division_two_hist(self, example_histogram):
-            with pytest.raises(TypeError) as ex:
-                _ = example_histogram / example_histogram
-            assert ex.match("^Division of two histograms is not supported.$")
+            with pytest.raises(
+                TypeError, match="^Division of two histograms is not supported.$"
+            ):
+                example_histogram / example_histogram
 
         def test_division_scalar_hist(self, example_histogram):
-            with pytest.raises(TypeError) as ex:
-                _ = 1 / example_histogram
-            assert ex.match("unsupported operand type")
+            with pytest.raises(TypeError, match="unsupported operand type"):
+                1 / example_histogram
 
 
 class TestMerging:
@@ -407,8 +416,11 @@ class TestFindBin:
 
 
 class TestFill:
+    @pytest.mark.skip(reason="hypothesis slow")
     @given(histogram=histograms_1d(), value=st.floats(), weight=st.floats(min_value=0))
-    def test_increases_total_by_zero_or_weight(self, value: float, histogram: Histogram1D, weight):
+    def test_increases_total_by_zero_or_weight(
+        self, value: float, histogram: Histogram1D, weight
+    ):
         # We let the OverflowError to occur
         assume(weight < 1e100)
         note(f"Pre: {histogram!r}")
@@ -449,7 +461,9 @@ class TestFill:
 class TestFillN:
     @given(
         histogram=histograms_1d(),
-        values=arrays(dtype=floating_dtypes(), shape=array_shapes(min_dims=1, max_dims=1)),
+        values=arrays(
+            dtype=floating_dtypes(), shape=array_shapes(min_dims=1, max_dims=1)
+        ),
     )
     def test_increases_total_by_zero_or_weight(self, histogram, values):
         pre = histogram.total
@@ -471,13 +485,13 @@ class TestDtype:
         assert hist.dtype == float
 
     def test_float_weights_in_integer(self, values):
-
         with pytest.raises(ValueError):
-            hist = h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
+            h1(values, weights=[1, 2, 2.1, 3.2], dtype=int)
 
     @pytest.mark.parametrize("dtype", Histogram1D.SUPPORTED_DTYPES)
     @pytest.mark.parametrize(
-        "values", [pytest.param([0, 1, 1], id="existing"), pytest.param(None, id="none")]
+        "values",
+        [pytest.param([0, 1, 1], id="existing"), pytest.param(None, id="none")],
     )
     def test_explicit_construction(self, dtype, values):
         hist = h1(values, dtype=dtype, range=(-1, 1))

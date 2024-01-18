@@ -49,7 +49,9 @@ def get_data(
             try:
                 data = histogram.cumulative_frequencies  # type: ignore
             except AttributeError:
-                raise TypeError(f"Type {type(histogram)} does not support cumulative frequencies.")
+                raise TypeError(
+                    f"Type {type(histogram)} does not support cumulative frequencies."
+                )
         else:
             data = histogram.frequencies
 
@@ -84,7 +86,7 @@ def get_err_data(
 
 
 def get_value_format(
-    value_format: Union[Callable[[float], str], str, None]
+    value_format: Union[Callable[[float], str], str, None],
 ) -> Callable[[float], str]:
     """Create a formatting function from a generic value_format argument.
 
@@ -218,7 +220,10 @@ class TimeTickHandler:
         elif ideal_width < 70000:
             return ("hour", find_human_width_24(ideal_width / 3600))
         else:
-            return ("day", find_human_width_decimal(ideal_width / 86400))  # # noqa: FURB126
+            return (
+                "day",
+                find_human_width_decimal(ideal_width / 86400),
+            )  # # noqa: FURB126
 
     def get_time_ticks(
         self, h1: Histogram1D, level: LevelType, min_: float, max_: float
@@ -251,7 +256,10 @@ class TimeTickHandler:
             tick_days = [tick / 86400 for tick in ticks]
             if not any(tick % 1 for tick in tick_days):
                 tick_days = [int(tick) for tick in tick_days]
-            return ["{0} day{1}".format(tick, "" if tick == 1 else "s") for tick in tick_days]
+            return [
+                "{0} day{1}".format(tick, "" if tick == 1 else "s")
+                for tick in tick_days
+            ]
         else:
             hms = [self.split_hms(tick) for tick in ticks]
             include_hours = any(h for _, h, _, _ in hms)

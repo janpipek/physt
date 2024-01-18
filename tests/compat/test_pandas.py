@@ -13,7 +13,7 @@ from pandas import IntervalIndex
 from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 from physt import h1, h2
-from physt.binnings import StaticBinning, static_binning
+from physt.binnings import static_binning
 from physt.compat.pandas import binning_to_index, index_to_binning
 from physt.testing import assert_histograms_equal
 
@@ -79,7 +79,9 @@ class TestBinningToIndex:
     def test_binning(self):
         binning = static_binning(data=None, bins=[1, 2, 3, 4])
         index = binning_to_index(binning)
-        expected = IntervalIndex.from_breaks([1, 2, 3, 4], closed="left", dtype="interval[int64]")
+        expected = IntervalIndex.from_breaks(
+            [1, 2, 3, 4], closed="left", dtype="interval[int64]"
+        )
         assert_index_equal(index, expected)
 
 
@@ -149,8 +151,12 @@ class TestPhystSeriesAccessors:
             expected = h1(np.array([0, 1, 2, 3, 4]), *args, **kwargs)
             assert_histograms_equal(output, expected, check_metadata=False)
 
-        def test_raise_nullable_with_no_dropna(self, series_of_nullable_int: pd.Series) -> None:
-            with pytest.raises(ValueError, match="Cannot calculate bins in presence of NaN"):
+        def test_raise_nullable_with_no_dropna(
+            self, series_of_nullable_int: pd.Series
+        ) -> None:
+            with pytest.raises(
+                ValueError, match="Cannot calculate bins in presence of NaN"
+            ):
                 series_of_nullable_int.physt.h1(dropna=False)
 
 
@@ -177,7 +183,9 @@ class TestPhystDataFrameAccessors:
             # TODO: Test no argument separately
             # Non-trivial *args should perhaps fail?
             output: Histogram1D = df_one_column.physt.h1(None, *args, **kwargs)
-            expected: Histogram1D = h1(np.asarray(df_one_column["a"].array), *args, **kwargs)
+            expected: Histogram1D = h1(
+                np.asarray(df_one_column["a"].array), *args, **kwargs
+            )
             assert_histograms_equal(output, expected, check_metadata=False)
 
         def test_correct_meta_data(self, df_one_column: pd.DataFrame) -> None:
@@ -202,7 +210,8 @@ class TestPhystDataFrameAccessors:
         ) -> None:
             try:
                 data = df_two_columns[column_name]
-            except:
+            except KeyError:
+                # Columns not there
                 with pytest.raises(KeyError, match=f"Column '{column_name}' not found"):
                     df_two_columns.physt.h1(column_name, bin_arg)
             else:
@@ -218,7 +227,8 @@ class TestPhystDataFrameAccessors:
         ) -> None:
             try:
                 data = df_multilevel_column_index[index]
-            except:
+            except KeyError:
+                # Columns not there
                 with pytest.raises(KeyError):
                     df_multilevel_column_index.physt.h1(index)
             else:
@@ -235,16 +245,21 @@ class TestPhystDataFrameAccessors:
 
     class TestH2:
         def test_one_column(self, df_one_column: pd.DataFrame) -> None:
-            with pytest.raises(ValueError, match="At least two columns required for 2D histograms"):
+            with pytest.raises(
+                ValueError, match="At least two columns required for 2D histograms"
+            ):
                 df_one_column.physt.h2()
 
         def test_two_columns(self, df_two_columns: pd.DataFrame) -> None:
             output = df_two_columns.physt.h2()
             expected = h2(df_two_columns["a"], df_two_columns["b"])
+            assert output == expected
 
         def test_three_columns_no_arg(self, df_three_columns: pd.DataFrame) -> None:
-            with pytest.raises(ValueError, match="Arguments `column1` and `column2` must be set"):
-                output = df_three_columns.physt.h2()
+            with pytest.raises(
+                ValueError, match="Arguments `column1` and `column2` must be set"
+            ):
+                df_three_columns.physt.h2()
 
         def test_invalid_dtype(self, df_with_str: pd.DataFrame) -> None:
             with pytest.raises(ValueError, match="Column 'str' is not numeric"):
@@ -270,8 +285,12 @@ class TestPhystDataFrameAccessors:
             assert_histograms_equal(output, expected, check_metadata=False)
 
         @pytest.mark.parametrize("columns_arg", [["a", "b", "d"], [0, 1]])
-        def test_invalid_columns(self, df_three_columns: pd.DataFrame, columns_arg: Any) -> None:
-            with pytest.raises(KeyError, match="At least one of the columns .+ could not be found"):
+        def test_invalid_columns(
+            self, df_three_columns: pd.DataFrame, columns_arg: Any
+        ) -> None:
+            with pytest.raises(
+                KeyError, match="At least one of the columns .+ could not be found"
+            ):
                 df_three_columns.physt.histogram(columns=columns_arg)
 
         def test_with_no_columns(self, df_three_columns) -> None:

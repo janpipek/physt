@@ -41,7 +41,9 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
                 raise ValueError("All histograms should share the same binning.")
         else:
             if binning is None:
-                raise ValueError("Either binning or at least one histogram must be provided.")
+                raise ValueError(
+                    "Either binning or at least one histogram must be provided."
+                )
             self._binning = as_binning(binning)
         self.name = name
         self.title = title or self.name
@@ -135,7 +137,9 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         """Return the sum of all contained histograms."""
         if not self.histograms:
             return Histogram1D(
-                data=np.zeros((self.binning.bin_count)), dtype=np.int64, binning=self.binning
+                data=np.zeros((self.binning.bin_count)),
+                dtype=np.int64,
+                binning=self.binning,
             )
         return cast(Histogram1D, sum(self.histograms))
 
@@ -173,7 +177,10 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         from physt.io import create_from_dict
 
         histograms = (
-            cast(Histogram1D, create_from_dict(item, "HistogramCollection", check_version=False))
+            cast(
+                Histogram1D,
+                create_from_dict(item, "HistogramCollection", check_version=False),
+            )
             for item in a_dict["histograms"]
         )
         return HistogramCollection(*histograms)

@@ -12,7 +12,6 @@ import numpy as np
 import pandas
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
-from pandas.core.arrays.masked import BaseMaskedArray, BaseMaskedDtype
 
 from physt._construction import calculate_1d_bins, extract_1d_array, extract_nd_array
 from physt._facade import h, h1
@@ -20,15 +19,19 @@ from physt.binnings import BinningBase, static_binning
 from physt.types import Histogram1D, Histogram2D, HistogramND
 
 if TYPE_CHECKING:
-    from typing import Any, Optional, Union
+    from typing import Any, Union
 
     from physt.typing_aliases import ArrayLike
 
 
 @extract_1d_array.register
-def _(series: pandas.Series, *, dropna: bool = True) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+def _(
+    series: pandas.Series, *, dropna: bool = True
+) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     if not pd.api.types.is_numeric_dtype(series):
-        raise ValueError(f"Cannot extract suitable array from non-numeric dtype: {series.dtype}")
+        raise ValueError(
+            f"Cannot extract suitable array from non-numeric dtype: {series.dtype}"
+        )
     series = series.astype(float)
     # if isinstance(series.dtype, BaseMaskedDtype):
     #     array = cast(BaseMaskedArray, series.array)
@@ -90,7 +93,9 @@ class PhystSeriesAccessor:
 
     def __init__(self, series: pandas.Series):
         if not is_numeric_dtype(series):
-            raise AttributeError(f"Series must be of a numeric type, not {series.dtype}")
+            raise AttributeError(
+                f"Series must be of a numeric type, not {series.dtype}"
+            )
         self._series = series
 
     def h1(self, bins=None, **kwargs) -> Histogram1D:
@@ -101,8 +106,12 @@ class PhystSeriesAccessor:
 
     def cut(self, bins=None, **kwargs) -> pd.Series:
         """Bin values using physt binning (eq. to pd.cut)."""
-        warnings.warn("This method is experimental, only partially implemented and may removed.")
-        binning = calculate_1d_bins(extract_1d_array(self._series, dropna=True)[0], bins, **kwargs)
+        warnings.warn(
+            "This method is experimental, only partially implemented and may removed."
+        )
+        binning = calculate_1d_bins(
+            extract_1d_array(self._series, dropna=True)[0], bins, **kwargs
+        )
         return pd.cut(self._series, binning.numpy_bins)
 
 
@@ -150,7 +159,9 @@ class PhystDataFrameAccessor:
             raise ValueError(f"Column '{column}' is not numeric.")
         return data.physt.h1(bins=bins, weights=weights, **kwargs)
 
-    def h2(self, column1: Any = None, column2: Any = None, bins=None, **kwargs) -> Histogram2D:
+    def h2(
+        self, column1: Any = None, column2: Any = None, bins=None, **kwargs
+    ) -> Histogram2D:
         """Create 2D histogram from two columns.
 
         Parameters
@@ -170,7 +181,9 @@ class PhystDataFrameAccessor:
             column1, column2 = self._df.columns
         elif column1 is None or column2 is None:
             raise ValueError("Arguments `column1` and `column2` must be set.")
-        return cast(Histogram2D, self.histogram([column1, column2], bins=bins, **kwargs))
+        return cast(
+            Histogram2D, self.histogram([column1, column2], bins=bins, **kwargs)
+        )
 
     def histogram(self, columns: Any = None, bins: Any = None, **kwargs) -> HistogramND:
         """Create a histogram.
@@ -195,11 +208,15 @@ class PhystDataFrameAccessor:
         try:
             data = self._df[columns]
         except KeyError as exc:
-            raise KeyError(f"At least one of the columns '{columns}' could not be found.") from exc
+            raise KeyError(
+                f"At least one of the columns '{columns}' could not be found."
+            ) from exc
         if isinstance(data, pd.Series) or data.shape[1] == 1:
             return data.physt.h1(bins, **kwargs)
         if not isinstance(data, pd.DataFrame):
-            raise TypeError(f"Argument `columns` does not select a DataFrame: '{columns}'")
+            raise TypeError(
+                f"Argument `columns` does not select a DataFrame: '{columns}'"
+            )
         if not data.shape[1]:
             raise ValueError("Cannot make histogram from DataFrame with no columns.")
         for column in data.columns:
@@ -210,7 +227,9 @@ class PhystDataFrameAccessor:
         return h(data=data.astype(float), bins=bins, **kwargs)
 
 
-def binning_to_index(binning: BinningBase, name: Optional[str] = None) -> pandas.IntervalIndex:
+def binning_to_index(
+    binning: BinningBase, name: Optional[str] = None
+) -> pandas.IntervalIndex:
     """Convert physt binning to a pandas interval index."""
     # TODO: Check closedness
     return pandas.IntervalIndex.from_arrays(
@@ -226,7 +245,9 @@ def index_to_binning(index: pandas.IntervalIndex) -> BinningBase:
         raise ValueError("Only `closed_left` indices supported.")
     if index.is_overlapping:
         raise ValueError("Intervals cannot overlap.")
-    bins = np.hstack([index.left.values[:, np.newaxis], index.right.values[:, np.newaxis]])
+    bins = np.hstack(
+        [index.left.values[:, np.newaxis], index.right.values[:, np.newaxis]]
+    )
     return static_binning(bins=bins)
 
 
