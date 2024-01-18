@@ -1,6 +1,6 @@
 [project]
 name = "physt"
-version = "0.6.0a1"
+version = "0.6.0a2"
 description = "P(i/y)thon h(i/y)stograms."
 readme = "README.md"
 requires-python = "~=3.8"
@@ -77,7 +77,7 @@ target-version = "py38"
 
 
 [tool.bumpver]
-current_version = "0.6.0a1"
+current_version = "0.6.0a2"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "Bump version: {old_version} → {new_version}"
 commit = true
