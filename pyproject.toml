@@ -21,7 +21,7 @@ dependencies = [
     "numpy>=1.22",
     "packaging",
     "typing_extensions",
-    "hypothesis"
+    "hypothesis>=6.96.1"
 ]
 
 [project.optional-dependencies]
@@ -30,7 +30,7 @@ dev = ["pytest", "mypy", "types-setuptools"]
 astropy = ["astropy"]
 dask = ["dask[array]"]
 pandas = ["pandas"]
-polars = ["polars", "pyarrow", "physt[pandas]"]
+polars = ["polars>=0.20", "pyarrow", "physt[pandas]"]
 xarray = ["xarray"]
 matplotlib = ["matplotlib>=2.0"]
 plotly = ["plotly"]

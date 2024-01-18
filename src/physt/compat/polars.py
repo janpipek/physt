@@ -24,11 +24,18 @@ from physt._construction import (
     extract_weights,
 )
 
-NUMERIC_POLARS_DTYPES = tuple(
-    dtype
-    for dtype, py_type in polars.datatypes.DataTypeMappings.DTYPE_TO_PY_TYPE.items()
-    if py_type in (int, float)
-)
+NUMERIC_POLARS_DTYPES = [
+    polars.Int8,
+    polars.Int16,
+    polars.Int32,
+    polars.Int64,
+    polars.UInt8,
+    polars.UInt16,
+    polars.UInt32,
+    polars.UInt64,
+    polars.Float32,
+    polars.Float64,
+]
 
 
 @extract_axis_name.register
