@@ -1,12 +1,14 @@
-0.6.0
-------
-- Added: Support for pola.rs series/dataframes
+0.6.0 (?? January 2024)
+-----------------------
+- Added: Experimental support for pola.rs series/dataframes
 - Moved: xarray support as a separate module in physt.compat
 - Removed: physt.special (use physt.special_histograms instead)
+- Removed: ROOT files support (hopefully temporarily)
 - Added: Pretty printing with rich library
+- Changed: Using ruff linter/formatter
 - Changed: Moved most configuration to pyproject.toml
 - Improved: Much more testing and edge-case bug fixes
-- Support: Removed Python 3.7 and numpy <1.22, added 3.11
+- Support: Removed Python 3.7 and numpy <1.22, added 3.11 and 3.12
 
 0.5.3 (6 January 2022)
 ----------------------
