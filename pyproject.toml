@@ -77,8 +77,8 @@ target-version = "py38"
 
 
 [tool.bumpver]
-current_version = "0.6.0a2"
-version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
+current_version = "v0.6.0a2"
+version_pattern = "vMAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "Bump version: {old_version} → {new_version}"
 commit = true
 tag = true
