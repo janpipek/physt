@@ -970,7 +970,8 @@ def _add_colorbar(
     """Show a colorbar right of the plot."""
     mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
     mappable.set_array(cmap_data)  # TODO: Or what???
-    ax.figure.colorbar(mappable, ax=ax)
+    # TODO: Fix typing?
+    ax.figure.colorbar(mappable, ax=ax)  # type: ignore
 
 
 def _add_stats_box(
