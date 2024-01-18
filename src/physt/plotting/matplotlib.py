@@ -118,7 +118,8 @@ def register(
                 f(hist, ax=ax, **kwargs)
 
             if write_to:
-                fig = ax.figure
+                # TODO: Find proper typing for this?
+                fig = ax.figure  # type: ignore
                 fig.tight_layout()
                 fig.savefig(write_to, dpi=dpi or default_dpi)
             return ax
@@ -404,7 +405,7 @@ def map(
 
         if data[i] != 0 or show_zero:
             if not transformed:
-                rect = plt.Rectangle(
+                rect: patches.Patch = patches.Rectangle(
                     (xpos[i], ypos[i]),
                     dx[i],
                     dy[i],
@@ -599,7 +600,8 @@ def polar_map(
                 **bar_args,
             )
 
-    ax.set_rmax(r_max.max())
+    # TODO: Properly type the polar axes?
+    ax.set_rmax(r_max.max())  # type: ignore
     if show_colorbar:
         _add_colorbar(ax, cmap, cmap_data, norm)
 
@@ -807,6 +809,7 @@ def pair_bars(
     return ax
 
 
+# TODO: Add overrides for the 3d/polars?
 def _get_axes(
     kwargs: Dict[str, Any], *, use_3d: bool = False, use_polar: bool = False
 ) -> Tuple[Figure, Union[Axes, Axes3D]]:
@@ -934,7 +937,8 @@ def _add_labels(ax: Axes, h: Union[Histogram1D, Histogram2D], kwargs: dict) -> N
         ax.set_xlabel(xlabel)
     if ylabel:
         ax.set_ylabel(ylabel)
-    ax.get_figure().tight_layout()
+    # TODO: Fix the typing here?
+    ax.get_figure().tight_layout()  # type: ignore
 
 
 def _add_values(ax: Axes, h1: Histogram1D, data, *, value_format=str, **kwargs) -> None:
@@ -957,17 +961,16 @@ def _add_values(ax: Axes, h1: Histogram1D, data, *, value_format=str, **kwargs) 
     text_kwargs.update(kwargs)
 
     for x, y in zip(h1.bin_centers, data):
-        ax.text(x, y, str(value_format(y)), **text_kwargs)
+        ax.text(x, y, str(value_format(y)), **text_kwargs)  # type: ignore
 
 
 def _add_colorbar(
     ax: Axes, cmap: colors.Colormap, cmap_data: np.ndarray, norm: colors.Normalize
 ) -> None:
     """Show a colorbar right of the plot."""
-    fig = ax.get_figure()
     mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
     mappable.set_array(cmap_data)  # TODO: Or what???
-    fig.colorbar(mappable, ax=ax)
+    ax.figure.colorbar(mappable, ax=ax)
 
 
 def _add_stats_box(

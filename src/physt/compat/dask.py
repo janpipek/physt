@@ -38,7 +38,7 @@ def _run_dask(
     """
     if expand_arg:
         graph = dict(
-            (f"{name}-{data.name}-{index}", (func, *item))
+            (f"{name}-{data.name}-{index}", (func, *item))  # type: ignore
             for index, item in enumerate(data.__dask_keys__())
         )
     else:
