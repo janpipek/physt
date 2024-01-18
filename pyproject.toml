@@ -18,21 +18,21 @@ classifiers = [
         "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "numpy>=1.22",
+    "numpy>=1.23",
     "packaging",
     "typing_extensions",
     "hypothesis>=6.96.1"
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "mypy", "types-setuptools"]
+dev = ["pytest", "mypy>=1.8", "types-setuptools"]
 # doc = ["sphinx", "sphinx_rtd_theme", "sphixncontrib-apidoc", "nbsphinx"]
 astropy = ["astropy"]
-dask = ["dask[array]"]
-pandas = ["pandas"]
+dask = ["dask[array]>=2023.0"]
+pandas = ["pandas>=1.3"]
 polars = ["polars>=0.20", "pyarrow", "physt[pandas]"]
 xarray = ["xarray"]
-matplotlib = ["matplotlib>=2.0"]
+matplotlib = ["matplotlib>=3.0"]
 plotly = ["plotly"]
 vega3 = ["vega3"]
 folium = ["folium"]

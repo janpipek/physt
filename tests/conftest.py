@@ -28,7 +28,7 @@ def create_adaptive():
             )
             for i, dim in enumerate(shape)
         ]
-        data = np.linspace(0, np.prod(shape) - 1, np.product(shape)).reshape(shape)
+        data = np.linspace(0, np.prod(shape) - 1, np.prod(shape)).reshape(shape)
         klass = HistogramND
         if len(shape) == 2:
             klass = Histogram2D
