@@ -61,7 +61,9 @@ def _run_dask(
     return graph, result_name
 
 
-def histogram1d(data: Union[Array, ArrayLike], bins: Any = None, *, compute: bool = True, **kwargs):
+def histogram1d(
+    data: Union[Array, ArrayLike], bins: Any = None, *, compute: bool = True, **kwargs
+):
     """Facade function to create one-dimensional histogram using dask.
 
     Parameters
@@ -74,7 +76,9 @@ def histogram1d(data: Union[Array, ArrayLike], bins: Any = None, *, compute: boo
     """
     if not isinstance(data, Array):
         data_np = np.asarray(data)
-        data = dask.array.from_array(data_np, chunks=int(data_np.shape[0] / options["chunk_split"]))
+        data = dask.array.from_array(
+            data_np, chunks=int(data_np.shape[0] / options["chunk_split"])
+        )
 
     if not kwargs.get("adaptive", True):
         raise ValueError("Only adaptive histograms supported for dask (currently).")

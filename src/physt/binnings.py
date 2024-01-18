@@ -24,7 +24,6 @@ if TYPE_CHECKING:
         Callable,
         ClassVar,
         Dict,
-        List,
         Optional,
         Sequence,
         Tuple,
@@ -103,7 +102,9 @@ class BinningBase:
         if adaptive and not self.adaptive_allowed:
             raise ValueError(f"Adaptivity not allowed for {self.__class__.__name__}.")
         if adaptive and includes_right_edge:
-            raise ValueError("Adaptivity does not work together with right-edge inclusion.")
+            raise ValueError(
+                "Adaptivity does not work together with right-edge inclusion."
+            )
         self._adaptive = adaptive
 
     def __getitem__(self, index: Union[slice, int]):
@@ -148,7 +149,9 @@ class BinningBase:
         ----------
         rtol, atol : numpy tolerance parameters
         """
-        return np.allclose(np.diff(self.bins[1] - self.bins[0]), 0.0, rtol=rtol, atol=atol)
+        return np.allclose(
+            np.diff(self.bins[1] - self.bins[0]), 0.0, rtol=rtol, atol=atol
+        )
 
     def is_consecutive(self, rtol: float = 1.0e-5, atol: float = 1.0e-8) -> bool:
         """Whether all bins are in a growing order.
@@ -315,11 +318,11 @@ class BinningBase:
         StaticBinning
             A new static binning with a copy of bins.
         """
-        return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
+        return StaticBinning(
+            bins=self.bins.copy(), includes_right_edge=self.includes_right_edge
+        )
 
-    def as_fixed_width(
-        self, copy: bool = True
-    ) -> "FixedWidthBinning":  # pylint: disable=unused-argument
+    def as_fixed_width(self, copy: bool = True) -> "FixedWidthBinning":  # pylint: disable=unused-argument
         """Convert binning to recipe with fixed width (if possible.)
 
         Parameters
@@ -335,7 +338,9 @@ class BinningBase:
                 bin_width=self.bins[1] - self.bins[0],
             )
         else:
-            raise ValueError("Cannot create fixed-width binning from differing bin widths.")
+            raise ValueError(
+                "Cannot create fixed-width binning from differing bin widths."
+            )
 
     def copy(self: "BinningType") -> "BinningType":
         """An identical, independent copy."""
@@ -361,7 +366,9 @@ class BinningBase:
                 bins[new, 1] = self.bins[old, 1]
         if np.any(np.isnan(bins)):
             raise ValueError("New binning is not complete.")
-        includes_right_edge = self.includes_right_edge and bins[-1, 1] == self.bins[-1, 1]
+        includes_right_edge = (
+            self.includes_right_edge and bins[-1, 1] == self.bins[-1, 1]
+        )
         binning = StaticBinning(bins, includes_right_edge=includes_right_edge)
         return binning
 
@@ -399,7 +406,9 @@ class StaticBinning(BinningBase):
         return self
 
     def copy(self):
-        return StaticBinning(bins=self.bins.copy(), includes_right_edge=self.includes_right_edge)
+        return StaticBinning(
+            bins=self.bins.copy(), includes_right_edge=self.includes_right_edge
+        )
 
     def __getitem__(self, item):
         copy = self.copy()
@@ -425,7 +434,9 @@ class NumpyBinning(BinningBase):
     def __init__(self, numpy_bins: ArrayLike, includes_right_edge=True, **kwargs):
         if not is_rising(numpy_bins):
             raise ValueError("Bins not in rising order.")
-        super().__init__(numpy_bins=numpy_bins, includes_right_edge=includes_right_edge, **kwargs)
+        super().__init__(
+            numpy_bins=numpy_bins, includes_right_edge=includes_right_edge, **kwargs
+        )
 
     @property
     def numpy_bins(self):
@@ -526,7 +537,9 @@ class FixedWidthBinning(BinningBase):
 
     def _force_bin_existence(self, values, *, includes_right_edge=None):
         if np.isscalar(values):
-            return self._force_bin_existence_single(values, includes_right_edge=includes_right_edge)
+            return self._force_bin_existence_single(
+                values, includes_right_edge=includes_right_edge
+            )
         else:
             min_, max_ = np.min(values), np.max(values)
             result = self._force_bin_existence_single(min_)
@@ -606,7 +619,9 @@ class FixedWidthBinning(BinningBase):
         """
         other = other.as_fixed_width()
         if self.bin_width != other.bin_width:
-            raise ValueError("Cannot adapt fixed-width histograms with different widths")
+            raise ValueError(
+                "Cannot adapt fixed-width histograms with different widths"
+            )
         if self._shift != other._shift:
             raise ValueError(
                 f"Cannot adapt shifted fixed-width histograms: {self._shift} vs {other._shift}"
@@ -619,7 +634,9 @@ class FixedWidthBinning(BinningBase):
             self._set_min_and_count(other._times_min, other.bin_count)
             return (), None
         new_min = min(self._times_min, other._times_min)
-        new_max = max(self._times_min + self._bin_count, other._times_min + other._bin_count)
+        new_max = max(
+            self._times_min + self._bin_count, other._times_min + other._bin_count
+        )
 
         bin_map1 = self._force_new_min_max(new_min, new_max)
         bin_map2 = other._force_new_min_max(new_min, new_max)
@@ -716,7 +733,9 @@ def numpy_binning(
         if data is None:
             raise ValueError("Either `range` or `data` must be set.")
         if data.size < 2:
-            raise ValueError(f"At least 2 values required to infer bins, {data.size} given.")
+            raise ValueError(
+                f"At least 2 values required to infer bins, {data.size} given."
+            )
         start = data.min()
         stop = data.max()
         if start == stop:
@@ -727,7 +746,9 @@ def numpy_binning(
             raise ValueError(f"Range too large to find bins: {start} to {stop}.")
         bins = np.linspace(start, stop, bin_count + 1)
         if (np.diff(bins) == 0).any():
-            raise ValueError(f"Range too narrow to split into {bin_count} bins: {start} to {stop}.")
+            raise ValueError(
+                f"Range too narrow to split into {bin_count} bins: {start} to {stop}."
+            )
     return NumpyBinning(bins)
 
 
@@ -918,7 +939,9 @@ def exponential_binning(
             raise ValueError("Cannot guess the range without data.")
         range = (np.log10(data.min()), np.log10(data.max()))
     log_width = (range[1] - range[0]) / bin_count
-    return ExponentialBinning(log_min=range[0], log_width=log_width, bin_count=bin_count, **kwargs)
+    return ExponentialBinning(
+        log_min=range[0], log_width=log_width, bin_count=bin_count, **kwargs
+    )
 
 
 with suppress(ImportError):
@@ -1054,8 +1077,14 @@ def ideal_bin_count(data: np.ndarray, method: str = "default") -> int:
         except ImportError:
             warnings.warn("Please install scipy to support 'doane' method")
         else:
-            sigma = np.sqrt(6 * (value_count - 2) / (value_count + 1) * (value_count + 3))
-            return int(np.ceil(1 + np.log2(value_count) + np.log2(1 + np.abs(skew(data)) / sigma)))
+            sigma = np.sqrt(
+                6 * (value_count - 2) / (value_count + 1) * (value_count + 3)
+            )
+            return int(
+                np.ceil(
+                    1 + np.log2(value_count) + np.log2(1 + np.abs(skew(data)) / sigma)
+                )
+            )
     if method == "rice":
         return int(np.ceil(2 * np.power(value_count, 1 / 3)))
     raise ValueError(f"Unknown bin count method: {method}")

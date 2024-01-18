@@ -11,7 +11,9 @@ COLLECTION_COMPATIBLE_VERSION = "0.4.5"
 
 
 def save_json(
-    histogram: Union[HistogramBase, HistogramCollection], path: Optional[str] = None, **kwargs
+    histogram: Union[HistogramBase, HistogramCollection],
+    path: Optional[str] = None,
+    **kwargs,
 ) -> str:
     """Save histogram to JSON format.
 
@@ -42,7 +44,9 @@ def save_json(
     return text
 
 
-def load_json(path: str, encoding: str = "utf-8") -> Union[HistogramBase, HistogramCollection]:
+def load_json(
+    path: str, encoding: str = "utf-8"
+) -> Union[HistogramBase, HistogramCollection]:
     """Load histogram from a JSON file."""
     with open(path, "r", encoding=encoding) as f:
         text = f.read()

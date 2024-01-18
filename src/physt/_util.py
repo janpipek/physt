@@ -6,10 +6,8 @@ for numerical computing, histogramming, etc.
 from __future__ import annotations
 
 import warnings
-from functools import singledispatch, wraps
-from typing import TYPE_CHECKING, Iterable, List, Optional
-
-import numpy as np
+from functools import wraps
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Dict, Tuple
@@ -32,7 +30,9 @@ def find_subclass(base: type, name: str) -> type:
 
     Uses only the class name without namespace.
     """
-    class_candidates = [klass for klass in all_subclasses(base) if klass.__name__ == name]
+    class_candidates = [
+        klass for klass in all_subclasses(base) if klass.__name__ == name
+    ]
     if not class_candidates:
         raise TypeError(f"No '{base.__name__}' subclass of '{name}'.")
     if len(class_candidates) > 1:

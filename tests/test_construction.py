@@ -57,13 +57,19 @@ class TestExtract1DArray:
         assert result == (None, None)
 
     class TestArrays:
-        @given(data=arrays(dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes()))
+        @given(
+            data=arrays(
+                dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes()
+            )
+        )
         def test_removes_nans_if_requested(self, data):
             array, array_mask = extract_1d_array(data, dropna=True)
             assert not any(np.isnan(array))
 
         @given(
-            data=arrays(dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes()),
+            data=arrays(
+                dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes()
+            ),
             dropna=st.booleans(),
         )
         def test_keeps_non_nan(self, data, dropna):
@@ -71,7 +77,9 @@ class TestExtract1DArray:
             # TODO: Finish
 
         @given(
-            data=arrays(dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes()),
+            data=arrays(
+                dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes()
+            ),
             dropna=st.booleans(),
         )
         def test_output_is_always_1d(self, data, dropna):
@@ -88,7 +96,7 @@ class TestExtract1DArray:
 
         @given(data=series(dtype=float), dropna=st.booleans())
         def test_uses_values_of_the_series(self, data, dropna):
-            result = extract_1d_array(data, dropna=dropna)
+            extract_1d_array(data, dropna=dropna)
             # TODO: Finish
 
         @pytest.mark.skip(reason="Not supported by hypothesis yet.")
@@ -185,7 +193,10 @@ class TestExtractNDArray:
                 extract_nd_array(data, dropna=dropna)
 
         @given(
-            data=arrays(dtype=integer_dtypes() | floating_dtypes(), shape=array_shapes(min_dims=3)),
+            data=arrays(
+                dtype=integer_dtypes() | floating_dtypes(),
+                shape=array_shapes(min_dims=3),
+            ),
             dropna=st.booleans(),
         )
         def test_high_dimension(self, data, dropna):
@@ -227,7 +238,9 @@ class TestExtractNDArray:
             dropna=st.booleans(),
         )
         def test_data_frame_with_invalid_columns(self, data, dropna):
-            with pytest.raises(ValueError, match="Cannot histogram non-numeric columns"):
+            with pytest.raises(
+                ValueError, match="Cannot histogram non-numeric columns"
+            ):
                 extract_nd_array(data, dropna=dropna)
 
     class TestIterables:
@@ -252,7 +265,10 @@ class TestExtractNDArray:
         )
         def test_jagged_lists(self, dim1, dim2, dropna):
             assume(dim1 != dim2)
-            data = [[random.random() for i in range(dim1)], [random.random() for i in range(dim2)]]
+            data = [
+                [random.random() for i in range(dim1)],
+                [random.random() for i in range(dim2)],
+            ]
             with pytest.raises(ValueError, match="Data must have a regular 2D shape"):
                 extract_nd_array(data, dropna=dropna)
 
@@ -262,10 +278,12 @@ class TestExtractNDArray:
 class TestExtractAndConcatArrays:
     @given(
         data1=arrays(
-            dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes(min_dims=1, max_dims=1)
+            dtype=floating_dtypes() | integer_dtypes(),
+            shape=array_shapes(min_dims=1, max_dims=1),
         ),
         data2=arrays(
-            dtype=floating_dtypes() | integer_dtypes(), shape=array_shapes(min_dims=1, max_dims=1)
+            dtype=floating_dtypes() | integer_dtypes(),
+            shape=array_shapes(min_dims=1, max_dims=1),
         ),
     )
     def test_fails_with_non_matching_size(self, data1: np.ndarray, data2: np.ndarray):
@@ -314,7 +332,9 @@ class TestExtractAxisNames:
             assert result == tuple(str(x) for x in df_axis_names)
 
         def test_multiindex(self):
-            df = pd.DataFrame([], columns=pd.MultiIndex.from_tuples([("a", 1), ("a", 2), ("b", 1)]))
+            df = pd.DataFrame(
+                [], columns=pd.MultiIndex.from_tuples([("a", 1), ("a", 2), ("b", 1)])
+            )
             result = extract_axis_names(df, axis_names=None)
             assert result == ("a, 1", "a, 2", "b, 1")
 

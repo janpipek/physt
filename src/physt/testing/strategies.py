@@ -55,7 +55,9 @@ def histograms_1d(draw):
 def histograms_nd(draw):
     ndim = draw(st.integers(min_value=2, max_value=4))
     shape = draw(array_shapes(min_dims=ndim, max_dims=ndim, min_side=1, max_side=10))
-    values = draw(arrays(shape=shape, dtype=float64, elements=from_dtype(float64, min_value=0)))
+    values = draw(
+        arrays(shape=shape, dtype=float64, elements=from_dtype(float64, min_value=0))
+    )
     bin_edges = [draw(bins(nbins=i)) for i in shape]
 
     return HistogramND(

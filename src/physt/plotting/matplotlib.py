@@ -77,7 +77,9 @@ default_figsize = matplotlib.rcParams["figure.figsize"]
 default_cmap = "Greys"  # matplotlib.rcParams['image.cmap']
 
 
-def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collection: bool = False):
+def register(
+    *dim: int, use_3d: bool = False, use_polar: bool = False, collection: bool = False
+):
     """Decorator to wrap common plotting functionality.
 
     Parameters
@@ -98,7 +100,9 @@ def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collectio
 
         @wraps(f)
         @check_ndim(dim)
-        def wrapped(hist, write_to: Optional[str] = None, dpi: Optional[float] = None, **kwargs):
+        def wrapped(
+            hist, write_to: Optional[str] = None, dpi: Optional[float] = None, **kwargs
+        ):
             fig, ax = _get_axes(kwargs, use_3d=use_3d, use_polar=use_polar)
 
             if collection and isinstance(hist, HistogramCollection):
@@ -125,9 +129,7 @@ def register(*dim: int, use_3d: bool = False, use_polar: bool = False, collectio
 
 
 @register(1, collection=True)
-def bar(
-    h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs
-):  # pylint: disable=blacklisted-name
+def bar(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):  # pylint: disable=blacklisted-name
     """Bar plot of 1D histograms."""
     show_stats = kwargs.pop("show_stats", False)
     show_values = kwargs.pop("show_values", False)
@@ -522,7 +524,9 @@ def image(
 
     for binning in h2._binnings:
         if not binning.is_regular():
-            raise ValueError("Histograms with irregular bins cannot be plotted using image method.")
+            raise ValueError(
+                "Histograms with irregular bins cannot be plotted using image method."
+            )
 
     kwargs["interpolation"] = interpolation
     if kwargs.get("xscale") == "log" or kwargs.get("yscale") == "log":
@@ -551,7 +555,12 @@ def image(
 
 @register(2, use_polar=True)
 def polar_map(
-    hist: Histogram2D, ax: Axes, *, show_zero: bool = True, show_colorbar: bool = True, **kwargs
+    hist: Histogram2D,
+    ax: Axes,
+    *,
+    show_zero: bool = True,
+    show_colorbar: bool = True,
+    **kwargs,
 ):
     """Polar map of polar histograms.
 
@@ -1104,7 +1113,9 @@ def _apply_xy_lims(
                     ylim = (h.get_bin_left_edges(1)[0], h.get_bin_right_edges(1)[-1])
                     if yscale == "log":
                         if ylim[0] <= 0:
-                            raise ValueError("Cannot use logarithmic scale for non-positive bins.")
+                            raise ValueError(
+                                "Cannot use logarithmic scale for non-positive bins."
+                            )
             if invert_y:
                 ylim = ylim[::-1]
                 # ax.xaxis.tick_top()
@@ -1123,7 +1134,9 @@ def _apply_xy_lims(
                     raise ValueError(f"Invalid dimension: {h.ndim}")
                 if xscale == "log":
                     if xlim[0] <= 0:
-                        raise ValueError("Cannot use xscale='log' for non-positive bins.")
+                        raise ValueError(
+                            "Cannot use xscale='log' for non-positive bins."
+                        )
         ax.set_xlim(*xlim)
 
     if xscale:

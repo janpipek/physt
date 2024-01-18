@@ -97,17 +97,25 @@ def h1(
     """
 
     # Extra treatment for pandas types
-    if isinstance(data, tuple) and isinstance(data[0], str):  # Works for groupby DataSeries
+    if isinstance(data, tuple) and isinstance(
+        data[0], str
+    ):  # Works for groupby DataSeries
         return h1(data[1], bins, name=data[0], **kwargs)
     if type(data).__name__ == "DataFrame":
-        raise TypeError("Cannot create a 1D histogram from a pandas DataFrame. Use Series.")
+        raise TypeError(
+            "Cannot create a 1D histogram from a pandas DataFrame. Use Series."
+        )
 
     array, array_mask = extract_1d_array(data, dropna=dropna)
 
     weights = extract_weights(weights, array_mask=array_mask)
 
     binning = calculate_1d_bins(
-        array, bins, check_nan=not dropna and array is not None, adaptive=adaptive, **kwargs
+        array,
+        bins,
+        check_nan=not dropna and array is not None,
+        adaptive=adaptive,
+        **kwargs,
     )
 
     axis_name = extract_axis_name(data, axis_name=axis_name)
@@ -134,7 +142,9 @@ def h1(
     )
 
 
-def h2(data1: Optional[ArrayLike], data2: Optional[ArrayLike], bins=10, **kwargs) -> Histogram2D:
+def h2(
+    data1: Optional[ArrayLike], data2: Optional[ArrayLike], bins=10, **kwargs
+) -> Histogram2D:
     """Facade function to create 2D histograms.
 
     For implementation and parameters, see histogramdd.
@@ -161,7 +171,11 @@ def h3(data: Optional[ArrayLike], bins=None, **kwargs) -> HistogramND:
         Can be a single array (with three columns) or three different arrays
         (for each component)
     """
-    if data is not None and isinstance(data, (list, tuple)) and not np.isscalar(data[0]):
+    if (
+        data is not None
+        and isinstance(data, (list, tuple))
+        and not np.isscalar(data[0])
+    ):
         if "axis_names" not in kwargs:
             kwargs["axis_names"] = [
                 (column.name if hasattr(column, "name") else None) for column in data
@@ -231,7 +245,12 @@ def h(
     if title:
         kwargs["title"] = title
     return klass.from_calculate_frequencies(
-        array, binnings=bin_schemas, weights=weights, axis_names=axis_names, name=name, title=title
+        array,
+        binnings=bin_schemas,
+        weights=weights,
+        axis_names=axis_names,
+        name=name,
+        title=title,
     )
 
 

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from physt import _bin_utils
 from physt._construction import (
     calculate_1d_frequencies,
     extract_1d_array,
@@ -235,7 +234,9 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         if isinstance(index, np.ndarray):
             if index.dtype == bool:
                 if index.shape != (self.bin_count,):
-                    raise IndexError("Cannot index with masked array of a wrong dimension")
+                    raise IndexError(
+                        "Cannot index with masked array of a wrong dimension"
+                    )
         elif isinstance(index, slice):
             keep_missed = self.keep_missed
             # TODO: Fix this
@@ -414,7 +415,11 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         return ixbin
 
     def fill_n(
-        self, values: ArrayLike, weights: Optional[ArrayLike] = None, *, dropna: bool = True
+        self,
+        values: ArrayLike,
+        weights: Optional[ArrayLike] = None,
+        *,
+        dropna: bool = True,
     ) -> None:
         # TODO: Unify with HistogramBase
         values_array, array_mask = extract_1d_array(values, dropna=dropna)

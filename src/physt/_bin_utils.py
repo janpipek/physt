@@ -43,7 +43,9 @@ def make_bin_array(bins: ArrayLike) -> np.ndarray:
         #     raise RuntimeError("Needs at least one bin")
         return bins  # Already correct, just pass
     else:
-        raise ValueError(f"Binning schema must have ndim==1 or ndim==2, {bins.ndim} found.")
+        raise ValueError(
+            f"Binning schema must have ndim==1 or ndim==2, {bins.ndim} found."
+        )
 
 
 def to_numpy_bins(bins: ArrayLike) -> np.ndarray:

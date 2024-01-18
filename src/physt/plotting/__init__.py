@@ -147,7 +147,9 @@ def set_default_backend(name: str) -> None:
             "Support for bokeh has been discontinued. At some point, we may return to support holoviews."
         )
     if name not in backends:
-        raise ValueError(f"Backend '{name}' is not supported and cannot be set as default.")
+        raise ValueError(
+            f"Backend '{name}' is not supported and cannot be set as default."
+        )
     _default_backend = name
 
 
@@ -176,7 +178,9 @@ def _get_backend(name: Optional[str] = None) -> Tuple[str, Any]:
     backend = backends.get(name)
     if not backend:
         available = ", ".join(backends.keys())
-        raise RuntimeError(f"Backend {name} does not exist. Use one of the following: {available}.")
+        raise RuntimeError(
+            f"Backend {name} does not exist. Use one of the following: {available}."
+        )
     return name, backend
 
 
@@ -196,15 +200,21 @@ def plot(
     """
     backend_name, backend_impl = _get_backend(backend)
     if kind is None:
-        kinds = [t for t in backend_impl.types if histogram.ndim in backend_impl.dims[t]]  # type: ignore
+        kinds = [
+            t for t in backend_impl.types if histogram.ndim in backend_impl.dims[t]
+        ]  # type: ignore
         if not kinds:
-            raise RuntimeError(f"No plot type is supported for {histogram.__class__.__name__}")
+            raise RuntimeError(
+                f"No plot type is supported for {histogram.__class__.__name__}"
+            )
         kind = kinds[0]
     if kind in backend_impl.types:
         method = getattr(backend_impl, kind)
         return method(histogram, **kwargs)
     else:
-        raise RuntimeError(f"Histogram type error: {kind} missing in backend {backend_name}.")
+        raise RuntimeError(
+            f"Histogram type error: {kind} missing in backend {backend_name}."
+        )
 
 
 class PlottingProxy:
@@ -245,4 +255,6 @@ class PlottingProxy:
 
     def __dir__(self):
         _, backend = _get_backend()
-        return tuple((t for t in backend.types if self.histogram.ndim in backend.dims[t]))
+        return tuple(
+            (t for t in backend.types if self.histogram.ndim in backend.dims[t])
+        )

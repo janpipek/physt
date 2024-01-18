@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-import physt
 from physt._facade import h1
 from physt.histogram1d import Statistics
 from physt.types import Histogram1D
@@ -30,7 +29,11 @@ def simple_h1_without_stats(simple_h1: Histogram1D) -> Histogram1D:
 class TestStatisticsComputation:
     @pytest.fixture
     def histogram(
-        self, input_values: ArrayLike, input_weights: ArrayLike, range_, use_weights: bool
+        self,
+        input_values: ArrayLike,
+        input_weights: ArrayLike,
+        range_,
+        use_weights: bool,
     ) -> Histogram1D:
         if use_weights:
             histogram = h1(input_values, weights=input_weights, range=range_)

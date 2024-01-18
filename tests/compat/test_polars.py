@@ -25,7 +25,11 @@ class TestH1:
     # Just check that the whole construction works.
     # More detailed tests for individual steps below.
 
-    @given(data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_infinities=False, min_size=2))
+    @given(
+        data=series(
+            allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_infinities=False, min_size=2
+        )
+    )
     def test_with_series(self, data):
         assume(np.inf > (data.max() - data.min()) > 0)
         result = h1(data)
@@ -47,7 +51,12 @@ class TestH:
         )
     )
     def test_with_dataframe(self, data):
-        assume(all((np.inf > (data[col].max() - data[col].min()) > 0) for col in data.columns))
+        assume(
+            all(
+                (np.inf > (data[col].max() - data[col].min()) > 0)
+                for col in data.columns
+            )
+        )
         result = h(data)
         assert isinstance(result, HistogramND)
 
@@ -126,7 +135,9 @@ class TestExtractAxisName:
 
     @given(data=dataframes())
     def test_fails_with_dataframe(self, data):
-        with pytest.raises(ValueError, match="Cannot extract axis name from a polars DataFrame."):
+        with pytest.raises(
+            ValueError, match="Cannot extract axis name from a polars DataFrame."
+        ):
             extract_axis_name(data)
 
     @given(data=series(), explicit_name=st.text())
@@ -144,7 +155,9 @@ def dataframes_and_axis_names(
     else:
         if min_length == max_length:
             raise ValueError("Cannot create examples.")
-        while (names_length := draw(st.integers(min_value=0, max_value=max_length))) == df_length:
+        while (
+            names_length := draw(st.integers(min_value=0, max_value=max_length))
+        ) == df_length:
             pass
     return (
         draw(dataframes(cols=df_length)),
@@ -179,7 +192,11 @@ class TestExtractAxisNames:
 
 @st.composite
 def series_and_mask(
-    draw, *, min_length: int = 0, max_length: int = 10, allowed_dtypes=NUMERIC_POLARS_DTYPES
+    draw,
+    *,
+    min_length: int = 0,
+    max_length: int = 10,
+    allowed_dtypes=NUMERIC_POLARS_DTYPES,
 ) -> Tuple[polars.Series, np.ndarray]:
     length = draw(st.integers(min_value=min_length, max_value=max_length))
     mask = draw(arrays(shape=(length,), dtype=bool))
@@ -203,7 +220,9 @@ class TestExtractWeights:
         data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES),
         array_mask=arrays(dtype=bool, shape=array_shapes(min_dims=1, max_dims=1)),
     )
-    def test_fails_with_shape_mismatch(self, data: polars.Series, array_mask: np.ndarray):
+    def test_fails_with_shape_mismatch(
+        self, data: polars.Series, array_mask: np.ndarray
+    ):
         assume(array_mask.shape != data.shape)
         with pytest.raises(ValueError, match="Weights array shape"):
             extract_weights(data, array_mask=array_mask)
@@ -218,5 +237,7 @@ class TestExtractWeights:
         array_mask=st.none() | arrays(dtype=bool, shape=array_shapes(max_dims=1)),
     )
     def test_fails_with_dataframe(self, data: polars.DataFrame, array_mask):
-        with pytest.raises(ValueError, match="Cannot extract weights from a polars DataFrame"):
+        with pytest.raises(
+            ValueError, match="Cannot extract weights from a polars DataFrame"
+        ):
             extract_weights(data, array_mask=array_mask)

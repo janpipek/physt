@@ -49,11 +49,15 @@ class TestHistogramND:
                 simple_h2.find_bin(5)
 
         @pytest.mark.parametrize("value", [-1, 17, np.inf])
-        def test_scalar_outside_the_range(self, simple_h2: Histogram2D, value: float) -> None:
+        def test_scalar_outside_the_range(
+            self, simple_h2: Histogram2D, value: float
+        ) -> None:
             assert simple_h2.find_bin(value, axis="x") is None
 
         @pytest.mark.parametrize("value", [[0.5, 6.5], [3.5, 5.5], [-np.inf, 12]])
-        def test_array_outside_the_range(self, simple_h2: Histogram2D, value: ArrayLike) -> None:
+        def test_array_outside_the_range(
+            self, simple_h2: Histogram2D, value: ArrayLike
+        ) -> None:
             assert simple_h2.find_bin(value) is None
 
         def test_array_with_axis(self, simple_h2: Histogram2D) -> None:

@@ -98,7 +98,9 @@ def geo_map(
     if not layer_name:
         layer_name = h2.name
 
-    color_map = LinearColormap(cmap, vmin=h2.frequencies.min(), vmax=h2.frequencies.max())
+    color_map = LinearColormap(
+        cmap, vmin=h2.frequencies.min(), vmax=h2.frequencies.max()
+    )
 
     # legend = folium.Html("<div>Legend</div>")
     # legend_div = folium.Div("20%", "20%", "75%", "5%")

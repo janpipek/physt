@@ -96,10 +96,12 @@ def extract_nd_array(
         array: np.ndarray = np.asarray(data, dtype=float)
     except ValueError as exc:
         if "The requested array has an inhomogeneous shape" in str(exc):
-            raise ValueError(f"Data must have a regular 2D shape of (n, d)") from exc
+            raise ValueError("Data must have a regular 2D shape of (n, d)") from exc
         raise
     if array.ndim != 2:
-        raise ValueError(f"Data must have a 2D shape of (n, d), {array.shape} encountered.")
+        raise ValueError(
+            f"Data must have a 2D shape of (n, d), {array.shape} encountered."
+        )
     if dim is not None and dim != array.shape[1]:
         raise ValueError(f"Dimension mismatch: {dim} != {array.shape[1]}")
     _, dim = array.shape
@@ -144,8 +146,12 @@ def extract_and_concat_arrays(
     if none_count == len(data):
         return None, None
     if 1 <= none_count < len(data):
-        raise ValueError(f"{none_count} None's on the input, 0 or {len(data)} expected.")
-    array_list = [cast(np.ndarray, extract_1d_array(item, dropna=False)[0]) for item in data]
+        raise ValueError(
+            f"{none_count} None's on the input, 0 or {len(data)} expected."
+        )
+    array_list = [
+        cast(np.ndarray, extract_1d_array(item, dropna=False)[0]) for item in data
+    ]
     array_shapes = set(array.shape for array in array_list)
     if len(array_shapes) > 1:
         raise ValueError(f"Array shapes do not match: {list(array_shapes)}")
@@ -315,7 +321,9 @@ def calculate_nd_frequencies(
 
     # Prepare numpy array of data
     if data.ndim != 2:
-        raise ValueError(f"calculate_frequencies requires 2D input data, dim={data.ndim} found.")
+        raise ValueError(
+            f"calculate_frequencies requires 2D input data, dim={data.ndim} found."
+        )
 
     # Guess correct dtype and apply to weights
     if weights is None:
@@ -329,7 +337,9 @@ def calculate_nd_frequencies(
         if dtype:
             dtype = np.dtype(dtype)
             if dtype.kind in "iu" and weights.dtype.kind == "f":
-                raise ValueError("Integer histogram requested but float weights entered.")
+                raise ValueError(
+                    "Integer histogram requested but float weights entered."
+                )
         else:
             dtype = weights.dtype
 
@@ -362,7 +372,9 @@ def calculate_1d_frequencies(
     validate_bins: bool = True,
     already_sorted: bool = False,
     dtype: Optional[DTypeLike] = None,
-) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float, float, Optional[Statistics]]:
+) -> Tuple[
+    Optional[np.ndarray], Optional[np.ndarray], float, float, Optional[Statistics]
+]:
     """Get frequencies and bin errors from the data.
 
     Parameters
@@ -448,7 +460,9 @@ def calculate_1d_frequencies(
         if xbin == 0:
             underflow = weights_array[0:start].sum()
         if xbin == len(bins) - 1:
-            stop = np.searchsorted(data_array, bin[1], side="right")  # TODO: Understand and explain
+            stop = np.searchsorted(
+                data_array, bin[1], side="right"
+            )  # TODO: Understand and explain
             overflow = weights_array[stop:].sum()
 
         frequencies[xbin] = weights_array[start:stop].sum()
@@ -473,7 +487,9 @@ def calculate_1d_frequencies(
     return frequencies, errors2, underflow, overflow, stats
 
 
-def calculate_1d_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> BinningBase:
+def calculate_1d_bins(
+    array: Optional[np.ndarray], _: Any = None, **kwargs
+) -> BinningBase:
     """Find optimal binning from arguments.
 
     Parameters
@@ -498,7 +514,9 @@ def calculate_1d_bins(array: Optional[np.ndarray], _: Any = None, **kwargs) -> B
         if kwargs.get("range"):  # TODO: re-consider the usage of this parameter
             array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
-        bin_count = 10  # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
+        bin_count = (
+            10  # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
+        )
         binning = numpy_binning(array, bin_count, **kwargs)
     elif isinstance(_, BinningBase):
         binning = _
@@ -545,7 +563,9 @@ def calculate_nd_bins(
     """
     if array is not None:
         if dim and array.shape[-1] != dim:
-            raise ValueError(f"The array must be of shape (N, {dim}), {array.shape} found.")
+            raise ValueError(
+                f"The array must be of shape (N, {dim}), {array.shape} found."
+            )
         _, dim = array.shape
 
         if check_nan:
