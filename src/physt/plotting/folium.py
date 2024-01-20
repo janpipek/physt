@@ -68,7 +68,7 @@ def geo_map(
     h2: Histogram2D,
     *,
     map: Optional[Map] = None,
-    tiles: str = "stamenterrain",
+    tiles: Optional[str] = "cartodb positron",
     cmap="wk",
     alpha: float = 0.5,
     lw=1,
