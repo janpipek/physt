@@ -8,6 +8,7 @@ from typing import Union
 import numpy as np
 
 from physt.binnings import fixed_width_binning
+from physt.statistics import Statistics
 from physt.types import Histogram1D, Histogram2D
 
 
@@ -60,12 +61,17 @@ def _create_h1(data, meta) -> Histogram1D:
     binning = fixed_width_binning(
         bin_width=(max_ - min_) / bin_count, range=(min_, max_)
     )
-    hist = Histogram1D(binning, name=_get(meta, "title"))
-    hist._frequencies = data[1:-1, 1]
-    hist._errors2 = data[1:-1, 2]
-    hist.underflow = data[0, 1]
-    hist.overflow = data[-1, 1]
-    hist._stats = {"sum": data[1:-1, 3].sum(), "sum2": data[1:-1, 4].sum()}
+    stats = Statistics(sum=data[1:-1, 3].sum(), sum2=data[1:-1, 4].sum())
+
+    hist = Histogram1D(
+        binning,
+        frequencies=data[1:-1, 1],
+        errors2=data[1:-1, 2],
+        name=_get(meta, "title"),
+        underflow=data[0, 1],
+        overflow=data[-1, 1],
+        stats=stats
+    )
     return hist
 
 
