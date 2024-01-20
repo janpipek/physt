@@ -114,10 +114,11 @@ with suppress(ImportError):
     backends["matplotlib"] = mpl_backend
 
 
-with suppress(ImportError):
-    from . import vega as vega_backend
+# TODO: Re-enable vega
+# with suppress(ImportError):
+#     from . import vega as vega_backend
 
-    backends["vega"] = vega_backend
+#     backends["vega"] = vega_backend
 
 with suppress(ImportError):
     from . import plotly as plotly_backend
