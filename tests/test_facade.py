@@ -19,16 +19,22 @@ from physt.types import Histogram1D, Histogram2D
 class TestH1:
     class TestNoArgs:
         @given(
-            array=arrays(
-                dtype=floating_dtypes() | integer_dtypes(),
-                shape=array_shapes(min_side=2),
-                unique=True,
+            array=st.one_of(
+                arrays(
+                    dtype=floating_dtypes(),
+                    shape=array_shapes(min_side=2),
+                    unique=True,
+                    elements=from_dtype(float, allow_infinity=False, allow_nan=False, allow_subnormal=False),
+                ),
+                arrays(
+                    dtype=integer_dtypes(),
+                    shape=array_shapes(min_side=2),
+                    unique=True,
+                ),
             )
         )
         def test_array_at_least_two_different_values(self, array):
             # Reasonable defaults for at least two different values
-            assume(np.isfinite(array).all())
-
             # Avoid too narrow ranges in float precision
             array_range = array.max() - array.min()
             assume(array_range > np.spacing(array.min()) * 20)
