@@ -17,7 +17,7 @@ from physt._bin_utils import (
     to_numpy_bins,
     to_numpy_bins_with_mask,
 )
-from physt._util import find_subclass
+from physt._util import find_subclass, deprecation_alias
 
 if TYPE_CHECKING:
     from typing import (
@@ -800,12 +800,8 @@ def pretty_binning(
     return fixed_width_binning(bin_width=bin_width, data=data, range=range, **kwargs)
 
 
-@wraps(pretty_binning)
-@register_binning(name="human")
-def human_binning(*arg, **kwargs):
-    """Deprecation alias for pretty_binning."""
-    warnings.warn("human_binning is deprecated, use pretty_binning instead.")
-    return pretty_binning(*arg, **kwargs)
+human_binning = deprecation_alias(pretty_binning, "human_binning")
+register_binning(name="human")(human_binning)
 
 
 @register_binning()
