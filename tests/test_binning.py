@@ -142,25 +142,25 @@ class TestFixedWidthBins:
             b3.adapt(b1)
 
 
-class TestHumanBins:
+class TestPrettyBins:
     def test_exact(self):
         data = np.random.rand(1000)
-        the_binning = binnings.human_binning(data, 10)
+        the_binning = binnings.pretty_binning(data, 10)
         assert np.allclose(the_binning.numpy_bins, np.linspace(0, 1, 11))
 
-        the_binning = binnings.human_binning(data, 9)
+        the_binning = binnings.pretty_binning(data, 9)
         assert np.allclose(the_binning.numpy_bins, np.linspace(0, 1, 11))
 
-        the_binning = binnings.human_binning(data, 11)
+        the_binning = binnings.pretty_binning(data, 11)
         assert np.allclose(the_binning.numpy_bins, np.linspace(0, 1, 11))
 
     def test_min_max_bin_width(self):
         data = np.random.rand(1000)
 
-        the_binning = binnings.human_binning(data, min_bin_width=0.3)
+        the_binning = binnings.pretty_binning(data, min_bin_width=0.3)
         assert the_binning.bin_width == 0.3
 
-        the_binning = binnings.human_binning(data, max_bin_width=0.001)
+        the_binning = binnings.pretty_binning(data, max_bin_width=0.001)
         assert the_binning.bin_width == 0.001
 
 

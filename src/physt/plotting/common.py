@@ -11,9 +11,9 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from physt._bin_utils import (
-    find_human_width_24,
-    find_human_width_60,
-    find_human_width_decimal,
+    find_pretty_width_24,
+    find_pretty_width_60,
+    find_pretty_width_decimal,
 )
 
 if TYPE_CHECKING:
@@ -212,17 +212,17 @@ class TimeTickHandler:
         """Determine the level of the tick handler from the histogram range."""
         ideal_width = (max_ - min_) / 6
         if ideal_width < 0.8:
-            return ("sec", find_human_width_decimal(ideal_width))
+            return ("sec", find_pretty_width_decimal(ideal_width))
         elif ideal_width < 50:
-            return ("sec", find_human_width_60(ideal_width))
+            return ("sec", find_pretty_width_60(ideal_width))
         elif ideal_width < 3000:
-            return ("min", find_human_width_60(ideal_width / 60))
+            return ("min", find_pretty_width_60(ideal_width / 60))
         elif ideal_width < 70000:
-            return ("hour", find_human_width_24(ideal_width / 3600))
+            return ("hour", find_pretty_width_24(ideal_width / 3600))
         else:
             return (
                 "day",
-                find_human_width_decimal(ideal_width / 86400),
+                find_pretty_width_decimal(ideal_width / 86400),
             )  # # noqa: FURB126
 
     def get_time_ticks(
