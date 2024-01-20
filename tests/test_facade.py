@@ -24,7 +24,7 @@ class TestH1:
                     dtype=floating_dtypes(),
                     shape=array_shapes(min_side=2),
                     unique=True,
-                    elements=from_dtype(np.float64, allow_infinity=False, allow_nan=False, allow_subnormal=False),
+                    elements=st.floats(allow_nan=False, allow_infinity=False, allow_subnormal=False),
                 ),
                 arrays(
                     dtype=integer_dtypes(),
