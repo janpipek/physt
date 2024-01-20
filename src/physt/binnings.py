@@ -1,5 +1,6 @@
 """Different binning algorithms/schemas for the histograms."""
 from __future__ import annotations
+from functools import wraps
 
 import warnings
 from contextlib import suppress
@@ -8,7 +9,7 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 
 from physt._bin_utils import (
-    find_human_width,
+    find_pretty_width,
     is_bin_subset,
     is_consecutive,
     is_rising,
@@ -16,7 +17,7 @@ from physt._bin_utils import (
     to_numpy_bins,
     to_numpy_bins_with_mask,
 )
-from physt._util import find_subclass
+from physt._util import find_subclass, deprecation_alias
 
 if TYPE_CHECKING:
     from typing import (
@@ -753,7 +754,7 @@ def numpy_binning(
 
 
 @register_binning()
-def human_binning(
+def pretty_binning(
     data: Optional[np.ndarray],
     bin_count: Optional[int] = None,
     *,
@@ -789,7 +790,7 @@ def human_binning(
         bin_count = ideal_bin_count(data)
 
     raw_width = (max_ - min_) / bin_count
-    bin_width = find_human_width(raw_width, kind=kind)
+    bin_width = find_pretty_width(raw_width, kind=kind)
 
     if min_bin_width:
         bin_width = max(bin_width, min_bin_width)
@@ -797,6 +798,10 @@ def human_binning(
         bin_width = min(bin_width, max_bin_width)
 
     return fixed_width_binning(bin_width=bin_width, data=data, range=range, **kwargs)
+
+
+human_binning = deprecation_alias(pretty_binning, "human_binning")
+register_binning(name="human")(human_binning)
 
 
 @register_binning()

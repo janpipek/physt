@@ -125,7 +125,7 @@ class TestPhystSeriesAccessors:
     class TestH1:
         @pytest.mark.parametrize(
             "args,kwargs",
-            [([], {}), (["human"], {}), (["fixed_width"], {"bin_width": 0.2})],
+            [([], {}), (["pretty"], {}), (["fixed_width"], {"bin_width": 0.2})],
         )
         def test_same_as_array(
             self, series_of_int: pd.Series, args: Iterable[Any], kwargs: Dict[str, Any]
@@ -203,7 +203,7 @@ class TestPhystDataFrameAccessors:
 
         @pytest.mark.parametrize(
             "column_name,bin_arg",
-            [("a", None), ("a", "human"), ("b", None), ("xxx", None)],
+            [("a", None), ("a", "pretty"), ("b", None), ("xxx", None)],
         )
         def test_two_columns(
             self, df_two_columns: pd.DataFrame, column_name: str, bin_arg: Any

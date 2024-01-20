@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from physt._bin_utils import (
-    find_human_width,
+    find_pretty_width,
     is_consecutive,
     is_rising,
     make_bin_array,
@@ -84,11 +84,11 @@ class TestFindHumanWidth:
     def test_normal(self):
         invalues = [1.1, 2.4, 32, 57, 2000, 3621, 85000]
         expected = [1.0, 2.5, 25, 50, 2000, 5000, 1e5]
-        result = [find_human_width(x) for x in invalues]
+        result = [find_pretty_width(x) for x in invalues]
         assert np.array_equal(result, expected)
 
     def test_time(self):
         invalues = [1.1, 2.4, 32, 57, 2000, 3621, 85000]
         expected = [1.0, 2.0, 30, 60, 1800, 3600, 86400]
-        result = [find_human_width(x, kind="time") for x in invalues]
+        result = [find_pretty_width(x, kind="time") for x in invalues]
         assert np.array_equal(result, expected)

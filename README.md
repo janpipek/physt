@@ -43,7 +43,7 @@ from physt import h2
 import seaborn as sns
 
 iris = sns.load_dataset('iris')
-iris_hist = h2(iris["sepal_length"], iris["sepal_width"], "human", bin_count=[12, 7], name="Iris")
+iris_hist = h2(iris["sepal_length"], iris["sepal_width"], "pretty", bin_count=[12, 7], name="Iris")
 iris_hist.plot(show_zero=False, cmap="gray_r", show_values=True);
 ```
 
@@ -119,8 +119,8 @@ or conda:
   - plotly (very basic, help wanted!)
   - ascii (experimental)
 * Algorithms for optimized binning
-  - human-friendly
-  - mathematical
+  - pretty (nice rounded bin edges)
+  - mathematical (statistical, quantile-based, geometrical, ...)
 * IO, conversions
   - I/O JSON
   - I/O xarray.DataSet (experimental)

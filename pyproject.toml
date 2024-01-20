@@ -34,13 +34,14 @@ polars = ["polars>=0.20", "pyarrow", "physt[pandas]"]
 xarray = ["xarray"]
 matplotlib = ["matplotlib>=3.0"]
 plotly = ["plotly"]
-vega3 = ["vega3"]
+# TODO: Re-enable vega
+# vega3 = ["vega3"]
 folium = ["folium"]
 root = ["uproot3"]  # TODO: Update to uproot4
 scipy = ["scipy"]
 xtermcolor = ["xtermcolor"]
 all = [
-    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,vega3,folium,root,scipy,xtermcolor]"
+    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,folium,root,scipy,xtermcolor]"
 ]
 
 [build-system]
