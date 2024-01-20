@@ -21,13 +21,12 @@ class TestH1:
         @given(
             array=arrays(
                 dtype=floating_dtypes() | integer_dtypes(),
-                shape=array_shapes(),
+                shape=array_shapes(min_side=2),
                 unique=True,
             )
         )
         def test_array_at_least_two_different_values(self, array):
             # Reasonable defaults for at least two different values
-            assume(array.size > 2)
             assume(np.isfinite(array).all())
 
             # Avoid too narrow ranges in float precision
