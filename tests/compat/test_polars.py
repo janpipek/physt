@@ -21,6 +21,11 @@ from physt.compat.polars import NUMERIC_POLARS_DTYPES
 from physt.types import Histogram1D, HistogramND
 
 
+@pytest.fixture
+def series_of_int() -> polars.Series:
+    return polars.Series("series_of_int", [0, 1, 2, 3, 4, 5])
+
+
 class TestH1:
     # Just check that the whole construction works.
     # More detailed tests for individual steps below.
@@ -246,3 +251,10 @@ class TestExtractWeights:
             ValueError, match="Cannot extract weights from a polars DataFrame"
         ):
             extract_weights(data, array_mask=array_mask)
+
+
+class TestPhystSeriesAccessors:
+    def test_exists_compatible_dtype(self, series_of_int) -> None:
+        assert hasattr(series_of_int, "physt")
+        assert hasattr(series_of_int.physt, "h1")
+        assert not hasattr(series_of_int.physt, "h2")

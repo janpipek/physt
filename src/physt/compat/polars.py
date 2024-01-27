@@ -10,11 +10,12 @@ Examples:
     Histogram1D(bins=(10,), total=100, dtype=int64)
 """
 
-from typing import Iterable, NoReturn, Optional, Tuple
+from typing import Any, Collection, Iterable, NoReturn, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 import polars
+import physt
 
 from physt._construction import (
     extract_1d_array,
@@ -23,6 +24,7 @@ from physt._construction import (
     extract_nd_array,
     extract_weights,
 )
+from physt.types import Histogram1D, HistogramND
 
 NUMERIC_POLARS_DTYPES = [
     polars.Int8,
@@ -83,6 +85,7 @@ def _(
 ) -> Tuple[int, np.ndarray, Optional[np.ndarray]]:
     if data.shape[1] == 0:
         raise ValueError("Must have at least one column.")
+    # TODO: This is not very optimized
     pandas_df = pd.DataFrame(
         {key: extract_1d_array(data[key], dropna=False)[0] for key in data.columns}
     )
@@ -117,3 +120,37 @@ def _(data: polars.Series, array_mask: Optional[np.ndarray] = None) -> np.ndarra
 @extract_weights.register
 def _(data: polars.DataFrame, **kwargs) -> NoReturn:
     raise ValueError("Cannot extract weights from a polars DataFrame.")
+
+
+@polars.api.register_series_namespace("physt")
+class PhystSeries:
+    def __init__(self, series: polars.Series):
+        # TODO: Check numeric dtypes!
+        self._series = series
+
+    def h1(self, bins: Any = None, **kwargs) -> Histogram1D:
+        return physt.h1(self._series, bins=bins, **kwargs)
+
+
+@polars.api.register_dataframe_namespace("physt")
+class PhystFrame:
+    def __init__(self, df: polars.DataFrame):
+        self._df = df
+
+    def histogram(self, columns: Union[str, Collection[str], None] = None, bins: Any = None, **kwargs) -> Union[Histogram1D, HistogramND]:
+        if columns is None:
+            columns = self._df.columns
+        if isinstance(columns, str):
+            columns = [columns]
+        try:
+            data = self._df[columns]
+        except KeyError as exc:
+            raise KeyError(
+                f"At least one of the columns '{columns}' could not be found."
+            ) from exc
+        if len(columns) == 1:
+            return physt.h1(data, bins=bins, **kwargs)
+        if len(columns) == 2:
+            return physt.h2(data[columns[0]], data[columns[1]], bins=bins, **kwargs)
+        # TODO: Check numeric dtypes ?
+        return physt.h(data, bins=bins, **kwargs)
