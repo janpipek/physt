@@ -8,7 +8,7 @@ from physt.histogram1d import Histogram1D
 
 @pytest.fixture
 def empty_adaptive1(create_adaptive) -> Histogram1D:
-    """One-dimesion adaptive fixed-width histogram with bin_width=1."""
+    """One-dimension adaptive fixed-width histogram with bin_width=1."""
     return create_adaptive((0,))
 
 
