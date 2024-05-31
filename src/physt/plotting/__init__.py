@@ -69,6 +69,8 @@ errors : bool
     Whether to show error bars (if available)
 show_stats : bool
     If True, display a small box with statistical info
+stats_loc: 1 | 2 | 3 | 4 | "upper right" | "upper left" | "lower left" | "lower right"
+    Where to display the stats box (similar to legend)
 
 2D heatmaps
 ~~~~~~~~~~~

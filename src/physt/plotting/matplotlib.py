@@ -29,6 +29,7 @@ Parameters
 ----------
 
 """
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -140,6 +141,7 @@ def bar(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):  # pylint
     label = kwargs.pop("label", h1.name)
     lw = kwargs.pop("linewidth", kwargs.pop("lw", 0.5))
     text_kwargs = pop_kwargs_with_prefix("text_", kwargs)
+    stats_kwargs = pop_kwargs_with_prefix("stats_", kwargs)
 
     data = get_data(h1, cumulative=cumulative, density=density)
 
@@ -174,7 +176,7 @@ def bar(h1: Histogram1D, ax: Axes, *, errors: bool = False, **kwargs):  # pylint
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
     if show_stats:
-        _add_stats_box(h1, ax, stats=show_stats)
+        _add_stats_box(h1, ax, stats=show_stats, **stats_kwargs)
 
 
 @register(1, collection=True)
@@ -192,6 +194,7 @@ def scatter(
     """Scatter plot of 1D histogram."""
     value_format = kwargs.pop("value_format", None)
     text_kwargs = pop_kwargs_with_prefix("text_", kwargs)
+    stats_kwargs = pop_kwargs_with_prefix("stats_", kwargs)
     label = kwargs.pop("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density)
@@ -222,7 +225,7 @@ def scatter(
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
     if show_stats:
-        _add_stats_box(h1, ax, stats=show_stats)
+        _add_stats_box(h1, ax, stats=show_stats, **stats_kwargs)
 
 
 @register(1, collection=True)
@@ -240,6 +243,7 @@ def line(
     """Line plot of 1D histogram."""
     value_format = kwargs.pop("value_format", None)
     text_kwargs = pop_kwargs_with_prefix("text_", kwargs)
+    stats_kwargs = pop_kwargs_with_prefix("stats_", kwargs)
     kwargs["label"] = kwargs.get("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density)
@@ -261,7 +265,7 @@ def line(
         ax.plot(h1.bin_centers, data, **kwargs)
 
     if show_stats:
-        _add_stats_box(h1, ax, stats=show_stats)
+        _add_stats_box(h1, ax, stats=show_stats, **stats_kwargs)
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
 
@@ -273,6 +277,7 @@ def fill(h1: Histogram1D, ax: Axes, **kwargs):
     # show_values = kwargs.pop("show_values", False)
     density = kwargs.pop("density", False)
     cumulative = kwargs.pop("cumulative", False)
+    stats_kwargs = pop_kwargs_with_prefix("stats_", kwargs)
     kwargs["label"] = kwargs.get("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density)
@@ -283,7 +288,7 @@ def fill(h1: Histogram1D, ax: Axes, **kwargs):
     ax.fill_between(h1.bin_centers, 0, data, **kwargs)
 
     if show_stats:
-        _add_stats_box(h1, ax, stats=show_stats)
+        _add_stats_box(h1, ax, stats=show_stats, **stats_kwargs)
     # if show_values:
     #     _add_values(ax, h1, data)
     return ax
@@ -298,6 +303,7 @@ def step(h1: Histogram1D, ax: Axes, **kwargs):
     cumulative = kwargs.pop("cumulative", False)
     value_format = kwargs.pop("value_format", None)
     text_kwargs = pop_kwargs_with_prefix("text_", kwargs)
+    stats_kwargs = pop_kwargs_with_prefix("stats_", kwargs)
     kwargs["label"] = kwargs.get("label", h1.name)
 
     data = get_data(h1, cumulative=cumulative, density=density)
@@ -308,7 +314,7 @@ def step(h1: Histogram1D, ax: Axes, **kwargs):
     ax.step(h1.numpy_bins, np.concatenate([data[:1], data]), **kwargs)
 
     if show_stats:
-        _add_stats_box(h1, ax, stats=show_stats)
+        _add_stats_box(h1, ax, stats=show_stats, **stats_kwargs)
     if show_values:
         _add_values(ax, h1, data, value_format=value_format, **text_kwargs)
 
@@ -975,7 +981,10 @@ def _add_colorbar(
 
 
 def _add_stats_box(
-    h1: Histogram1D, ax: Axes, stats: Union[str, bool, Collection[str]] = "all"
+    h1: Histogram1D,
+    ax: Axes,
+    stats: Union[str, bool, Collection[str]] = "all",
+    loc: Union[int, str, None] = None,
 ) -> None:
     """Insert a small legend-like box with statistical information.
 
@@ -983,6 +992,7 @@ def _add_stats_box(
     ----------
     stats : False | "all" or True | field | list of fields
         What info to display
+    loc: As with legend(loc=...) but we do not support auto
 
     Note
     ----
@@ -1000,6 +1010,14 @@ def _add_stats_box(
 
     if not stats:
         return
+
+    # Process the loc argument
+    if not loc:
+        loc = 2
+    elif loc in ("upper right", "upper left", "lower left", "lower right"):
+        loc = ("upper right", "upper left", "lower left", "lower right").index(loc) + 1
+    elif loc not in (1, 2, 3, 4):
+        raise ValueError(f"Invalid location for stats box: {loc}")
 
     if stats in ("all", True):
         used_stats: List[str] = available_stats
@@ -1036,15 +1054,22 @@ def _add_stats_box(
 
     text = "\n".join(text_frags)
 
+    pos_args = {
+        1: dict(x=0.95, y=0.95, verticalalignment="top", horizontalalignment="right"),
+        2: dict(
+            x=0.05,
+            y=0.95,
+            verticalalignment="top",
+            horizontalalignment="left",
+        ),
+        3: dict(x=0.05, y=0.05, verticalalignment="bottom", horizontalalignment="left"),
+        4: dict(
+            x=0.95, y=0.05, verticalalignment="bottom", horizontalalignment="right"
+        ),
+    }
+
     # The placement
-    ax.text(
-        0.05,
-        0.95,
-        text,
-        transform=ax.transAxes,
-        verticalalignment="top",
-        horizontalalignment="left",
-    )
+    ax.text(s=text, transform=ax.transAxes, **pos_args[loc])
 
 
 def _apply_xy_lims(
