@@ -1,8 +1,9 @@
-0.6.0
-------
+0.7.0 (31 May 2024)
+-------------------
 - Added: Support for pola.rs series/dataframes
 - Moved: xarray support as a separate module in physt.compat
 - Removed: physt.special (use physt.special_histograms instead)
+- Added: stats_loc arg to locate stats box in plots
 - Added: Pretty printing with rich library
 - Changed: Moved most configuration to pyproject.toml
 - Improved: Much more testing and edge-case bug fixes

@@ -5,6 +5,7 @@ from functools import wraps
 import warnings
 from contextlib import suppress
 from typing import TYPE_CHECKING, cast
+from typing_extensions import Self
 
 import numpy as np
 
@@ -43,7 +44,7 @@ binning_methods = {}
 """Dictionary of available binnnings."""
 
 
-def register_binning(name: Optional[str] = None):
+def register_binning(name: Optional[str] = None) -> Callable[[Callable], Callable]:
     """Decorator to register among available binning methods."""
 
     def decorator(f: Callable) -> Callable:
@@ -343,7 +344,7 @@ class BinningBase:
                 "Cannot create fixed-width binning from differing bin widths."
             )
 
-    def copy(self: "BinningType") -> "BinningType":
+    def copy(self) -> Self:
         """An identical, independent copy."""
         raise NotImplementedError()
 
@@ -385,7 +386,7 @@ if TYPE_CHECKING:
 class StaticBinning(BinningBase):
     """Binning defined by an array of bin edge pairs."""
 
-    inconsecutive_allowed = True
+    inconsecutive_allowed: ClassVar[bool] = True
 
     def __init__(self, bins, includes_right_edge=True, **kwargs):
         super().__init__(bins=bins, includes_right_edge=includes_right_edge)
@@ -406,7 +407,7 @@ class StaticBinning(BinningBase):
             return self.copy()
         return self
 
-    def copy(self):
+    def copy(self) -> "StaticBinning":
         return StaticBinning(
             bins=self.bins.copy(), includes_right_edge=self.includes_right_edge
         )

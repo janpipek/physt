@@ -27,6 +27,8 @@ if TYPE_CHECKING:
         Union,
     )
 
+    from typing_extensions import Self
+
     import physt
     from physt.binnings import BinningLike
     from physt.typing_aliases import ArrayLike, Axis, DTypeLike
@@ -823,7 +825,7 @@ class HistogramBase(abc.ABC):
         return kwargs
 
     @classmethod
-    def from_dict(cls, a_dict: Mapping[str, Any]) -> "HistogramBase":
+    def from_dict(cls, a_dict: Mapping[str, Any]) -> Self:
         """Create an instance from a dictionary.
 
         If customization is necessary, override the _from_dict_kwargs
