@@ -26,6 +26,14 @@ def series_of_int() -> polars.Series:
     return polars.Series("series_of_int", [0, 1, 2, 3, 4, 5])
 
 
+@pytest.fixture
+def simple_data_frame() -> polars.DataFrame:
+    return polars.DataFrame({
+        "a": [1, 2, 3, 4],
+        "b":   [5, 6, 7, 8],
+    })
+
+
 class TestH1:
     # Just check that the whole construction works.
     # More detailed tests for individual steps below.
@@ -258,3 +266,9 @@ class TestPhystSeriesAccessors:
         assert hasattr(series_of_int, "physt")
         assert hasattr(series_of_int.physt, "h1")
         assert not hasattr(series_of_int.physt, "h2")
+
+
+class TestPhystDataFrameAccessors:
+    def test_exists(self, simple_data_frame) -> None:
+        assert hasattr(simple_data_frame, "physt")
+        assert hasattr(simple_data_frame.physt, "histogram")
