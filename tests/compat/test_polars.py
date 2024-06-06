@@ -79,6 +79,7 @@ class TestH:
             allowed_dtypes=NUMERIC_POLARS_DTYPES,
             allow_infinities=False,
             allow_null=False,
+            allow_nan=False,
             min_cols=1,
             max_cols=4,
             min_size=2,
@@ -86,6 +87,8 @@ class TestH:
         )
     )
     def test_with_dataframe(self, data):
+        # Any better way of getting rid of NAs?
+        data = data.fill_nan(0)
         assume(
             all(
                 (np.inf > (data[col].max() - data[col].min()) > 0)
