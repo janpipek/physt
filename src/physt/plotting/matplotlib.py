@@ -984,6 +984,7 @@ def _add_stats_box(
     h1: Histogram1D,
     ax: Axes,
     stats: Union[str, bool, Collection[str]] = "all",
+    title: Optional[str] = None,
     loc: Union[int, str, None] = None,
 ) -> None:
     """Insert a small legend-like box with statistical information.
@@ -993,6 +994,7 @@ def _add_stats_box(
     stats : False | "all" or True | field | list of fields
         What info to display
     loc: As with legend(loc=...) but we do not support auto
+    title: What is displayed above the stats_box
 
     Note
     ----
@@ -1027,6 +1029,8 @@ def _add_stats_box(
         used_stats = list(stats)  # type: ignore
 
     text_frags = []
+    if title:
+        text_frags.append(title)
     if "total" in used_stats:
         text_frags.append(f"Total: {h1.total}")
     if "underflow" in used_stats:
