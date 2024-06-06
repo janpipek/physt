@@ -1,6 +1,6 @@
-0.7.2 (6 Jun 2024)
-------------------
-- Improved: stats box in plots improvement
+0.7.2 (?? Jun 2024)
+-------------------
+- Improved: stats box in plots
 
 0.7.1 (6 Jun 2024)
 ------------------
