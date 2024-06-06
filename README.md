@@ -142,7 +142,7 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
-- Python 3.7+
+- Python 3.8+ (for polars, currently 3.9+)
 - Numpy 1.20+
 - (optional) matplotlib - simple output
 - (optional) xarray - I/O
