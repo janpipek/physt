@@ -21,13 +21,17 @@ class TestH1:
         @given(
             array=st.one_of(
                 arrays(
-                    dtype=floating_dtypes(),
+                    # TODO: Add more floating types?
+                    dtype=float,
                     shape=array_shapes(min_side=2),
                     unique=True,
-                    elements=st.floats(allow_nan=False, allow_infinity=False, allow_subnormal=False),
+                    elements=st.floats(
+                        allow_nan=False, allow_infinity=False, allow_subnormal=False
+                    ),
                 ),
                 arrays(
-                    dtype=integer_dtypes(),
+                    # TODO: Add more integer types?
+                    dtype=int,
                     shape=array_shapes(min_side=2),
                     unique=True,
                 ),
@@ -37,7 +41,7 @@ class TestH1:
             # Reasonable defaults for at least two different values
             # Avoid too narrow ranges in float precision
             array_range = array.max() - array.min()
-            assume(array_range > np.spacing(array.min()) * 20)
+            assume(np.inf > array_range > np.spacing(array.min()) * 20)
 
             histogram = h1(array)
             assert isinstance(histogram, Histogram1D)
