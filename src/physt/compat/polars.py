@@ -3,6 +3,9 @@
 pola.rs Series and DataFrames can be passed to h1, ..., h
 in the same way as their pandas equivalents.
 
+Note that by default, we drop NAs, but not nulls.
+Histogramming a column with nulls will result in an error.
+
 Examples:
     >>> import polars, physt
     >>> series = polars.Series("x", range(100))
@@ -10,13 +13,15 @@ Examples:
     Histogram1D(bins=(10,), total=100, dtype=int64)
 """
 
+# TODO: Support structures with numerical items
+
 from typing import Any, Collection, Iterable, NoReturn, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 import polars
-import physt
 
+import physt
 from physt._construction import (
     extract_1d_array,
     extract_axis_name,
@@ -60,7 +65,9 @@ def _(
         raise ValueError(
             f"Cannot extract float array from type {data.dtype}, must be int-like or float-like"
         )
-    return extract_1d_array(data.to_numpy(zero_copy_only=True), dropna=dropna)  # type: ignore
+    if data.is_null().any():
+        raise ValueError("Cannot create histogram from series with nulls")
+    return extract_1d_array(data.to_numpy(allow_copy=True), dropna=dropna)  # type: ignore
 
 
 @extract_1d_array.register
@@ -137,7 +144,12 @@ class PhystFrame:
     def __init__(self, df: polars.DataFrame):
         self._df = df
 
-    def histogram(self, columns: Union[str, Collection[str], None] = None, bins: Any = None, **kwargs) -> Union[Histogram1D, HistogramND]:
+    def h(
+        self,
+        columns: Union[str, Collection[str], None] = None,
+        bins: Any = None,
+        **kwargs,
+    ) -> Union[Histogram1D, HistogramND]:
         if columns is None:
             columns = self._df.columns
         if isinstance(columns, str):
