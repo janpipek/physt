@@ -1,13 +1,12 @@
 # physt ![Physt logo](doc/physt-logo64.png)
 
-
-
 P(i/y)thon h(i/y)stograms. Inspired (and based on) numpy.histogram, but designed for humans(TM) on steroids(TM).
 
-The goal is to unify different concepts of histograms as occurring in numpy, pandas, matplotlib, ROOT, etc.
-and to create one representation that is easily manipulated with from the data point of view and at the same time provides
-nice integration into IPython notebook and various plotting options. In short, whatever you want to do with histograms,
-**physt** aims to be on your side.
+Create rich histogram objects from **numpy** or **dask** arrays, from **pandas** and **polars** series/dataframes,
+from **xarray** datasets and a few more types of objects. Manipulate them with ease, plot them with **matplotlib**,
+**vega** or **plotly**.
+
+In short, whatever you want to do with histograms, **physt** aims to be on your side.
 
 [![ReadTheDocs](https://readthedocs.org/projects/physt/badge/?version=latest)](http://physt.readthedocs.io/en/latest/)
 [![Join the chat at https://gitter.im/physt/Lobby](https://badges.gitter.im/physt/physt.svg)](https://gitter.im/physt/physt)
@@ -143,7 +142,7 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
-- Python 3.7+
+- Python 3.8+ (for polars, currently 3.9+)
 - Numpy 1.20+
 - (optional) matplotlib - simple output
 - (optional) xarray - I/O
@@ -152,7 +151,7 @@ Rationale (for both): physt is dumb, but precise.
 - (optional) folium - map plotting
 - (optional) vega3 - for vega in-line in IPython notebook (note that to generate vega JSON, this is not necessary)
 - (optional) xtermcolot - for ASCII color maps
-- (testing) pytest, pandas
+- (testing) pytest
 - (docs) sphinx, sphinx_rtd_theme, ipython
 
 ## Publicity

@@ -21,19 +21,53 @@ from physt.compat.polars import NUMERIC_POLARS_DTYPES
 from physt.types import Histogram1D, HistogramND
 
 
+@pytest.fixture
+def series_of_int() -> polars.Series:
+    return polars.Series("series_of_int", [0, 1, 2, 3, 4, 5])
+
+
+@pytest.fixture
+def series_with_null() -> polars.Series:
+    return polars.Series("series_with_null", [0, 1, None, 3, 4, 5])
+
+
+@pytest.fixture
+def simple_data_frame() -> polars.DataFrame:
+    return polars.DataFrame(
+        {
+            "a": [1, 2, 3, 4],
+            "b": [5, 6, 7, 8],
+        }
+    )
+
+
+@pytest.fixture
+def dataframe_with_null(series_with_null, series_of_int) -> polars.DataFrame:
+    return polars.DataFrame([series_with_null, series_of_int])
+
+
 class TestH1:
     # Just check that the whole construction works.
     # More detailed tests for individual steps below.
 
     @given(
         data=series(
-            allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_infinities=False, min_size=2
+            allowed_dtypes=NUMERIC_POLARS_DTYPES,
+            allow_infinities=False,
+            allow_null=False,
+            min_size=2,
         )
     )
     def test_with_series(self, data):
         assume(np.inf > (data.max() - data.min()) > 0)
         result = h1(data)
         assert isinstance(result, Histogram1D)
+
+    def test_with_null_series(self, series_with_null):
+        with pytest.raises(
+            ValueError, match="Cannot create histogram from series with nulls"
+        ):
+            h1(series_with_null)
 
 
 class TestH:
@@ -44,6 +78,8 @@ class TestH:
         data=dataframes(
             allowed_dtypes=NUMERIC_POLARS_DTYPES,
             allow_infinities=False,
+            allow_null=False,
+            allow_nan=False,
             min_cols=1,
             max_cols=4,
             min_size=2,
@@ -51,6 +87,8 @@ class TestH:
         )
     )
     def test_with_dataframe(self, data):
+        # Any better way of getting rid of NAs?
+        data = data.fill_nan(0)
         assume(
             all(
                 (np.inf > (data[col].max() - data[col].min()) > 0)
@@ -60,9 +98,16 @@ class TestH:
         result = h(data)
         assert isinstance(result, HistogramND)
 
+    def test_with_null_dataframe(self, dataframe_with_null):
+        with pytest.raises(ValueError, match="Cannot create histogram .* with nulls"):
+            h(dataframe_with_null)
+
 
 class TestExtraNDArray:
-    @given(data=dataframes(allowed_dtypes=NUMERIC_POLARS_DTYPES), dropna=st.booleans())
+    @given(
+        data=dataframes(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_null=False),
+        dropna=st.booleans(),
+    )
     def test_same_result_as_with_arrays(self, data: polars.DataFrame, dropna: bool):
         # With equality, we do not have to look at specific cases
         _, result, _ = extract_nd_array(data, dropna=dropna)
@@ -205,12 +250,12 @@ def series_and_mask(
 ) -> Tuple[polars.Series, np.ndarray]:
     length = draw(st.integers(min_value=min_length, max_value=max_length))
     mask = draw(arrays(shape=(length,), dtype=bool))
-    s = draw(series(size=length, allowed_dtypes=allowed_dtypes))
+    s = draw(series(size=length, allowed_dtypes=allowed_dtypes, allow_null=False))
     return s, mask
 
 
 class TestExtractWeights:
-    @given(data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES))
+    @given(data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_null=False))
     def test_selects_full_series_without_mask(self, data: polars.Series):
         result = extract_weights(data, array_mask=None)
         assert_array_equal(result, data.to_numpy())
@@ -222,7 +267,7 @@ class TestExtractWeights:
         assert isinstance(result, np.ndarray)
 
     @given(
-        data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES),
+        data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_null=False),
         array_mask=arrays(dtype=bool, shape=array_shapes(min_dims=1, max_dims=1)),
     )
     def test_fails_with_shape_mismatch(
@@ -232,7 +277,7 @@ class TestExtractWeights:
         with pytest.raises(ValueError, match="Weights array shape"):
             extract_weights(data, array_mask=array_mask)
 
-    @given(data=series(excluded_dtypes=NUMERIC_POLARS_DTYPES))
+    @given(data=series(excluded_dtypes=NUMERIC_POLARS_DTYPES, allow_null=False))
     def test_fails_with_wrong_type(self, data):
         with pytest.raises(ValueError, match="Cannot extract float array from type"):
             extract_weights(data)
@@ -246,3 +291,16 @@ class TestExtractWeights:
             ValueError, match="Cannot extract weights from a polars DataFrame"
         ):
             extract_weights(data, array_mask=array_mask)
+
+
+class TestPhystSeriesAccessors:
+    def test_exists_compatible_dtype(self, series_of_int) -> None:
+        assert hasattr(series_of_int, "physt")
+        assert hasattr(series_of_int.physt, "h1")
+        assert not hasattr(series_of_int.physt, "h2")
+
+
+class TestPhystDataFrameAccessors:
+    def test_exists(self, simple_data_frame) -> None:
+        assert hasattr(simple_data_frame, "physt")
+        assert hasattr(simple_data_frame.physt, "h")
