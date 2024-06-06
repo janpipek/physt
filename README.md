@@ -142,8 +142,9 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
-- Python 3.8+ (for polars, currently 3.9+)
+- Python 3.8+
 - Numpy 1.20+
+- (optional) polars, pandas, dask, xarray - if you want to histogram those
 - (optional) matplotlib - simple output
 - (optional) xarray - I/O
 - (optional) uproot - I/O
