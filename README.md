@@ -173,8 +173,6 @@ Patches:
 
 ## Alternatives and inspirations
 
-* <https://github.com/HDembinski/histogram> (C++, part of boost)
+* <https://github.com/boostorg/histogram> (C++, part of boost)
 * <https://github.com/scikit-hep/boost-histogram> (Python wrapper around boost-histogram)
-* <https://github.com/theodoregoetz/histogram>
 * <https://github.com/ibab/matplotlib-hep>
-* <https://github.com/diana-hep/histbook>
