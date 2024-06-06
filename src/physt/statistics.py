@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 class Statistics:
     """Container of statistics accumulative data."""
 
+    # TODO: Reconsider changing mean, std to properties
+
     sum: float = 0.0
     """Weighted sum of all values entered into histogram."""
 
@@ -29,6 +31,8 @@ class Statistics:
 
     weight: float = 0.0
     """The total weight of values used to construct the histogram."""
+
+    median: float = np.nan
 
     def mean(self) -> float:
         """Statistical mean of all values entered into histogram (weighted)."""
@@ -63,6 +67,7 @@ class Statistics:
             min=min(self.min, other.min),
             max=max(self.max, other.max),
             weight=self.weight + other.weight,
+            median=np.nan,
         )
 
     def __mul__(self, other: Any) -> Statistics:

@@ -1007,6 +1007,7 @@ def _add_stats_box(
         "underflow",
         "overflow",
         "std",
+        "median",
         "total",
     ]
 
@@ -1040,21 +1041,25 @@ def _add_stats_box(
         if h1.overflow:
             text_frags.append(f"Overflow: {h1.overflow}")
     if "mean" in used_stats:
-        mean = h1.mean()
+        mean = h1.statistics.mean()
         if mean is not None:
             text_frags.append(f"Mean: {mean:.2f}")
+    if "median" in used_stats:
+        median = h1.statistics.median
+        if median is not None:
+            text_frags.append(f"Median: {median:.2f}")
     if "std" in used_stats:
-        std = h1.std()
+        std = h1.statistics.std()
         if std is not None:
             text_frags.append(f"Std.dev: {std:.2f}")
     if "min" in used_stats:
-        min = h1.min()
-        if min is not None:
-            text_frags.append(f"Min.: {min:.2f}")
+        min_ = h1.statistics.min
+        if min_ is not None:
+            text_frags.append(f"Min.: {min_:.2f}")
     if "max" in used_stats:
-        max = h1.max()
-        if max is not None:
-            text_frags.append(f"Max.: {max:.2f}")
+        max_ = h1.statistics.max
+        if max_ is not None:
+            text_frags.append(f"Max.: {max_:.2f}")
 
     text = "\n".join(text_frags)
 
