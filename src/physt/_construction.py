@@ -435,8 +435,10 @@ def calculate_1d_frequencies(
             raise ValueError(
                 f"Weights must have the same shape as data, {weights_array.shape} != {data_array.shape}"
             )
+        equal_weights = weights_array.max() - weights_array.min() == 0
     else:
         weights_array = np.ones_like(data_array, dtype=int)
+        equal_weights = True
 
     # Prepare dtype
     inferred_dtype: np.dtype = np.dtype(dtype or weights_array.dtype)
@@ -483,6 +485,8 @@ def calculate_1d_frequencies(
             min=float(data_array.min()),
             max=float(data_array.max()),
             weight=float(weights_array.sum()),
+            # TODO: Support median with weights?
+            median=np.median(data_array) if equal_weights else np.nan,
         )
     return frequencies, errors2, underflow, overflow, stats
 

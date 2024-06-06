@@ -65,6 +65,12 @@ class TestStatisticsComputation:
         else:
             assert histogram.statistics.weight == 4
 
+    def test_median(self, histogram, use_weights):
+        if use_weights:
+            assert np.isnan(histogram.statistics.median)
+        else:
+            assert histogram.statistics.median == 2.5
+
     def test_mean(self, histogram, use_weights):
         if use_weights:
             assert histogram.statistics.mean() == 2.8

@@ -1,3 +1,12 @@
+0.7.2 (?? Jun 2024)
+-------------------
+- Improved: stats box in plots
+
+0.7.1 (6 Jun 2024)
+------------------
+- Fixed: Newer polars compatibility, deal with Nones
+- Added: .physt accessors for polars series and dataframes
+
 0.7.0 (31 May 2024)
 -------------------
 - Added: Support for pola.rs series/dataframes
