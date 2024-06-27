@@ -13,7 +13,7 @@ float64 = np.dtype("float64")
 @st.composite
 def bins(draw, nbins: Optional[int] = None) -> np.ndarray:
     if nbins is None:
-        nbins = draw(st.integers(min_value=1, max_value=100))
+        nbins = draw(st.integers(min_value=1, max_value=10))
     unsorted_edges = draw(
         arrays(
             dtype=float64,

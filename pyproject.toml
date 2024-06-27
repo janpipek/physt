@@ -21,7 +21,7 @@ dependencies = [
     "numpy>=1.23,<2.0",
     "packaging",
     "typing_extensions",
-    "hypothesis>=6.96.1"
+    "hypothesis>=6.96.1",
 ]
 
 [project.optional-dependencies]
