@@ -1,13 +1,12 @@
 """Different binning algorithms/schemas for the histograms."""
 from __future__ import annotations
-from functools import wraps
 
 import warnings
 from contextlib import suppress
 from typing import TYPE_CHECKING, cast
-from typing_extensions import Self
 
 import numpy as np
+from typing_extensions import Self
 
 from physt._bin_utils import (
     find_pretty_width,
@@ -18,7 +17,7 @@ from physt._bin_utils import (
     to_numpy_bins,
     to_numpy_bins_with_mask,
 )
-from physt._util import find_subclass, deprecation_alias
+from physt._util import deprecation_alias, find_subclass
 
 if TYPE_CHECKING:
     from typing import (
@@ -730,7 +729,7 @@ def numpy_binning(
     if not isinstance(bin_count, int):
         raise TypeError("bin_count must be a number.")
     if range:
-        bins = np.linspace(range[0], range[1], bin_count + 1)
+        edges = np.linspace(range[0], range[1], bin_count + 1)
     else:
         if data is None:
             raise ValueError("Either `range` or `data` must be set.")
@@ -746,12 +745,14 @@ def numpy_binning(
             )
         if not np.isfinite(stop - start):
             raise ValueError(f"Range too large to find bins: {start} to {stop}.")
-        bins = np.linspace(start, stop, bin_count + 1)
-        if (np.diff(bins) == 0).any():
-            raise ValueError(
-                f"Range too narrow to split into {bin_count} bins: {start} to {stop}."
-            )
-    return NumpyBinning(bins)
+        edges = np.linspace(start, stop, bin_count + 1)
+        if (np.diff(edges) == 0).any():
+            edge = edges[0]
+            edges = np.array([edge := np.nextafter(edge, np.inf) for _ in edges])
+            # raise ValueError(
+            #    f"Range too narrow to split into {bin_count} bins: {start} to {stop}."
+            # )
+    return NumpyBinning(edges)
 
 
 @register_binning()

@@ -20,6 +20,9 @@ from physt._construction import (
 from physt.compat.polars import NUMERIC_POLARS_DTYPES
 from physt.types import Histogram1D, HistogramND
 
+# To by-pass Python 3.8-only dependency
+pytest.importorskip("zoneinfo")
+
 
 @pytest.fixture
 def series_of_int() -> polars.Series:
@@ -59,7 +62,7 @@ class TestH1:
         )
     )
     def test_with_series(self, data):
-        assume(np.inf > (data.max() - data.min()) > 0)
+        assume(np.inf > (float(data.max()) - float(data.min())) > 0)
         result = h1(data)
         assert isinstance(result, Histogram1D)
 
@@ -91,7 +94,7 @@ class TestH:
         data = data.fill_nan(0)
         assume(
             all(
-                (np.inf > (data[col].max() - data[col].min()) > 0)
+                (np.inf > (float(data[col].max()) - float(data[col].min())) > 0)
                 for col in data.columns
             )
         )
@@ -149,7 +152,7 @@ class TestExtract1DArray:
             # Null type was a bit of problem
             pl_input = polars.Series([], dtype=polars.Float64)
         else:
-            pl_input = polars.Series(values=values)
+            pl_input = polars.Series(values=values, dtype=polars.Float64, strict=False)
         nd_input = np.array(values)
 
         pl_array, pl_mask = extract_1d_array(pl_input, dropna=dropna)

@@ -144,14 +144,14 @@ Rationale (for both): physt is dumb, but precise.
 
 - Python 3.8+
 - Numpy 1.20+
-- (optional) polars, pandas, dask, xarray - if you want to histogram those
+- (optional) polars (0.20, 1.0), pandas, dask, xarray - if you want to histogram those
 - (optional) matplotlib - simple output
 - (optional) xarray - I/O
 - (optional) uproot - I/O
 - (optional) astropy - additional binning algorithms
 - (optional) folium - map plotting
 - (optional) vega3 - for vega in-line in IPython notebook (note that to generate vega JSON, this is not necessary)
-- (optional) xtermcolot - for ASCII color maps
+- (optional) xtermcolor - for ASCII color maps
 - (testing) pytest
 - (docs) sphinx, sphinx_rtd_theme, ipython
 
