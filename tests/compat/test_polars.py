@@ -149,7 +149,7 @@ class TestExtract1DArray:
             # Null type was a bit of problem
             pl_input = polars.Series([], dtype=polars.Float64)
         else:
-            pl_input = polars.Series(values=values)
+            pl_input = polars.Series(values=values, dtype=polars.Float64, strict=False)
         nd_input = np.array(values)
 
         pl_array, pl_mask = extract_1d_array(pl_input, dropna=dropna)
