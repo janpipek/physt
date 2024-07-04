@@ -1,3 +1,9 @@
+0.7.3 (4 Jul 2024)
+------------------
+- Improved: dealing with extremely narrow bin ranges
+- Fixed: mypy and pytest issues
+- Fixed: compatibility with polars 1.0
+
 0.7.2 (27 Jun 2024)
 -------------------
 - Improved: stats box in plots
