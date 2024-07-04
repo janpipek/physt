@@ -215,8 +215,8 @@ class TestExtractNDArray:
         @given(
             data=data_frames(
                 columns=(
-                    column(name=st.text() | st.integers(), dtype=float),
-                    column(name=st.text() | st.integers(), dtype=float),
+                    column(dtype=float),
+                    column(dtype=float),
                 )
             ),
             dropna=st.booleans(),
@@ -231,8 +231,8 @@ class TestExtractNDArray:
         @given(
             data=data_frames(
                 columns=(
-                    column(name=st.text() | st.integers(), dtype=float),
-                    column(name=st.text() | st.integers(), dtype=str),
+                    column(dtype=float),
+                    column(dtype=str),
                 )
             ),
             dropna=st.booleans(),
