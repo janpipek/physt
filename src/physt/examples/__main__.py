@@ -7,6 +7,9 @@ You can run this like:
 import importlib
 import sys
 
+from rich.json import JSON
+from rich.panel import Panel
+
 if not importlib.util.find_spec("rich"):
     print("Please, install rich or physt[terminal] to view nice terminal output.")
     sys.exit(-1)
@@ -33,6 +36,9 @@ console.print("[bold]And the plot:[/bold]")
 
 h1.plot(backend="ascii", show_values=True)
 console.print()
+
+console.print("[bold]JSON fully describing the histogram:[/bold]")
+console.print(Panel(JSON(h1.to_json()), width=min(console.width, 60)))
 
 console.print("[bold]A 2D histogram:[/bold]")
 console.print(h2)
