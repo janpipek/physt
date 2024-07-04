@@ -34,7 +34,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 from functools import wraps
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import matplotlib
 import matplotlib.cm as cm
@@ -1016,10 +1016,12 @@ def _add_stats_box(
 
     # Process the loc argument
     if not loc:
-        loc = 2
+        iloc: int = 2
     elif loc in ("upper right", "upper left", "lower left", "lower right"):
-        loc = ("upper right", "upper left", "lower left", "lower right").index(loc) + 1
-    elif loc not in (1, 2, 3, 4):
+        iloc = ("upper right", "upper left", "lower left", "lower right").index(loc) + 1
+    elif loc in (1, 2, 3, 4):
+        iloc = cast(int, loc)
+    else:
         raise ValueError(f"Invalid location for stats box: {loc}")
 
     if stats in ("all", True):
@@ -1063,7 +1065,7 @@ def _add_stats_box(
 
     text = "\n".join(text_frags)
 
-    pos_args = {
+    pos_args: dict[int, dict[str, Any]] = {
         1: dict(x=0.95, y=0.95, verticalalignment="top", horizontalalignment="right"),
         2: dict(
             x=0.05,
@@ -1078,7 +1080,7 @@ def _add_stats_box(
     }
 
     # The placement
-    ax.text(s=text, transform=ax.transAxes, **pos_args[loc])
+    ax.text(s=text, transform=ax.transAxes, **pos_args[iloc])
 
 
 def _apply_xy_lims(
