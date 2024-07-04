@@ -1,4 +1,3 @@
-import sys
 from typing import Tuple
 
 import hypothesis.strategies as st
@@ -21,12 +20,8 @@ from physt._construction import (
 from physt.compat.polars import NUMERIC_POLARS_DTYPES
 from physt.types import Histogram1D, HistogramND
 
-if sys.version_info[:2] <= (3, 8):
-    # We will not fix this as EOL for Python 3.8 is 2024-10-14
-    pytest.skip(
-        "To run all tests, we would need to explicitly require the zoneinfo module",
-        allow_module_level=True,
-    )
+# To by-pass Python 3.8-only dependency
+pytest.importorskip("zoneinfo")
 
 
 @pytest.fixture
