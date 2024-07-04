@@ -62,7 +62,7 @@ class TestH1:
         )
     )
     def test_with_series(self, data):
-        assume(np.inf > (data.max() - data.min()) > 0)
+        assume(np.inf > (float(data.max()) - float(data.min())) > 0)
         result = h1(data)
         assert isinstance(result, Histogram1D)
 
@@ -94,7 +94,7 @@ class TestH:
         data = data.fill_nan(0)
         assume(
             all(
-                (np.inf > (data[col].max() - data[col].min()) > 0)
+                (np.inf > (float(data[col].max()) - float(data[col].min())) > 0)
                 for col in data.columns
             )
         )
