@@ -1,6 +1,6 @@
-"""Support for pola.rs library.
+"""Support for polars library.
 
-pola.rs Series and DataFrames can be passed to h1, ..., h
+polars Series and DataFrames can be passed to h1, ..., h
 in the same way as their pandas equivalents.
 
 Note that by default, we drop NAs, but not nulls.
@@ -136,6 +136,10 @@ class PhystSeries:
         self._series = series
 
     def h1(self, bins: Any = None, **kwargs) -> Histogram1D:
+        """Create a 1D histogram from the Series.
+
+        :param bins: Binning specification. If None, default bins are used.
+        """
         return physt.h1(self._series, bins=bins, **kwargs)
 
 
@@ -150,10 +154,19 @@ class PhystFrame:
         bins: Any = None,
         **kwargs,
     ) -> Union[Histogram1D, HistogramND]:
+        """Create a histogram from the DataFrame.
+
+        :param columns: Columns to be used for histogramming. If None, all columns are used.
+        :param bins: Binning specification. If None, default bins are used.
+        """
+
         if columns is None:
             columns = self._df.columns
         if isinstance(columns, str):
             columns = [columns]
+        else:
+            columns = list(columns)
+
         try:
             data = self._df[columns]
         except KeyError as exc:
