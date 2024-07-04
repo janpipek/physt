@@ -8,7 +8,7 @@ import importlib
 import sys
 
 if not importlib.util.find_spec("rich"):
-    print("Please, install rich to view nice terminal output.")
+    print("Please, install rich or physt[terminal] to view nice terminal output.")
     sys.exit(-1)
 
 from rich.console import Console
