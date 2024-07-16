@@ -4,28 +4,26 @@ version = "0.7.4"
 description = "P(i/y)thon h(i/y)stograms."
 readme = "README.md"
 requires-python = "~=3.8"
-license = {file = "LICENSE"}
-authors = [
-    {name = "Jan Pipek", email="jan.pipek@gmail.com"}
-]
+license = { file = "LICENSE" }
+authors = [{ name = "Jan Pipek", email = "jan.pipek@gmail.com" }]
 classifiers = [
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Information Technology",
-        "Intended Audience :: Science/Research",
-        "Topic :: Scientific/Engineering",
-        "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "numpy>=1.23,<2.0",
+    "numpy>=1.22,<2.0",
     "packaging",
     "typing_extensions",
     "hypothesis>=6.96.1",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "mypy>=1.8", "types-setuptools", "bumpver"]
+dev = ["pytest", "mypy>=1.8", "types-setuptools", "bumpver", "pytest-xdist"]
 # doc = ["sphinx", "sphinx_rtd_theme", "sphixncontrib-apidoc", "nbsphinx"]
 astropy = ["astropy"]
 dask = ["dask[array]>=2023.0"]
@@ -41,7 +39,7 @@ folium = ["folium"]
 scipy = ["scipy"]
 xtermcolor = ["xtermcolor"]
 all = [
-    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,folium,scipy,xtermcolor]"
+    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,folium,scipy,xtermcolor]",
 ]
 
 [build-system]
@@ -88,9 +86,7 @@ push = true
 [tool.bumpver.file_patterns]
 "pyproject.toml" = [
     'current_version = "{version}"',
-    'version = "{pep440_version}"']
-"src/physt/version.py" = [
-    '__version__ = "{pep440_version}"']
-"conda/meta.yaml" = [
-    '{% set version = "{pep440_version}" %}'
+    'version = "{pep440_version}"',
 ]
+"src/physt/version.py" = ['__version__ = "{pep440_version}"']
+"conda/meta.yaml" = ['{% set version = "{pep440_version}" %}']

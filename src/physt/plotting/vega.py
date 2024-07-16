@@ -15,7 +15,7 @@ from __future__ import annotations
 import codecs
 import json
 from functools import wraps
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, cast
 
 import numpy as np
 
@@ -618,6 +618,7 @@ def _create_scales(
 ) -> None:
     """Find proper scales for axes."""
     if hist.ndim == 1:
+        hist = cast(Histogram1D, hist)
         bins0 = hist.bins.astype(float)
     else:
         bins0 = hist.bins[0].astype(float)
