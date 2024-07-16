@@ -1,3 +1,7 @@
+0.7.4 (16 Jul 2024)
+-------------------
+- Dependency: allow numpy 1.22 again
+
 0.7.3 (4 Jul 2024)
 ------------------
 - Improved: dealing with extremely narrow bin ranges
