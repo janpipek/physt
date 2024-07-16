@@ -705,7 +705,7 @@ class HistogramBase(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def bins(self):
+    def bins(self) -> Union[np.ndarray, List[np.ndarray]]:
         ...
 
     @abc.abstractmethod

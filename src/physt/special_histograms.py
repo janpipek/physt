@@ -178,7 +178,7 @@ class RadialHistogram(TransformedHistogramMixin, Histogram1D):
         return (self.bin_right_edges**2 - self.bin_left_edges**2) * np.pi
 
     @classmethod
-    def _transform_correct_dimension(cls, value):
+    def _transform_correct_dimension(cls, value) -> np.ndarray:
         if value.shape[-1] == 2:
             return np.hypot(value[..., 1], value[..., 0])
         return np.hypot(np.hypot(value[..., 1], value[..., 0]), value[..., 2])
