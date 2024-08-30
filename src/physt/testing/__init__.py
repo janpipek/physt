@@ -44,7 +44,6 @@ def assert_optional_array_equal(
     """Assert the arrays are equal or both None (helper for out tests)."""
     if actual is None:
         assert desired is None
-        return
     else:
         assert desired is not None
         assert_array_equal(actual, desired, **kwargs)
