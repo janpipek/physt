@@ -13,6 +13,7 @@ from physt._construction import (
     extract_1d_array,
     extract_weights,
 )
+from physt.helpers import deprecate
 from physt.histogram_base import HistogramBase
 from physt.statistics import INVALID_STATISTICS, Statistics
 
@@ -322,23 +323,23 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     def inner_missed(self, value):
         self._missed[2] = value
 
-    @np.deprecate(message="Please use .statistics.mean instead.")
+    @deprecate(message="Please use .statistics.mean instead.")
     def mean(self) -> float:
         return self.statistics.mean()
 
-    @np.deprecate(message="Please use .statistics.min instead.")
+    @deprecate(message="Please use .statistics.min instead.")
     def min(self) -> float:
         return self.statistics.min
 
-    @np.deprecate(message="Please use .statistics.max instead.")
+    @deprecate(message="Please use .statistics.max instead.")
     def max(self) -> float:
         return self.statistics.max
 
-    @np.deprecate(message="Please use .statistics.std instead.")
+    @deprecate(message="Please use .statistics.std instead.")
     def std(self) -> float:  # , ddof=0):
         return self.statistics.std()
 
-    @np.deprecate(message="Please use .statistics.variance instead.")
+    @deprecate(message="Please use .statistics.variance instead.")
     def variance(self) -> float:  # , ddof: int = 0) -> float:
         return self.statistics.variance()
 
