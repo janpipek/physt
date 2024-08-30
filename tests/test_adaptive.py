@@ -18,8 +18,8 @@ class TestAdaptive(object):
         assert h.bin_count == 0
         assert h.total == 0
         assert np.allclose(h.bin_widths, 10)
-        assert np.isnan(h.mean())
-        assert np.isnan(h.std())
+        assert np.isnan(h.statistics.mean())
+        assert np.isnan(h.statistics.std())
         assert h.overflow == 0
         assert h.underflow == 0
 
