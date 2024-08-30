@@ -6,7 +6,6 @@ import polars
 import pytest
 from hypothesis import assume, given
 from hypothesis.extra.numpy import array_shapes, arrays
-from numpy.testing import assert_array_equal
 from polars.testing.parametric import dataframes, series
 
 from physt import h, h1
@@ -18,6 +17,7 @@ from physt._construction import (
     extract_weights,
 )
 from physt.compat.polars import NUMERIC_POLARS_DTYPES
+from physt.testing import assert_optional_array_equal
 from physt.types import Histogram1D, HistogramND
 
 # To by-pass Python 3.8-only dependency
@@ -116,7 +116,7 @@ class TestExtraNDArray:
         _, result, _ = extract_nd_array(data, dropna=dropna)
         array = data.to_numpy()
         _, array_result, _ = extract_nd_array(array, dropna=dropna)
-        assert_array_equal(result, array_result)
+        assert_optional_array_equal(result, array_result)
 
     @pytest.mark.parametrize("dropna", [False, True])
     def test_with_empty_data_frame(self, dropna: bool):
@@ -158,9 +158,9 @@ class TestExtract1DArray:
         pl_array, pl_mask = extract_1d_array(pl_input, dropna=dropna)
         nd_array, nd_mask = extract_1d_array(nd_input, dropna=dropna)
 
-        assert_array_equal(pl_array, nd_array)
+        assert_optional_array_equal(pl_array, nd_array)
         if dropna:
-            assert_array_equal(pl_mask, nd_mask)
+            assert_optional_array_equal(pl_mask, nd_mask)
         else:
             assert pl_mask is None
 
@@ -261,7 +261,7 @@ class TestExtractWeights:
     @given(data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_null=False))
     def test_selects_full_series_without_mask(self, data: polars.Series):
         result = extract_weights(data, array_mask=None)
-        assert_array_equal(result, data.to_numpy())
+        assert_optional_array_equal(result, data.to_numpy())
 
     @given(data_and_mask=series_and_mask())
     def test_selects_with_mask(self, data_and_mask):

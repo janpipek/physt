@@ -110,7 +110,7 @@ def extract_nd_array(
         array = array[array_mask]
     else:
         array_mask = None
-    return dim, array, array_mask
+    return cast(int, dim), array, array_mask
 
 
 @extract_nd_array.register

@@ -55,6 +55,7 @@ include = '\.pyi?$'
 # TODO: revisit
 ignore_missing_imports = true
 plugins = ["numpy.typing.mypy_plugin"]
+exclude = ["doc"]
 
 [tool.isort]
 profile = "black"
