@@ -16,7 +16,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "numpy>=1.22,<2.0",
+    "numpy>=1.22",
     "packaging",
     "typing_extensions",
     "hypothesis>=6.96.1",
