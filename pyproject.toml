@@ -16,7 +16,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "numpy>=1.22,<2.0",
+    "numpy>=1.22",
     "packaging",
     "typing_extensions",
     "hypothesis>=6.96.1",
@@ -55,6 +55,7 @@ include = '\.pyi?$'
 # TODO: revisit
 ignore_missing_imports = true
 plugins = ["numpy.typing.mypy_plugin"]
+exclude = ["doc"]
 
 [tool.isort]
 profile = "black"

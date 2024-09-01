@@ -65,7 +65,7 @@ class TransformedHistogramMixin(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def _transform_correct_dimension(cls, value: np.ndarray):
+    def _transform_correct_dimension(cls, value: np.ndarray) -> np.ndarray:
         ...
 
     def find_bin(
