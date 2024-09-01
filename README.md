@@ -166,7 +166,8 @@ Talk at PyData Berlin 2018:
 I am looking for anyone interested in using / developing physt. You can contribute by reporting errors, implementing missing features and suggest new one.
 
 Thanks to:
-- **Ryan Mackenzie White** - <https://github.com/ryanmackenziewhite> for the protobuf idea and first implementation
+- **Ryan Mackenzie White** - <https://github.com/ryanmackenziewhite> for the protobuf idea and first implementation.
+- **Ben Greiner** - <https://github.com/bnavigator> for the numpy>=2.0 PR though I implemented it in a different way eventually.
 
 Patches:
 - **Matthieu Marinangeli** - <https://github.com/marinang>
