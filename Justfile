@@ -17,3 +17,14 @@ mypy:
 pyright:
     # Optionally test with pyright (we don't aim yet)
     uv run --with pyright pyright
+
+pre-commit:
+    # Run all the pre-commit checks on the whole code-base
+    uvx pre-commit run --all
+
+build:
+    rm -rf dist/
+    uv build
+
+publish: build
+    uv publish
