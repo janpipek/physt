@@ -387,6 +387,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
                     sum2=self.statistics.sum2 + weight * value**2,
                     min=min(self.statistics.min, value),
                     max=max(self.statistics.max, value),
+                    median=np.nan,
                 )
             except OverflowError:
                 warnings.warn("Overflow when updating statistics.")

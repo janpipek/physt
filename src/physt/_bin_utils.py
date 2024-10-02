@@ -184,14 +184,24 @@ def find_pretty_width_decimal(raw_width: float) -> float:
 
 
 def find_pretty_width_60(raw_width: float) -> int:
-    """Find the best pretty bin width for seconds and minutes close to raw_width."""
+    """Find the best pretty bin width for seconds and minutes close to raw_width.
+
+    Examples:
+        >>> find_pretty_width_60(51.2)
+        60
+    """
     subscales = np.array([1, 2, 5, 10, 15, 20, 30])
     best_index = np.argmin(np.abs(np.log(subscales / raw_width)))
     return subscales[best_index]
 
 
 def find_pretty_width_24(raw_width: float) -> int:
-    """Find the best pretty bin width for hours close to raw_width."""
+    """Find the best pretty bin width for hours close to raw_width.
+
+    Examples:
+        >>> find_pretty_width_24(10)
+        12
+    """
     subscales = np.array([1, 2, 3, 4, 6, 12])
     best_index = np.argmin(np.abs(np.log(subscales / raw_width)))
     return subscales[best_index]

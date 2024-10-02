@@ -33,6 +33,11 @@ class Statistics:
     """The total weight of values used to construct the histogram."""
 
     median: float = np.nan
+    """The median of the values used to construct the histogram.
+
+    Note that any addition/subtraction or filling will destroy the
+    value (unlike some other summary statistics.)
+    """
 
     def mean(self) -> float:
         """Statistical mean of all values entered into histogram (weighted)."""
