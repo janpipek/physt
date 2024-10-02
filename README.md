@@ -142,10 +142,10 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
-- Python 3.8+
-- Numpy 1.20+
-- (optional) polars (0.20, 1.0), pandas, dask, xarray - if you want to histogram those
-- (optional) matplotlib - simple output
+- Python 3.9+
+- Numpy 1.25+
+- (optional) polars (1.0+), pandas (1.5+), dask, xarray - if you want to histogram those
+- (optional) matplotlib - simple visualization
 - (optional) xarray - I/O
 - (optional) uproot - I/O
 - (optional) astropy - additional binning algorithms
