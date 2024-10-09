@@ -1,4 +1,5 @@
 """Different binning algorithms/schemas for the histograms."""
+
 from __future__ import annotations
 
 import warnings
@@ -1079,19 +1080,11 @@ def ideal_bin_count(data: np.ndarray, method: str = "default") -> int:
     if method == "doane":
         if value_count < 3:
             return 1
-        try:
-            from scipy.stats import skew
-        except ImportError:
-            warnings.warn("Please install scipy to support 'doane' method")
-        else:
-            sigma = np.sqrt(
-                6 * (value_count - 2) / (value_count + 1) * (value_count + 3)
-            )
-            return int(
-                np.ceil(
-                    1 + np.log2(value_count) + np.log2(1 + np.abs(skew(data)) / sigma)
-                )
-            )
+
+        sigma = np.sqrt(6 * (value_count - 2) / (value_count + 1) * (value_count + 3))
+        return int(
+            np.ceil(1 + np.log2(value_count) + np.log2(1 + np.abs(_skew(data)) / sigma))
+        )
     if method == "rice":
         return int(np.ceil(2 * np.power(value_count, 1 / 3)))
     raise ValueError(f"Unknown bin count method: {method}")
@@ -1117,3 +1110,17 @@ def as_binning(obj: BinningLike, copy: bool = False) -> BinningBase:
     else:
         bins = make_bin_array(obj)
         return StaticBinning(bins)
+
+
+def _skew(data: np.ndarray) -> float:
+    """Compute skewness, i.e. the third standardised moment.
+
+    See also: `scipy.stats.skew`
+
+    https://en.wikipedia.org/wiki/Skewness#Definition
+    """
+    data = data.flatten()
+    mean = np.mean(data)
+    sigma = np.std(data)
+    sum_res = np.sum((data - mean) ** 3)
+    return (sum_res / sigma**3 / len(data)).item()

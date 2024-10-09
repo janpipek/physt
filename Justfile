@@ -1,6 +1,6 @@
 nox:
     # Run the full tests suite via nox
-    uvx nox
+    uvx --with "nox>=2021.10.9" nox
 
 bump-minor:
     # Bump the version from x.y.z to x.(y+1).0
@@ -9,6 +9,9 @@ bump-minor:
 bump-patch:
     # Bump the version from x.y.z to x.y.(z+1)
     uvx bumpver update --tag final --patch
+
+pytest:
+    uv run pytest
 
 mypy:
     # Test typing with mypy (we want this to succeed)
