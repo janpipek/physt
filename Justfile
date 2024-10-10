@@ -11,15 +11,15 @@ bump-patch:
     uvx bumpver update --tag final --patch
 
 pytest:
-    uv run pytest
+    uv run --extra all pytest
 
 mypy:
     # Test typing with mypy (we want this to succeed)
-    uv run mypy src/ tests/
+    uv run --extra all mypy src/ tests/
 
 pyright:
     # Optionally test with pyright (we don't aim yet)
-    uv run --with pyright pyright
+    uv run --python 3.12 --extra all --with pyright pyright
 
 pre-commit:
     # Run all the pre-commit checks on the whole code-base
