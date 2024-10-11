@@ -18,7 +18,7 @@ from physt._construction import (
 )
 from physt.compat.polars import NUMERIC_POLARS_DTYPES
 from physt.testing import assert_optional_array_equal
-from physt.types import Histogram1D, HistogramND
+from physt.types import Histogram1D, Histogram2D, HistogramND
 
 # To by-pass Python 3.8-only dependency
 pytest.importorskip("zoneinfo")
@@ -304,6 +304,29 @@ class TestPhystSeriesAccessors:
 
 
 class TestPhystDataFrameAccessors:
+    @pytest.fixture()
+    def simple_df(self) -> polars.DataFrame:
+        return polars.DataFrame(
+            {
+                "a": [1, 2, 3, 4, 5],
+                "b": ["a", "b", "c", "d", "e"],
+                "c": [1.0, 2.0, 3.0, 4.0, 5.0],
+            }
+        )
+
     def test_exists(self, simple_data_frame) -> None:
         assert hasattr(simple_data_frame, "physt")
         assert hasattr(simple_data_frame.physt, "h")
+
+    class TestH:
+        def test_selects_numerical(self, simple_df):
+            h = simple_df.physt.h()
+            assert isinstance(h, Histogram2D)
+
+        @pytest.mark.parametrize(
+            "selector",
+            [["a", "c"], [polars.selectors.numeric()]],
+        )
+        def test_uses_selectors(self, selector, simple_df):
+            h = simple_df.physt.h(selector)
+            assert isinstance(h, Histogram2D)
