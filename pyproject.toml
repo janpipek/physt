@@ -31,7 +31,7 @@ dev = ["pytest", "mypy>=1.8", "types-setuptools", "bumpver", "pytest-xdist"]
 astropy = ["astropy>=6.0"]
 dask = ["dask[array]>=2023.0"]
 pandas = ["pandas>=1.3"]
-polars = ["polars>=1.0", "pyarrow", "physt[pandas]"]
+polars = ["polars>=1.0", "physt[pandas]"]
 xarray = ["xarray"]
 matplotlib = ["matplotlib>=3.0"]
 plotly = ["plotly"]
@@ -40,10 +40,9 @@ plotly = ["plotly"]
 folium = ["folium"]
 # TODO: Update to uproot4?
 # root = ["uproot3"]
-scipy = ["scipy"]
 xtermcolor = ["xtermcolor"]
 all = [
-    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,folium,scipy,xtermcolor]",
+    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,folium,xtermcolor]",
 ]
 
 [build-system]
