@@ -39,7 +39,7 @@ plotly = ["plotly"]
 # vega3 = ["vega3"]
 folium = ["folium"]
 # root = ["uproot3"]  # TODO: Update to uproot4
-xtermcolor = ["xtermcolor", "rich"]
+terminal = ["xtermcolor", "rich"]
 all = [
     "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,folium,terminal]"
 ]
