@@ -6,7 +6,6 @@ import polars
 import pytest
 from hypothesis import assume, given
 from hypothesis.extra.numpy import array_shapes, arrays
-from numpy.testing import assert_array_equal
 from polars.testing.parametric import dataframes, series
 
 from physt import h, h1
@@ -18,7 +17,11 @@ from physt._construction import (
     extract_weights,
 )
 from physt.compat.polars import NUMERIC_POLARS_DTYPES
-from physt.types import Histogram1D, HistogramND
+from physt.testing import assert_optional_array_equal
+from physt.types import Histogram1D, Histogram2D, HistogramND
+
+# To by-pass Python 3.8-only dependency
+pytest.importorskip("zoneinfo")
 
 
 @pytest.fixture
@@ -59,7 +62,7 @@ class TestH1:
         )
     )
     def test_with_series(self, data):
-        assume(np.inf > (data.max() - data.min()) > 0)
+        assume(np.inf > (float(data.max()) - float(data.min())) > 0)
         result = h1(data)
         assert isinstance(result, Histogram1D)
 
@@ -91,7 +94,7 @@ class TestH:
         data = data.fill_nan(0)
         assume(
             all(
-                (np.inf > (data[col].max() - data[col].min()) > 0)
+                (np.inf > (float(data[col].max()) - float(data[col].min())) > 0)
                 for col in data.columns
             )
         )
@@ -113,7 +116,7 @@ class TestExtraNDArray:
         _, result, _ = extract_nd_array(data, dropna=dropna)
         array = data.to_numpy()
         _, array_result, _ = extract_nd_array(array, dropna=dropna)
-        assert_array_equal(result, array_result)
+        assert_optional_array_equal(result, array_result)
 
     @pytest.mark.parametrize("dropna", [False, True])
     def test_with_empty_data_frame(self, dropna: bool):
@@ -149,15 +152,15 @@ class TestExtract1DArray:
             # Null type was a bit of problem
             pl_input = polars.Series([], dtype=polars.Float64)
         else:
-            pl_input = polars.Series(values=values)
+            pl_input = polars.Series(values=values, dtype=polars.Float64, strict=False)
         nd_input = np.array(values)
 
         pl_array, pl_mask = extract_1d_array(pl_input, dropna=dropna)
         nd_array, nd_mask = extract_1d_array(nd_input, dropna=dropna)
 
-        assert_array_equal(pl_array, nd_array)
+        assert_optional_array_equal(pl_array, nd_array)
         if dropna:
-            assert_array_equal(pl_mask, nd_mask)
+            assert_optional_array_equal(pl_mask, nd_mask)
         else:
             assert pl_mask is None
 
@@ -258,7 +261,7 @@ class TestExtractWeights:
     @given(data=series(allowed_dtypes=NUMERIC_POLARS_DTYPES, allow_null=False))
     def test_selects_full_series_without_mask(self, data: polars.Series):
         result = extract_weights(data, array_mask=None)
-        assert_array_equal(result, data.to_numpy())
+        assert_optional_array_equal(result, data.to_numpy())
 
     @given(data_and_mask=series_and_mask())
     def test_selects_with_mask(self, data_and_mask):
@@ -301,6 +304,29 @@ class TestPhystSeriesAccessors:
 
 
 class TestPhystDataFrameAccessors:
+    @pytest.fixture()
+    def simple_df(self) -> polars.DataFrame:
+        return polars.DataFrame(
+            {
+                "a": [1, 2, 3, 4, 5],
+                "b": ["a", "b", "c", "d", "e"],
+                "c": [1.0, 2.0, 3.0, 4.0, 5.0],
+            }
+        )
+
     def test_exists(self, simple_data_frame) -> None:
         assert hasattr(simple_data_frame, "physt")
         assert hasattr(simple_data_frame.physt, "h")
+
+    class TestH:
+        def test_selects_numerical(self, simple_df):
+            h = simple_df.physt.h()
+            assert isinstance(h, Histogram2D)
+
+        @pytest.mark.parametrize(
+            "selector",
+            [["a", "c"], [polars.selectors.numeric()]],
+        )
+        def test_uses_selectors(self, selector, simple_df):
+            h = simple_df.physt.h(selector)
+            assert isinstance(h, Histogram2D)

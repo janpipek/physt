@@ -142,16 +142,16 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
-- Python 3.8+
-- Numpy 1.20+
-- (optional) polars, pandas, dask, xarray - if you want to histogram those
-- (optional) matplotlib - simple output
+- Python 3.9+
+- Numpy 1.25+
+- (optional) polars (1.0+), pandas (1.5+), dask, xarray - if you want to histogram those
+- (optional) matplotlib - simple visualization
 - (optional) xarray - I/O
 - (optional) uproot - I/O
 - (optional) astropy - additional binning algorithms
 - (optional) folium - map plotting
 - (optional) vega3 - for vega in-line in IPython notebook (note that to generate vega JSON, this is not necessary)
-- (optional) xtermcolot - for ASCII color maps
+- (optional) xtermcolor - for ASCII color maps
 - (testing) pytest
 - (docs) sphinx, sphinx_rtd_theme, ipython
 
@@ -166,7 +166,8 @@ Talk at PyData Berlin 2018:
 I am looking for anyone interested in using / developing physt. You can contribute by reporting errors, implementing missing features and suggest new one.
 
 Thanks to:
-- **Ryan Mackenzie White** - <https://github.com/ryanmackenziewhite> for the protobuf idea and first implementation
+- **Ryan Mackenzie White** - <https://github.com/ryanmackenziewhite> for the protobuf idea and first implementation.
+- **Ben Greiner** - <https://github.com/bnavigator> for the numpy>=2.0 PR though I implemented it in a different way eventually.
 
 Patches:
 - **Matthieu Marinangeli** - <https://github.com/marinang>

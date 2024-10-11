@@ -57,10 +57,8 @@ class TestH1:
 
         def test_infinitesimal_range(self):
             array = np.array([1, np.nextafter(1, 2)])
-            with pytest.raises(
-                ValueError, match="Range too narrow to split into [0-9]+ bins"
-            ):
-                h1(array)
+            h1(array)
+            # TODO: Test that it is actually ok
 
 
 @st.composite

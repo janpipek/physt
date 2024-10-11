@@ -171,7 +171,12 @@ def is_bin_superset(sup: ArrayLike, sub: ArrayLike) -> bool:
 
 
 def find_pretty_width_decimal(raw_width: float) -> float:
-    """Find the pretty bin width on decimal scale close to raw_width."""
+    """Find the pretty bin width on decimal scale close to raw_width.
+
+    Examples:
+        >>> find_pretty_width_decimal(445)
+        500
+    """
     subscales = np.array([0.5, 1, 2, 2.5, 5, 10])
     power = np.floor(np.log10(raw_width)).astype(int)
     best_index = np.argmin(np.abs(np.log(subscales * (10.0**power) / raw_width)))
@@ -179,20 +184,32 @@ def find_pretty_width_decimal(raw_width: float) -> float:
 
 
 def find_pretty_width_60(raw_width: float) -> int:
-    """Find the best pretty bin width for seconds and minutes close to raw_width."""
+    """Find the best pretty bin width for seconds and minutes close to raw_width.
+
+    Examples:
+        >>> find_pretty_width_60(51.2)
+        60
+    """
     subscales = np.array([1, 2, 5, 10, 15, 20, 30])
     best_index = np.argmin(np.abs(np.log(subscales / raw_width)))
     return subscales[best_index]
 
 
 def find_pretty_width_24(raw_width: float) -> int:
-    """Find the best pretty bin width for hours close to raw_width."""
+    """Find the best pretty bin width for hours close to raw_width.
+
+    Examples:
+        >>> find_pretty_width_24(10)
+        12
+    """
     subscales = np.array([1, 2, 3, 4, 6, 12])
     best_index = np.argmin(np.abs(np.log(subscales / raw_width)))
     return subscales[best_index]
 
 
-def find_pretty_width(raw_width: float, kind: Optional[Literal["time"]] = None) -> float:
+def find_pretty_width(
+    raw_width: float, kind: Optional[Literal["time"]] = None
+) -> float:
     """Find the best pretty width close to a given raw_width."""
     # TODO: Deal with infinity
     if not kind:

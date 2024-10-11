@@ -1,3 +1,30 @@
+0.8.2 (11 Oct 2025)
+-------------------
+- Typing: Added py.typed file
+- Plotting: auto tight_layout()
+- Improved: polars.DataFrame.physt.h accepts any selectors
+- Dependency: support Python 3.13, don't use scipy
+
+0.8.1 (2 Oct 2025)
+------------------
+- Tooling: embrace uv
+- Dependency: drop Python 3.8, numpy<1.25, pandas<1.5, polars<1.0
+
+0.8.0 (1 Sep 2024)
+-------------------
+- Dependency: allow numpy>=2.0
+- Removed a few deprecated methods for histogram statistics
+
+0.7.4 (16 Jul 2024)
+-------------------
+- Dependency: allow numpy 1.22 again
+
+0.7.3 (4 Jul 2024)
+------------------
+- Improved: dealing with extremely narrow bin ranges
+- Fixed: mypy and pytest issues
+- Fixed: compatibility with polars 1.0
+
 0.7.2 (27 Jun 2024)
 -------------------
 - Improved: stats box in plots

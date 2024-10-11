@@ -322,26 +322,6 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     def inner_missed(self, value):
         self._missed[2] = value
 
-    @np.deprecate(message="Please use .statistics.mean instead.")
-    def mean(self) -> float:
-        return self.statistics.mean()
-
-    @np.deprecate(message="Please use .statistics.min instead.")
-    def min(self) -> float:
-        return self.statistics.min
-
-    @np.deprecate(message="Please use .statistics.max instead.")
-    def max(self) -> float:
-        return self.statistics.max
-
-    @np.deprecate(message="Please use .statistics.std instead.")
-    def std(self) -> float:  # , ddof=0):
-        return self.statistics.std()
-
-    @np.deprecate(message="Please use .statistics.variance instead.")
-    def variance(self) -> float:  # , ddof: int = 0) -> float:
-        return self.statistics.variance()
-
     def find_bin(self, value: float, axis: Optional[Axis] = None) -> Optional[int]:
         """Index of bin corresponding to a value.
 
@@ -407,6 +387,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
                     sum2=self.statistics.sum2 + weight * value**2,
                     min=min(self.statistics.min, value),
                     max=max(self.statistics.max, value),
+                    median=np.nan,
                 )
             except OverflowError:
                 warnings.warn("Overflow when updating statistics.")

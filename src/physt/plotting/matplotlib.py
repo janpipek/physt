@@ -118,10 +118,10 @@ def register(
             else:
                 f(hist, ax=ax, **kwargs)
 
+            fig = ax.figure  # type: ignore
+            fig.tight_layout()
+
             if write_to:
-                # TODO: Find proper typing for this?
-                fig = ax.figure  # type: ignore
-                fig.tight_layout()
                 fig.savefig(write_to, dpi=dpi or default_dpi)
             return ax
 

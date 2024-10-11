@@ -65,7 +65,7 @@ class TransformedHistogramMixin(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def _transform_correct_dimension(cls, value: np.ndarray):
+    def _transform_correct_dimension(cls, value: np.ndarray) -> np.ndarray:
         ...
 
     def find_bin(
@@ -178,7 +178,7 @@ class RadialHistogram(TransformedHistogramMixin, Histogram1D):
         return (self.bin_right_edges**2 - self.bin_left_edges**2) * np.pi
 
     @classmethod
-    def _transform_correct_dimension(cls, value):
+    def _transform_correct_dimension(cls, value) -> np.ndarray:
         if value.shape[-1] == 2:
             return np.hypot(value[..., 1], value[..., 0])
         return np.hypot(np.hypot(value[..., 1], value[..., 0]), value[..., 2])
@@ -574,24 +574,26 @@ def spherical(
     if isinstance(phi_bins, int):
         phi_bins = np.linspace(*phi_range, phi_bins + 1)
 
-    try:
-        bin_schemas = calculate_nd_bins(
-            transformed_array,
-            [radial_bins, theta_bins, phi_bins],
-            range=[radial_range, None, None],
-            check_nan=not dropna,
-            **kwargs,
-        )
-    except ValueError as err:
-        if "Range too narrow to split" in str(err):
-            if transformed_array is not None and np.isclose(
-                transformed_array[:, 0].min(), transformed_array[:, 0].max()
-            ):
-                raise ValueError(
-                    f"All radii seem to be the same: {transformed_array[:,0].min():,.4f}. "
-                    "Perhaps you wanted to use `spherical_surface_histogram` instead or set radius bins explicitly?"
-                )
-        raise
+    bin_schemas = calculate_nd_bins(
+        transformed_array,
+        [radial_bins, theta_bins, phi_bins],
+        range=[radial_range, None, None],
+        check_nan=not dropna,
+        **kwargs,
+    )
+
+    # TODO: Issue warning if the range is too narrow to split?
+    # except ValueError as err:
+    #     if "Range too narrow to split" in str(err):
+    #         if transformed_array is not None and np.isclose(
+    #             transformed_array[:, 0].min(), transformed_array[:, 0].max()
+    #         ):
+    #             raise ValueError(
+    #                 f"All radii seem to be the same: {transformed_array[:,0].min():,.4f}. "
+    #                 "Perhaps you wanted to use `spherical_surface_histogram` instead or set radius bins explicitly?"
+    #             )
+    #     raise
+
     return SphericalHistogram.from_calculate_frequencies(
         transformed_array, binnings=bin_schemas, weights=weights
     )
