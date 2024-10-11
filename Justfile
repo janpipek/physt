@@ -28,6 +28,7 @@ pre-commit:
 build:
     rm -rf dist/
     uv build
+    rm -rf src/physt.egg-info
 
 publish: build
     uv publish
