@@ -15,7 +15,7 @@ Examples:
 
 # TODO: Support structures with numerical items
 
-from typing import Any, Collection, Iterable, NoReturn, Optional, Tuple, Union
+from typing import Any, Iterable, NoReturn, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -150,29 +150,29 @@ class PhystFrame:
 
     def h(
         self,
-        columns: Union[str, Collection[str], None] = None,
+        *selectors: Any,
         bins: Any = None,
         **kwargs,
     ) -> Union[Histogram1D, HistogramND]:
         """Create a histogram from the DataFrame.
 
-        :param columns: Columns to be used for histogramming. If None, all columns are used.
+        :param selectors: Any selectors. If none, all numeric columns are used.
         :param bins: Binning specification. If None, default bins are used.
         """
 
-        if columns is None:
-            columns = self._df.columns
+        if not selectors:
+            selectors = (polars.selectors.numeric(),)
+        data = self._df.select(*selectors)
+        columns = data.columns
+
+        if len(columns) < 1:
+            raise KeyError("No columns selected for histogramming.")
+
         if isinstance(columns, str):
             columns = [columns]
         else:
             columns = list(columns)
 
-        try:
-            data = self._df[columns]
-        except KeyError as exc:
-            raise KeyError(
-                f"At least one of the columns '{columns}' could not be found."
-            ) from exc
         if len(columns) == 1:
             return physt.h1(data, bins=bins, **kwargs)
         if len(columns) == 2:
