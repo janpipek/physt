@@ -1,11 +1,16 @@
-0.8.2 (11 Oct 2025)
+0.8.4 (11 Oct 2024)
+-------------------
+- UX: a bit of rich support
+- Examples: runnable from command line / uv
+
+0.8.2 (11 Oct 2024)
 -------------------
 - Typing: Added py.typed file
 - Plotting: auto tight_layout()
 - Improved: polars.DataFrame.physt.h accepts any selectors
 - Dependency: support Python 3.13, don't use scipy
 
-0.8.1 (2 Oct 2025)
+0.8.1 (2 Oct 2024)
 ------------------
 - Tooling: embrace uv
 - Dependency: drop Python 3.8, numpy<1.25, pandas<1.5, polars<1.0
