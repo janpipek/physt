@@ -32,3 +32,6 @@ build:
 
 publish: build
     uv publish
+
+examples:
+    uv run --extra all python -m physt.examples

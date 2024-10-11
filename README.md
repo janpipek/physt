@@ -16,6 +16,14 @@ In short, whatever you want to do with histograms, **physt** aims to be on your 
 [![Anaconda-Server Badge](https://anaconda.org/janpipek/physt/badges/license.svg)](https://anaconda.org/janpipek/physt)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+## See it in action
+
+With [`uv`](https://docs.astral.sh/uv/) installed, you can run the following command without needing to install 
+anything to see some examples in action:
+
+```bash
+uv run --with "physt[terminal]>=0.8.3" -m physt.examples
+```
 
 ## Simple example
 
