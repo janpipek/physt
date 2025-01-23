@@ -5,12 +5,13 @@ The plots are printed directly to standard output.
 """
 from __future__ import annotations
 
+import typing
+
 import numpy as np
-import rich.console
 import rich.color
+import rich.console
 from rich.style import Style
 from rich.text import Text
-import typing
 
 from physt.plotting.common import get_value_format
 
@@ -27,13 +28,15 @@ dims = {
 
 
 def hbar(h1: "Histogram1D", width: int = 80, show_values: bool = False) -> None:
+    """Horizontal bar plot in block characters."""
+    console = rich.console.Console()
     data = (h1.normalize().frequencies * width).round().astype(int)
     for i in range(h1.bin_count):
         # TODO: Print bin labels somehow
         if show_values:
-            print("#" * data[i], h1.frequencies[i])
+            console.print("█" * data[i], h1.frequencies[i])
         else:
-            print("#" * data[i])
+            console.print("█" * data[i])
 
 
 SUPPORTED_CMAPS = ("Greys", "Greys_r")
@@ -45,11 +48,12 @@ SHADING_CHARS = " ░▒▓█"
 FULL_SQUARE_CHAR = SHADING_CHARS[-1]
 
 
-def map(
-        h2: "Histogram2D",
-        use_color: typing.Optional[bool] = None,
-        **kwargs) -> None:
-    """Heat map."""
+def map(h2: "Histogram2D", use_color: typing.Optional[bool] = None, **kwargs) -> None:
+    """Heat map.
+
+    Depending on the color system, it uses either block characters or shades
+    from the colormap.
+    """
 
     console = rich.console.Console()
     color_system = console.color_system
@@ -61,9 +65,10 @@ def map(
     cmap_data = _get_cmap_data(h2.frequencies, kwargs)
 
     if use_color:
+
         def _render_cell(value: float) -> Text:
             color = rich.color.Color.from_rgb(
-                    int(255 * value), int(255 * value), int(255 * value)
+                int(255 * value), int(255 * value), int(255 * value)
             )
             return Text(FULL_SQUARE_CHAR, style=Style(color=color))
 
@@ -80,23 +85,25 @@ def map(
             )
 
     else:
+
         def _render_cell(value: float) -> Text:
-            return Text(SHADING_CHARS[int(np.clip(value * (len(SHADING_CHARS)), 0, len(SHADING_CHARS) - 1))])
+            return Text(
+                SHADING_CHARS[
+                    int(
+                        np.clip(value * (len(SHADING_CHARS)), 0, len(SHADING_CHARS) - 1)
+                    )
+                ]
+            )
 
         colorbar_range = np.arange(h2.shape[1] + 1) / h2.shape[1]
 
     console.print(
-        (value_format(h2.get_bin_right_edges(0)[-1]) + " →").rjust(
-            h2.shape[1] + 2, " "
-        )
+        (value_format(h2.get_bin_right_edges(0)[-1]) + " →").rjust(h2.shape[1] + 2, " ")
     )
     console.print("+" + "-" * h2.shape[1] + "+")
     for i in range(h2.shape[0] - 1, -1, -1):
         line_frags = ["|"]
-        line_frags += [
-            _render_cell(cmap_data[i, j])
-            for j in range(h2.shape[1])
-        ]
+        line_frags += [_render_cell(cmap_data[i, j]) for j in range(h2.shape[1])]
         line_frags.append("|")
         if i == h2.shape[0] - 1:
             line_frags.append(value_format(h2.get_bin_right_edges(1)[-1]) + " ↑")
@@ -105,10 +112,7 @@ def map(
         console.print(*line_frags, sep="")
     console.print("+" + "-" * h2.shape[1] + "+")
     console.print("←", value_format(h2.get_bin_left_edges(0)[0]))
-    colorbar_frags = [
-        _render_cell(j)
-        for j in colorbar_range
-    ]
+    colorbar_frags = [_render_cell(j) for j in colorbar_range]
     console.print("↓", 0, sep="")
     console.print(*colorbar_frags, sep="")
     console.print(str(h2.frequencies.max()).rjust(h2.shape[1], " "), "↑")
