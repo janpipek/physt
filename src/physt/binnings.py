@@ -7,7 +7,7 @@ from contextlib import suppress
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
-from typing_extensions import Self
+from typing_extensions import NoReturn, Self
 
 from physt._bin_utils import (
     find_pretty_width,
@@ -226,7 +226,7 @@ class BinningBase:
             raise RuntimeError("Cannot change binning to adaptive.")
         self._adaptive = value
 
-    def _adapt(self, other):
+    def _adapt(self, other) -> NoReturn:
         raise RuntimeError("Cannot adapt binning.")
 
     @property
