@@ -86,6 +86,18 @@ class Statistics:
             weight=self.weight * other_scalar,
         )
 
+    def __eq__(self, other):
+        if not isinstance(other, Statistics):
+            return False
+        return (
+            np.array_equal(self.sum, other.sum, equal_nan=True)
+            and np.array_equal(self.sum2, other.sum2, equal_nan=True)
+            and np.array_equal(self.min, other.min, equal_nan=True)
+            and np.array_equal(self.max, other.max, equal_nan=True)
+            and np.array_equal(self.weight, other.weight, equal_nan=True)
+            and np.array_equal(self.median, other.median, equal_nan=True)
+        )
+
 
 INVALID_STATISTICS: Statistics = Statistics(
     sum=np.nan, sum2=np.nan, min=np.nan, max=np.nan, weight=np.nan
