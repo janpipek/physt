@@ -11,8 +11,8 @@ from physt.histogram1d import Histogram1D, ObjectWithBinning
 if TYPE_CHECKING:
     from typing import Any, Dict, Optional, Tuple
 
-    import physt
     from physt.binnings import BinningLike
+    from physt.plotting import PlottingProxy
     from physt.typing_aliases import ArrayLike
 
 
@@ -144,7 +144,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         return cast(Histogram1D, sum(self.histograms))
 
     @property
-    def plot(self) -> "physt.plotting.PlottingProxy":
+    def plot(self) -> "PlottingProxy":
         """Proxy to plotting.
 
         This attribute is a special proxy to plotting. In the most

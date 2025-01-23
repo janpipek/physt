@@ -7,6 +7,7 @@ This involves:
 
 Note that the histogram classes are rather data structures and need computed data to be created.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
@@ -177,9 +178,7 @@ def h3(data: Optional[ArrayLike], bins=None, **kwargs) -> HistogramND:
         and not np.isscalar(data[0])
     ):
         if "axis_names" not in kwargs:
-            kwargs["axis_names"] = [
-                (column.name if hasattr(column, "name") else None) for column in data
-            ]
+            kwargs["axis_names"] = [getattr(column, "name", None) for column in data]
         data = np.concatenate([item[:, np.newaxis] for item in data], axis=1)
     else:
         kwargs["dim"] = 3
