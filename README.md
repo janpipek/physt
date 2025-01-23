@@ -159,7 +159,7 @@ Rationale (for both): physt is dumb, but precise.
 - (optional) astropy - additional binning algorithms
 - (optional) folium - map plotting
 - (optional) vega3 - for vega in-line in IPython notebook (note that to generate vega JSON, this is not necessary)
-- (optional) xtermcolor - for ASCII color maps
+- (optional) rich - console output including plots
 - (testing) pytest
 - (docs) sphinx, sphinx_rtd_theme, ipython
 

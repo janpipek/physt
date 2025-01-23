@@ -1065,7 +1065,6 @@ all = [
     { name = "rich" },
     { name = "types-setuptools" },
     { name = "xarray" },
-    { name = "xtermcolor" },
 ]
 astropy = [
     { name = "astropy", version = "6.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version != '3.11.*'" },
@@ -1099,7 +1098,6 @@ polars = [
 ]
 terminal = [
     { name = "rich" },
-    { name = "xtermcolor" },
 ]
 xarray = [
     { name = "xarray" },
@@ -1132,7 +1130,6 @@ requires-dist = [
     { name = "types-setuptools", marker = "extra == 'dev'" },
     { name = "typing-extensions" },
     { name = "xarray", marker = "extra == 'xarray'" },
-    { name = "xtermcolor", marker = "extra == 'terminal'" },
 ]
 
 [package.metadata.requires-dev]
@@ -1527,12 +1524,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/84/e8/8ee12706df0d34ad0
 wheels = [
     { url = "https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl", hash = "sha256:1b0fd51ec408474aa1f4a355d75c00cc1c02bd425d97b2c2e551fd21810e7f64", size = 1176466 },
 ]
-
-[[package]]
-name = "xtermcolor"
-version = "1.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/65/46/c17b53f040396fb6bc0ee6afd0e809c12580791a61b801728708b48b6711/xtermcolor-1.3.tar.gz", hash = "sha256:66dd9f4b1489ba8a24d5be746fbbd70ecbe55a9cc1795ab552e9734e14bdbcdd", size = 3839 }
 
 [[package]]
 name = "xyzservices"
