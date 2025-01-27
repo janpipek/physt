@@ -18,7 +18,7 @@ In short, whatever you want to do with histograms, **physt** aims to be on your 
 
 ## See it in action
 
-With [`uv`](https://docs.astral.sh/uv/) installed, you can run the following command without needing to install 
+With [`uv`](https://docs.astral.sh/uv/) installed, you can run the following command without needing to install
 anything to see some examples in action:
 
 ```bash
@@ -121,7 +121,7 @@ or conda:
 * Simple statistics for original data (mean, std, sem) - only for 1D histograms
 * Plotting with several backends
   - matplotlib (static plots with many options)
-  - vega (interactive plots, beta, help wanted!)
+  - vega (interactive plots, broken, help wanted!)
   - folium (experimental for geo-data)
   - plotly (very basic, help wanted!)
   - ascii (experimental)
@@ -155,10 +155,8 @@ Rationale (for both): physt is dumb, but precise.
 - (optional) polars (1.0+), pandas (1.5+), dask, xarray - if you want to histogram those
 - (optional) matplotlib - simple visualization
 - (optional) xarray - I/O
-- (optional) uproot - I/O
 - (optional) astropy - additional binning algorithms
 - (optional) folium - map plotting
-- (optional) vega3 - for vega in-line in IPython notebook (note that to generate vega JSON, this is not necessary)
 - (optional) rich - console output including plots
 - (testing) pytest
 - (docs) sphinx, sphinx_rtd_theme, ipython
