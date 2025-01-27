@@ -16,7 +16,7 @@ from rich.text import Text
 from physt.plotting.common import get_value_format
 
 if typing.TYPE_CHECKING:
-    from typing import Optional, Union
+    from typing import Any, Optional, Union
 
     from physt.types import Histogram1D, Histogram2D
 
@@ -38,7 +38,7 @@ def hbar(
     """Horizontal bar plot in block characters."""
     console = rich.console.Console()
     data = (h1.normalize().frequencies * width).round().astype(int)
-    style_kwargs = {}
+    style_kwargs: dict[str, Any] = {}
     if color:
         style_kwargs["color"] = color
     style = Style(**style_kwargs)
