@@ -1038,7 +1038,7 @@ wheels = [
 
 [[package]]
 name = "physt"
-version = "0.8.7"
+version = "0.8.5"
 source = { editable = "." }
 dependencies = [
     { name = "hypothesis" },
