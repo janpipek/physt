@@ -6,11 +6,13 @@ bump-minor:
     # Bump the version from x.y.z to x.(y+1).0
     uvx bumpver update --tag final --minor
     uv lock --no-upgrade
+    git add uv.lock
 
 bump-patch:
     # Bump the version from x.y.z to x.y.(z+1)
     uvx bumpver update --tag final --patch
     uv lock --no-upgrade
+    git add uv.lock
 
 pytest:
     uv run --extra all pytest
