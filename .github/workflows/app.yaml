@@ -15,7 +15,7 @@ jobs:
           - os: macos-latest
             python: "3.13"
 
-    runs-on: ${{ matrix.os }
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
