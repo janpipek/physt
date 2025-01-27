@@ -16,6 +16,8 @@ from rich.text import Text
 from physt.plotting.common import get_value_format
 
 if typing.TYPE_CHECKING:
+    from typing import Union
+
     from physt.types import Histogram1D, Histogram2D
 
 
@@ -102,7 +104,7 @@ def map(h2: "Histogram2D", use_color: typing.Optional[bool] = None, **kwargs) ->
     )
     console.print("+" + "-" * h2.shape[1] + "+")
     for i in range(h2.shape[0] - 1, -1, -1):
-        line_frags = ["|"]
+        line_frags: list[Union[Text, str]] = ["|"]
         line_frags += [_render_cell(cmap_data[i, j]) for j in range(h2.shape[1])]
         line_frags.append("|")
         if i == h2.shape[0] - 1:
