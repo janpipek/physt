@@ -18,57 +18,61 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python }}
+          # Install a specific version of uv.
+          version: "0.5.24"
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-          pip install .[all]
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Run pytest
-        run: pytest
+        run: uv run pytest
 
   mypy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
+          # Install a specific version of uv.
+          version: "0.5.24"
+          python-version: 3.12
+          enable-cache: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-          pip install .[all]
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Run mypy (on source)
-        run: mypy src/physt
+        run: uv run mypy src/physt
 
       - name: Run mypy (on tests)
-        run: mypy tests
+        run: uv run mypy tests
 
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
+          # Install a specific version of uv.
+          version: "0.5.24"
+          python-version: 3.12
+          enable-cache: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel build
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Build
-        run: python -m build
+        run: uv build
