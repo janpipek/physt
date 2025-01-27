@@ -34,7 +34,7 @@ console.print(h1.statistics)
 console.print()
 console.print("[bold]And the plot:[/bold]")
 
-h1.plot(backend="ascii", show_values=True)
+h1.plot(backend="ascii", show_values=True, color="green")
 console.print()
 
 console.print("[bold]JSON fully describing the histogram:[/bold]")

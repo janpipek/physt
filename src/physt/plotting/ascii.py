@@ -16,7 +16,7 @@ from rich.text import Text
 from physt.plotting.common import get_value_format
 
 if typing.TYPE_CHECKING:
-    from typing import Union
+    from typing import Any, Optional, Union
 
     from physt.types import Histogram1D, Histogram2D
 
@@ -29,16 +29,30 @@ dims = {
 }
 
 
-def hbar(h1: "Histogram1D", width: int = 80, show_values: bool = False) -> None:
+def hbar(
+    h1: "Histogram1D",
+    width: int = 80,
+    show_values: bool = False,
+    color: Optional[str] = None,
+) -> None:
     """Horizontal bar plot in block characters."""
     console = rich.console.Console()
     data = (h1.normalize().frequencies * width).round().astype(int)
+    style_kwargs: dict[str, Any] = {}
+    if color:
+        style_kwargs["color"] = color
+    style = Style(**style_kwargs)
+
     for i in range(h1.bin_count):
         # TODO: Print bin labels somehow
-        if show_values:
-            console.print("█" * data[i], h1.frequencies[i])
+        if data[i] == 0:
+            bar_text = LEFT_LINE_CHAR
         else:
-            console.print("█" * data[i])
+            bar_text = FULL_SQUARE_CHAR * data[i]
+        if show_values:
+            console.print(Text(bar_text, style=style), h1.frequencies[i])
+        else:
+            console.print(Text(bar_text), style=style)
 
 
 SUPPORTED_CMAPS = ("Greys", "Greys_r")
@@ -48,6 +62,7 @@ SHADING_CHARS = " ░▒▓█"
 """Characters used for shading in the ASCII map."""
 
 FULL_SQUARE_CHAR = SHADING_CHARS[-1]
+LEFT_LINE_CHAR = "▏"
 
 
 def map(h2: "Histogram2D", use_color: typing.Optional[bool] = None, **kwargs) -> None:
@@ -102,17 +117,17 @@ def map(h2: "Histogram2D", use_color: typing.Optional[bool] = None, **kwargs) ->
     console.print(
         (value_format(h2.get_bin_right_edges(0)[-1]) + " →").rjust(h2.shape[1] + 2, " ")
     )
-    console.print("+" + "-" * h2.shape[1] + "+")
+    console.print("┌" + "─" * h2.shape[1] + "┐")
     for i in range(h2.shape[0] - 1, -1, -1):
-        line_frags: list[Union[Text, str]] = ["|"]
+        line_frags: list[Union[Text, str]] = ["│"]
         line_frags += [_render_cell(cmap_data[i, j]) for j in range(h2.shape[1])]
-        line_frags.append("|")
+        line_frags.append("│")
         if i == h2.shape[0] - 1:
             line_frags.append(value_format(h2.get_bin_right_edges(1)[-1]) + " ↑")
         if i == 0:
             line_frags.append(value_format(h2.get_bin_left_edges(1)[0]) + " ↓")
         console.print(*line_frags, sep="")
-    console.print("+" + "-" * h2.shape[1] + "+")
+    console.print("└" + "─" * h2.shape[1] + "┘")
     console.print("←", value_format(h2.get_bin_left_edges(0)[0]))
     colorbar_frags = [_render_cell(j) for j in colorbar_range]
     console.print("↓", 0, sep="")
