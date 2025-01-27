@@ -1,4 +1,4 @@
-{% set version = "0.8.9" %}
+{% set version = "0.8.5" %}
 
 package:
   name: physt
