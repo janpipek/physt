@@ -1,6 +1,7 @@
 0.8.5 (27 Jan 2024)
 -------------------
 - Plotting: improved ASCII plotting
+- Build system: changed to flit
 
 0.8.4 (11 Oct 2024)
 -------------------

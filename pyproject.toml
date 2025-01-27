@@ -45,8 +45,8 @@ all = [
 ]
 
 [build-system]
-requires = ["setuptools>=65.0", "build"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core>=3.4"]
+build-backend = "flit_core.buildapi"
 
 [tool.black]
 line-length = 100
