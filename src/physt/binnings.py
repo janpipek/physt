@@ -829,10 +829,6 @@ def quantile_binning(
     bin_count: Number of bins
     q: Sequence of quantiles to be used as edges (a la numpy)
     qrange: Two floats as minimum and maximum quantile (default: 0.0, 1.0)
-
-    Returns
-    -------
-    StaticBinning
     """
     if data is None:
         raise ValueError("Cannot construct quantile binning without data.")

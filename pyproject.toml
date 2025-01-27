@@ -41,7 +41,7 @@ folium = ["folium"]
 # root = ["uproot3"]  # TODO: Update to uproot4
 terminal = ["rich"]
 all = [
-    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,folium,terminal]"
+    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,folium,terminal]",
 ]
 
 [build-system]
@@ -82,14 +82,13 @@ target-version = "py39"
 current_version = "v0.8.5"
 version_pattern = "vMAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "Bump version: {old_version} → {new_version}"
-commit = true
-tag = true
-push = true
+commit = false
+tag = false
+push = false
 
 [tool.bumpver.file_patterns]
 "pyproject.toml" = [
     'current_version = "{version}"',
     'version = "{pep440_version}"',
 ]
-"src/physt/version.py" = ['__version__ = "{pep440_version}"']
 "conda/meta.yaml" = ['{% set version = "{pep440_version}" %}']
