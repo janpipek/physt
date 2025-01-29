@@ -34,5 +34,7 @@ test:
 
 about:
   home: https://github.com/janpipek/physt
-  license: MIT License
+  license: MIT
+  license_family: MIT
+  license_file: LICENSE.txt
   summary: 'P(i/y)thon h(i/y)stograms.'
