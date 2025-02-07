@@ -115,20 +115,20 @@ def map(h2: "Histogram2D", use_color: typing.Optional[bool] = None, **kwargs) ->
         colorbar_range = np.arange(h2.shape[1] + 1) / h2.shape[1]
 
     console.print(
-        (value_format(h2.get_bin_right_edges(0)[-1]) + " →").rjust(h2.shape[1] + 2, " ")
+        (value_format(h2.get_bin_right_edges(0)[-1].item()) + " →").rjust(h2.shape[1] + 2, " ")
     )
     console.print("┌" + "─" * h2.shape[1] + "┐")
     for i in range(h2.shape[0] - 1, -1, -1):
         line_frags: list[Union[Text, str]] = ["│"]
-        line_frags += [_render_cell(cmap_data[i, j]) for j in range(h2.shape[1])]
+        line_frags += [_render_cell(cmap_data[i, j].item()) for j in range(h2.shape[1])]
         line_frags.append("│")
         if i == h2.shape[0] - 1:
-            line_frags.append(value_format(h2.get_bin_right_edges(1)[-1]) + " ↑")
+            line_frags.append(value_format(h2.get_bin_right_edges(1)[-1].item()) + " ↑")
         if i == 0:
-            line_frags.append(value_format(h2.get_bin_left_edges(1)[0]) + " ↓")
+            line_frags.append(value_format(h2.get_bin_left_edges(1)[0].item()) + " ↓")
         console.print(*line_frags, sep="")
     console.print("└" + "─" * h2.shape[1] + "┘")
-    console.print("←", value_format(h2.get_bin_left_edges(0)[0]))
+    console.print("←", value_format(h2.get_bin_left_edges(0)[0].item()))
     colorbar_frags = [_render_cell(j) for j in colorbar_range]
     console.print("↓", 0, sep="")
     console.print(*colorbar_frags, sep="")

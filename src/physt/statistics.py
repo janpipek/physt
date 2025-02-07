@@ -100,3 +100,4 @@ class Statistics:
 INVALID_STATISTICS: Statistics = Statistics(
     sum=np.nan, sum2=np.nan, min=np.nan, max=np.nan, weight=np.nan
 )
+"""Invalid statistics object used as placeholder when not enough information is available."""
