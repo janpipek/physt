@@ -1043,7 +1043,7 @@ def _add_stats_box(
         if h1.overflow:
             text_frags.append(f"Overflow: {h1.overflow}")
     if "mean" in used_stats:
-        mean = h1.statistics.mean()
+        mean = h1.statistics.mean
         if mean is not None:
             text_frags.append(f"Mean: {mean:.2f}")
     if "median" in used_stats:
@@ -1051,7 +1051,7 @@ def _add_stats_box(
         if median is not None:
             text_frags.append(f"Median: {median:.2f}")
     if "std" in used_stats:
-        std = h1.statistics.std()
+        std = h1.statistics.std
         if std is not None:
             text_frags.append(f"Std.dev: {std:.2f}")
     if "min" in used_stats:

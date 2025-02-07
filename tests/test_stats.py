@@ -73,15 +73,15 @@ class TestStatisticsComputation:
 
     def test_mean(self, histogram, use_weights):
         if use_weights:
-            assert histogram.statistics.mean() == 2.8
+            assert histogram.statistics.mean == 2.8
         else:
-            assert histogram.statistics.mean() == 2.5
+            assert histogram.statistics.mean == 2.5
 
     def test_std(self, histogram, use_weights):
         if use_weights:
-            assert np.allclose(histogram.statistics.std(), np.sqrt(6.8 / 5))
+            assert np.allclose(histogram.statistics.std, np.sqrt(6.8 / 5))
         else:
-            assert np.allclose(histogram.statistics.std(), np.sqrt(5 / 4))
+            assert np.allclose(histogram.statistics.std, np.sqrt(5 / 4))
 
 
 class TestEmptyHistogram:
