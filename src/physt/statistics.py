@@ -15,8 +15,6 @@ if TYPE_CHECKING:
 class Statistics:
     """Container of statistics accumulative data."""
 
-    # TODO: Reconsider changing mean, std to properties
-
     sum: float = 0.0
     """Weighted sum of all values entered into histogram."""
 
@@ -39,6 +37,7 @@ class Statistics:
     value (unlike some other summary statistics.)
     """
 
+    @property
     def mean(self) -> float:
         """Statistical mean of all values entered into histogram (weighted)."""
         try:
@@ -46,19 +45,18 @@ class Statistics:
         except ZeroDivisionError:
             return np.nan
 
-    def std(self) -> float:  # , ddof=0):
+    @property
+    def std(self) -> float:
         """Standard deviation of all values entered into histogram."""
-        # TODO: Add DOF
-        return np.sqrt(self.variance())
+        return np.sqrt(self.variance)
 
-    def variance(self) -> float:  # , ddof: int = 0) -> float:
+    @property
+    def variance(self) -> float:
         """Statistical variance of all values entered into histogram.
 
         This number is precise, because we keep the necessary data
         separate from bin contents.
         """
-        # TODO: Add DOF
-        # http://stats.stackexchange.com/questions/6534/how-do-i-calculate-a-weighted-standard-deviation-in-excel
         if self.weight > 0:
             return (self.sum2 - self.sum**2 / self.weight) / self.weight
         return np.nan
