@@ -55,6 +55,7 @@ def hbar(
             console.print(Text(bar_text), style=style)
 
 
+# TODO: Support more maps
 SUPPORTED_CMAPS = ("Greys", "Greys_r")
 DEFAULT_CMAP = SUPPORTED_CMAPS[1]
 
@@ -62,7 +63,10 @@ SHADING_CHARS = " ░▒▓█"
 """Characters used for shading in the ASCII map."""
 
 FULL_SQUARE_CHAR = SHADING_CHARS[-1]
+"""Character used for horizontal bar plots."""
+
 LEFT_LINE_CHAR = "▏"
+# TODO: Include more varying width characters for the bar
 
 
 def map(h2: "Histogram2D", use_color: typing.Optional[bool] = None, **kwargs) -> None:
@@ -115,19 +119,21 @@ def map(h2: "Histogram2D", use_color: typing.Optional[bool] = None, **kwargs) ->
         colorbar_range = np.arange(h2.shape[1] + 1) / h2.shape[1]
 
     console.print(
-        (value_format(h2.get_bin_right_edges(0)[-1].item()) + " →").rjust(h2.shape[1] + 2, " ")
+        (value_format(h2.get_bin_right_edges(0)[-1].item()) + " →").rjust(
+            h2.shape[0] + 2, " "
+        )
     )
-    console.print("┌" + "─" * h2.shape[1] + "┐")
-    for i in range(h2.shape[0] - 1, -1, -1):
+    console.print("┌" + "─" * h2.shape[0] + "┐")
+    for y in range(h2.shape[1] - 1, -1, -1):
         line_frags: list[Union[Text, str]] = ["│"]
-        line_frags += [_render_cell(cmap_data[i, j].item()) for j in range(h2.shape[1])]
+        line_frags += [_render_cell(cmap_data[x, y].item()) for x in range(h2.shape[0])]
         line_frags.append("│")
-        if i == h2.shape[0] - 1:
+        if y == h2.shape[1] - 1:
             line_frags.append(value_format(h2.get_bin_right_edges(1)[-1].item()) + " ↑")
-        if i == 0:
+        if y == 0:
             line_frags.append(value_format(h2.get_bin_left_edges(1)[0].item()) + " ↓")
         console.print(*line_frags, sep="")
-    console.print("└" + "─" * h2.shape[1] + "┘")
+    console.print("└" + "─" * h2.shape[0] + "┘")
     console.print("←", value_format(h2.get_bin_left_edges(0)[0].item()))
     colorbar_frags = [_render_cell(j) for j in colorbar_range]
     console.print("↓", 0, sep="")
