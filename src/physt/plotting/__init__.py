@@ -136,6 +136,12 @@ with suppress(ImportError):
     backends["folium"] = folium_backend
 
 
+with suppress(KeyError):
+    from . import plotext as plotext_backend
+
+    backends["plotext"] = plotext_backend
+
+
 backends["ascii"] = ascii_backend
 
 _default_backend: Optional[str] = None

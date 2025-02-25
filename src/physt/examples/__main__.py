@@ -4,7 +4,7 @@ You can run this like:
 
     python -m physt.examples
 """
-import importlib
+import importlib.util
 import sys
 
 from rich.json import JSON
@@ -36,6 +36,8 @@ console.print("[bold]And the plot:[/bold]")
 
 h1.plot(backend="ascii", show_values=True, color="green")
 console.print()
+
+h1.plot(backend="plotext", kind="hbar")
 
 console.print("[bold]JSON fully describing the histogram:[/bold]")
 console.print(Panel(JSON(h1.to_json()), width=min(console.width, 60)))
