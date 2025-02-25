@@ -1,4 +1,8 @@
-0.8.5 (27 Jan 2024)
+0.8.6 (25 Feb 2025)
+-------------------
+- Plotting: fixed ASCII heatmaps (swapped axes)
+
+0.8.5 (27 Jan 2025)
 -------------------
 - Plotting: improved ASCII plotting
 - Build system: changed to flit
