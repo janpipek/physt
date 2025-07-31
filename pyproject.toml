@@ -3,7 +3,7 @@ name = "physt"
 version = "0.8.6"
 description = "P(i/y)thon h(i/y)stograms."
 readme = "README.md"
-requires-python = "~=3.9"
+requires-python = ">=3.9"
 license = { file = "LICENSE" }
 authors = [{ name = "Jan Pipek", email = "jan.pipek@gmail.com" }]
 classifiers = [
