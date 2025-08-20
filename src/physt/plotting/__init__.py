@@ -6,6 +6,7 @@ Available backends
 - vega
 - plotly (simple wrapper around matplotlib for 1D histograms)
 - folium (just for the geographical histograms)
+- ascii (for the command-line usage)
 
 Calling the plotting functions
 
