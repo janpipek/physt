@@ -50,7 +50,6 @@ def _load_data(path: Path) -> nw.DataFrame:
 
 
 def _load_data_pandas(path: Path):
-    nw.re
 
     import pandas as pd
 
