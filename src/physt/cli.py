@@ -49,24 +49,5 @@ def _load_data(path: Path) -> nw.DataFrame:
     raise ValueError(f"Unsupported file format: {path}")
 
 
-def _load_data_pandas(path: Path):
-
-    import pandas as pd
-
-    match path.suffix:
-        case ".csv":
-            return pd.read_csv(path)
-        case ".json":
-            return pd.read_json(path)
-        case _:
-            raise ValueError(f"Unsupported file format: {path.suffix}")
-
-
-def _load_data_polars(path: Path):
-    import polars as pl
-
-    return pl.read_csv(path)
-
-
 if __name__ == "__main__":
     app()
