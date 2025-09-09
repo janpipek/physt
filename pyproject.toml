@@ -21,6 +21,8 @@ dependencies = [
     "typing_extensions",
     "hypothesis>=6.96.1",
     "click>=8.1.8",
+    "narwhals>=2.0.1",
+    "rich>=14.1.0",
 ]
 
 [tool.uv]
@@ -40,10 +42,12 @@ plotly = ["plotly"]
 # vega3 = ["vega3"]
 folium = ["folium"]
 # root = ["uproot3"]  # TODO: Update to uproot4
-terminal = ["rich"]
 all = [
-    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,folium,terminal]",
+    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,folium]",
 ]
+
+[project.scripts]
+physt = "physt.cli:app"
 
 [build-system]
 requires = ["flit_core>=3.4"]
