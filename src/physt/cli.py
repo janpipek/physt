@@ -20,7 +20,7 @@ def app():
 )
 @click.option("--dropna", is_flag=True)
 def h1_(path: Path, column: str, dropna: bool):
-    """Print a 1D histogram of date from a file"""
+    """Print a 1D histogram of data from a file"""
     data = _load_data(path).to_native()
     h = h1(data[column], dropna=dropna)
     rich.print(h)
