@@ -1,3 +1,8 @@
+"""The `physt` CLI command.
+
+It is in an early stage of development.
+"""
+
 from importlib.util import find_spec
 from pathlib import Path
 
@@ -37,6 +42,10 @@ def examples():
 
 
 def _load_data(path: Path) -> nw.DataFrame:
+    """Load data from a file.
+
+    This tries both pandas and polars backends (and various formats).
+    """
     supported_backends = ["pandas", "polars"]  # TODO: revert
     available_backends = (
         backend for backend in supported_backends if find_spec(backend)
