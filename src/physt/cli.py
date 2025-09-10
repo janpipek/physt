@@ -28,6 +28,14 @@ def h1_(path: Path, column: str, dropna: bool):
     h.plot.hbar(backend="ascii", show_values=True)
 
 
+@app.command()
+def examples():
+    """Show some of the physt examples."""
+    from physt.examples import show_examples
+
+    show_examples()
+
+
 def _load_data(path: Path) -> nw.DataFrame:
     supported_backends = ["pandas", "polars"]  # TODO: revert
     available_backends = (
