@@ -124,5 +124,5 @@ def geo_map(
     layer = GeoJson(geo_json, style_function=styling_function, name=layer_name)
     layer.add_to(map)
     if fit_bounds:
-        map.fit_bounds(layer.get_bounds())
+        map.fit_bounds(layer.get_bounds())  # type: ignore
     return map
