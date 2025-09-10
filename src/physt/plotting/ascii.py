@@ -31,11 +31,20 @@ dims = {
 
 def hbar(
     h1: "Histogram1D",
+    *,
     width: int = 80,
     show_values: bool = False,
+    show_labels: bool = False,
     color: Optional[str] = None,
 ) -> None:
-    """Horizontal bar plot in block characters."""
+    """Horizontal bar plot in block characters.
+
+    :param h1: Histogram to plot.
+    :param width: Width of the bars (excluding labels and values).
+    :param show_values: Whether to show values right of the bars.
+    :param show_labels: Whether to show bin labels left ot the bars.
+    :param color: Color of the bars.
+    """
     console = rich.console.Console()
     data = (h1.normalize().frequencies * width).round().astype(int)
     style_kwargs: dict[str, Any] = {}
@@ -43,8 +52,14 @@ def hbar(
         style_kwargs["color"] = color
     style = Style(**style_kwargs)
 
+    label_width = 10
+
     for i in range(h1.bin_count):
-        # TODO: Print bin labels somehow
+        if show_labels:
+            label = str(h1.bin_left_edges[i])
+            console.print(
+                Text(label.rjust(label_width)[:label_width], style=style), end=" "
+            )
         if data[i] == 0:
             bar_text = LEFT_LINE_CHAR
         else:
@@ -53,6 +68,12 @@ def hbar(
             console.print(Text(bar_text, style=style), h1.frequencies[i])
         else:
             console.print(Text(bar_text), style=style)
+    if show_labels:
+        last_edge = str(h1.max_edge)
+        console.print(
+            Text(last_edge.rjust(label_width)[:label_width], style=style), end=" "
+        )
+    console.print()
 
 
 # TODO: Support more maps
@@ -69,7 +90,9 @@ LEFT_LINE_CHAR = "▏"
 # TODO: Include more varying width characters for the bar
 
 
-def map(h2: "Histogram2D", use_color: typing.Optional[bool] = None, **kwargs) -> None:
+def map(
+    h2: "Histogram2D", *, use_color: typing.Optional[bool] = None, **kwargs
+) -> None:
     """Heat map.
 
     Depending on the color system, it uses either block characters or shades
