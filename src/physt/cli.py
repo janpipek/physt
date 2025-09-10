@@ -5,6 +5,7 @@ It is in an early stage of development.
 
 from importlib.util import find_spec
 from pathlib import Path
+from typing import Any
 
 import click
 import narwhals as nw
@@ -23,14 +24,20 @@ def app():
 @click.option(
     "-c", "--column", type=str, required=True, help="Name of the column to use"
 )
+@click.option("-n", "--bin-count", type=int, help="(Approximate) number of bins to use")
+@click.option("-w", "--bin-width", type=float, help="Explicitly set bin width")
+@click.option(
+    "-p", "--pretty", is_flag=True, help="Make the bin width pretty and rounded"
+)
 @click.option("--dropna", is_flag=True)
-def h1_(path: Path, column: str, dropna: bool):
-    """Print a 1D histogram of data from a file"""
+def h1_(*, path: Path, column: str, **kwargs):
+    """Print a 1D histogram of data from a file."""
     data = _load_data(path).to_native()
-    h = h1(data[column], dropna=dropna)
+    hist_kwargs = _extract_h1_kwargs(kwargs)
+    h = h1(data[column], **hist_kwargs)
     rich.print(h)
     rich.print(h.statistics)
-    h.plot.hbar(backend="ascii", show_values=True)
+    h.plot.hbar(backend="ascii", show_values=True, show_labels=True)
 
 
 @app.command()
@@ -64,6 +71,28 @@ def _load_data(path: Path) -> nw.DataFrame:
                 continue
 
     raise ValueError(f"Unsupported file format: {path}")
+
+
+def _extract_h1_kwargs(kwargs) -> dict[str, Any]:
+    """Find appropriate keyword arguments for histogram creation.
+
+    It's not the most elegant solution, but it works :-(
+    """
+
+    pass_directly = ["dropna"]
+    hist_kwargs = {
+        key: value
+        for key in pass_directly
+        if (value := kwargs.pop(key, None)) is not None
+    }
+    pretty = kwargs.pop("pretty", False)
+    if bin_count := kwargs.pop("bin_count", None) or pretty:
+        hist_kwargs["bins"] = "pretty" if pretty else "numpy"
+        hist_kwargs["bin_count"] = bin_count
+    if bin_width := kwargs.pop("bin_width", None):
+        hist_kwargs["bins"] = "fixed_width"
+        hist_kwargs["bin_width"] = bin_width
+    return hist_kwargs
 
 
 if __name__ == "__main__":
