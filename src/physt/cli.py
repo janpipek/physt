@@ -12,6 +12,7 @@ import narwhals as nw
 import rich
 
 from physt._facade import h1
+from physt.histogram1d import Histogram1D
 
 
 @click.group()
@@ -29,15 +30,28 @@ def app():
 @click.option(
     "-p", "--pretty", is_flag=True, help="Make the bin width pretty and rounded"
 )
-@click.option("--dropna", is_flag=True)
-def h1_(*, path: Path, column: str, **kwargs):
+@click.option("--dropna", is_flag=True, help="Ignore missing values")
+@click.option("--json", is_flag=True, help="Print JSON representation of the histogram")
+def h1_(*, path: Path, column: str, json: bool, **kwargs):
     """Print a 1D histogram of data from a file."""
     data = _load_data(path).to_native()
+
+    # Get the histogram
     hist_kwargs = _extract_h1_kwargs(kwargs)
-    h = h1(data[column], **hist_kwargs)
-    rich.print(h)
-    rich.print(h.statistics)
-    h.plot.hbar(backend="ascii", show_values=True, show_labels=True)
+    try:
+        col = data[column]
+    except KeyError:
+        rich.print(f"Column '{column}' not found in the data.")
+        rich.print(f"Available columns: {', '.join(data.columns)}")
+        exit(-1)
+    h = h1(col, **hist_kwargs)
+
+    # Output
+    if json:
+        print(h.to_json())
+    else:
+        _print_stats(h)
+        h.plot.hbar(backend="ascii", show_values=True, show_labels=True)
 
 
 @app.command()
@@ -93,6 +107,16 @@ def _extract_h1_kwargs(kwargs) -> dict[str, Any]:
         hist_kwargs["bins"] = "fixed_width"
         hist_kwargs["bin_width"] = bin_width
     return hist_kwargs
+
+
+def _print_stats(h1: Histogram1D):
+    rich.print(h1.name or h1.title or h1.axis_names[0] or "Histogram")
+    statistics = h1.statistics
+    rich.print(f"  Total: {h1.total}")
+    rich.print(f"  Mean: {statistics.mean}")
+    rich.print(f"  Median: {statistics.median}")
+    rich.print(f"  Standard Deviation: {statistics.std}")
+    rich.print()
 
 
 if __name__ == "__main__":
