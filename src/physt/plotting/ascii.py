@@ -42,21 +42,22 @@ def hbar(
 
     :param h1: Histogram to plot.
     :param max_width: Width of the bars (including labels and values).
+        By default, the width of the terminal minus one.
     :param show_values: Whether to show values right of the bars.
     :param show_labels: Whether to show bin labels left ot the bars.
     :param label_width: Width of the label field (if shown).
     :param color: Color of the bars.
     """
     console = rich.console.Console()
-    max_width = max_width or console.width
 
-    label_width = 10
+    # Calculate width available for box characters
+    max_width = max_width or (console.width - 1)
     if show_labels:
         max_width -= label_width + 1
     if show_values:
         max_width -= len(str(h1.frequencies.max())) + 1
 
-    data = (h1.frequencies / h1.frequencies.max() * max_width).round().astype(int)
+    bar_widths = (h1.frequencies / h1.frequencies.max() * max_width).round().astype(int)
     style_kwargs: dict[str, Any] = {}
     if color:
         style_kwargs["color"] = color
@@ -68,10 +69,10 @@ def hbar(
             console.print(
                 Text(label.rjust(label_width)[:label_width], style=style), end=" "
             )
-        if data[i] == 0:
+        if bar_widths[i] == 0:
             bar_text = LEFT_LINE_CHAR
         else:
-            bar_text = FULL_SQUARE_CHAR * data[i]
+            bar_text = FULL_SQUARE_CHAR * bar_widths[i]
         if show_values:
             console.print(Text(bar_text, style=style), h1.frequencies[i])
         else:
