@@ -753,11 +753,11 @@ def numpy_binning(
                 f"Range too narrow to split into {bin_count} bins: {start} to {stop}.",
                 RuntimeWarning,
             )
-            edges = list(np.unique(edges))
+            edges_ = list(np.unique(edges))
             from builtins import range as range_
-            for _ in range_(bin_count - len(edges) + 1):
-                edges.append(np.nextafter(edges[-1], np.inf))
-            edges = np.array(edges)
+            for _ in range_(bin_count - len(edges_) + 1):
+                edges_.append(np.nextafter(edges_[-1], np.inf))
+            edges = np.array(edges_)
                 
     return NumpyBinning(edges)
 
