@@ -21,9 +21,20 @@ In short, whatever you want to do with histograms, **physt** aims to be on your 
 With [`uv`](https://docs.astral.sh/uv/) installed, you can run the following command without needing to install
 anything to see some examples in action:
 
-```bash
+```shell
 uv run --with "physt[terminal]>=0.8.3" -m physt.examples
 ```
+
+## Command-line interface (experimental)
+
+You can run (and install) `physt` as a command-line application to quickly analyse 
+data files. This functionality is currently in development.
+
+```shell
+uv run physt h1 "src/physt/examples/munros.csv" -c height  -p -n 10
+```
+
+For more information, use the `--help` flag.
 
 ## Simple example
 
