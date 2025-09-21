@@ -45,8 +45,8 @@ class TestH1:
 
             histogram = h1(array)
             assert isinstance(histogram, Histogram1D)
-            assert histogram.bin_right_edges[-1] >= array.max()
-            assert histogram.bin_left_edges[0] >= array.min()
+            assert histogram.bin_right_edges[-1] >= float(array.max())
+            assert histogram.bin_left_edges[0] >= float(array.min())
             assert histogram.total == array.size
 
         def test_empty_ndarray(self, empty_ndarray):
