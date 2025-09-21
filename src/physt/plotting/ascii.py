@@ -44,7 +44,7 @@ def hbar(
     :param max_width: Width of the bars (including labels and values).
         By default, the width of the terminal minus one.
     :param show_values: Whether to show values right of the bars.
-    :param show_labels: Whether to show bin labels left ot the bars.
+    :param show_labels: Whether to show bin labels left of the bars.
     :param label_width: Width of the label field (if shown).
     :param color: Color of the bars.
     """
