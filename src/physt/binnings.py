@@ -748,11 +748,17 @@ def numpy_binning(
             raise ValueError(f"Range too large to find bins: {start} to {stop}.")
         edges = np.linspace(start, stop, bin_count + 1)
         if (np.diff(edges) == 0).any():
-            edge = edges[0]
-            edges = np.array([edge := np.nextafter(edge, np.inf) for _ in edges])
-            # raise ValueError(
-            #    f"Range too narrow to split into {bin_count} bins: {start} to {stop}."
-            # )
+            # Artificially widen the range so that the bins are distinct
+            warnings.warn(
+                f"Range too narrow to split into {bin_count} bins: {start} to {stop}.",
+                RuntimeWarning,
+            )
+            edges_ = list(np.unique(edges))
+            from builtins import range as range_
+            for _ in range_(bin_count - len(edges_) + 1):
+                edges_.append(np.nextafter(edges_[-1], np.inf))
+            edges = np.array(edges_)
+                
     return NumpyBinning(edges)
 
 
