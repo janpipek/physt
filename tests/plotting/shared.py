@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from physt.histogram_nd import Histogram2D
 
 
-class AbstractTest(ABC):
+class AbstractPlottingTest(ABC):
     module: Any
     function_name: str
 
@@ -21,7 +21,7 @@ class AbstractTest(ABC):
         ...
 
 
-class AbstractTest1D(AbstractTest, ABC):
+class AbstractTest1D(AbstractPlottingTest, ABC):
     def test_2d_fail(self, simple_h2: "Histogram2D", default_kwargs):
         with pytest.raises(TypeError):
             self.method(simple_h2, **default_kwargs)
@@ -30,7 +30,7 @@ class AbstractTest1D(AbstractTest, ABC):
         _ = self.method(simple_h1, **default_kwargs)
 
 
-class AbstractTest2D(AbstractTest, ABC):
+class AbstractTest2D(AbstractPlottingTest, ABC):
     def test_1d_fail(self, simple_h1: "Histogram1D", default_kwargs):
         with pytest.raises(TypeError):
             self.method(simple_h1, **default_kwargs)

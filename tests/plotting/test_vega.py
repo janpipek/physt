@@ -6,14 +6,14 @@ from typing import TYPE_CHECKING
 
 from physt.plotting import vega
 
-from .shared import AbstractTest, AbstractTest1D, AbstractTest2D
+from .shared import AbstractPlottingTest, AbstractTest1D, AbstractTest2D
 
 if TYPE_CHECKING:
     from physt.histogram1d import Histogram1D
     from physt.histogram_nd import Histogram2D
 
 
-class _TestBase(AbstractTest, ABC):
+class _TestBase(AbstractPlottingTest, ABC):
     module = vega
 
     def assert_valid_output(self, output):

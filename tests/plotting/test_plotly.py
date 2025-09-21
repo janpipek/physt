@@ -8,7 +8,7 @@ from plotly.graph_objs import Figure
 
 from physt.plotting import plotly
 
-from .shared import AbstractTest, AbstractTest1D, AbstractTest2D
+from .shared import AbstractPlottingTest, AbstractTest1D, AbstractTest2D
 
 
 @pytest.fixture()
@@ -16,7 +16,7 @@ def default_kwargs() -> Dict[str, Any]:
     return {}
 
 
-class _TestBase(AbstractTest, ABC):
+class _TestBase(AbstractPlottingTest, ABC):
     module = plotly
 
     def assert_valid_output(self, output):

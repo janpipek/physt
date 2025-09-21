@@ -7,10 +7,17 @@ from matplotlib.axes import Axes
 
 from physt.plotting import matplotlib
 
-from .shared import AbstractTest, AbstractTest1D, AbstractTest2D
+from .shared import AbstractPlottingTest, AbstractTest1D, AbstractTest2D
 
 
-class _TestBase(AbstractTest, ABC):
+@pytest.fixture(autouse=True)
+def setup_matplotlib():
+    import matplotlib
+
+    matplotlib.use("Agg")
+
+
+class _TestBase(AbstractPlottingTest, ABC):
     module = matplotlib
 
     def assert_valid_output(self, output) -> None:
