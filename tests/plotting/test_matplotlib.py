@@ -3,21 +3,27 @@ from abc import ABC
 import pytest
 
 pytest.importorskip("matplotlib")
+import matplotlib as mpl
 from matplotlib.axes import Axes
 
 from physt.plotting import matplotlib
 
-from .shared import AbstractTest, AbstractTest1D, AbstractTest2D
+from .shared import AbstractPlotTest, AbstractPlot1DTest, AbstractPlot2DTest
 
 
-class _TestBase(AbstractTest, ABC):
+@pytest.fixture(autouse=True)
+def set_headless_backend():
+    mpl.use("Agg")
+
+
+class _TestBase(AbstractPlotTest, ABC):
     module = matplotlib
 
     def assert_valid_output(self, output) -> None:
         assert isinstance(output, Axes)
 
 
-class _TestBase1D(_TestBase, AbstractTest1D, ABC):
+class _TestBase1D(_TestBase, AbstractPlot1DTest, ABC):
     pass
 
 
@@ -41,7 +47,7 @@ class TestStep(_TestBase1D):
     function_name = "step"
 
 
-class _TestBase2D(_TestBase, AbstractTest2D, ABC):
+class _TestBase2D(_TestBase, AbstractPlot2DTest, ABC):
     pass
 
 

@@ -8,7 +8,7 @@ from plotly.graph_objs import Figure
 
 from physt.plotting import plotly
 
-from .shared import AbstractTest, AbstractTest1D, AbstractTest2D
+from .shared import AbstractPlotTest, AbstractPlot1DTest, AbstractPlot2DTest
 
 
 @pytest.fixture()
@@ -16,14 +16,14 @@ def default_kwargs() -> Dict[str, Any]:
     return {}
 
 
-class _TestBase(AbstractTest, ABC):
+class _TestBase(AbstractPlotTest, ABC):
     module = plotly
 
     def assert_valid_output(self, output):
         assert isinstance(output, Figure)
 
 
-class _TestBase1D(_TestBase, AbstractTest1D, ABC):
+class _TestBase1D(_TestBase, AbstractPlot1DTest, ABC):
     pass
 
 
@@ -39,7 +39,7 @@ class TestScatter(_TestBase1D):
     function_name = "scatter"
 
 
-class _TestBase2D(_TestBase, AbstractTest2D, ABC):
+class _TestBase2D(_TestBase, AbstractPlot2DTest, ABC):
     pass
 
 
