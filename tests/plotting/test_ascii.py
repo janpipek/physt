@@ -12,9 +12,8 @@ def simple_h1():
     )
 
 
-def test_plot_hbar(simple_h1, capsys, monkeypatch):
-    monkeypatch.setenv("COLUMNS", "31")  # console reports 30 here :-/
-    hbar(simple_h1, show_values=True, show_labels=True, label_width=4)
+def test_plot_hbar(simple_h1, capsys):
+    hbar(simple_h1, show_values=True, show_labels=True, label_width=4, max_width=29)
     captured = capsys.readouterr()
     assert captured.out == EXPECTED_HBAR
 
