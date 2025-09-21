@@ -32,27 +32,35 @@ dims = {
 def hbar(
     h1: "Histogram1D",
     *,
-    width: int = 80,
+    max_width: Optional[int] = None,
     show_values: bool = False,
     show_labels: bool = False,
     color: Optional[str] = None,
+    label_width: int = 10,
 ) -> None:
     """Horizontal bar plot in block characters.
 
     :param h1: Histogram to plot.
-    :param width: Width of the bars (excluding labels and values).
+    :param max_width: Width of the bars (including labels and values).
     :param show_values: Whether to show values right of the bars.
     :param show_labels: Whether to show bin labels left ot the bars.
+    :param label_width: Width of the label field (if shown).
     :param color: Color of the bars.
     """
     console = rich.console.Console()
-    data = (h1.normalize().frequencies * width).round().astype(int)
+    max_width = max_width or console.width
+
+    label_width = 10
+    if show_labels:
+        max_width -= label_width + 1
+    if show_values:
+        max_width -= len(str(h1.frequencies.max())) + 1
+
+    data = (h1.frequencies / h1.frequencies.max() * max_width).round().astype(int)
     style_kwargs: dict[str, Any] = {}
     if color:
         style_kwargs["color"] = color
     style = Style(**style_kwargs)
-
-    label_width = 10
 
     for i in range(h1.bin_count):
         if show_labels:
