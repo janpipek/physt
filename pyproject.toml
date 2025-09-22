@@ -70,7 +70,7 @@ include = '\.pyi?$'
 # TODO: revisit
 ignore_missing_imports = true
 # plugins = ["numpy.typing.mypy_plugin"]
-exclude = ["doc"]
+exclude = ["docs"]
 
 [tool.isort]
 profile = "black"
@@ -84,7 +84,7 @@ where = ["src"]
 [tool.ruff]
 # Be a bit tolerant
 # line-length = 100
-extend-exclude = ["doc"]
+extend-exclude = ["docs"]
 target-version = "py39"
 
 [tool.ruff.per-file-ignores]
