@@ -7,6 +7,7 @@ Usage:
     2) mprof run profile_h1.py
     3) mprof plot     # See the results
 """
+
 import gc
 import time
 
@@ -18,7 +19,7 @@ import physt
 def make_big_h1(data):
     # 0.3.26 The following creates 2 additional copies!!!
     # 0.3.25 The following creates 5 additional copies!!!
-    h = physt.h1(data)
+    physt.h1(data)
 
 
 def make_big_numpy_hist(data):

@@ -1,4 +1,5 @@
 """Support for summary statistics kept in the histogram instances."""
+
 from __future__ import annotations
 
 import dataclasses

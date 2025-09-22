@@ -1,4 +1,5 @@
 """HistogramBase - base for all histogram classes."""
+
 from __future__ import annotations
 
 import abc
@@ -705,8 +706,7 @@ class HistogramBase(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def bins(self) -> Union[np.ndarray, List[np.ndarray]]:
-        ...
+    def bins(self) -> Union[np.ndarray, List[np.ndarray]]: ...
 
     @abc.abstractmethod
     def fill(

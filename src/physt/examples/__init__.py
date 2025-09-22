@@ -1,4 +1,5 @@
 """A set of examples used for demonstrating the physt capabilities / in tests."""
+
 import importlib.util
 import io
 import pkgutil

@@ -10,6 +10,7 @@ Common parameters
 See the `enable_inline_view` wrapper.
 
 """
+
 from __future__ import annotations
 
 import codecs

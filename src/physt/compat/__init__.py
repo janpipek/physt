@@ -1,4 +1,5 @@
 """Histograms types and function for various external libraries."""
+
 from contextlib import suppress
 
 __all__ = []

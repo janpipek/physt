@@ -108,7 +108,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
 
     def __eq__(self, other) -> bool:
         return (
-            (type(other) == HistogramCollection)
+            (type(other) is HistogramCollection)
             and (len(other) == len(self))
             and all((h1 == h2) for h1, h2 in zip(self.histograms, other.histograms))
         )

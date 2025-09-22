@@ -89,6 +89,7 @@ Line plots
 lw (or linewidth) : int
     Width of the lines
 """
+
 from __future__ import annotations
 
 from contextlib import suppress

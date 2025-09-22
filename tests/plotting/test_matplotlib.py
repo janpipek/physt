@@ -8,7 +8,7 @@ from matplotlib.axes import Axes
 
 from physt.plotting import matplotlib
 
-from .shared import AbstractPlotTest, AbstractPlot1DTest, AbstractPlot2DTest
+from .shared import AbstractPlot1DTest, AbstractPlot2DTest, AbstractPlotTest
 
 
 @pytest.fixture(autouse=True)

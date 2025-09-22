@@ -7,6 +7,7 @@ Currently, it uses matplotlib translation for 1D histograms:
 
 TODO: More elaborate output planned
 """
+
 from __future__ import annotations
 
 from functools import wraps

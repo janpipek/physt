@@ -1,4 +1,5 @@
 """Multi-dimensional histograms."""
+
 from __future__ import annotations
 
 import warnings
@@ -176,12 +177,10 @@ class HistogramND(HistogramBase):
     # Missing: cumulative_frequencies - does it make sense?
 
     @overload
-    def get_bin_widths(self, axis: Axis) -> np.ndarray:
-        ...
+    def get_bin_widths(self, axis: Axis) -> np.ndarray: ...
 
     @overload
-    def get_bin_widths(self, axis: None = ...) -> Sequence[np.ndarray]:
-        ...
+    def get_bin_widths(self, axis: None = ...) -> Sequence[np.ndarray]: ...
 
     def get_bin_widths(
         self, axis: Optional[Axis] = None
@@ -212,12 +211,10 @@ class HistogramND(HistogramBase):
         return float(np.sum(self.bin_sizes))
 
     @overload
-    def get_bin_edges(self, axis: Axis) -> np.ndarray:
-        ...
+    def get_bin_edges(self, axis: Axis) -> np.ndarray: ...
 
     @overload
-    def get_bin_edges(self, axis: None = ...) -> Sequence[np.ndarray]:
-        ...
+    def get_bin_edges(self, axis: None = ...) -> Sequence[np.ndarray]: ...
 
     def get_bin_edges(
         self, axis: Optional[Axis] = None
@@ -230,12 +227,10 @@ class HistogramND(HistogramBase):
             return np.meshgrid(*edges, indexing="ij")
 
     @overload
-    def get_bin_left_edges(self, axis: Axis) -> np.ndarray:
-        ...
+    def get_bin_left_edges(self, axis: Axis) -> np.ndarray: ...
 
     @overload
-    def get_bin_left_edges(self, axis: None = ...) -> Sequence[np.ndarray]:
-        ...
+    def get_bin_left_edges(self, axis: None = ...) -> Sequence[np.ndarray]: ...
 
     def get_bin_left_edges(
         self, axis: Optional[Axis] = None
@@ -247,12 +242,10 @@ class HistogramND(HistogramBase):
         return np.meshgrid(*edges, indexing="ij")
 
     @overload
-    def get_bin_right_edges(self, axis: Axis) -> np.ndarray:
-        ...
+    def get_bin_right_edges(self, axis: Axis) -> np.ndarray: ...
 
     @overload
-    def get_bin_right_edges(self, axis: None = ...) -> Sequence[np.ndarray]:
-        ...
+    def get_bin_right_edges(self, axis: None = ...) -> Sequence[np.ndarray]: ...
 
     def get_bin_right_edges(
         self, axis: Optional[Axis] = None
@@ -264,12 +257,10 @@ class HistogramND(HistogramBase):
         return np.meshgrid(*edges, indexing="ij")
 
     @overload
-    def get_bin_centers(self, axis: Axis) -> np.ndarray:
-        ...
+    def get_bin_centers(self, axis: Axis) -> np.ndarray: ...
 
     @overload
-    def get_bin_centers(self, axis: None = ...) -> Sequence[np.ndarray]:
-        ...
+    def get_bin_centers(self, axis: None = ...) -> Sequence[np.ndarray]: ...
 
     def get_bin_centers(
         self, axis: Optional[Axis] = None

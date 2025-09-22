@@ -1,4 +1,5 @@
 """Methods for investigation and manipulation of bin arrays."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

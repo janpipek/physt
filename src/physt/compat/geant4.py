@@ -2,6 +2,7 @@
 
 See https://geant4.web.cern.ch/ for the project pages.
 """
+
 import codecs
 from typing import Union
 
@@ -70,7 +71,7 @@ def _create_h1(data, meta) -> Histogram1D:
         name=_get(meta, "title"),
         underflow=data[0, 1],
         overflow=data[-1, 1],
-        stats=stats
+        stats=stats,
     )
     return hist
 

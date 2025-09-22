@@ -1,4 +1,5 @@
 import pytest
+
 pytest.skip("Vega is currently broken.", allow_module_level=True)
 
 from abc import ABC
@@ -6,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from physt.plotting import vega
 
-from .shared import AbstractPlotTest, AbstractPlot1DTest, AbstractPlot2DTest
+from .shared import AbstractPlot1DTest, AbstractPlot2DTest, AbstractPlotTest
 
 if TYPE_CHECKING:
     from physt.histogram1d import Histogram1D

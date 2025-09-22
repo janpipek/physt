@@ -1,6 +1,7 @@
 """
 Functions that are shared by several (all) plotting backends.
 """
+
 from __future__ import annotations
 
 import re
@@ -288,5 +289,3 @@ class TimeTickHandler:
         ticks = self.get_time_ticks(h1, level, min_, max_)
         tick_labels = self.format_time_ticks(ticks, level=level)
         return ticks, tick_labels
-
-

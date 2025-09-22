@@ -1,4 +1,5 @@
 """Functions for individual steps of histogram and binning creation."""
+
 import warnings
 from functools import singledispatch
 from typing import Any, Iterable, Iterator, List, Optional, Tuple, cast, overload
@@ -273,8 +274,7 @@ def calculate_nd_frequencies(
     weights: Optional[np.ndarray] = None,
     *,
     dtype: Optional[DTypeLike] = None,
-) -> Tuple[np.ndarray, np.ndarray, float]:
-    ...
+) -> Tuple[np.ndarray, np.ndarray, float]: ...
 
 
 @overload
@@ -284,8 +284,7 @@ def calculate_nd_frequencies(
     weights: Optional[np.ndarray] = None,
     *,
     dtype: Optional[DTypeLike] = None,
-) -> Tuple[None, None, float]:
-    ...
+) -> Tuple[None, None, float]: ...
 
 
 def calculate_nd_frequencies(

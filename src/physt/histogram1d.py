@@ -1,4 +1,5 @@
 """One-dimensional histograms."""
+
 from __future__ import annotations
 
 import dataclasses

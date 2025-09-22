@@ -755,10 +755,11 @@ def numpy_binning(
             )
             edges_ = list(np.unique(edges))
             from builtins import range as range_
+
             for _ in range_(bin_count - len(edges_) + 1):
                 edges_.append(np.nextafter(edges_[-1], np.inf))
             edges = np.array(edges_)
-                
+
     return NumpyBinning(edges)
 
 

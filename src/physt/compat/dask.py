@@ -1,4 +1,5 @@
 """Dask-based and dask oriented variants of physt histogram facade functions."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast

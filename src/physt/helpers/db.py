@@ -1,4 +1,5 @@
 """Helper functions to consume DB cursors."""
+
 # TODO: Add tests with in-memory SQLite
 # TODO: Implement non-adaptive
 from typing import TYPE_CHECKING

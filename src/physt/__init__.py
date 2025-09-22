@@ -8,6 +8,7 @@ but designed for humans(TM) on steroids(TM).
 (C) Jan Pipek, 2016-2022, MIT licence
 See https://github.com/janpipek/physt
 """
+
 __all__ = [
     "azimuthal",
     "collection",

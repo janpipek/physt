@@ -3,6 +3,7 @@
 - conversion between histograms and Series/DataFrames
 - .physt accessor for pandas objects
 """
+
 from __future__ import annotations
 
 import warnings

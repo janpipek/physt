@@ -1,4 +1,5 @@
 """Definitions for type hints."""
+
 from typing import Tuple, Union
 
 from numpy.typing import ArrayLike, DTypeLike

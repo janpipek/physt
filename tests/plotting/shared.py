@@ -17,8 +17,7 @@ class AbstractPlotTest(ABC):
         return f(h, *args, **kwargs)
 
     @abstractmethod
-    def assert_valid_output(self, output) -> None:
-        ...
+    def assert_valid_output(self, output) -> None: ...
 
 
 class AbstractPlot1DTest(AbstractPlotTest, ABC):

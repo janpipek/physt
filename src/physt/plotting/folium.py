@@ -3,6 +3,7 @@ Plotting inside maps with folium.
 
 Very experimental!
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

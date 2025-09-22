@@ -1,5 +1,7 @@
 from textwrap import dedent
+
 import pytest
+
 from physt.histogram1d import Histogram1D
 from physt.plotting.ascii import hbar, map
 
@@ -28,7 +30,7 @@ EXPECTED_HBAR = """   0 ███ 1
    1 ██████ 2
    2 ██████████████████████ 7
    3 ▏ 0
-   4 
+   4
 """
 
 

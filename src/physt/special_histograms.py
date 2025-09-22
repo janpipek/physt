@@ -15,6 +15,7 @@ And of course, it is possible to re-use the general transforming functionality
 by adding `TransformedHistogramMixin` among the custom histogram
 class superclasses.
 """
+
 from __future__ import annotations
 
 import abc
@@ -65,8 +66,7 @@ class TransformedHistogramMixin(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def _transform_correct_dimension(cls, value: np.ndarray) -> np.ndarray:
-        ...
+    def _transform_correct_dimension(cls, value: np.ndarray) -> np.ndarray: ...
 
     def find_bin(
         self, value: ArrayLike, axis: Optional[Axis] = None, transformed: bool = False
@@ -87,8 +87,7 @@ class TransformedHistogramMixin(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def bin_sizes(self):
-        ...
+    def bin_sizes(self): ...
 
     def fill(
         self,
@@ -756,8 +755,7 @@ def extract_transformed_data(
     klass: Type[TransformedHistogramMixin],
     *,
     dropna: bool = False,
-) -> Tuple[np.ndarray, np.ndarray]:
-    ...
+) -> Tuple[np.ndarray, np.ndarray]: ...
 
 
 @overload
@@ -767,8 +765,7 @@ def extract_transformed_data(
     klass: Type[TransformedHistogramMixin],
     *,
     dropna: bool = False,
-) -> Tuple[None, None]:
-    ...
+) -> Tuple[None, None]: ...
 
 
 def extract_transformed_data(

@@ -83,8 +83,8 @@ class TestPolar:
         x = data[:, 0]
         y = data[:, 1]
         h = special_histograms.polar(x, y, radial_bins=2, phi_bins=4)
-        assert special_histograms.RadialHistogram == type(h.projection("r"))
-        assert special_histograms.AzimuthalHistogram == type(h.projection("phi"))
+        assert special_histograms.RadialHistogram is type(h.projection("r"))
+        assert special_histograms.AzimuthalHistogram is type(h.projection("phi"))
 
 
 class TestRadial:
@@ -135,10 +135,10 @@ class TestSpherical:
 
     def test_projection_types(self):
         h = special_histograms.spherical([[1, 2, 3], [2, 3, 4]])
-        assert special_histograms.SphericalSurfaceHistogram == type(
+        assert special_histograms.SphericalSurfaceHistogram is type(
             h.projection("phi", "theta")
         )
-        assert special_histograms.SphericalSurfaceHistogram == type(
+        assert special_histograms.SphericalSurfaceHistogram is type(
             h.projection("theta", "phi")
         )
 
@@ -183,7 +183,7 @@ class TestCylindricalSurface:
     def test_projection_types(self):
         h = special_histograms.cylindrical([[1, 2, 3], [2, 3, 4]])
         proj = h.projection("phi", "z")
-        assert special_histograms.AzimuthalHistogram == type(proj.projection("phi"))
+        assert special_histograms.AzimuthalHistogram is type(proj.projection("phi"))
 
 
 class TestCylindrical:
@@ -202,11 +202,11 @@ class TestCylindrical:
 
     def test_projection_types(self):
         h = special_histograms.cylindrical([[1, 2, 3], [2, 3, 4]])
-        assert special_histograms.CylindricalSurfaceHistogram == type(
+        assert special_histograms.CylindricalSurfaceHistogram is type(
             h.projection("phi", "z")
         )
-        assert special_histograms.CylindricalSurfaceHistogram == type(
+        assert special_histograms.CylindricalSurfaceHistogram is type(
             h.projection("z", "phi")
         )
-        assert special_histograms.PolarHistogram == type(h.projection("rho", "phi"))
-        assert special_histograms.PolarHistogram == type(h.projection("phi", "rho"))
+        assert special_histograms.PolarHistogram is type(h.projection("rho", "phi"))
+        assert special_histograms.PolarHistogram is type(h.projection("phi", "rho"))
