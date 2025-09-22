@@ -51,7 +51,7 @@ plotly = ["plotly"]
 folium = ["folium"]
 # root = ["uproot3"]  # TODO: Update to uproot4
 all = [
-    "physt[astropy,dev,dask,pandas,polars,xarray,matplotlib,plotly,folium]",
+    "physt[astropy,dask,pandas,polars,xarray,matplotlib,plotly,folium]",
 ]
 
 [project.scripts]
