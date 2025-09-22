@@ -18,7 +18,6 @@ Tutorials
    special_histograms
    ascii
    geospatial
-   vega-examples
    plotly
    collections
 

@@ -9,19 +9,13 @@ Subpackages
 
    physt.compat
    physt.examples
+   physt.helpers
    physt.io
    physt.plotting
+   physt.testing
 
 Submodules
 ----------
-
-physt.bin\_utils module
------------------------
-
-.. automodule:: physt.bin_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 physt.binnings module
 ---------------------
@@ -31,18 +25,18 @@ physt.binnings module
    :undoc-members:
    :show-inheritance:
 
-physt.config module
--------------------
+physt.cli module
+----------------
 
-.. automodule:: physt.config
+.. automodule:: physt.cli
    :members:
    :undoc-members:
    :show-inheritance:
 
-physt.facade module
+physt.config module
 -------------------
 
-.. automodule:: physt.facade
+.. automodule:: physt.config
    :members:
    :undoc-members:
    :show-inheritance:
@@ -79,14 +73,6 @@ physt.histogram\_nd module
    :undoc-members:
    :show-inheritance:
 
-physt.special module
---------------------
-
-.. automodule:: physt.special
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 physt.special\_histograms module
 --------------------------------
 
@@ -95,18 +81,10 @@ physt.special\_histograms module
    :undoc-members:
    :show-inheritance:
 
-physt.testing module
---------------------
+physt.statistics module
+-----------------------
 
-.. automodule:: physt.testing
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-physt.time module
------------------
-
-.. automodule:: physt.time
+.. automodule:: physt.statistics
    :members:
    :undoc-members:
    :show-inheritance:
@@ -123,14 +101,6 @@ physt.typing\_aliases module
 ----------------------------
 
 .. automodule:: physt.typing_aliases
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-physt.util module
------------------
-
-.. automodule:: physt.util
    :members:
    :undoc-members:
    :show-inheritance:

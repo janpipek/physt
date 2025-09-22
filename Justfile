@@ -43,4 +43,5 @@ examples:
     uv run --extra all python -m physt.examples
 
 docs:
+    cd docs && uv run --extra all sphinx-apidoc -o . ../src/physt
     uv run --extra all sphinx-build -b html docs/ docs/_build/html

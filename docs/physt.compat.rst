@@ -28,6 +28,22 @@ physt.compat.pandas module
    :undoc-members:
    :show-inheritance:
 
+physt.compat.polars module
+--------------------------
+
+.. automodule:: physt.compat.polars
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+physt.compat.xarray module
+--------------------------
+
+.. automodule:: physt.compat.xarray
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
