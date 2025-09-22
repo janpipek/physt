@@ -28,6 +28,7 @@ dependencies = [
 [tool.uv]
 dev-dependencies = [
     "bumpver>=2025.1131",
+    "ipython>=8.18.1",
     "mypy>=1.18.2",
     "nbsphinx>=0.9.7",
     "physt[all]",
