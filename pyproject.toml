@@ -62,11 +62,6 @@ physt = "physt.cli:app"
 requires = ["flit_core>=3.4"]
 build-backend = "flit_core.buildapi"
 
-[tool.black]
-line-length = 100
-target-version = ['py39', 'py310']
-include = '\.pyi?$'
-
 [tool.mypy]
 # TODO: revisit
 ignore_missing_imports = true
