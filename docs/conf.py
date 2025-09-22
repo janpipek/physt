@@ -53,7 +53,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Physt"
-copyright = "2016, Jan Pipek"
+copyright = "2016-2025, Jan Pipek"
 author = "Jan Pipek"
 
 import physt.binnings

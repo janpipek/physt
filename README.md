@@ -27,7 +27,7 @@ uv run --with "physt[terminal]>=0.8.3" -m physt.examples
 
 ## Command-line interface (experimental)
 
-You can run (and install) `physt` as a command-line application to quickly analyse 
+You can run (and install) `physt` as a command-line application to quickly analyse
 data files. This functionality is currently in development.
 
 ```shell
@@ -52,7 +52,7 @@ hist << 190                      # <--- add a forgotten value
 hist.plot()                      # <--- and plot it
 ```
 
-![Heights plot](doc/heights.png)
+![Heights plot](docs/heights.png)
 
 ## 2D example
 
@@ -65,7 +65,7 @@ iris_hist = h2(iris["sepal_length"], iris["sepal_width"], "pretty", bin_count=[1
 iris_hist.plot(show_zero=False, cmap="gray_r", show_values=True);
 ```
 
-![Iris 2D plot](doc/iris-2d.png)
+![Iris 2D plot](docs/iris-2d.png)
 
 ## 3D directional example
 
@@ -86,19 +86,18 @@ h = special_histograms.spherical(data)
 h.projection("theta", "phi").plot.globe_map(density=True, figsize=(7, 7), cmap="rainbow")
 ```
 
-![Directional 3D plot](doc/globe.png)
+![Directional 3D plot](docs/globe.png)
 
 See more in docstring's and notebooks:
 
-- Basic tutorial: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/tutorial.ipynb>
-- Binning: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/binning.ipynb>
-- 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/2d_histograms.ipynb>
-- Special histograms (polar, spherical, cylindrical - *beta*): <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/special_histograms.ipynb>
-- Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/adaptive_histogram.ipynb>
-- Use dask for large (not "big") data - *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/dask.ipynb>
-- Geographical bins . *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/geospatial.ipynb>
-- Plotting with vega backend: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/doc/vega-examples.ipynb>
-...and others, see the `doc` directory.
+- Basic tutorial: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/docs/tutorial.ipynb>
+- Binning: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/docs/binning.ipynb>
+- 2D histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/docs/2d_histograms.ipynb>
+- Special histograms (polar, spherical, cylindrical - *beta*): <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/docs/special_histograms.ipynb>
+- Adaptive histograms: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/docs/adaptive_histogram.ipynb>
+- Use dask for large (not "big") data - *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/docs/dask.ipynb>
+- Geographical bins . *alpha*: <http://nbviewer.jupyter.org/github/janpipek/physt/blob/dev/docs/geospatial.ipynb>
+...and others, see the `docs` directory.
 
 ## Installation
 
