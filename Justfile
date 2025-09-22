@@ -41,3 +41,6 @@ publish: build
 
 examples:
     uv run --extra all python -m physt.examples
+
+docs:
+    uv run --extra all sphinx-build -b html docs/ docs/_build/html

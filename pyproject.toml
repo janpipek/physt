@@ -26,11 +26,19 @@ dependencies = [
 ]
 
 [tool.uv]
-dev-dependencies = ["physt[all]"]
+dev-dependencies = [
+    "bumpver>=2025.1131",
+    "mypy>=1.18.2",
+    "nbsphinx>=0.9.7",
+    "physt[all]",
+    "pytest>=8.4.1",
+    "pytest-xdist>=3.8.0",
+    "sphinx>=7.4.7",
+    "sphinx-rtd-theme>=3.0.2",
+    "sphinxcontrib-apidoc>=0.6.0",
+]
 
 [project.optional-dependencies]
-dev = ["pytest", "mypy>=1.8", "types-setuptools", "bumpver", "pytest-xdist"]
-# doc = ["sphinx", "sphinx_rtd_theme", "sphixncontrib-apidoc", "nbsphinx"]
 astropy = ["astropy>=6.0"]
 dask = ["dask[array]>=2023.0"]
 pandas = ["pandas>=1.3"]
