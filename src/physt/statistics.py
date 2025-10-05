@@ -104,6 +104,8 @@ class Statistics:
         yield "max", self.max
         yield "total", self.weight
 
+    __rich_repr__.angular = True
+
     def __str__(self):
         rich_str = ", ".join(f"{key}={value}" for key, value in self.__rich_repr__())
         return f"Statistics({rich_str})"
