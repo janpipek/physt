@@ -42,14 +42,14 @@ class Statistics:
     def mean(self) -> float:
         """Statistical mean of all values entered into histogram (weighted)."""
         try:
-            return self.sum / self.weight
+            return float(self.sum / self.weight)
         except ZeroDivisionError:
             return np.nan
 
     @property
     def std(self) -> float:
         """Standard deviation of all values entered into histogram."""
-        return np.sqrt(self.variance)
+        return float(np.sqrt(self.variance))
 
     @property
     def variance(self) -> float:
@@ -59,7 +59,7 @@ class Statistics:
         separate from bin contents.
         """
         if self.weight > 0:
-            return (self.sum2 - self.sum**2 / self.weight) / self.weight
+            return float((self.sum2 - self.sum**2 / self.weight) / self.weight)
         return np.nan
 
     def __add__(self, other: Any) -> Statistics:
@@ -96,6 +96,17 @@ class Statistics:
             and np.array_equal(self.weight, other.weight, equal_nan=True)
             and np.array_equal(self.median, other.median, equal_nan=True)
         )
+
+    def __rich_repr__(self):
+        yield "mean", self.mean
+        yield "std", self.std
+        yield "min", self.min
+        yield "max", self.max
+        yield "total", self.weight
+
+    def __str__(self):
+        rich_str = ", ".join(f"{key}={value}" for key, value in self.__rich_repr__())
+        return f"Statistics({rich_str})"
 
 
 INVALID_STATISTICS: Statistics = Statistics(

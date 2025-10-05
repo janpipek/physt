@@ -1,3 +1,5 @@
+import re
+
 import numpy as np
 import pytest
 
@@ -26,7 +28,7 @@ def simple_h1_without_stats(simple_h1: Histogram1D) -> Histogram1D:
 
 @pytest.mark.parametrize("range_", [None, pytest.param((1.5, 2.5), id="limiting")])
 @pytest.mark.parametrize("use_weights", [False, True])
-class TestStatisticsComputation:
+class TestStatistics:
     @pytest.fixture
     def histogram(
         self,
@@ -82,6 +84,12 @@ class TestStatisticsComputation:
             assert np.allclose(histogram.statistics.std, np.sqrt(6.8 / 5))
         else:
             assert np.allclose(histogram.statistics.std, np.sqrt(5 / 4))
+
+    def test_str(self, histogram, use_weights):
+        str_repr = str(histogram.statistics)
+        pattern = re.compile(r"^Statistics\(mean=[0-9.\-]+, std=[0-9.\-]+, min=[0-9.\-]+, max=[0-9.\-]+, total=[0-9.\-]+\)$")
+        match = pattern.match(str_repr)
+        x = 7
 
 
 class TestEmptyHistogram:

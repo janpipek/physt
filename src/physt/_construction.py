@@ -479,13 +479,13 @@ def calculate_1d_frequencies(
         stats = Statistics()
     else:
         stats = Statistics(
-            sum=(data_array * weights_array).sum(),
-            sum2=(data_array**2 * weights_array).sum(),
+            sum=float((data_array * weights_array).sum()),
+            sum2=float((data_array**2 * weights_array).sum()),
             min=float(data_array.min()),
             max=float(data_array.max()),
             weight=float(weights_array.sum()),
             # TODO: Support median with weights?
-            median=np.median(data_array) if equal_weights else np.nan,
+            median=float(np.median(data_array)) if equal_weights else np.nan,
         )
     return frequencies, errors2, underflow, overflow, stats
 
