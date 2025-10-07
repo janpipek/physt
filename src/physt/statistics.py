@@ -104,7 +104,7 @@ class Statistics:
         yield "max", self.max
         yield "total", self.weight
 
-    __rich_repr__.angular = True
+    __rich_repr__.angular = True  # type: ignore[attr-defined]
 
     def __str__(self):
         rich_str = ", ".join(f"{key}={value}" for key, value in self.__rich_repr__())
