@@ -3,7 +3,7 @@ name = "physt"
 version = "0.9.0"
 description = "P(i/y)thon h(i/y)stograms."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [{ name = "Jan Pipek", email = "jan.pipek@gmail.com" }]
 classifiers = [
@@ -25,8 +25,8 @@ dependencies = [
     "rich>=14.1.0",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "bumpver>=2025.1131",
     "ipython>=8.18.1",
     "mypy>=1.18.2",
