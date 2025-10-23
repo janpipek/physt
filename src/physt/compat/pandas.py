@@ -10,7 +10,6 @@ import warnings
 from typing import TYPE_CHECKING, NoReturn, Optional, Tuple, cast
 
 import numpy as np
-import pandas
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
@@ -27,7 +26,7 @@ if TYPE_CHECKING:
 
 @extract_1d_array.register
 def _(
-    series: pandas.Series, *, dropna: bool = True
+    series: pd.Series, *, dropna: bool = True
 ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     if not pd.api.types.is_numeric_dtype(series):
         raise ValueError(
@@ -85,14 +84,14 @@ def _(
     return data_frame.shape[1], array, array_mask
 
 
-@pandas.api.extensions.register_series_accessor("physt")
+@pd.api.extensions.register_series_accessor("physt")
 class PhystSeriesAccessor:
     """Histogramming methods for pandas Series.
 
     It exists only for numeric series.
     """
 
-    def __init__(self, series: pandas.Series):
+    def __init__(self, series: pd.Series):
         if not is_numeric_dtype(series):
             raise AttributeError(
                 f"Series must be of a numeric type, not {series.dtype}"
@@ -116,11 +115,11 @@ class PhystSeriesAccessor:
         return pd.cut(self._series, binning.numpy_bins)
 
 
-@pandas.api.extensions.register_dataframe_accessor("physt")
+@pd.api.extensions.register_dataframe_accessor("physt")
 class PhystDataFrameAccessor:
     """Histogramming methods for pandas DataFrames."""
 
-    def __init__(self, df: pandas.DataFrame):
+    def __init__(self, df: pd.DataFrame):
         self._df = df
 
     def h1(
@@ -230,17 +229,17 @@ class PhystDataFrameAccessor:
 
 def binning_to_index(
     binning: BinningBase, name: Optional[str] = None
-) -> pandas.IntervalIndex:
+) -> pd.IntervalIndex:
     """Convert physt binning to a pandas interval index."""
     # TODO: Check closedness
-    return pandas.IntervalIndex.from_arrays(
+    return pd.IntervalIndex.from_arrays(
         left=binning.bins[:, 0], right=binning.bins[:, 1], closed="left", name=name
     )
 
 
-def index_to_binning(index: pandas.IntervalIndex) -> BinningBase:
+def index_to_binning(index: pd.IntervalIndex) -> BinningBase:
     """Convert an interval index into physt binning."""
-    if not isinstance(index, pandas.IntervalIndex):
+    if not isinstance(index, pd.IntervalIndex):
         raise TypeError(f"IntervalIndex required, '{type(index)}' passed.")
     if not index.closed_left:
         raise ValueError("Only `closed_left` indices supported.")
@@ -252,17 +251,17 @@ def index_to_binning(index: pandas.IntervalIndex) -> BinningBase:
     return static_binning(bins=bins)
 
 
-def _h1_to_dataframe(h1: Histogram1D) -> pandas.DataFrame:
+def _h1_to_dataframe(h1: Histogram1D) -> pd.DataFrame:
     """Convert histogram to pandas DataFrame."""
-    return pandas.DataFrame(
+    return pd.DataFrame(
         {"frequency": h1.frequencies, "error": h1.errors},
         index=binning_to_index(h1.binning, name=h1.name),
     )
 
 
-def _h1_to_series(h1: Histogram1D) -> pandas.Series:
+def _h1_to_series(h1: Histogram1D) -> pd.Series:
     """Convert histogram to pandas Series."""
-    return pandas.Series(
+    return pd.Series(
         h1.frequencies,
         name="frequency",
         index=binning_to_index(h1.binning, name=h1.name),

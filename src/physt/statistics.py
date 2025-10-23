@@ -98,6 +98,7 @@ class Statistics:
         )
 
     def __rich_repr__(self):
+        # Output interesting attributes instead of internal representation
         yield "mean", self.mean
         yield "std", self.std
         yield "min", self.min
