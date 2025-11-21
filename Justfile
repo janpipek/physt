@@ -13,6 +13,7 @@ bump-minor:
 bump-patch:
     uvx bumpver update --tag final --patch
 
+# Run pytest
 [group('qa')]
 test:
     uv run --extra all pytest
@@ -31,17 +32,21 @@ pyright:
 pre-commit:
     uvx pre-commit run --all
 
+# Create a wheel
 build:
     rm -rf dist/
     uv build
     rm -rf src/physt.egg-info
 
+# Publish to pypi.org
 publish: build
     uv publish
 
+# Run the project example in the CLI
 examples:
     uv run --extra all python -m physt.examples
 
+# Build the spinx documentation
 docs:
     cd docs && uv run --extra all sphinx-apidoc -o . ../src/physt
     uv run --extra all sphinx-build -b html docs/ docs/_build/html
