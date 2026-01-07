@@ -9,7 +9,6 @@ Subpackages
 
    physt.compat
    physt.examples
-   physt.helpers
    physt.io
    physt.plotting
    physt.testing

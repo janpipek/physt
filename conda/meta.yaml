@@ -29,7 +29,6 @@ test:
     - physt
     - physt.compat
     - physt.io
-    - physt.helpers
     - physt.plotting
 
 about:
