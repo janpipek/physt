@@ -62,6 +62,12 @@ physt = "physt.cli:app"
 requires = ["flit_core>=3.4"]
 build-backend = "flit_core.buildapi"
 
+[tool.flit.sdist]
+include = [
+    "src/physt/examples/*.csv",
+    "tests/data/",
+]
+
 [tool.mypy]
 # TODO: revisit
 ignore_missing_imports = true
