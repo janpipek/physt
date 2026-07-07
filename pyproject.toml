@@ -23,6 +23,7 @@ dependencies = [
     "click>=8.1.8",
     "narwhals>=2.0.1",
     "rich>=14.1.0",
+    "basedpyright>=1.39.9",
 ]
 
 [dependency-groups]
@@ -73,6 +74,10 @@ include = [
 ignore_missing_imports = true
 # plugins = ["numpy.typing.mypy_plugin"]
 exclude = ["docs"]
+
+[tool.pyright]
+reportImplicitOverride = false
+reportExplicitAny = false
 
 [tool.isort]
 profile = "black"
