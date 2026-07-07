@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import warnings
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from contextlib import suppress
-from typing import TYPE_CHECKING, cast, final, TypeAlias
+from typing import TYPE_CHECKING, TypeAlias, final
 
 import numpy as np
 from typing_extensions import Self
@@ -481,10 +481,10 @@ class FixedWidthBinning(BinningBase):
         bin_times_min: int | None = None,
         # TODO: move this to the helper method?
         min: float | None = None,
-        includes_right_edge : bool = False,
+        includes_right_edge: bool = False,
         adaptive: bool = False,
-        bin_shift: float | None =None,
-        align:bool  = True,
+        bin_shift: float | None = None,
+        align: bool = True,
         **kwargs,
     ):
         super().__init__(adaptive=adaptive, includes_right_edge=includes_right_edge)
@@ -521,7 +521,9 @@ class FixedWidthBinning(BinningBase):
     def is_regular(self, **kwargs) -> bool:
         return True
 
-    def _force_bin_existence_single(self, value: float, *, includes_right_edge: bool | None = None) -> int | None:
+    def _force_bin_existence_single(
+        self, value: float, *, includes_right_edge: bool | None = None
+    ) -> int | None:
         if includes_right_edge is None:
             includes_right_edge = self.includes_right_edge
 
@@ -553,7 +555,9 @@ class FixedWidthBinning(BinningBase):
             else:
                 return None
 
-    def _force_bin_existence(self, values, *, includes_right_edge=None) -> int | BinMap | None:
+    def _force_bin_existence(
+        self, values, *, includes_right_edge=None
+    ) -> int | BinMap | None:
         if np.isscalar(values):
             return self._force_bin_existence_single(
                 values, includes_right_edge=includes_right_edge

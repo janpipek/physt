@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
-from physt.binnings import BinningBase, as_binning, BinMap
+from physt.binnings import BinMap, BinningBase, as_binning
 from physt.config import config
 from physt.statistics import INVALID_STATISTICS
 
@@ -656,9 +656,7 @@ class HistogramBase(abc.ABC):
                 return False
         return True
 
-    def copy(
-        self, *, include_frequencies: bool = True
-    ) -> Self:
+    def copy(self, *, include_frequencies: bool = True) -> Self:
         """Copy the histogram.
 
         Parameters

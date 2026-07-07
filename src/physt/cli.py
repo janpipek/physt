@@ -80,7 +80,7 @@ def _load_data(path: Path) -> nw.DataFrame:
             return nw.read_csv(str(path), backend=backend)  # type: ignore[arg-type]
         except KeyError:
             try:
-                return nw.read_parquet(str(path), backend=backend)   # type: ignore[arg-type]
+                return nw.read_parquet(str(path), backend=backend)  # type: ignore[arg-type]
             except EnvironmentError:
                 continue
 
