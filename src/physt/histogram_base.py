@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
-from physt.binnings import BinningBase, as_binning
+from physt.binnings import BinningBase, as_binning, BinMap
 from physt.config import config
 from physt.statistics import INVALID_STATISTICS
 
@@ -488,10 +488,10 @@ class HistogramBase(abc.ABC):
     def _change_binning(
         self,
         new_binning: BinningBase,
-        bin_map: Iterable[Tuple[int, int]],
+        bin_map: BinMap | None,
         axis: Axis = 0,
     ):
-        """Set new binnning and update the bin contents according to a map.
+        """Set new binning and update the bin contents according to a map.
 
         Fills frequencies and errors with 0.
         It's the caller's responsibility to provide correct binning and map.
@@ -567,7 +567,7 @@ class HistogramBase(abc.ABC):
             self._change_binning(new_binning, bin_map, axis=axis)
         return self
 
-    def _reshape_data(self, new_size: int, bin_map, axis: int = 0):
+    def _reshape_data(self, new_size: int, bin_map: BinMap, axis: int = 0):
         """Reshape data to match new binning schema.
 
         Fills frequencies and errors with 0.
@@ -605,7 +605,7 @@ class HistogramBase(abc.ABC):
         new_frequencies: np.ndarray,
         old_errors2: np.ndarray,
         new_errors2: np.ndarray,
-        bin_map: Union[Iterable[Tuple[int, int]], int],
+        bin_map: BinMap,
         axis: int,
     ):
         """Fill new data arrays using a map.
@@ -657,8 +657,8 @@ class HistogramBase(abc.ABC):
         return True
 
     def copy(
-        self: "HistogramType", *, include_frequencies: bool = True
-    ) -> "HistogramType":
+        self, *, include_frequencies: bool = True
+    ) -> Self:
         """Copy the histogram.
 
         Parameters
@@ -673,7 +673,7 @@ class HistogramBase(abc.ABC):
             frequencies = np.zeros_like(self._frequencies)
             errors2 = np.zeros_like(self._errors2)
             missed = np.zeros_like(self._missed)
-        a_copy = self.__class__.__new__(self.__class__)
+        a_copy = type(self).__new__(type(self))
         a_copy._binnings = [binning.copy() for binning in self._binnings]
         a_copy._dtype = self.dtype
         a_copy._frequencies = frequencies
@@ -1009,7 +1009,7 @@ class HistogramBase(abc.ABC):
             raise TypeError("Histograms may be divided only by a constant.")
         return self
 
-    def __lshift__(self, value):
+    def __lshift__(self, value) -> None:
         """Convenience alias for fill.
 
         Because of the limit to argument count, weight is not supported.
@@ -1033,8 +1033,8 @@ class HistogramBase(abc.ABC):
             for key in keys
         }
 
-    def __array__(self) -> np.ndarray:
-        """Convert to numpy array.
+    def __array__(self, dtype=None, copy: bool | None = None) -> np.ndarray:
+        """Convert to a numpy array.
 
         Returns
         -------
@@ -1044,4 +1044,4 @@ class HistogramBase(abc.ABC):
         --------
         frequencies
         """
-        return self.frequencies
+        return np.asarray(self.frequencies, dtype=dtype, copy=copy)

@@ -32,6 +32,7 @@ Parameters
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from contextlib import suppress
 from functools import wraps
 from typing import TYPE_CHECKING, cast
@@ -69,8 +70,8 @@ if TYPE_CHECKING:
 
 
 # To be filled by register function
-types = []
-dims = {}
+types: list[str] = []
+dims: dict[str, Iterable[int]] = {}
 
 
 default_dpi = 72

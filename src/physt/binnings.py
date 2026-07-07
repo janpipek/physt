@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import warnings
+from abc import abstractmethod, ABC
+from collections.abc import Iterable
 from contextlib import suppress
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, final, TypeAlias
 
 import numpy as np
-from typing_extensions import NoReturn, Self
+from typing_extensions import Self
 
 from physt._bin_utils import (
     find_pretty_width,
@@ -40,8 +42,12 @@ if TYPE_CHECKING:
     BinningType = TypeVar("BinningType", bound="BinningBase")
 
 
-binning_methods = {}
-"""Dictionary of available binnnings."""
+BinMap: TypeAlias = Iterable[tuple[int, int]]
+"""Description of the bin remapping - from left to right."""
+
+
+binning_methods: dict[str, Callable] = {}
+"""Dictionary of available binnings."""
 
 
 def register_binning(name: Optional[str] = None) -> Callable[[Callable], Callable]:
@@ -58,7 +64,7 @@ def register_binning(name: Optional[str] = None) -> Callable[[Callable], Callabl
 # TODO: Locking and edit operations (like numpy read-only)
 
 
-class BinningBase:
+class BinningBase(ABC):
     """Abstract base class for binning schemas.
 
     Inheriting
@@ -109,7 +115,7 @@ class BinningBase:
             )
         self._adaptive = adaptive
 
-    def __getitem__(self, index: Union[slice, int]):
+    def __getitem__(self, index: slice | int) -> StaticBinning | np.ndarray:
         if isinstance(index, slice):
             new_binning = self.as_static()
             new_binning._bins = new_binning.bins[index]
@@ -117,27 +123,26 @@ class BinningBase:
         return self.bins[index]
 
     @staticmethod
-    def from_dict(a_dict: Dict[str, Any]) -> BinningBase:
+    def from_dict(a_dict: dict[str, Any]) -> BinningBase:
         binning_type = a_dict.pop("binning_type", "StaticBinning")
         klass = find_subclass(BinningBase, binning_type)
         return klass(**a_dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    @final
+    def to_dict(self) -> dict[str, Any]:
         """Dictionary representation of the binning schema.
 
         This serves as template method, please implement _update_dict
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "adaptive": self._adaptive,
             "binning_type": type(self).__name__,
         }
         self._update_dict(result)
         return result
 
-    def _update_dict(self, a_dict):
-        raise NotImplementedError(
-            f"Dictionary representation of {type(self).__name__} is not implemented."
-        )
+    @abstractmethod
+    def _update_dict(self, a_dict: dict[str, Any]) -> None: ...
 
     @property
     def includes_right_edge(self) -> bool:
@@ -155,7 +160,7 @@ class BinningBase:
             np.diff(self.bins[1] - self.bins[0]), 0.0, rtol=rtol, atol=atol
         )
 
-    def is_consecutive(self, rtol: float = 1.0e-5, atol: float = 1.0e-8) -> bool:
+    def is_consecutive(self, *, rtol: float = 1.0e-5, atol: float = 1.0e-8) -> bool:
         """Whether all bins are in a growing order.
 
         Parameters
@@ -174,7 +179,8 @@ class BinningBase:
         """Whether the binning can be adapted to include values not currently spanned."""
         return self._adaptive
 
-    def force_bin_existence(self, values):
+    @final
+    def force_bin_existence(self, values: ArrayLike) -> int | BinMap | None:
         """Change schema so that there is a bin for value.
 
         It is necessary to implement the _force_bin_existence template method.
@@ -186,36 +192,47 @@ class BinningBase:
 
         Returns
         -------
-        bin_map: Iterable[tuple] or None or int
+        bin_map: _BinMap or None or int
             None => There was no change in bins
             int => The bins are only shifted (allows mass assignment)
             Otherwise => the iterable contains tuples (old bin index, new bin index)
                 new bin index can occur multiple times, which corresponds to bin merging
         """
-        # TODO: Rename to something less evil
         if not self.is_adaptive():
-            raise RuntimeError("Histogram is not adaptive")
+            raise RuntimeError("Histogram is not adaptive.")
         else:
             return self._force_bin_existence(values)
 
-    def _force_bin_existence(self, values):
-        # TODO: in-place
+    def _force_bin_existence(self, values) -> int | BinMap | None:
         raise NotImplementedError()
 
-    def adapt(self, other: "BinningBase"):
+    @final
+    def adapt(self, other: "BinningBase") -> tuple[BinMap | None, BinMap | None]:
         """Adapt this binning so that it contains all bins of another binning.
 
         Parameters
         ----------
         other: BinningBase
+
+        Returns
+        -------
+        map1: A remapping from old bins to new bins. If not changed, None.
+        map2: A remapping of `other` bins to new bins. If not changed, None.
+
+        Note
+        ----
+        Implement the `_adapt` template method.
         """
-        # TODO: in-place arg
         if np.array_equal(self.bins, other.bins):
             return None, None
         elif not self.is_adaptive():
             raise RuntimeError("Cannot adapt non-adaptive binning.")
         else:
             return self._adapt(other)
+
+    def _adapt(self, other) -> tuple[BinMap | None, BinMap | None]:
+        # By default, this is not possible
+        raise RuntimeError(f"Cannot adapt {self.__class__.__name__}.")
 
     def set_adaptive(self, value: bool = True) -> None:
         """Set/unset the adaptive property of the binning.
@@ -225,9 +242,6 @@ class BinningBase:
         if value and not self.adaptive_allowed:
             raise RuntimeError("Cannot change binning to adaptive.")
         self._adaptive = value
-
-    def _adapt(self, other) -> NoReturn:
-        raise RuntimeError("Cannot adapt binning.")
 
     @property
     def bins(self) -> np.ndarray:
@@ -325,7 +339,7 @@ class BinningBase:
         )
 
     def as_fixed_width(self, copy: bool = True) -> "FixedWidthBinning":  # pylint: disable=unused-argument
-        """Convert binning to recipe with fixed width (if possible.)
+        """Convert binning to recipe with fixed width (if possible).
 
         Parameters
         ----------
@@ -344,12 +358,12 @@ class BinningBase:
                 "Cannot create fixed-width binning from differing bin widths."
             )
 
+    @abstractmethod
     def copy(self) -> Self:
-        """An identical, independent copy."""
-        raise NotImplementedError()
+        """Create an identical, independent copy."""
 
-    def apply_bin_map(self, bin_map) -> "BinningBase":
-        """
+    def apply_bin_map(self, bin_map: BinMap) -> "BinningBase":
+        """...
 
         Parameters
         ----------
@@ -407,8 +421,8 @@ class StaticBinning(BinningBase):
             return self.copy()
         return self
 
-    def copy(self) -> "StaticBinning":
-        return StaticBinning(
+    def copy(self) -> StaticBinning:
+        return type(self)(
             bins=self.bins.copy(), includes_right_edge=self.includes_right_edge
         )
 
@@ -418,15 +432,16 @@ class StaticBinning(BinningBase):
         # TODO: check for the right_edge??
         return copy
 
-    def _update_dict(self, a_dict):
+    def _update_dict(self, a_dict: dict[str, Any]) -> None:
         a_dict["bins"] = self.bins.tolist()
 
-    def _adapt(self, other):
+    def _adapt(self, other: BinningBase) -> tuple[None, BinMap]:
         if is_bin_subset(other.bins, self.bins):
             indices = np.searchsorted(other.bins[:, 0], self.bins[:, 0])
             return None, list(enumerate(indices))
+        raise ValueError("Cannot adapt binning with different bins.")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.bins!r})"
 
 
@@ -441,10 +456,10 @@ class NumpyBinning(BinningBase):
         )
 
     @property
-    def numpy_bins(self):
+    def numpy_bins(self) -> np.ndarray:
         return self._numpy_bins
 
-    def copy(self) -> "NumpyBinning":
+    def copy(self) -> NumpyBinning:
         return NumpyBinning(
             numpy_bins=self.numpy_bins, includes_right_edge=self.includes_right_edge
         )
@@ -461,14 +476,15 @@ class FixedWidthBinning(BinningBase):
     def __init__(
         self,
         *,
-        bin_width,
-        bin_count=0,
-        bin_times_min=None,
-        min=None,
-        includes_right_edge=False,
-        adaptive=False,
-        bin_shift=None,
-        align=True,
+        bin_width: float,
+        bin_count: int = 0,
+        bin_times_min: int | None = None,
+        # TODO: move this to the helper method?
+        min: float | None = None,
+        includes_right_edge : bool = False,
+        adaptive: bool = False,
+        bin_shift: float | None =None,
+        align:bool  = True,
         **kwargs,
     ):
         super().__init__(adaptive=adaptive, includes_right_edge=includes_right_edge)
@@ -505,7 +521,7 @@ class FixedWidthBinning(BinningBase):
     def is_regular(self, **kwargs) -> bool:
         return True
 
-    def _force_bin_existence_single(self, value, includes_right_edge=None):
+    def _force_bin_existence_single(self, value: float, *, includes_right_edge: bool | None = None) -> int | None:
         if includes_right_edge is None:
             includes_right_edge = self.includes_right_edge
 
@@ -537,7 +553,7 @@ class FixedWidthBinning(BinningBase):
             else:
                 return None
 
-    def _force_bin_existence(self, values, *, includes_right_edge=None):
+    def _force_bin_existence(self, values, *, includes_right_edge=None) -> int | BinMap | None:
         if np.isscalar(values):
             return self._force_bin_existence_single(
                 values, includes_right_edge=includes_right_edge
@@ -555,14 +571,14 @@ class FixedWidthBinning(BinningBase):
 
     @property
     def first_edge(self) -> float:
-        return self._times_min * self._bin_width + self._shift
+        return self._bin_width * self._times_min + self._shift
 
     @property
     def last_edge(self) -> float:
         return (self._times_min + self._bin_count) * self._bin_width + self._shift
 
     @property
-    def numpy_bins(self):
+    def numpy_bins(self) -> np.ndarray:
         if self._numpy_bins is None:
             self._bins = None
             if self._bin_count == 0:
@@ -573,10 +589,10 @@ class FixedWidthBinning(BinningBase):
         return self._numpy_bins
 
     @property
-    def bin_count(self):
+    def bin_count(self) -> int:
         return self._bin_count
 
-    def copy(self):
+    def copy(self) -> FixedWidthBinning:
         return FixedWidthBinning(
             bin_width=self._bin_width,
             bin_count=self._bin_count,
@@ -588,10 +604,10 @@ class FixedWidthBinning(BinningBase):
         )
 
     @property
-    def bin_width(self):
+    def bin_width(self) -> float:
         return self._bin_width
 
-    def _force_new_min_max(self, new_min, new_max):
+    def _force_new_min_max(self, new_min, new_max) -> BinMap | None:
         bin_map = None
         add_right = add_left = 0
         if new_min < self._times_min:
@@ -605,20 +621,13 @@ class FixedWidthBinning(BinningBase):
             )
         return bin_map
 
-    def _set_min_and_count(self, times_min, bin_count):
+    def _set_min_and_count(self, times_min, bin_count) -> None:
         self._bin_count = bin_count
         self._times_min = times_min
         self._bins = None
         self._numpy_bins = None
 
-    def _adapt(self, other: BinningBase):
-        """
-
-        Returns
-        -------
-        bin_map1: Iterable[tuple] or None
-        bin_map2: Iterable[tuple] or None
-        """
+    def _adapt(self, other: BinningBase) -> tuple[BinMap | None, BinMap | None]:
         other = other.as_fixed_width()
         if self.bin_width != other.bin_width:
             raise ValueError(
@@ -629,7 +638,7 @@ class FixedWidthBinning(BinningBase):
                 f"Cannot adapt shifted fixed-width histograms: {self._shift} vs {other._shift}"
             )
         # Following operations modify schemas
-        other = cast(FixedWidthBinning, other.copy())
+        other = other.copy()
         if other.bin_count == 0:
             return None, ()
         if self.bin_count == 0:
@@ -684,7 +693,7 @@ class ExponentialBinning(BinningBase):
         return False
 
     @property
-    def numpy_bins(self):
+    def numpy_bins(self) -> np.ndarray:
         if self._bin_count == 0:
             return np.ndarray((0,), dtype=float)
         if self._numpy_bins is None:
@@ -697,7 +706,7 @@ class ExponentialBinning(BinningBase):
             self._log_min, self._log_width, self._bin_count, self.includes_right_edge
         )
 
-    def _update_dict(self, a_dict):
+    def _update_dict(self, a_dict) -> None:
         a_dict["log_min"] = self._log_min
         a_dict["log_width"] = self._log_width
         a_dict["bin_count"] = self._bin_count
@@ -855,7 +864,7 @@ def quantile_binning(
 
 @register_binning()
 def static_binning(
-    data: Optional[np.ndarray] = None, *, bins: ArrayLike, **kwargs
+    data: np.ndarray | None = None, *, bins: ArrayLike, **kwargs
 ) -> StaticBinning:
     """Construct static binning with whatever bins."""
     # TODO: Fail with no bins!
@@ -863,7 +872,7 @@ def static_binning(
 
 
 @register_binning()
-def integer_binning(data: Optional[np.ndarray] = None, **kwargs) -> FixedWidthBinning:
+def integer_binning(data: np.ndarray | None = None, **kwargs) -> FixedWidthBinning:
     """Construct fixed-width binning schema with bins centered around integers.
 
     Parameters
@@ -886,10 +895,10 @@ def integer_binning(data: Optional[np.ndarray] = None, **kwargs) -> FixedWidthBi
 
 @register_binning()
 def fixed_width_binning(
-    data: Optional[np.ndarray] = None,
+    data: np.ndarray | None = None,
     bin_width: Union[float, int] = 1,
     *,
-    range: Optional[RangeTuple] = None,
+    range: RangeTuple | None = None,
     includes_right_edge: bool = False,
     **kwargs,
 ) -> FixedWidthBinning:
@@ -912,7 +921,6 @@ def fixed_width_binning(
         if not kwargs.get("adaptive"):
             return result  # Otherwise we want to adapt to data
     if data is not None and data.shape[0]:
-        # print("Jo, tady")
         result._force_bin_existence(
             [np.min(data), np.max(data)], includes_right_edge=includes_right_edge
         )
