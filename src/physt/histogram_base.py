@@ -567,7 +567,7 @@ class HistogramBase(abc.ABC):
             self._change_binning(new_binning, bin_map, axis=axis)
         return self
 
-    def _reshape_data(self, new_size: int, bin_map: BinMap, axis: int = 0):
+    def _reshape_data(self, new_size: int, bin_map: BinMap | int | None, axis: int = 0):
         """Reshape data to match new binning schema.
 
         Fills frequencies and errors with 0.
@@ -709,7 +709,7 @@ class HistogramBase(abc.ABC):
     @abc.abstractmethod
     def fill(
         self, value: float, weight: float = 1, **kwargs
-    ) -> Union[None, int, Tuple[int, ...]]:
+    ) -> Union[None, int, tuple[int, ...]]:
         """Update histogram with a new value.
 
         It is an in-place operation.
@@ -730,7 +730,7 @@ class HistogramBase(abc.ABC):
     def fill_n(
         self,
         values: ArrayLike,
-        weights: Optional[ArrayLike] = None,
+        weights: ArrayLike | None = None,
         *,
         dropna: bool = True,
     ):
@@ -800,7 +800,7 @@ class HistogramBase(abc.ABC):
         pass
 
     @classmethod
-    def _kwargs_from_dict(cls, a_dict: Mapping[str, Any]) -> Dict[str, Any]:
+    def _kwargs_from_dict(cls, a_dict: Mapping[str, Any]) -> dict[str, Any]:
         """Modify __init__ arguments from an external dictionary.
 
         Template method for from dict.
@@ -832,7 +832,7 @@ class HistogramBase(abc.ABC):
         kwargs = cls._kwargs_from_dict(a_dict)
         return cls(**kwargs)
 
-    def to_json(self, path: Optional[str] = None, **kwargs) -> str:
+    def to_json(self, path: str | None = None, **kwargs) -> str:
         """Convert to JSON representation.
 
         Parameters
@@ -922,7 +922,7 @@ class HistogramBase(abc.ABC):
             )
         return self
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> Self:
         new = self.copy()
         new -= other
         if isinstance(other, HistogramBase):

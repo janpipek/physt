@@ -11,10 +11,10 @@ from functools import wraps
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Dict, Tuple
+    from typing import Any, Callable
 
 
-def all_subclasses(cls: type) -> Tuple[type, ...]:
+def all_subclasses(cls: type) -> tuple[type, ...]:
     """All subclasses of a class.
 
     From: http://stackoverflow.com/a/17246726/2692780
@@ -41,7 +41,7 @@ def find_subclass(base: type, name: str) -> type:
     return class_candidates[0]
 
 
-def pop_many(a_dict: Dict[str, Any], *args: str, **kwargs) -> Dict[str, Any]:
+def pop_many(a_dict: dict[str, Any], *args: str, **kwargs) -> dict[str, Any]:
     """Pop multiple items from a dictionary.
 
     Parameters

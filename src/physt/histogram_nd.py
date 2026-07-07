@@ -279,8 +279,8 @@ class HistogramND(HistogramBase):
     # def find_bin(self, value: Number, axis: Axis) -> Optional[int]: ...
 
     def find_bin(
-        self, value: ArrayLike, axis: Optional[Axis] = None
-    ) -> Union[None, int, Tuple[int, ...]]:
+        self, value: ArrayLike, axis: Axis | None = None
+    ) -> Union[None, int, tuple[int, ...]]:
         """Index(-ices) of bin corresponding to a value.
 
         Parameters
@@ -349,7 +349,7 @@ class HistogramND(HistogramBase):
     def fill_n(
         self,
         values: ArrayLike,
-        weights: Optional[ArrayLike] = None,
+        weights: ArrayLike | None = None,
         *,
         dropna: bool = True,
         columns: bool = False,

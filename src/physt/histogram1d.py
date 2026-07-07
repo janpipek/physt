@@ -134,15 +134,15 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     def __init__(
         self,
         binning: BinningLike,
-        frequencies: Optional[ArrayLike] = None,
-        errors2: Optional[ArrayLike] = None,
+        frequencies: ArrayLike | None = None,
+        errors2: ArrayLike | None = None,
         *,
         keep_missed: bool = True,
-        stats: Optional[Statistics] = None,
-        overflow: Optional[float] = 0.0,
-        underflow: Optional[float] = 0.0,
-        inner_missed: Optional[float] = 0.0,
-        axis_name: Optional[str] = None,
+        stats: Statistics | None = None,
+        overflow: float | None = 0.0,
+        underflow: float| None = 0.0,
+        inner_missed: float| None = 0.0,
+        axis_name: str | None = None,
         **kwargs,
     ):
         """Constructor

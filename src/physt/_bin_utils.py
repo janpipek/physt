@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from typing import Optional, Tuple, Union
-
     from typing_extensions import Literal
 
     from physt.typing_aliases import ArrayLike
@@ -68,7 +66,7 @@ def to_numpy_bins(bins: ArrayLike) -> np.ndarray:
     return np.concatenate([bins[:1, 0], bins[:, 1]])
 
 
-def to_numpy_bins_with_mask(bins: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
+def to_numpy_bins_with_mask(bins: ArrayLike) -> tuple[np.ndarray, np.ndarray]:
     """Numpy binning edges including gaps.
 
     Parameters
@@ -90,9 +88,9 @@ def to_numpy_bins_with_mask(bins: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
     """
     bins = np.asarray(bins)
     if bins.ndim == 1:
-        edges_: Union[np.ndarray, list] = bins
+        edges_: np.ndarray | list[float] = bins
         if bins.shape[0] > 1:
-            mask_: Union[np.ndarray, list] = np.arange(bins.shape[0] - 1)
+            mask_: np.ndarray | list[int] = np.arange(bins.shape[0] - 1)
         else:
             mask_ = []
     elif bins.ndim == 2:
@@ -135,7 +133,7 @@ def is_rising(bins: ArrayLike) -> bool:
     return True
 
 
-def is_consecutive(bins: ArrayLike, rtol: float = 1.0e-5, atol: float = 1.0e-8) -> bool:
+def is_consecutive(bins: ArrayLike, *, rtol: float = 1.0e-5, atol: float = 1.0e-8) -> bool:
     """Check whether the bins are consecutive (edges match).
 
     Does not check if the bins are in rising order.
@@ -209,7 +207,7 @@ def find_pretty_width_24(raw_width: float) -> int:
 
 
 def find_pretty_width(
-    raw_width: float, kind: Optional[Literal["time"]] = None
+    raw_width: float, kind: Literal["time"] | None = None
 ) -> float:
     """Find the best pretty width close to a given raw_width."""
     # TODO: Deal with infinity
