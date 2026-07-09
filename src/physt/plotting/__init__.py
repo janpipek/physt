@@ -100,7 +100,7 @@ from physt.types import HistogramBase, HistogramCollection
 from . import ascii as ascii_backend
 
 if TYPE_CHECKING:
-    from typing import Any, Optional, Tuple, Union
+    from typing import Any
 
 backends: dict[str, Any] = {}
 
@@ -140,7 +140,7 @@ with suppress(ImportError):
 
 backends["ascii"] = ascii_backend
 
-_default_backend: Optional[str] = None
+_default_backend: str | None = None
 
 if backends:
     _default_backend = list(backends.keys())[0]
@@ -160,12 +160,12 @@ def set_default_backend(name: str) -> None:
     _default_backend = name
 
 
-def get_default_backend() -> Optional[str]:
+def get_default_backend() -> str | None:
     """The backend that will be used by default with the `plot` function."""
     return _default_backend
 
 
-def _get_backend(name: Optional[str] = None) -> Tuple[str, Any]:
+def _get_backend(name: str | None = None) -> tuple[str, Any]:
     """Get a plotting backend.
 
     Tries to get it using the name - or the default one.
@@ -192,9 +192,9 @@ def _get_backend(name: Optional[str] = None) -> Tuple[str, Any]:
 
 
 def plot(
-    histogram: Union[HistogramBase, HistogramCollection],
-    kind: Optional[str] = None,
-    backend: Optional[str] = None,
+    histogram: HistogramBase | HistogramCollection,
+    kind: str | None = None,
+    backend: str | None = None,
     **kwargs,
 ):
     """Universal plotting function.
@@ -245,10 +245,10 @@ class PlottingProxy:
 
     """
 
-    def __init__(self, h: Union[HistogramBase, HistogramCollection]):
+    def __init__(self, h: HistogramBase | HistogramCollection):
         self.histogram = h
 
-    def __call__(self, kind: Optional[str] = None, **kwargs):
+    def __call__(self, kind: str | None = None, **kwargs):
         """Use the plotter as callable."""
         return plot(self.histogram, kind=kind, **kwargs)
 

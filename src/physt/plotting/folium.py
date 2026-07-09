@@ -12,7 +12,7 @@ from branca.colormap import LinearColormap
 from folium import GeoJson, Map
 
 if TYPE_CHECKING:
-    from typing import Any, Dict, Optional
+    from typing import Any
 
     from physt.histogram_nd import Histogram2D
 
@@ -23,7 +23,7 @@ dims = {
 }
 
 
-def _bins_to_json(h2: Histogram2D) -> Dict[str, Any]:
+def _bins_to_json(h2: Histogram2D) -> dict[str, Any]:
     """Create GeoJSON representation of histogram bins
 
     Parameters
@@ -68,13 +68,13 @@ def _bins_to_json(h2: Histogram2D) -> Dict[str, Any]:
 def geo_map(
     h2: Histogram2D,
     *,
-    map: Optional[Map] = None,
-    tiles: Optional[str] = "cartodb positron",
+    map: Map | None = None,
+    tiles: str | None = "cartodb positron",
     cmap="wk",
     alpha: float = 0.5,
     lw=1,
-    fit_bounds: Optional[bool] = None,
-    layer_name: Optional[str] = None,
+    fit_bounds: bool | None = None,
+    layer_name: str | None = None,
 ) -> Map:
     """Show rectangular grid over a map.
 

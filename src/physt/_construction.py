@@ -1,8 +1,9 @@
 """Functions for individual steps of histogram and binning creation."""
 
 import warnings
+from collections.abc import Iterable, Iterator
 from functools import singledispatch
-from typing import Any, Iterable, Iterator, List, Optional, Tuple, cast, overload
+from typing import Any, cast, overload
 
 import numpy as np
 
@@ -22,7 +23,7 @@ from physt.typing_aliases import DTypeLike
 @singledispatch
 def extract_1d_array(
     data: Any, *, dropna: bool = True
-) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+) -> tuple[np.ndarray | None, np.ndarray | None]:
     """Extract 1D array from any input.
 
     Parameters
@@ -66,8 +67,8 @@ def _(data: None, *, dropna=True):
 
 @singledispatch
 def extract_nd_array(
-    data: Any, *, dim: Optional[int] = None, dropna: bool = True
-) -> Tuple[int, Optional[np.ndarray], Optional[np.ndarray]]:
+    data: Any, *, dim: int | None = None, dropna: bool = True
+) -> tuple[int, np.ndarray | None, np.ndarray | None]:
     """Extract 2D tabular-like array from any input.
 
     Parameters
@@ -124,8 +125,8 @@ def _(data: None, *, dim=None, dropna=True):
 
 
 def extract_and_concat_arrays(
-    *data: Optional[Any], dropna: bool = True
-) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+    *data: Any | None, dropna: bool = True
+) -> tuple[np.ndarray | None, np.ndarray | None]:
     """Align multiple data arrays as columns into a single one.
 
     Parameters
@@ -166,7 +167,7 @@ def extract_and_concat_arrays(
 
 
 @singledispatch
-def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional[str]:
+def extract_axis_name(data: Any, *, axis_name: str | None = None) -> str | None:
     """For input data, find the axis name (if there is any).
 
     Typically, this is the name of the data object (Series, ...)
@@ -202,8 +203,8 @@ def extract_axis_name(data: Any, *, axis_name: Optional[str] = None) -> Optional
 
 @singledispatch
 def extract_axis_names(
-    data: Any, *, axis_names: Optional[Iterable[str]] = None
-) -> Optional[Tuple[str, ...]]:
+    data: Any, *, axis_names: Iterable[str] | None = None
+) -> tuple[str, ...] | None:
     """For input data, find the names of the axes (if there are any).
 
     Typically, these are column names for dataframes etc.
@@ -230,7 +231,7 @@ def extract_axis_names(
     return None
 
 
-def _normalize_axis_name(axis_name: Any) -> Optional[str]:
+def _normalize_axis_name(axis_name: Any) -> str | None:
     if axis_name is None:
         return None
     if isinstance(axis_name, (list, tuple)):
@@ -240,8 +241,8 @@ def _normalize_axis_name(axis_name: Any) -> Optional[str]:
 
 @singledispatch
 def extract_weights(
-    weights: Any, *, array_mask: Optional[np.ndarray] = None
-) -> Optional[np.ndarray]:
+    weights: Any, *, array_mask: np.ndarray | None = None
+) -> np.ndarray | None:
     """Extract weights from the provided object.
 
     Returns
@@ -271,29 +272,29 @@ def extract_weights(
 def calculate_nd_frequencies(
     data: np.ndarray,
     binnings: Iterable[BinningBase],
-    weights: Optional[np.ndarray] = None,
+    weights: np.ndarray | None = None,
     *,
-    dtype: Optional[DTypeLike] = None,
-) -> Tuple[np.ndarray, np.ndarray, float]: ...
+    dtype: DTypeLike | None = None,
+) -> tuple[np.ndarray, np.ndarray, float]: ...
 
 
 @overload
 def calculate_nd_frequencies(
     data: None,
     binnings: Iterable[BinningBase],
-    weights: Optional[np.ndarray] = None,
+    weights: np.ndarray | None = None,
     *,
-    dtype: Optional[DTypeLike] = None,
-) -> Tuple[None, None, float]: ...
+    dtype: DTypeLike | None = None,
+) -> tuple[None, None, float]: ...
 
 
 def calculate_nd_frequencies(
-    data: Optional[np.ndarray],
+    data: np.ndarray | None,
     binnings: Iterable[BinningBase],
-    weights: Optional[np.ndarray] = None,
+    weights: np.ndarray | None = None,
     *,
-    dtype: Optional[DTypeLike] = None,
-) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float]:
+    dtype: DTypeLike | None = None,
+) -> tuple[np.ndarray | None, np.ndarray | None, float]:
     """Get frequencies and bin errors from the data (n-dimensional variant).
 
     Parameters
@@ -364,16 +365,14 @@ def calculate_nd_frequencies(
 
 
 def calculate_1d_frequencies(
-    data: Optional[np.ndarray],
+    data: np.ndarray | None,
     binning: BinningBase,
-    weights: Optional[np.ndarray] = None,
+    weights: np.ndarray | None = None,
     *,
     validate_bins: bool = True,
     already_sorted: bool = False,
-    dtype: Optional[DTypeLike] = None,
-) -> Tuple[
-    Optional[np.ndarray], Optional[np.ndarray], float, float, Optional[Statistics]
-]:
+    dtype: DTypeLike | None = None,
+) -> tuple[np.ndarray | None, np.ndarray | None, float, float, Statistics | None]:
     """Get frequencies and bin errors from the data.
 
     Parameters
@@ -491,7 +490,7 @@ def calculate_1d_frequencies(
 
 
 def calculate_1d_bins(
-    array: Optional[np.ndarray], _: Any = None, *, check_nan: bool = True, **kwargs
+    array: np.ndarray | None, _: Any = None, *, check_nan: bool = True, **kwargs
 ) -> BinningBase:
     """Find optimal binning from arguments.
 
@@ -558,12 +557,12 @@ def calculate_1d_bins(
 
 
 def calculate_nd_bins(
-    array: Optional[np.ndarray],
+    array: np.ndarray | None,
     bins=None,
-    dim: Optional[int] = None,
+    dim: int | None = None,
     check_nan: bool = True,
     **kwargs,
-) -> List[BinningBase]:
+) -> list[BinningBase]:
     """Find optimal binning from arguments (n-dimensional variant)
 
     Usage similar to `calculate_bins`.

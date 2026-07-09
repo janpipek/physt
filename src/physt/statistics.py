@@ -97,7 +97,7 @@ class Statistics:
             and np.array_equal(self.median, other.median, equal_nan=True)
         )
 
-    def __rich_repr__(self) -> str:
+    def __rich_repr__(self):
         # Output interesting attributes instead of internal representation
         yield "mean", self.mean
         yield "std", self.std

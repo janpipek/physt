@@ -23,12 +23,12 @@ from physt._bin_utils import (
 from physt._util import deprecation_alias, find_subclass
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-    from typing import Any, Callable, ClassVar, TypeVar
+    from collections.abc import Callable, Sequence
+    from typing import Any, ClassVar, TypeVar
 
     """Anything that can be converted to a binning."""
 
-    from typing_extensions import Literal
+    from typing import Literal
 
     from physt.typing_aliases import ArrayLike, RangeTuple
 

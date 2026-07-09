@@ -38,23 +38,23 @@ from physt.special_histograms import (
 from physt.types import Histogram1D, Histogram2D, HistogramCollection, HistogramND
 
 if TYPE_CHECKING:
-    from typing import Iterable, Optional, Type
+    from collections.abc import Iterable
 
     from physt.typing_aliases import ArrayLike, DTypeLike
 
 
 def h1(
-    data: Optional[ArrayLike],
+    data: ArrayLike | None,
     bins=None,
     *,
     adaptive: bool = False,
     dropna: bool = True,
-    dtype: Optional[DTypeLike] = None,
-    weights: Optional[ArrayLike] = None,
+    dtype: DTypeLike | None = None,
+    weights: ArrayLike | None = None,
     keep_missed: bool = True,
-    name: Optional[str] = None,
-    title: Optional[str] = None,
-    axis_name: Optional[str] = None,
+    name: str | None = None,
+    title: str | None = None,
+    axis_name: str | None = None,
     **kwargs,
 ) -> Histogram1D:
     """Facade function to create 1D histograms.
@@ -144,7 +144,7 @@ def h1(
 
 
 def h2(
-    data1: Optional[ArrayLike], data2: Optional[ArrayLike], bins=10, **kwargs
+    data1: ArrayLike | None, data2: ArrayLike | None, bins=10, **kwargs
 ) -> Histogram2D:
     """Facade function to create 2D histograms.
 
@@ -163,7 +163,7 @@ def h2(
     return cast(Histogram2D, result)
 
 
-def h3(data: Optional[ArrayLike], bins=None, **kwargs) -> HistogramND:
+def h3(data: ArrayLike | None, bins=None, **kwargs) -> HistogramND:
     """Facade function to create 3D histograms.
 
     Parameters
@@ -186,16 +186,16 @@ def h3(data: Optional[ArrayLike], bins=None, **kwargs) -> HistogramND:
 
 
 def h(
-    data: Optional[ArrayLike],
+    data: ArrayLike | None,
     bins=10,
     *,
     adaptive: bool = False,
     dropna: bool = True,
-    name: Optional[str] = None,
-    title: Optional[str] = None,
-    axis_names: Optional[Iterable[str]] = None,
-    dim: Optional[int] = None,
-    weights: Optional[ArrayLike] = None,
+    name: str | None = None,
+    title: str | None = None,
+    axis_names: Iterable[str] | None = None,
+    dim: int | None = None,
+    weights: ArrayLike | None = None,
     **kwargs,
 ) -> HistogramND:
     """Facade function to create n-dimensional histograms.
@@ -238,7 +238,7 @@ def h(
     )
 
     # Prepare remaining data
-    klass: Type[HistogramND] = Histogram2D if dim == 2 else HistogramND  # type: ignore
+    klass: type[HistogramND] = Histogram2D if dim == 2 else HistogramND  # type: ignore
     if name:
         kwargs["name"] = name
     if title:

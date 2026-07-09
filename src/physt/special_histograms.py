@@ -38,8 +38,6 @@ from physt.histogram_nd import HistogramND
 from . import histogram_nd
 
 if TYPE_CHECKING:
-    from typing import Dict, Optional, Tuple, Union
-
     from physt.typing_aliases import ArrayLike, Axis, RangeTuple
 
 
@@ -69,7 +67,7 @@ class TransformedHistogramMixin(abc.ABC):
     def _transform_correct_dimension(cls, value: np.ndarray) -> np.ndarray: ...
 
     def find_bin(
-        self, value: ArrayLike, axis: Optional[Axis] = None, transformed: bool = False
+        self, value: ArrayLike, axis: Axis | None = None, transformed: bool = False
     ):
         """
 
@@ -92,7 +90,7 @@ class TransformedHistogramMixin(abc.ABC):
     def fill(
         self,
         value: ArrayLike,
-        weight: Optional[ArrayLike] = 1,
+        weight: ArrayLike | None = 1,
         *,
         transformed: bool = False,
         **kwargs,
@@ -104,7 +102,7 @@ class TransformedHistogramMixin(abc.ABC):
     def fill_n(
         self,
         values: ArrayLike,
-        weights: Optional[ArrayLike] = None,
+        weights: ArrayLike | None = None,
         *,
         dropna: bool = True,
         transformed: bool = False,
@@ -114,9 +112,9 @@ class TransformedHistogramMixin(abc.ABC):
             values = self.transform(values)
         super().fill_n(values=values, weights=weights, dropna=dropna, **kwargs)  # type: ignore
 
-    _projection_class_map: Dict[Tuple[int, ...], type] = {}
+    _projection_class_map: dict[tuple[int, ...], type] = {}
 
-    source_ndim: Union[int, Tuple[int, ...]]
+    source_ndim: int | tuple[int, ...]
 
     def projection(self, *axes, **kwargs):
         """Projection to lower-dimensional histogram.
@@ -144,7 +142,7 @@ class TransformedHistogramMixin(abc.ABC):
             )
 
     @classmethod
-    def transform(cls, value: ArrayLike) -> Union[np.ndarray, float]:
+    def transform(cls, value: ArrayLike) -> np.ndarray | float:
         """Convert cartesian (general) coordinates into internal ones.
 
         Parameters
@@ -419,11 +417,11 @@ def polar(
     ydata: ArrayLike,
     *,
     radial_bins="numpy",
-    radial_range: Optional[RangeTuple] = None,
+    radial_range: RangeTuple | None = None,
     phi_bins=DEFAULT_PHI_BINS,
     phi_range: RangeTuple = (0, 2 * np.pi),
     dropna: bool = False,
-    weights: Optional[ArrayLike] = None,
+    weights: ArrayLike | None = None,
     transformed: bool = False,
     **kwargs,
 ) -> PolarHistogram:
@@ -460,7 +458,7 @@ def polar(
 
 def azimuthal(
     xdata: ArrayLike,
-    ydata: Optional[ArrayLike] = None,
+    ydata: ArrayLike | None = None,
     *,
     bins=DEFAULT_PHI_BINS,
     range: RangeTuple = (0, 2 * np.pi),
@@ -495,13 +493,13 @@ def azimuthal(
 
 def radial(
     xdata: ArrayLike,
-    ydata: Optional[ArrayLike] = None,
-    zdata: Optional[ArrayLike] = None,
+    ydata: ArrayLike | None = None,
+    zdata: ArrayLike | None = None,
     *,
     bins="numpy",
-    range: Optional[RangeTuple] = None,
+    range: RangeTuple | None = None,
     dropna: bool = False,
-    weights: Optional[ArrayLike] = None,
+    weights: ArrayLike | None = None,
     transformed: bool = False,
     **kwargs,
 ) -> RadialHistogram:
@@ -553,7 +551,7 @@ def spherical(
     transformed: bool = False,
     theta_range: RangeTuple = (0, np.pi),
     phi_range: RangeTuple = (0, 2 * np.pi),
-    radial_range: Optional[RangeTuple] = None,
+    radial_range: RangeTuple | None = None,
     weights=None,
     **kwargs,
 ) -> SphericalHistogram:
@@ -604,9 +602,9 @@ def spherical_surface(
     theta_bins=DEFAULT_THETA_BINS,
     phi_bins=DEFAULT_PHI_BINS,
     transformed: bool = False,
-    radius: Optional[float] = None,
+    radius: float | None = None,
     dropna: bool = False,
-    weights: Optional[ArrayLike] = None,
+    weights: ArrayLike | None = None,
     theta_range: RangeTuple = FULL_THETA_RANGE,
     phi_range: RangeTuple = FULL_PHI_RANGE,
     **kwargs,
@@ -643,17 +641,17 @@ def spherical_surface(
 
 
 def cylindrical(
-    data: Optional[ArrayLike] = None,
+    data: ArrayLike | None = None,
     *,
     rho_bins="numpy",
     phi_bins=16,
     z_bins="numpy",
     transformed: bool = False,
     dropna: bool = True,
-    rho_range: Optional[RangeTuple] = None,
+    rho_range: RangeTuple | None = None,
     phi_range: RangeTuple = FULL_PHI_RANGE,
-    weights: Optional[ArrayLike] = None,
-    z_range: Optional[RangeTuple] = None,
+    weights: ArrayLike | None = None,
+    z_range: RangeTuple | None = None,
     **kwargs,
 ) -> CylindricalHistogram:
     """Facade function to create a cylindrical histogram."""
@@ -690,11 +688,11 @@ def cylindrical_surface(
     phi_bins=16,
     z_bins="numpy",
     transformed: bool = False,
-    radius: Optional[float] = None,
+    radius: float | None = None,
     dropna: bool = False,
     weights=None,
     phi_range: RangeTuple = FULL_PHI_RANGE,
-    z_range: Optional[RangeTuple] = None,
+    z_range: RangeTuple | None = None,
     **kwargs,
 ) -> CylindricalSurfaceHistogram:
     """Facade function to create a cylindrical surface histogram."""
@@ -765,7 +763,7 @@ def extract_transformed_data(
     klass: type[TransformedHistogramMixin],
     *,
     dropna: bool = False,
-) -> Tuple[None, None]: ...
+) -> tuple[None, None]: ...
 
 
 def extract_transformed_data(
@@ -774,7 +772,7 @@ def extract_transformed_data(
     klass: type[TransformedHistogramMixin],
     *,
     dropna: bool = False,
-) -> tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+) -> tuple[np.ndarray | None, np.ndarray | None]:
     """Extract and potentially transform data for binning."""
     if data is None:
         return None, None

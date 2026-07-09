@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import hypothesis.strategies as st
 import numpy as np
 import polars
@@ -250,7 +248,7 @@ def series_and_mask(
     min_length: int = 0,
     max_length: int = 10,
     allowed_dtypes=NUMERIC_POLARS_DTYPES,
-) -> Tuple[polars.Series, np.ndarray]:
+) -> tuple[polars.Series, np.ndarray]:
     length = draw(st.integers(min_value=min_length, max_value=max_length))
     mask = draw(arrays(shape=(length,), dtype=bool))
     s = draw(series(size=length, allowed_dtypes=allowed_dtypes, allow_null=False))

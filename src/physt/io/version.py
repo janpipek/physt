@@ -1,5 +1,3 @@
-from typing import Union
-
 from packaging.version import Version, parse
 
 from physt import __version__
@@ -11,9 +9,7 @@ class VersionError(Exception):
     pass
 
 
-def require_compatible_version(
-    compatible_version: Union[str, Version], word="File"
-) -> None:
+def require_compatible_version(compatible_version: str | Version, word="File") -> None:
     """Check that compatible version of input data is not too new."""
     if isinstance(compatible_version, str):
         compatible_version = parse(compatible_version)

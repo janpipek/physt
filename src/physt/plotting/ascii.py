@@ -17,12 +17,12 @@ from rich.text import Text
 from physt.plotting.common import get_value_format
 
 if typing.TYPE_CHECKING:
-    from typing import Any, Optional, Union
+    from typing import Any
 
     from physt.types import Histogram1D, Histogram2D
 
 
-types: typing.Tuple[str, ...] = ("hbar", "map")
+types: tuple[str, ...] = ("hbar", "map")
 
 dims = {
     "hbar": [1],
@@ -33,10 +33,10 @@ dims = {
 def hbar(
     h1: "Histogram1D",
     *,
-    max_width: Optional[int] = None,
+    max_width: int | None = None,
     show_values: bool = False,
     show_labels: bool = False,
-    color: Optional[str] = None,
+    color: str | None = None,
     label_width: int = 10,
 ) -> None:
     """Horizontal bar plot in block characters.
@@ -100,9 +100,7 @@ LEFT_LINE_CHAR = "▏"
 # TODO: Include more varying width characters for the bar
 
 
-def map(
-    h2: "Histogram2D", *, use_color: typing.Optional[bool] = None, **kwargs
-) -> None:
+def map(h2: "Histogram2D", *, use_color: bool | None = None, **kwargs) -> None:
     """Heat map.
 
     Depending on the color system, it uses either block characters or shades
@@ -158,7 +156,7 @@ def map(
     )
     console.print("┌" + "─" * h2.shape[0] + "┐")
     for y in range(h2.shape[1] - 1, -1, -1):
-        line_frags: list[Union[Text, str]] = ["│"]
+        line_frags: list[Text | str] = ["│"]
         line_frags += [_render_cell(cmap_data[x, y].item()) for x in range(h2.shape[0])]
         line_frags.append("│")
         if y == h2.shape[1] - 1:

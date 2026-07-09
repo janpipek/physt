@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import hypothesis.strategies as st
 import numpy as np
 import pytest
@@ -64,7 +62,7 @@ class TestH1:
 @st.composite
 def two_1d_arrays_of_the_same_length(
     draw, *, min_side=None, max_side=None, dtype=float, **kwargs
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     array_shape = draw(
         array_shapes(min_side=min_side, max_side=max_side, min_dims=1, max_dims=1)
     )

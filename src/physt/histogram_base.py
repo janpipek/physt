@@ -13,20 +13,8 @@ from physt.config import config
 from physt.statistics import INVALID_STATISTICS
 
 if TYPE_CHECKING:
-    from typing import (
-        Any,
-        ClassVar,
-        Collection,
-        Dict,
-        Iterable,
-        List,
-        Mapping,
-        Optional,
-        Tuple,
-        Type,
-        TypeVar,
-        Union,
-    )
+    from collections.abc import Collection, Iterable, Mapping
+    from typing import Any, ClassVar, TypeVar
 
     from typing_extensions import Self
 
@@ -38,7 +26,7 @@ if TYPE_CHECKING:
 
 
 # Various platforms have different default floating point dtypes.
-_FREQUENCY_SUPPORTED_DTYPES: List[Type[np.number]] = [
+_FREQUENCY_SUPPORTED_DTYPES: list[type[np.number]] = [
     np.int16,
     np.int32,  # Default in Windows
     np.int64,  # Default in 64-bit Linux
@@ -179,24 +167,24 @@ class HistogramBase(abc.ABC):
         self.axis_names = tuple(axis_names or self.default_axis_names)
 
     # "Protected" attributes
-    _binnings: List[BinningBase]
+    _binnings: list[BinningBase]
     _frequencies: np.ndarray
     _errors2: np.ndarray
     _missed: np.ndarray
 
-    SUPPORTED_DTYPES: ClassVar[Collection[Type[np.number]]] = tuple(
+    SUPPORTED_DTYPES: ClassVar[Collection[type[np.number]]] = tuple(
         _FREQUENCY_SUPPORTED_DTYPES
     )
 
     @property
-    def default_axis_names(self) -> List[str]:
+    def default_axis_names(self) -> list[str]:
         """Axis names to be used when an instance does not define them."""
         return [f"axis{i}" for i in range(self.ndim)]
 
-    default_init_values: Dict[str, Any] = {}
+    default_init_values: dict[str, Any] = {}
 
     @property
-    def meta_data(self) -> Dict[str, Any]:
+    def meta_data(self) -> dict[str, Any]:
         """A dictionary of non-numerical information about the histogram.
 
         It contains several pre-defined ones, but you can add any other.
@@ -205,7 +193,7 @@ class HistogramBase(abc.ABC):
         return self._meta_data
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Name of the histogram (stored in meta-data)."""
         return self._meta_data.get("name")
 
@@ -218,7 +206,7 @@ class HistogramBase(abc.ABC):
         self._meta_data["name"] = value
 
     @property
-    def title(self) -> Optional[str]:
+    def title(self) -> str | None:
         """Title of the histogram to be displayed when plotted (stored in meta-data).
 
         If not specified, defaults to `name`.
@@ -234,7 +222,7 @@ class HistogramBase(abc.ABC):
         self._meta_data["title"] = value
 
     @property
-    def axis_names(self) -> Tuple[str, ...]:
+    def axis_names(self) -> tuple[str, ...]:
         """Names of axes (stored in meta-data)."""
         default = [f"axis{i}" for i in range(self.ndim)]
         return tuple(self._meta_data.get("axis_names", None) or default)
@@ -267,7 +255,7 @@ class HistogramBase(abc.ABC):
         )
 
     @property
-    def shape(self) -> Tuple[int, ...]:
+    def shape(self) -> tuple[int, ...]:
         """Shape of histogram's data.
 
         Returns
@@ -285,9 +273,7 @@ class HistogramBase(abc.ABC):
         return len(self._binnings)
 
     @classmethod
-    def _eval_dtype(
-        cls, value: DTypeLike
-    ) -> Tuple[np.dtype, Union[np.iinfo, np.finfo]]:
+    def _eval_dtype(cls, value: DTypeLike) -> tuple[np.dtype, np.iinfo | np.finfo]:
         """Convert dtype into canonical form, check its applicability and return info.
 
         Parameters
@@ -301,7 +287,7 @@ class HistogramBase(abc.ABC):
         """
         dtype: np.dtype = np.dtype(value)
         if dtype.kind in "iu":
-            type_info: Union[np.iinfo, np.finfo] = np.iinfo(dtype)
+            type_info: np.iinfo | np.finfo = np.iinfo(dtype)
         elif dtype.kind == "f":
             type_info = np.finfo(dtype)
         else:
@@ -508,10 +494,10 @@ class HistogramBase(abc.ABC):
 
     def merge_bins(
         self: "HistogramType",
-        amount: Optional[int] = None,
+        amount: int | None = None,
         *,
-        min_frequency: Optional[float] = None,
-        axis: Optional[Axis] = None,
+        min_frequency: float | None = None,
+        axis: Axis | None = None,
         inplace: bool = False,
     ) -> "HistogramType":
         """Reduce the number of bins and add their content:
@@ -628,9 +614,7 @@ class HistogramBase(abc.ABC):
         """
         if old_frequencies is not None and old_frequencies.shape[axis] > 0:
             if isinstance(bin_map, int):
-                new_index: List[Union[int, slice]] = [
-                    slice(None) for i in range(self.ndim)
-                ]
+                new_index: list[int | slice] = [slice(None) for i in range(self.ndim)]
                 new_index[axis] = slice(bin_map, bin_map + old_frequencies.shape[axis])
                 new_frequencies[tuple(new_index)] += old_frequencies
                 new_errors2[tuple(new_index)] += old_errors2
@@ -638,7 +622,7 @@ class HistogramBase(abc.ABC):
                 for old, new in bin_map:  # Generic enough
                     new_index = [slice(None) for i in range(self.ndim)]
                     new_index[axis] = new
-                    old_index: List[Union[int, slice]] = [
+                    old_index: list[int | slice] = [
                         slice(None) for i in range(self.ndim)
                     ]
                     old_index[axis] = old
@@ -790,7 +774,7 @@ class HistogramBase(abc.ABC):
         self._update_dict(result)
         return result
 
-    def _update_dict(self, a_dict: Dict[str, Any]) -> None:
+    def _update_dict(self, a_dict: dict[str, Any]) -> None:
         """Update the dictionary for export.
 
         Override if you want to customize the process.
@@ -808,7 +792,7 @@ class HistogramBase(abc.ABC):
         Template method for from dict.
         Override if necessary (like it's done in Histogram1D).
         """
-        kwargs: Dict[str, Any] = {
+        kwargs: dict[str, Any] = {
             "binnings": [
                 BinningBase.from_dict(binning_data)
                 for binning_data in a_dict["binnings"]

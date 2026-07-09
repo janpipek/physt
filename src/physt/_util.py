@@ -11,7 +11,8 @@ from functools import wraps
 from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
 if TYPE_CHECKING:
-    from typing import Any, Callable
+    from collections.abc import Callable
+    from typing import Any
 
 
 def all_subclasses(cls: type) -> tuple[type, ...]:

@@ -1,4 +1,5 @@
-from typing import Any, Dict, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 import numpy as np
 import pytest
@@ -128,7 +129,7 @@ class TestPhystSeriesAccessors:
             [([], {}), (["pretty"], {}), (["fixed_width"], {"bin_width": 0.2})],
         )
         def test_same_as_array(
-            self, series_of_int: pd.Series, args: Iterable[Any], kwargs: Dict[str, Any]
+            self, series_of_int: pd.Series, args: Iterable[Any], kwargs: dict[str, Any]
         ):
             output = series_of_int.physt.h1(*args, **kwargs)
             expected = h1(np.asarray(series_of_int.array), *args, **kwargs)
@@ -145,7 +146,7 @@ class TestPhystSeriesAccessors:
             self,
             series_of_nullable_int: pd.Series,
             args: Iterable[Any],
-            kwargs: Dict[str, Any],
+            kwargs: dict[str, Any],
         ):
             output = series_of_nullable_int.physt.h1(*args, **kwargs)
             expected = h1(np.array([0, 1, 2, 3, 4]), *args, **kwargs)
@@ -178,7 +179,7 @@ class TestPhystDataFrameAccessors:
             self,
             df_one_column: pd.DataFrame,
             args: Iterable[Any],
-            kwargs: Dict[str, Any],
+            kwargs: dict[str, Any],
         ) -> None:
             # TODO: Test no argument separately
             # Non-trivial *args should perhaps fail?

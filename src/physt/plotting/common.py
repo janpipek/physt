@@ -18,11 +18,12 @@ from physt._bin_utils import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+    from collections.abc import Callable
+    from typing import Any
 
     from physt.types import Histogram1D, HistogramBase
 
-    TickCollection = Tuple[List[float], List[str]]
+    TickCollection = tuple[list[float], list[str]]
     """A tuple of tick values and labels."""
 
 
@@ -87,7 +88,7 @@ def get_err_data(
 
 
 def get_value_format(
-    value_format: Union[Callable[[float], str], str, None],
+    value_format: Callable[[float], str] | str | None,
 ) -> Callable[[float], str]:
     """Create a formatting function from a generic value_format argument.
 
@@ -112,7 +113,7 @@ def get_value_format(
     raise TypeError("`value_format` must be a string or a callable.")
 
 
-def pop_kwargs_with_prefix(prefix: str, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+def pop_kwargs_with_prefix(prefix: str, kwargs: dict[str, Any]) -> dict[str, Any]:
     """Pop all items from a dictionary that have keys beginning with a prefix.
 
     Parameters
@@ -130,7 +131,7 @@ def pop_kwargs_with_prefix(prefix: str, kwargs: Dict[str, Any]) -> Dict[str, Any
     return {key[len(prefix) :]: kwargs.pop(key) for key in keys}
 
 
-def check_ndim(ndim: Union[int, Tuple[int, ...]]) -> Callable[[Callable], Callable]:
+def check_ndim(ndim: int | tuple[int, ...]) -> Callable[[Callable], Callable]:
     """Decorator checking proper histogram dimension.
 
     Parameters
@@ -159,7 +160,7 @@ class TimeTickHandler:
     Note: This class is very experimental and subject to change or disappear.
     """
 
-    def __init__(self, level: Optional[str] = None):  # , format=None):
+    def __init__(self, level: str | None = None):  # , format=None):
         self.level = self.parse_level(level) if level else None
 
     LEVELS = {
@@ -170,11 +171,11 @@ class TimeTickHandler:
     }
 
     if TYPE_CHECKING:
-        LevelType = Tuple[str, Union[float, int]]
+        LevelType = tuple[str, float | int]
 
     @classmethod
     def parse_level(
-        cls, value: Union[LevelType, float, str, timedelta]
+        cls, value: LevelType | float | str | timedelta
     ) -> "TimeTickHandler.LevelType":
         """Parse the level from any of the supported types."""
         if isinstance(value, tuple):
@@ -228,7 +229,7 @@ class TimeTickHandler:
 
     def get_time_ticks(
         self, h1: Histogram1D, level: LevelType, min_: float, max_: float
-    ) -> List[float]:
+    ) -> list[float]:
         """Get ticks for a given level."""
         # TODO: Change to class method?
         if level[0] == "edge":
@@ -244,7 +245,7 @@ class TimeTickHandler:
         return list(np.arange(min_factor, max_factor + 1) * width)
 
     @classmethod
-    def split_hms(cls, value: float) -> Tuple[bool, int, int, Union[int, float]]:
+    def split_hms(cls, value: float) -> tuple[bool, int, int, int | float]:
         """Split the time value into sign, hours, minutes, seconds"""
         value, negative = (value, False) if value >= 0 else (-value, True)
         hm, s = divmod(value, 60)
@@ -252,7 +253,7 @@ class TimeTickHandler:
         s = s if s % 1 else int(s)
         return negative, h, m, s
 
-    def format_time_ticks(self, ticks: List[float], level: LevelType) -> List[str]:
+    def format_time_ticks(self, ticks: list[float], level: LevelType) -> list[str]:
         if level[0] == "day":
             tick_days = [tick / 86400 for tick in ticks]
             if not any(tick % 1 for tick in tick_days):
