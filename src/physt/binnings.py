@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from functools import cached_property
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from contextlib import suppress
-from typing import TYPE_CHECKING, TypeAlias, final, cast
+from typing import TYPE_CHECKING, TypeAlias, cast, final, overload
 
 import numpy as np
 from typing_extensions import Self, override
@@ -25,12 +24,7 @@ from physt._util import deprecation_alias, find_subclass
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from typing import (
-        Any,
-        Callable,
-        ClassVar,
-        TypeVar,
-    )
+    from typing import Any, Callable, ClassVar, TypeVar
 
     """Anything that can be converted to a binning."""
 
@@ -44,6 +38,10 @@ if TYPE_CHECKING:
 
 BinMap: TypeAlias = Iterable[tuple[int, int]]
 """Description of the bin remapping - from left to right."""
+
+
+EdgePair: TypeAlias = np.ndarray[tuple[int], np.dtype[np.float64]]
+"""Edges of a bin (as a type)."""
 
 
 binning_methods: dict[str, Callable] = {}
@@ -62,8 +60,6 @@ def register_binning(name: str | None = None) -> Callable[[Callable], Callable]:
 
 
 # TODO: Locking and edit operations (like numpy read-only)
-
-
 # TODO: Using pydantic models strongly recommended here
 class BinningBase(ABC):
     """Abstract base class for binning schemas.
@@ -100,7 +96,13 @@ class BinningBase(ABC):
             )
         self._adaptive: bool = adaptive
 
-    def __getitem__(self, index: slice | int) -> StaticBinning | np.ndarray:
+    @overload
+    def __getitem__(self, index: slice) -> StaticBinning: ...
+
+    @overload
+    def __getitem__(self, index: int) -> EdgePair: ...
+
+    def __getitem__(self, index: slice | int) -> StaticBinning | EdgePair:
         if isinstance(index, slice):
             new_binning = self.as_static()
             new_binning._bins = new_binning.bins[index]
@@ -162,7 +164,7 @@ class BinningBase(ABC):
         return self._adaptive
 
     @final
-    def force_bin_existence(self, values: np.ndarray) -> int | BinMap | None:
+    def force_bin_existence(self, values: ArrayLike) -> int | BinMap | None:
         """Change schema so that there is a bin for value.
 
         It is necessary to implement the _force_bin_existence template method.
@@ -184,7 +186,7 @@ class BinningBase(ABC):
         else:
             return self._force_bin_existence(values)
 
-    def _force_bin_existence(self, values: np.ndarray) -> int | BinMap | None:
+    def _force_bin_existence(self, values: ArrayLike) -> int | BinMap | None:
         # Implement this if appropriate. It cannot be an abstract method.
         raise NotImplementedError()
 
@@ -228,15 +230,10 @@ class BinningBase(ABC):
     def __eq__(self, other: object) -> bool:
         if self is other:
             return True
-        if type(other) != type(self):
+        if type(other) is not type(self):
             return False
-        if self.bins is not None:
-            return np.array_equal(self.bins, other.bins)
-        if self._numpy_bins is not None:
-            return np.array_equal(self.numpy_bins, other.numpy_bins)
-        bins = self.bins
-        if bins is not None:
-            return np.array_equal(self.bins, other.bins)
+        if (bins := self.bins) is not None:
+            return np.array_equal(bins, other.bins)
         return False
 
     @property
@@ -246,7 +243,7 @@ class BinningBase(ABC):
 
     @property
     @abstractmethod
-    def bins(self) -> np.ndarray:
+    def bins(self) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         """Bins in the wider format (as edge pairs)
 
         Returns
@@ -257,7 +254,7 @@ class BinningBase(ABC):
 
     @property
     @abstractmethod
-    def numpy_bins(self) -> np.ndarray:
+    def numpy_bins(self) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
         """Bins in the numpy format
 
         This might not be available for inconsecutive binnings.
@@ -369,13 +366,11 @@ class BinningBase(ABC):
 class StaticBinning(BinningBase):
     """Binning defined by an array of bin edge pairs."""
 
-
-
     inconsecutive_allowed: ClassVar[bool] = True
 
     _bins: np.ndarray
 
-    def __init__(self, bins: ArrayLike, includes_right_edge : bool = True, **kwargs):
+    def __init__(self, bins: ArrayLike, includes_right_edge: bool = True, **kwargs):
         super().__init__(includes_right_edge=includes_right_edge)
         bins = make_bin_array(bins)
         if not is_rising(bins):
@@ -394,12 +389,10 @@ class StaticBinning(BinningBase):
     def numpy_bins(self) -> np.ndarray:
         return to_numpy_bins(self._bins)
 
-
     def as_static(self, copy: bool = True) -> "StaticBinning":
         if copy:
             return self.copy()
         return self
-
 
     def copy(self) -> StaticBinning:
         return type(self)(
@@ -430,7 +423,7 @@ class _NumpyLikeBinning(BinningBase, ABC):
 
     @property
     @override
-    def bins(self)-> np.ndarray:
+    def bins(self) -> np.ndarray:
         return make_bin_array(self.numpy_bins)
 
     # TODO: Add custom numpy_bins_with_mask
@@ -444,11 +437,13 @@ class _NumpyLikeBinning(BinningBase, ABC):
 class NumpyBinning(_NumpyLikeBinning):
     """Binning schema working as numpy.histogram."""
 
-    def __init__(self, numpy_bins: ArrayLike, **kwargs):
+    def __init__(
+        self, numpy_bins: ArrayLike, *, includes_right_edge: bool = True, **kwargs
+    ):
         numpy_bins = np.asarray(numpy_bins)
         if not is_rising(numpy_bins):
             raise ValueError("Bins not in rising order.")
-        super().__init__(**kwargs)
+        super().__init__(includes_right_edge=includes_right_edge, **kwargs)
         self._numpy_bins: np.ndarray = np.asarray(numpy_bins)
 
     @property
@@ -469,6 +464,11 @@ class FixedWidthBinning(_NumpyLikeBinning):
 
     adaptive_allowed: ClassVar[bool] = True
 
+    _bin_width: float
+    _bin_count: int
+    _times_min: int | None
+    _shift: float
+
     def __init__(
         self,
         *,
@@ -480,7 +480,6 @@ class FixedWidthBinning(_NumpyLikeBinning):
         includes_right_edge: bool = False,
         adaptive: bool = False,
         bin_shift: float | None = None,
-        align: bool = True,
         **kwargs,
     ):
         super().__init__(adaptive=adaptive, includes_right_edge=includes_right_edge)
@@ -491,17 +490,25 @@ class FixedWidthBinning(_NumpyLikeBinning):
             raise ValueError("Bin count must be >= 0.")
         if (bin_times_min is not None or bin_shift is not None) and (min is not None):
             raise ValueError("Cannot specify both min and (times_min or shift)")
-        if (bin_count == 0) and ((bin_times_min is not None) or (min is not None)):
-            raise ValueError("Cannot set min for an empty binning.")
-        self._bin_width: float = float(bin_width)
-        self._align: bool = align
-        self._bin_count: int = int(bin_count)
+        self._bin_width = float(bin_width)
+        self._bin_count = int(bin_count)
         if min is not None:
-            self._times_min: int = int(np.floor(min / self.bin_width))
-            self._shift: float = min - self._times_min * self.bin_width
+            times_min = int(np.floor(min / self.bin_width))
+            self._shift = min - times_min * self.bin_width
+            self._times_min = times_min
         else:
-            self._times_min = bin_times_min
             self._shift = bin_shift or 0.0
+            self._times_min = bin_times_min
+
+    def copy(self) -> FixedWidthBinning:
+        result = FixedWidthBinning.__new__(FixedWidthBinning)
+        result._bin_width = self._bin_width
+        result._bin_count = self._bin_count
+        result._times_min = self._times_min
+        result._shift = self._shift
+        result._adaptive = self._adaptive
+        result._includes_right_edge = self._includes_right_edge
+        return result
 
     @override
     def __repr__(self):
@@ -524,10 +531,9 @@ class FixedWidthBinning(_NumpyLikeBinning):
 
         if self._bin_count == 0:
             self._times_min = int(np.floor((value - self._shift) / self.bin_width))
-            if not self._align:
-                self._shift = value - self._times_min * self.bin_width
             self._bin_count = 1
-            return ()
+            # No bins yet, no remapping needed
+            return 0
         else:
             add_left = add_right = 0
             if value < self.numpy_bins[0]:
@@ -547,7 +553,7 @@ class FixedWidthBinning(_NumpyLikeBinning):
                 return None
 
     def _force_bin_existence(
-        self, values: float | np.ndarray, *, includes_right_edge=None
+        self, values: ArrayLike, *, includes_right_edge=None
     ) -> int | BinMap | None:
         if np.isscalar(values):
             return self._force_bin_existence_single(
@@ -584,17 +590,6 @@ class FixedWidthBinning(_NumpyLikeBinning):
     @property
     def bin_count(self) -> int:
         return self._bin_count
-
-    def copy(self) -> FixedWidthBinning:
-        return FixedWidthBinning(
-            bin_width=self._bin_width,
-            bin_count=self._bin_count,
-            align=self._align,  # Not necessary
-            bin_times_min=self._times_min,
-            bin_shift=self._shift,
-            includes_right_edge=self.includes_right_edge,
-            adaptive=self._adaptive,
-        )
 
     @property
     def bin_width(self) -> float:
@@ -689,11 +684,14 @@ class ExponentialBinning(_NumpyLikeBinning):
         if self._bin_count == 0:
             return np.ndarray((0,), dtype=float)
         log_bins = self._log_min + np.arange(self._bin_count + 1) * self._log_width
-        return 10.0 ** log_bins
+        return 10.0**log_bins
 
     def copy(self) -> "ExponentialBinning":
         return ExponentialBinning(
-            log_min=self._log_min, log_width=self._log_width, bin_count=self._bin_count, includes_right_edge=self.includes_right_edge
+            log_min=self._log_min,
+            log_width=self._log_width,
+            bin_count=self._bin_count,
+            includes_right_edge=self.includes_right_edge,
         )
 
     def _update_dict(self, a_dict: dict[str, Any]) -> None:
@@ -859,7 +857,12 @@ def static_binning(
 
 
 @register_binning()
-def integer_binning(data: np.ndarray | None = None, *, range: RangeTuple | None = None, bin_width: int = 1, **kwargs) -> FixedWidthBinning:
+def integer_binning(
+    data: np.ndarray | None = None,
+    *,
+    range: tuple[int, int] | None = None,
+    bin_width: int = 1,
+) -> FixedWidthBinning:
     """Construct fixed-width binning schema with bins centered around integers.
 
     Parameters
@@ -867,15 +870,13 @@ def integer_binning(data: np.ndarray | None = None, *, range: RangeTuple | None 
     range:  min (included) and max integer (excluded) bin
     bin_width: group "bin_width" integers into one bin (not recommended)
     """
+    kwargs = {}
     if range:
-        range = tuple(r - 0.5 for r in range)
+        kwargs["range"] = tuple(r - 0.5 for r in range)
+    else:
+        kwargs["bin_shift"] = 0.5
     return fixed_width_binning(
-        data=data,
-        bin_width=bin_width,
-        align=True,
-        bin_shift=0.5,
-        range=range,
-        **kwargs,
+        data=data, bin_width=bin_width, align=False, includes_right_edge=True, **kwargs
     )
 
 
@@ -884,10 +885,11 @@ def fixed_width_binning(
     data: np.ndarray | None = None,
     bin_width: float = 1.0,
     *,
+    bin_shift: float | None = None,
+    adaptive: bool = False,
     range: RangeTuple | None = None,
-    align: bool = True,
+    align: bool | None = None,
     includes_right_edge: bool = False,
-    **kwargs,
 ) -> FixedWidthBinning:
     """Construct fixed-width binning schema.
 
@@ -897,13 +899,28 @@ def fixed_width_binning(
     range: (min, max)
     align: Must be multiple of bin_width
     """
+    if align and range is not None:
+        raise ValueError("Cannot set both `align` and `range`.")
+    if align and bin_shift:
+        raise ValueError("Cannot set `bin_shift` when `align==True`.")
+    if range:
+        min_ = range[0]
+    elif bin_shift:
+        # Not needed
+        min_ = None
+    else:
+        min_ = np.min(data)
     result = FixedWidthBinning(
-        bin_width=bin_width, includes_right_edge=includes_right_edge, align=align, **kwargs
+        bin_width=bin_width,
+        includes_right_edge=includes_right_edge,
+        min=min_,
+        adaptive=adaptive,
+        bin_shift=bin_shift,
     )
     if range:
         result._force_bin_existence(range[0])
         result._force_bin_existence(range[1], includes_right_edge=True)
-        if not kwargs.get("adaptive"):
+        if not adaptive:
             return result  # Otherwise we want to adapt to data
     if data is not None and data.shape[0]:
         result._force_bin_existence(
@@ -957,7 +974,9 @@ with suppress(ImportError):
     warnings.filterwarnings("ignore", module="astropy\\..*")
 
     @register_binning(name="blocks")
-    def bayesian_blocks_binning(data: np.ndarray, *, range: RangeTuple | None = None, **kwargs) -> StaticBinning:
+    def bayesian_blocks_binning(
+        data: np.ndarray, *, range: RangeTuple | None = None, **kwargs
+    ) -> StaticBinning:
         """Binning schema based on Bayesian blocks (from astropy).
 
         Computationally expensive for large data sets.
@@ -967,6 +986,7 @@ with suppress(ImportError):
         astropy.stats.histogram.bayesian_blocks
         astropy.stats.histogram.histogram
         """
+        # TODO: This is not in astropy.histogram.__all__!
         from astropy.stats.histogram import bayesian_blocks
 
         if range is not None:
@@ -975,7 +995,9 @@ with suppress(ImportError):
         return StaticBinning(edges, **kwargs)
 
     @register_binning()
-    def knuth_binning(data: np.ndarray, *, range: RangeTuple | None = None, **kwargs) -> StaticBinning:
+    def knuth_binning(
+        data: np.ndarray, *, range: RangeTuple | None = None, **kwargs
+    ) -> StaticBinning:
         """Binning schema based on Knuth's rule (from astropy).
 
         Computationally expensive for large data sets.
@@ -994,7 +1016,9 @@ with suppress(ImportError):
         return StaticBinning(edges, **kwargs)
 
     @register_binning()
-    def scott_binning(data: np.ndarray, *, range: RangeTuple | None =None, **kwargs) -> StaticBinning:
+    def scott_binning(
+        data: np.ndarray, *, range: RangeTuple | None = None, **kwargs
+    ) -> StaticBinning:
         """Binning schema based on Scott's rule (from astropy).
 
         See also
@@ -1010,7 +1034,9 @@ with suppress(ImportError):
         return StaticBinning(edges, **kwargs)
 
     @register_binning()
-    def freedman_binning(data: np.ndarray, *, range : RangeTuple | None=None, **kwargs) -> StaticBinning:
+    def freedman_binning(
+        data: np.ndarray, *, range: RangeTuple | None = None, **kwargs
+    ) -> StaticBinning:
         """Binning schema based on Freedman-Diaconis rule (from astropy).
 
         Parameters

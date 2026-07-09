@@ -605,10 +605,12 @@ class HistogramBase(abc.ABC):
         new_frequencies: np.ndarray,
         old_errors2: np.ndarray,
         new_errors2: np.ndarray,
-        bin_map: BinMap,
+        bin_map: BinMap | int,
         axis: int,
     ):
         """Fill new data arrays using a map.
+
+        It modifies new_frequencies and new_errors2 in-place.
 
         Parameters
         ----------

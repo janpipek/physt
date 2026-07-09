@@ -66,7 +66,9 @@ def to_numpy_bins(bins: ArrayLike) -> np.ndarray:
     return np.concatenate([bins[:1, 0], bins[:, 1]])
 
 
-def to_numpy_bins_with_mask(bins: ArrayLike) -> tuple[np.ndarray, np.ndarray]:
+def to_numpy_bins_with_mask(
+    bins: ArrayLike,
+) -> tuple[np.ndarray, np.ndarray[tuple[int]]]:
     """Numpy binning edges including gaps.
 
     Parameters
@@ -133,7 +135,9 @@ def is_rising(bins: ArrayLike) -> bool:
     return True
 
 
-def is_consecutive(bins: ArrayLike, *, rtol: float = 1.0e-5, atol: float = 1.0e-8) -> bool:
+def is_consecutive(
+    bins: ArrayLike, *, rtol: float = 1.0e-5, atol: float = 1.0e-8
+) -> bool:
     """Check whether the bins are consecutive (edges match).
 
     Does not check if the bins are in rising order.
@@ -206,9 +210,7 @@ def find_pretty_width_24(raw_width: float) -> int:
     return subscales[best_index]
 
 
-def find_pretty_width(
-    raw_width: float, kind: Literal["time"] | None = None
-) -> float:
+def find_pretty_width(raw_width: float, kind: Literal["time"] | None = None) -> float:
     """Find the best pretty width close to a given raw_width."""
     # TODO: Deal with infinity
     if not kind:
