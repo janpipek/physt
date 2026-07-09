@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, NoReturn, Optional, Tuple, cast
+from typing import TYPE_CHECKING, NoReturn, cast
 
 import numpy as np
 import pandas as pd
@@ -19,7 +19,7 @@ from physt.binnings import BinningBase, static_binning
 from physt.types import Histogram1D, Histogram2D, HistogramND
 
 if TYPE_CHECKING:
-    from typing import Any, Union
+    from typing import Any
 
     from physt.typing_aliases import ArrayLike
 
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 @extract_1d_array.register
 def _(
     series: pd.Series, *, dropna: bool = True
-) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+) -> tuple[np.ndarray, np.ndarray | None]:
     if not pd.api.types.is_numeric_dtype(series):
         raise ValueError(
             f"Cannot extract suitable array from non-numeric dtype: {series.dtype}"
@@ -67,8 +67,8 @@ def _(series: pd.Series, **kwargs) -> NoReturn:
 
 @extract_nd_array.register
 def _(
-    data_frame: pd.DataFrame, *, dim: Optional[int] = None, dropna: bool = True
-) -> Tuple[int, np.ndarray, Optional[np.ndarray]]:
+    data_frame: pd.DataFrame, *, dim: int | None = None, dropna: bool = True
+) -> tuple[int, np.ndarray, np.ndarray | None]:
     if non_numeric_columns := [
         name for name, series in data_frame.items() if not is_numeric_dtype(series)
     ]:
@@ -127,7 +127,7 @@ class PhystDataFrameAccessor:
         column: Any = None,
         bins=None,
         *,
-        weights: Union[ArrayLike, str, None] = None,
+        weights: ArrayLike | str | None = None,
         **kwargs,
     ) -> Histogram1D:
         """Create 1D histogram from a column.
@@ -227,9 +227,7 @@ class PhystDataFrameAccessor:
         return h(data=data.astype(float), bins=bins, **kwargs)
 
 
-def binning_to_index(
-    binning: BinningBase, name: Optional[str] = None
-) -> pd.IntervalIndex:
+def binning_to_index(binning: BinningBase, name: str | None = None) -> pd.IntervalIndex:
     """Convert physt binning to a pandas interval index."""
     # TODO: Check closedness
     return pd.IntervalIndex.from_arrays(

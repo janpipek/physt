@@ -85,7 +85,7 @@ class Statistics:
             weight=self.weight * other_scalar,
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Statistics):
             return False
         return (

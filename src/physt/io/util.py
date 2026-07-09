@@ -7,12 +7,12 @@ from physt.io.version import require_compatible_version
 from physt.types import HistogramBase, HistogramCollection
 
 if TYPE_CHECKING:
-    from typing import Type, Union
+    pass
 
 
 def create_from_dict(
     data: dict, format_name: str, check_version: bool = True
-) -> Union[HistogramBase, HistogramCollection]:
+) -> HistogramBase | HistogramCollection:
     """Once dict from source data is created, turn this into histogram.
 
     Parameters
@@ -32,5 +32,5 @@ def create_from_dict(
     histogram_type = data["histogram_type"]
     if histogram_type == "histogram_collection":
         return HistogramCollection.from_dict(data)
-    klass: Type[HistogramBase] = find_subclass(HistogramBase, histogram_type)
+    klass: type[HistogramBase] = find_subclass(HistogramBase, histogram_type)
     return klass.from_dict(data)

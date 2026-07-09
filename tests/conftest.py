@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 import pytest
 
@@ -18,7 +16,7 @@ def empty_ndarray() -> np.ndarray:
 def create_adaptive():
     """Adaptive fixed-width histogram of a defined shape and some values."""
 
-    def inner(shape: Tuple[int]) -> HistogramBase:
+    def inner(shape: tuple[int, ...]) -> HistogramBase:
         binnings = [
             FixedWidthBinning(
                 bin_width=1,

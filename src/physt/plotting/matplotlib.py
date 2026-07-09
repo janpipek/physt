@@ -32,6 +32,7 @@ Parameters
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from contextlib import suppress
 from functools import wraps
 from typing import TYPE_CHECKING, cast
@@ -55,7 +56,8 @@ from physt.plotting.common import (
 from physt.types import HistogramCollection
 
 if TYPE_CHECKING:
-    from typing import Any, Collection, Dict, List, Optional, Tuple, Union
+    from collections.abc import Collection
+    from typing import Any
 
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
@@ -69,8 +71,8 @@ if TYPE_CHECKING:
 
 
 # To be filled by register function
-types = []
-dims = {}
+types: list[str] = []
+dims: dict[str, Iterable[int]] = {}
 
 
 default_dpi = 72
@@ -102,7 +104,7 @@ def register(
         @wraps(f)
         @check_ndim(dim)
         def wrapped(
-            hist, write_to: Optional[str] = None, dpi: Optional[float] = None, **kwargs
+            hist, write_to: str | None = None, dpi: float | None = None, **kwargs
         ):
             fig, ax = _get_axes(kwargs, use_3d=use_3d, use_polar=use_polar)
 
@@ -614,7 +616,7 @@ def polar_map(
 
 @register(2, use_3d=True)
 def globe_map(
-    hist: Union[Histogram2D, SphericalSurfaceHistogram],
+    hist: Histogram2D | SphericalSurfaceHistogram,
     ax: Axes3D,
     *,
     lw: int = 1,
@@ -657,7 +659,7 @@ def globe_map(
 
 @register(2, use_3d=True)
 def cylinder_map(
-    hist: Union[Histogram2D, CylindricalSurfaceHistogram],
+    hist: Histogram2D | CylindricalSurfaceHistogram,
     ax: Axes3D,
     *,
     show_zero: bool = True,
@@ -817,8 +819,8 @@ def pair_bars(
 
 # TODO: Add overrides for the 3d/polars?
 def _get_axes(
-    kwargs: Dict[str, Any], *, use_3d: bool = False, use_polar: bool = False
-) -> Tuple[Figure, Union[Axes, Axes3D]]:
+    kwargs: dict[str, Any], *, use_3d: bool = False, use_polar: bool = False
+) -> tuple[Figure, Axes | Axes3D]:
     """Prepare the axis to draw into.
 
     Parameters
@@ -881,7 +883,7 @@ def _get_cmap(kwargs: dict) -> colors.Colormap:
     return cmap
 
 
-def _get_cmap_data(data, kwargs) -> Tuple[colors.Normalize, np.ndarray]:
+def _get_cmap_data(data, kwargs) -> tuple[colors.Normalize, np.ndarray]:
     """Get normalized values to be used with a colormap.
 
     Parameters
@@ -928,7 +930,7 @@ def _get_alpha_data(data: np.ndarray, kwargs) -> np.ndarray:
     return alpha
 
 
-def _add_labels(ax: Axes, h: Union[Histogram1D, Histogram2D], kwargs: dict) -> None:
+def _add_labels(ax: Axes, h: Histogram1D | Histogram2D, kwargs: dict) -> None:
     """Add axis and plot labels.
 
     TODO: Document kwargs
@@ -983,9 +985,9 @@ def _add_colorbar(
 def _add_stats_box(
     h1: Histogram1D,
     ax: Axes,
-    stats: Union[str, bool, Collection[str]] = "all",
-    title: Optional[str] = None,
-    loc: Union[int, str, None] = None,
+    stats: str | bool | Collection[str] = "all",
+    title: str | None = None,
+    loc: int | str | None = None,
 ) -> None:
     """Insert a small legend-like box with statistical information.
 
@@ -1025,7 +1027,7 @@ def _add_stats_box(
         raise ValueError(f"Invalid location for stats box: {loc}")
 
     if stats in ("all", True):
-        used_stats: List[str] = available_stats
+        used_stats: list[str] = available_stats
     elif isinstance(stats, str):
         used_stats = [stats]
     else:
@@ -1084,7 +1086,7 @@ def _add_stats_box(
 
 
 def _apply_xy_lims(
-    ax: Axes, h: Union[Histogram1D, Histogram2D], data: np.ndarray, kwargs: dict
+    ax: Axes, h: Histogram1D | Histogram2D, data: np.ndarray, kwargs: dict
 ) -> None:
     """Apply axis limits and scales from kwargs.
 

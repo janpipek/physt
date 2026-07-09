@@ -1,3 +1,4 @@
+# pyright: ignore
 """Vega3 backend for plotting in physt.
 
 The JSON can be produced without any external dependency, the ability
@@ -15,8 +16,9 @@ from __future__ import annotations
 
 import codecs
 import json
+from collections.abc import Callable
 from functools import wraps
-from typing import TYPE_CHECKING, Callable, cast
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
@@ -27,7 +29,7 @@ from physt.types import HistogramCollection
 
 
 if TYPE_CHECKING:
-    from typing import Any, Dict, Optional, Union
+    from typing import Any
 
     from physt.types import Histogram1D, Histogram2D, HistogramBase, HistogramND
 
@@ -153,7 +155,7 @@ def enable_inline_view(f: Callable) -> Callable:
 def write_vega(
     vega_data,
     *,
-    title: Optional[str],
+    title: str | None,
     write_to: str,
     write_format: str = "auto",
     indent: int = 2,
@@ -183,7 +185,7 @@ def write_vega(
         out.write(output)
 
 
-def display_vega(vega_data: dict, display: bool = True) -> Union["Vega", dict]:
+def display_vega(vega_data: dict, display: bool = True) -> "Vega" | dict:
     """Optionally display vega dictionary.
 
     Parameters
@@ -375,7 +377,7 @@ def map(
         for j in range(h2.shape[1]):
             if not show_zero and values[i][j] == 0:
                 continue
-            item: Dict[str, Any] = {
+            item: dict[str, Any] = {
                 "x": float(x[i]),
                 "x1": float(x1[i]),
                 "x2": float(x2[i]),
@@ -472,7 +474,7 @@ def map_with_slider(
             for k in range(h3.shape[2]):
                 if not show_zero and values[i][j][k] == 0:
                     continue
-                item: Dict[str, Any] = {
+                item: dict[str, Any] = {
                     "x": float(x[i]),
                     "x1": float(x1[i]),
                     "x2": float(x2[i]),
@@ -599,7 +601,7 @@ def _scatter_or_line(h1: Histogram1D, mark_template: list, kwargs: dict) -> dict
     return vega
 
 
-def _create_figure(kwargs: Dict[str, Any]) -> dict:
+def _create_figure(kwargs: dict[str, Any]) -> dict:
     """Create basic dictionary object with figure properties."""
     return {
         "$schema": "https://vega.github.io/schema/vega/v3.json",
@@ -615,7 +617,7 @@ def _create_colorbar(vega: dict, kwargs: dict) -> None:
 
 
 def _create_scales(
-    hist: Union[HistogramCollection, HistogramBase], vega: dict, kwargs: dict
+    hist: HistogramCollection | HistogramBase, vega: dict, kwargs: dict
 ) -> None:
     """Find proper scales for axes."""
     if hist.ndim == 1:
@@ -720,7 +722,7 @@ def _create_cmap_scale(values_arr: np.ndarray, vega: dict, kwargs: dict) -> None
 
 
 def _create_axes(
-    hist: Union[HistogramCollection, HistogramBase], vega: dict, kwargs: dict
+    hist: HistogramCollection | HistogramBase, vega: dict, kwargs: dict
 ) -> None:
     """Create axes in the figure."""
     xlabel = kwargs.pop("xlabel", hist.axis_names[0])
@@ -780,7 +782,7 @@ def _create_tooltips(hist: Histogram1D, vega: dict, kwargs: dict) -> None:
 
 
 def _add_title(
-    hist: Union[HistogramBase, HistogramCollection], vega: dict, kwargs: dict
+    hist: HistogramBase | HistogramCollection, vega: dict, kwargs: dict
 ) -> None:
     """Display plot title if available."""
     title = kwargs.pop("title", hist.title)

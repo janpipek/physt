@@ -1,5 +1,4 @@
-from typing import Optional
-
+# pyright: reportUnknownArgumentType=false, reportUnknownParameterType=false, reportUnknownVariableType=false, reportMissingParameterType=false
 import hypothesis.strategies as st
 import numpy as np
 from hypothesis.extra.numpy import array_shapes, arrays, from_dtype
@@ -11,7 +10,7 @@ float64 = np.dtype("float64")
 
 
 @st.composite
-def bins(draw, nbins: Optional[int] = None) -> np.ndarray:
+def bins(draw, nbins: int | None = None) -> np.ndarray:
     if nbins is None:
         nbins = draw(st.integers(min_value=1, max_value=10))
     unsorted_edges = draw(

@@ -15,7 +15,8 @@ Examples:
 
 # TODO: Support structures with numerical items
 
-from typing import Any, Iterable, NoReturn, Optional, Tuple, Union
+from collections.abc import Iterable
+from typing import Any, NoReturn
 
 import numpy as np
 import pandas as pd
@@ -46,7 +47,7 @@ NUMERIC_POLARS_DTYPES = [
 
 
 @extract_axis_name.register
-def _(data: polars.Series, *, axis_name: Optional[str] = None) -> Optional[str]:
+def _(data: polars.Series, *, axis_name: str | None = None) -> str | None:
     if axis_name is not None:
         return axis_name
     return data.name
@@ -60,7 +61,7 @@ def _(data: polars.DataFrame, **kwargs) -> NoReturn:
 @extract_1d_array.register
 def _(
     data: polars.Series, *, dropna: bool = True
-) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+) -> tuple[np.ndarray, np.ndarray | None]:
     if data.dtype not in NUMERIC_POLARS_DTYPES:
         raise ValueError(
             f"Cannot extract float array from type {data.dtype}, must be int-like or float-like"
@@ -88,8 +89,8 @@ def _(data: polars.Series, **kwargs) -> NoReturn:
 
 @extract_nd_array.register
 def _(
-    data: polars.DataFrame, *, dim: Optional[int] = None, dropna: bool = True
-) -> Tuple[int, np.ndarray, Optional[np.ndarray]]:
+    data: polars.DataFrame, *, dim: int | None = None, dropna: bool = True
+) -> tuple[int, np.ndarray, np.ndarray | None]:
     if data.shape[1] == 0:
         raise ValueError("Must have at least one column.")
     # TODO: This is not very optimized
@@ -101,8 +102,8 @@ def _(
 
 @extract_axis_names.register
 def _(
-    data: polars.DataFrame, *, axis_names: Optional[Iterable[str]] = None
-) -> Optional[Tuple[str, ...]]:
+    data: polars.DataFrame, *, axis_names: Iterable[str] | None = None
+) -> tuple[str, ...] | None:
     if axis_names is not None:
         result = tuple(axis_names)
         if (given_length := len(result)) != (expected_length := data.shape[1]):
@@ -119,7 +120,7 @@ def _(data: polars.Series, **kwargs) -> NoReturn:
 
 
 @extract_weights.register
-def _(data: polars.Series, array_mask: Optional[np.ndarray] = None) -> np.ndarray:
+def _(data: polars.Series, array_mask: np.ndarray | None = None) -> np.ndarray:
     array, _ = extract_1d_array(data, dropna=False)
     return extract_weights(array, array_mask=array_mask)  # type: ignore
 
@@ -153,7 +154,7 @@ class PhystFrame:
         *selectors: Any,
         bins: Any = None,
         **kwargs,
-    ) -> Union[Histogram1D, HistogramND]:
+    ) -> Histogram1D | HistogramND:
         """Create a histogram from the DataFrame.
 
         :param selectors: Any selectors. If none, all numeric columns are used.

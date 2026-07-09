@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import warnings
 from functools import wraps
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Dict, Tuple
+    from collections.abc import Callable
+    from typing import Any
 
 
-def all_subclasses(cls: type) -> Tuple[type, ...]:
+def all_subclasses(cls: type) -> tuple[type, ...]:
     """All subclasses of a class.
 
     From: http://stackoverflow.com/a/17246726/2692780
@@ -41,7 +42,7 @@ def find_subclass(base: type, name: str) -> type:
     return class_candidates[0]
 
 
-def pop_many(a_dict: Dict[str, Any], *args: str, **kwargs) -> Dict[str, Any]:
+def pop_many(a_dict: dict[str, Any], *args: str, **kwargs) -> dict[str, Any]:
     """Pop multiple items from a dictionary.
 
     Parameters
@@ -63,7 +64,11 @@ def pop_many(a_dict: Dict[str, Any], *args: str, **kwargs) -> Dict[str, Any]:
     return result
 
 
-def deprecation_alias(f: Callable, deprecated_name: str) -> Callable:
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+def deprecation_alias(f: Callable[P, R], deprecated_name: str) -> Callable[P, R]:
     """Provide a deprecated copy of a function.
 
     Parameters

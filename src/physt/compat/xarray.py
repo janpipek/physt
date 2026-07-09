@@ -14,7 +14,7 @@ from xarray import DataArray, Dataset
 from physt.types import Histogram1D
 
 if TYPE_CHECKING:
-    from typing import Any, Dict, Type
+    from typing import Any
 
 
 def _h1_to_xarray(h1: Histogram1D) -> Dataset:
@@ -25,13 +25,13 @@ def _h1_to_xarray(h1: Histogram1D) -> Dataset:
 
     # TODO: Rethink how the dimensions / variables are used
 
-    data_vars: Dict[str, Any] = {
+    data_vars: dict[str, Any] = {
         "frequencies": DataArray(h1.frequencies, dims="bin"),
         "errors2": DataArray(h1.errors2, dims="bin"),
         "bins": DataArray(h1.bins, dims=("bin", "x01")),
     }
-    coords: Dict[str, Any] = {}
-    attrs: Dict[str, Any] = {
+    coords: dict[str, Any] = {}
+    attrs: dict[str, Any] = {
         "underflow": h1.underflow,
         "overflow": h1.overflow,
         "inner_missed": h1.inner_missed,
@@ -42,7 +42,7 @@ def _h1_to_xarray(h1: Histogram1D) -> Dataset:
     return Dataset(data_vars, coords, attrs)
 
 
-def _h1_from_xarray(cls: Type[Histogram1D], arr: Dataset) -> Histogram1D:
+def _h1_from_xarray(cls: type[Histogram1D], arr: Dataset) -> Histogram1D:
     """Convert form xarray.Dataset
 
     Parameters

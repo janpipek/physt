@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import warnings
 from numbers import Number
-from typing import TYPE_CHECKING, Tuple, cast, overload
+from typing import TYPE_CHECKING, cast, overload
 
 import numpy as np
 
@@ -13,7 +13,8 @@ from physt.histogram_base import HistogramBase
 
 if TYPE_CHECKING:
     # TODO: use float?
-    from typing import Any, Iterable, List, Optional, Sequence, Union
+    from collections.abc import Iterable, Sequence
+    from typing import Any
 
     from physt.binnings import BinningLike
     from physt.typing_aliases import ArrayLike, Axis
@@ -30,10 +31,10 @@ class HistogramND(HistogramBase):
     def __init__(
         self,
         binnings: Iterable[BinningLike],
-        frequencies: Optional[ArrayLike] = None,
+        frequencies: ArrayLike | None = None,
         *,
-        dimension: Optional[int] = None,
-        axis_names: Optional[Iterable[str]] = None,
+        dimension: int | None = None,
+        axis_names: Iterable[str] | None = None,
         missed=0,
         **kwargs,
     ):
@@ -73,16 +74,16 @@ class HistogramND(HistogramBase):
         self._missed = np.array([missed], dtype=self.dtype)
 
     @property
-    def bins(self) -> List[np.ndarray]:
+    def bins(self) -> list[np.ndarray]:
         """List of bin matrices."""
         return [binning.bins for binning in self._binnings]
 
     @property
-    def edges(self) -> List[np.ndarray]:
+    def edges(self) -> list[np.ndarray]:
         return [binning.numpy_bins for binning in self._binnings]
 
     @property
-    def numpy_bins(self) -> List[np.ndarray]:
+    def numpy_bins(self) -> list[np.ndarray]:
         """Numpy-like bins (if available)."""
         warnings.warn(
             "`numpy_bins` is deprecated, use `edges` instead",
@@ -91,12 +92,12 @@ class HistogramND(HistogramBase):
         return self.edges
 
     @property
-    def numpy_like(self) -> Tuple:
+    def numpy_like(self) -> tuple:
         """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins
 
     def select(
-        self, axis: Axis, index: Union[int, slice], *, force_copy: bool = False
+        self, axis: Axis, index: int | slice, *, force_copy: bool = False
     ) -> HistogramBase:
         # TODO: Implement mask?
 
@@ -104,7 +105,7 @@ class HistogramND(HistogramBase):
             return self
 
         axis_id = self._get_axis(axis)
-        array_index: List[Union[int, slice]] = [
+        array_index: list[int | slice] = [
             slice(None, None, None) for i in range(self.ndim)
         ]
         array_index[axis_id] = index
@@ -127,8 +128,8 @@ class HistogramND(HistogramBase):
         raise TypeError("Invalid index.")
 
     def __getitem__(
-        self, index: Union[int, slice, Iterable[int]]
-    ) -> Union["HistogramBase", Tuple[Tuple[Tuple[float, float], ...], float]]:
+        self, index: int | slice | Iterable[int]
+    ) -> "HistogramBase" | tuple[tuple[tuple[float, float], ...], float]:
         """Select subset of histogram.
 
         Parameters
@@ -183,8 +184,8 @@ class HistogramND(HistogramBase):
     def get_bin_widths(self, axis: None = ...) -> Sequence[np.ndarray]: ...
 
     def get_bin_widths(
-        self, axis: Optional[Axis] = None
-    ) -> Union[np.ndarray, Sequence[np.ndarray]]:  # TODO: -> Base ?
+        self, axis: Axis | None = None
+    ) -> np.ndarray | Sequence[np.ndarray]:  # TODO: -> Base ?
         if axis is not None:
             axis = self._get_axis(axis)
             return self.get_bin_right_edges(axis) - self.get_bin_left_edges(axis)
@@ -217,8 +218,8 @@ class HistogramND(HistogramBase):
     def get_bin_edges(self, axis: None = ...) -> Sequence[np.ndarray]: ...
 
     def get_bin_edges(
-        self, axis: Optional[Axis] = None
-    ) -> Union[np.ndarray, Sequence[np.ndarray]]:
+        self, axis: Axis | None = None
+    ) -> np.ndarray | Sequence[np.ndarray]:
         if axis is not None:
             axis = self._get_axis(axis)
             return self.edges[self._get_axis(axis)]
@@ -233,8 +234,8 @@ class HistogramND(HistogramBase):
     def get_bin_left_edges(self, axis: None = ...) -> Sequence[np.ndarray]: ...
 
     def get_bin_left_edges(
-        self, axis: Optional[Axis] = None
-    ) -> Union[np.ndarray, Sequence[np.ndarray]]:
+        self, axis: Axis | None = None
+    ) -> np.ndarray | Sequence[np.ndarray]:
         if axis is not None:
             axis = self._get_axis(axis)
             return self.bins[axis][:, 0]
@@ -248,8 +249,8 @@ class HistogramND(HistogramBase):
     def get_bin_right_edges(self, axis: None = ...) -> Sequence[np.ndarray]: ...
 
     def get_bin_right_edges(
-        self, axis: Optional[Axis] = None
-    ) -> Union[np.ndarray, Sequence[np.ndarray]]:
+        self, axis: Axis | None = None
+    ) -> np.ndarray | Sequence[np.ndarray]:
         if axis is not None:
             axis = self._get_axis(axis)
             return self.bins[axis][:, 1]
@@ -263,8 +264,8 @@ class HistogramND(HistogramBase):
     def get_bin_centers(self, axis: None = ...) -> Sequence[np.ndarray]: ...
 
     def get_bin_centers(
-        self, axis: Optional[Axis] = None
-    ) -> Union[np.ndarray, Sequence[np.ndarray]]:
+        self, axis: Axis | None = None
+    ) -> np.ndarray | Sequence[np.ndarray]:
         if axis is not None:
             axis = self._get_axis(axis)
             return (self.get_bin_right_edges(axis) + self.get_bin_left_edges(axis)) / 2
@@ -279,8 +280,8 @@ class HistogramND(HistogramBase):
     # def find_bin(self, value: Number, axis: Axis) -> Optional[int]: ...
 
     def find_bin(
-        self, value: ArrayLike, axis: Optional[Axis] = None
-    ) -> Union[None, int, Tuple[int, ...]]:
+        self, value: ArrayLike, axis: Axis | None = None
+    ) -> None | int | tuple[int, ...]:
         """Index(-ices) of bin corresponding to a value.
 
         Parameters
@@ -324,7 +325,7 @@ class HistogramND(HistogramBase):
                     f"Wrong shape: {value_array.shape}, expected: ({self.ndim},)"
                 )
             ixbins = cast(
-                Tuple[int, ...],
+                tuple[int, ...],
                 tuple(self.find_bin(value_array[i], i) for i in range(self.ndim)),
             )
             if None in ixbins:
@@ -349,7 +350,7 @@ class HistogramND(HistogramBase):
     def fill_n(
         self,
         values: ArrayLike,
-        weights: Optional[ArrayLike] = None,
+        weights: ArrayLike | None = None,
         *,
         dropna: bool = True,
         columns: bool = False,
@@ -403,7 +404,7 @@ class HistogramND(HistogramBase):
 
     def _get_projection_axes(
         self, *axes: Axis
-    ) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
+    ) -> tuple[tuple[int, ...], tuple[int, ...]]:
         """Find axis identifiers for projection and all the remaining ones.
 
         Returns
@@ -411,7 +412,7 @@ class HistogramND(HistogramBase):
         axes: axes to include in the projection
         invert: axes along which to reduce
         """
-        axes_: List[int] = [self._get_axis(ax) for ax in axes]
+        axes_: list[int] = [self._get_axis(ax) for ax in axes]
         if not axes_:
             raise ValueError("No axis selected for projection")
         if len(axes_) != len(set(axes_)):
@@ -587,6 +588,6 @@ class Histogram2D(HistogramND):
             return self
 
     @property
-    def numpy_like(self) -> Tuple[np.ndarray, ...]:
+    def numpy_like(self) -> tuple[np.ndarray, ...]:
         """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins[0], self.numpy_bins[1]

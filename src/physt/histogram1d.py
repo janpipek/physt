@@ -18,7 +18,8 @@ from physt.histogram_base import HistogramBase
 from physt.statistics import INVALID_STATISTICS, Statistics
 
 if TYPE_CHECKING:
-    from typing import Any, Dict, Mapping, Optional, Tuple, Type, TypeVar, Union
+    from collections.abc import Mapping
+    from typing import Any, TypeVar
 
     from physt.binnings import BinningBase, BinningLike
     from physt.typing_aliases import ArrayLike, Axis, DTypeLike
@@ -134,15 +135,15 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     def __init__(
         self,
         binning: BinningLike,
-        frequencies: Optional[ArrayLike] = None,
-        errors2: Optional[ArrayLike] = None,
+        frequencies: ArrayLike | None = None,
+        errors2: ArrayLike | None = None,
         *,
         keep_missed: bool = True,
-        stats: Optional[Statistics] = None,
-        overflow: Optional[float] = 0.0,
-        underflow: Optional[float] = 0.0,
-        inner_missed: Optional[float] = 0.0,
-        axis_name: Optional[str] = None,
+        stats: Statistics | None = None,
+        overflow: float | None = 0.0,
+        underflow: float | None = 0.0,
+        inner_missed: float | None = 0.0,
+        axis_name: str | None = None,
         **kwargs,
     ):
         """Constructor
@@ -202,7 +203,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
 
     def select(
         self, axis, index, *, force_copy: bool = False
-    ) -> Union["Histogram1D", Tuple[np.ndarray, float]]:
+    ) -> "Histogram1D" | tuple[np.ndarray, float]:
         """Alias for [] to be compatible with HistogramND."""
         if axis == 0:
             if index == slice(None) and not force_copy:
@@ -212,8 +213,8 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             raise ValueError("In Histogram1D.select(), axis must be 0.")
 
     def __getitem__(
-        self, index: Union[int, slice, np.ndarray]
-    ) -> Union["Histogram1D", Tuple[np.ndarray, float]]:
+        self, index: int | slice | np.ndarray
+    ) -> "Histogram1D" | tuple[np.ndarray, float]:
         """Select sub-histogram or get one bin.
 
         Parameters
@@ -281,7 +282,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         return self._binning
 
     @property
-    def numpy_like(self) -> Tuple[np.ndarray, np.ndarray]:
+    def numpy_like(self) -> tuple[np.ndarray, np.ndarray]:
         """Same result as would the numpy.histogram function return."""
         return self.frequencies, self.numpy_bins
 
@@ -323,7 +324,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     def inner_missed(self, value):
         self._missed[2] = value
 
-    def find_bin(self, value: float, axis: Optional[Axis] = None) -> Optional[int]:
+    def find_bin(self, value: float, axis: Axis | None = None) -> int | None:
         """Index of bin corresponding to a value.
 
         Returns
@@ -349,7 +350,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             return self.bin_count
         return None
 
-    def fill(self, value: float, weight: float = 1, **kwargs) -> Optional[int]:
+    def fill(self, value: float, weight: float = 1, **kwargs) -> int | None:
         """Update histogram with a new value.
 
         Parameters
@@ -399,12 +400,13 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     def fill_n(
         self,
         values: ArrayLike,
-        weights: Optional[ArrayLike] = None,
+        weights: ArrayLike | None = None,
         *,
         dropna: bool = True,
     ) -> None:
         # TODO: Unify with HistogramBase
         values_array, array_mask = extract_1d_array(values, dropna=dropna)
+        assert values_array is not None
         if self._binning.is_adaptive():
             map = self._binning.force_bin_existence(values_array)
             self._reshape_data(self._binning.bin_count, map)
@@ -452,33 +454,33 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         return True
 
     @classmethod
-    def _kwargs_from_dict(cls, a_dict: Mapping[str, Any]) -> Dict[str, Any]:
+    def _kwargs_from_dict(cls, a_dict: Mapping[str, Any]) -> dict[str, Any]:
         kwargs = HistogramBase._kwargs_from_dict(a_dict)  # type: ignore
         kwargs["binning"] = kwargs.pop("binnings")[0]
         return kwargs
 
     @classmethod
     def from_calculate_frequencies(
-        cls: Type["Histogram1DType"],
-        data: Optional[np.ndarray],
+        cls: type["Histogram1DType"],
+        data: np.ndarray | None,
         binning: BinningBase,
-        weights: Optional[np.ndarray] = None,
+        weights: np.ndarray | None = None,
         *,
         validate_bins: bool = True,
         already_sorted: bool = False,
         keep_missed: bool = True,
-        dtype: Optional[DTypeLike] = None,
+        dtype: DTypeLike | None = None,
         **kwargs,
     ) -> "Histogram1DType":
         """Construct the histogram from values and bins."""
         # TODO: Remove this method
 
         if data is None:
-            frequencies: Optional[np.ndarray] = None
-            errors2: Optional[np.ndarray] = None
+            frequencies: np.ndarray | None = None
+            errors2: np.ndarray | None = None
             underflow: float = 0.0
             overflow: float = 0.0
-            stats: Optional[Statistics] = None
+            stats: Statistics | None = None
         else:
             frequencies, errors2, underflow, overflow, stats = calculate_1d_frequencies(
                 data=data,

@@ -4,7 +4,6 @@ See https://geant4.web.cern.ch/ for the project pages.
 """
 
 import codecs
-from typing import Union
 
 import numpy as np
 
@@ -13,7 +12,7 @@ from physt.statistics import Statistics
 from physt.types import Histogram1D, Histogram2D
 
 
-def load_csv(path: str) -> Union[Histogram1D, Histogram2D]:
+def load_csv(path: str) -> Histogram1D | Histogram2D:
     """Loads a histogram as output from Geant4 analysis tools in CSV format.
 
     Parameters

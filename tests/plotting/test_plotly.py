@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -12,7 +12,7 @@ from .shared import AbstractPlot1DTest, AbstractPlot2DTest, AbstractPlotTest
 
 
 @pytest.fixture()
-def default_kwargs() -> Dict[str, Any]:
+def default_kwargs() -> dict[str, Any]:
     return {}
 
 

@@ -87,7 +87,9 @@ class TestStatistics:
 
     def test_str(self, histogram, use_weights):
         str_repr = str(histogram.statistics)
-        pattern = re.compile(r"^Statistics\(mean=[0-9.\-]+, std=[0-9.\-]+, min=[0-9.\-]+, max=[0-9.\-]+, total=[0-9.\-]+\)$")
+        pattern = re.compile(
+            r"^Statistics\(mean=[0-9.\-]+, std=[0-9.\-]+, min=[0-9.\-]+, max=[0-9.\-]+, total=[0-9.\-]+\)$"
+        )
         assert pattern.match(str_repr)
 
 

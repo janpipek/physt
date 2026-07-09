@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import dask
+import dask.threaded
 import numpy as np
 from dask.array import Array
 
@@ -12,7 +13,8 @@ from physt._facade import h1 as original_h1
 from physt._facade import histogramdd as original_hdd
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Union
+    from collections.abc import Callable
+    from typing import Any
 
     from physt.typing_aliases import ArrayLike
 
@@ -24,7 +26,7 @@ def _run_dask(
     name: str,
     data: Array,
     compute: bool,
-    method: Union[None, str, Callable],
+    method: None | str | Callable,
     func: Callable,
     expand_arg: bool = False,
 ) -> Any:
@@ -63,7 +65,7 @@ def _run_dask(
 
 
 def histogram1d(
-    data: Union[Array, ArrayLike], bins: Any = None, *, compute: bool = True, **kwargs
+    data: Array | ArrayLike, bins: Any = None, *, compute: bool = True, **kwargs
 ):
     """Facade function to create one-dimensional histogram using dask.
 
@@ -100,7 +102,7 @@ def histogram1d(
 h1 = histogram1d  # Alias for convenience
 
 
-def histogramdd(data: Union[Array, ArrayLike], bins: Any = None, **kwargs):
+def histogramdd(data: Array | ArrayLike, bins: Any = None, **kwargs):
     """Facade function to create multi-dimensional histogram using dask.
 
     Each "column" must be one-dimensional.

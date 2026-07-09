@@ -3,8 +3,6 @@
 More detailed comparisons of histograms mostly for unit testing.
 """
 
-from typing import Optional
-
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal
 
@@ -40,7 +38,7 @@ def assert_histograms_equal(
 
 
 def assert_optional_array_equal(
-    actual: Optional[np.ndarray], desired: Optional[np.ndarray], **kwargs
+    actual: np.ndarray | None, desired: np.ndarray | None, **kwargs
 ) -> None:
     """Assert the arrays are equal or both None (helper for out tests)."""
     if actual is None:

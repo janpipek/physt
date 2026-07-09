@@ -1,6 +1,5 @@
 import random
 from itertools import tee
-from typing import Tuple
 
 import hypothesis.strategies as st
 import numpy as np
@@ -23,7 +22,7 @@ from physt._construction import (
 
 
 @st.composite
-def two_array_of_the_same_shape(draw, shape, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+def two_array_of_the_same_shape(draw, shape, **kwargs) -> tuple[np.ndarray, np.ndarray]:
     shape_ = draw(shape)
     return (draw(arrays(shape=shape_, **kwargs)), draw(arrays(shape=shape_, **kwargs)))
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Container, Mapping, cast
+from collections.abc import Container, Mapping
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
@@ -9,7 +10,7 @@ from physt.binnings import BinningBase, as_binning
 from physt.histogram1d import Histogram1D, ObjectWithBinning
 
 if TYPE_CHECKING:
-    from typing import Any, Dict, Optional, Tuple
+    from typing import Any
 
     from physt.binnings import BinningLike
     from physt.plotting import PlottingProxy
@@ -26,9 +27,9 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
     def __init__(
         self,
         *histograms: Histogram1D,
-        binning: Optional[BinningLike] = None,
-        title: Optional[str] = None,
-        name: Optional[str] = None,
+        binning: BinningLike | None = None,
+        title: str | None = None,
+        name: str | None = None,
     ):
         self.histograms = list(histograms)
         if histograms:
@@ -78,7 +79,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         return self.histograms[0].axis_name if self.histograms else "axis0"
 
     @property
-    def axis_names(self) -> Tuple[str]:
+    def axis_names(self) -> tuple[str]:
         return (self.axis_name,)
 
     def add(self, histogram: Histogram1D) -> None:
@@ -91,7 +92,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         self, name: str, values, *, weights=None, dropna: bool = True, **kwargs
     ) -> Histogram1D:
         # TODO: Rename!
-        init_kwargs: Dict[str, Any] = {"axis_name": self.axis_name}
+        init_kwargs: dict[str, Any] = {"axis_name": self.axis_name}
         init_kwargs.update(kwargs)
         histogram = Histogram1D(binning=self.binning, name=name, **init_kwargs)
         histogram.fill_n(values, weights=weights, dropna=dropna)
@@ -173,7 +174,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         return collection
 
     @classmethod
-    def from_dict(cls, a_dict: Dict[str, Any]) -> "HistogramCollection":
+    def from_dict(cls, a_dict: dict[str, Any]) -> "HistogramCollection":
         from physt.io import create_from_dict
 
         histograms = (
@@ -185,13 +186,13 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
         )
         return HistogramCollection(*histograms)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "histogram_type": "histogram_collection",
             "histograms": [h.to_dict() for h in self.histograms],
         }
 
-    def to_json(self, path: Optional[str] = None, **kwargs) -> str:
+    def to_json(self, path: str | None = None, **kwargs) -> str:
         """Convert to JSON representation.
 
         Parameters

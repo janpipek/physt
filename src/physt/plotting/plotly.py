@@ -10,8 +10,9 @@ TODO: More elaborate output planned
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import plotly.graph_objs as go
 import plotly.offline as pyo
@@ -23,11 +24,9 @@ from physt.types import Histogram2D, HistogramCollection
 from .common import check_ndim, get_data
 
 if TYPE_CHECKING:
-    from typing import Optional, Union
-
     from physt.types import Histogram1D
 
-    AbstractHistogram1D = Union[HistogramCollection, Histogram1D]
+    AbstractHistogram1D = HistogramCollection | Histogram1D
     # TODO: Move this to the typing itself
 
 DEFAULT_BARMODE: str = "overlay"
@@ -36,7 +35,7 @@ DEFAULT_ALPHA: float = 1.0
 
 def enable_output(f: Callable) -> Callable:
     @wraps(f)
-    def new_f(*args, write_to: Optional[str] = None, **kwargs) -> Figure:
+    def new_f(*args, write_to: str | None = None, **kwargs) -> Figure:
         figure: Figure = f(*args, **kwargs)
         if write_to:
             pyo.plot(figure, filename=write_to)
