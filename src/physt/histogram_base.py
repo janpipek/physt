@@ -115,11 +115,11 @@ class HistogramBase(abc.ABC):
     def __init__(
         self,
         binnings: Iterable[BinningLike],
-        frequencies: Optional[ArrayLike] = None,
-        errors2: Optional[ArrayLike] = None,
+        frequencies: ArrayLike | None = None,
+        errors2: ArrayLike | None = None,
         *,
-        axis_names: Optional[Iterable[str]] = None,
-        dtype: Optional[DTypeLike] = None,
+        axis_names: Iterable[str] | None = None,
+        dtype: DTypeLike | None = None,
         keep_missed: bool = True,
         **kwargs,
     ):
@@ -685,7 +685,7 @@ class HistogramBase(abc.ABC):
 
     @abc.abstractmethod
     def select(
-        self, axis: Axis, index: Union[int, slice], *, force_copy: bool = False
+        self, axis: Axis, index: int | slice, *, force_copy: bool = False
     ) -> Any:
         """Select in an axis.
 
@@ -697,7 +697,7 @@ class HistogramBase(abc.ABC):
         """
 
     @property
-    def binnings(self) -> List[BinningBase]:
+    def binnings(self) -> list[BinningBase]:
         """The binnings.
 
         Note: Please, do not try to update the objects themselves.
@@ -706,12 +706,12 @@ class HistogramBase(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def bins(self) -> Union[np.ndarray, List[np.ndarray]]: ...
+    def bins(self) -> np.ndarray | list[np.ndarray]: ...
 
     @abc.abstractmethod
     def fill(
         self, value: float, weight: float = 1, **kwargs
-    ) -> Union[None, int, tuple[int, ...]]:
+    ) -> int | tuple[int, ...] | None:
         """Update histogram with a new value.
 
         It is an in-place operation.
@@ -766,14 +766,14 @@ class HistogramBase(abc.ABC):
 
         return PlottingProxy(self)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Dictionary with all data in the histogram.
 
         This is used for export into various formats (e.g. JSON)
         If a descendant class needs to update the dictionary in some way
         (put some more information), override the _update_dict method.
         """
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
         result["histogram_type"] = type(self).__name__
         result["binnings"] = [binning.to_dict() for binning in self._binnings]
         if self.frequencies is not None:

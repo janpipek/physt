@@ -26,7 +26,7 @@ mypy:
 # Optionally test with pyright (we don't aim yet)
 [group('qa')]
 pyright:
-    uv run --extra all --with pyright pyright
+    uv run --extra all basedpyright src/
 
 # Run all the pre-commit checks on the whole code-base
 pre-commit:

@@ -85,7 +85,7 @@ class Statistics:
             weight=self.weight * other_scalar,
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Statistics):
             return False
         return (
@@ -97,7 +97,7 @@ class Statistics:
             and np.array_equal(self.median, other.median, equal_nan=True)
         )
 
-    def __rich_repr__(self):
+    def __rich_repr__(self) -> str:
         # Output interesting attributes instead of internal representation
         yield "mean", self.mean
         yield "std", self.std

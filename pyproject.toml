@@ -75,9 +75,10 @@ ignore_missing_imports = true
 # plugins = ["numpy.typing.mypy_plugin"]
 exclude = ["docs"]
 
-[tool.pyright]
+[tool.basedpyright]
 reportImplicitOverride = false
 reportExplicitAny = false
+reportAny = false
 
 [tool.isort]
 profile = "black"

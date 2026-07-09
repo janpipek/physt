@@ -1,3 +1,4 @@
+# pyright: ignore
 """Vega3 backend for plotting in physt.
 
 The JSON can be produced without any external dependency, the ability

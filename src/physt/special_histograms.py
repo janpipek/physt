@@ -38,7 +38,7 @@ from physt.histogram_nd import HistogramND
 from . import histogram_nd
 
 if TYPE_CHECKING:
-    from typing import Dict, Optional, Tuple, Type, Union
+    from typing import Dict, Optional, Tuple, Union
 
     from physt.typing_aliases import ArrayLike, Axis, RangeTuple
 
@@ -752,29 +752,29 @@ cylindrical_surface_histogram = deprecation_alias(
 def extract_transformed_data(
     data: ArrayLike,
     transformed: bool,
-    klass: Type[TransformedHistogramMixin],
+    klass: type[TransformedHistogramMixin],
     *,
     dropna: bool = False,
-) -> Tuple[np.ndarray, np.ndarray]: ...
+) -> tuple[np.ndarray, np.ndarray]: ...
 
 
 @overload
 def extract_transformed_data(
     data: None,
     transformed: bool,
-    klass: Type[TransformedHistogramMixin],
+    klass: type[TransformedHistogramMixin],
     *,
     dropna: bool = False,
 ) -> Tuple[None, None]: ...
 
 
 def extract_transformed_data(
-    data: Optional[ArrayLike],
+    data: ArrayLike | None,
     transformed: bool,
-    klass: Type[TransformedHistogramMixin],
+    klass: type[TransformedHistogramMixin],
     *,
     dropna: bool = False,
-) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+) -> tuple[Optional[np.ndarray], Optional[np.ndarray]]:
     """Extract and potentially transform data for binning."""
     if data is None:
         return None, None

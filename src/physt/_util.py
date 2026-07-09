@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import warnings
 from functools import wraps
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
 if TYPE_CHECKING:
     from typing import Any, Callable
@@ -63,7 +63,11 @@ def pop_many(a_dict: dict[str, Any], *args: str, **kwargs) -> dict[str, Any]:
     return result
 
 
-def deprecation_alias(f: Callable, deprecated_name: str) -> Callable:
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+def deprecation_alias(f: Callable[P, R], deprecated_name: str) -> Callable[P, R]:
     """Provide a deprecated copy of a function.
 
     Parameters
