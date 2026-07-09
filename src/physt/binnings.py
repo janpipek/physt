@@ -6,7 +6,7 @@ import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from contextlib import suppress
-from typing import TYPE_CHECKING, TypeAlias, cast, final, overload
+from typing import TYPE_CHECKING, ParamSpec, TypeAlias, TypeVar, cast, final, overload
 
 import numpy as np
 from typing_extensions import Self, override
@@ -24,7 +24,7 @@ from physt._util import deprecation_alias, find_subclass
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
-    from typing import Any, ClassVar, TypeVar
+    from typing import Any, ClassVar
 
     """Anything that can be converted to a binning."""
 
@@ -48,10 +48,14 @@ binning_methods: dict[str, Callable] = {}
 """Dictionary of available binnings."""
 
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
 def register_binning(name: str | None = None) -> Callable[[Callable], Callable]:
     """Decorator to register among available binning methods."""
 
-    def decorator(f: Callable) -> Callable:
+    def decorator(f: Callable[P, R]) -> Callable[P, R]:
         key = name or f.__name__[:-8]
         binning_methods[key] = f
         return f

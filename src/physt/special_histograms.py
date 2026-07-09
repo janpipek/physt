@@ -36,6 +36,7 @@ from physt.histogram1d import Histogram1D
 from physt.histogram_nd import HistogramND
 
 from . import histogram_nd
+from .histogram_base import HistogramBase
 
 if TYPE_CHECKING:
     from physt.typing_aliases import ArrayLike, Axis, RangeTuple
@@ -48,10 +49,10 @@ DEFAULT_PHI_BINS: int = 16
 DEFAULT_THETA_BINS: int = 16
 
 
-class TransformedHistogramMixin(abc.ABC):
+class TransformedHistogramBase(HistogramBase):
     """Histogram with non-cartesian (or otherwise transformed) axes.
 
-    This is a mixin, providing transform-aware find_bin, fill and fill_n.
+    This provides transform-aware find_bin, fill and fill_n.
 
     When implementing, you are required to provide tbe following:
     - `_transform_correct_dimension` method to convert rectangular (it must be a classmethod)
@@ -159,15 +160,16 @@ class TransformedHistogramMixin(abc.ABC):
         return cls._transform_correct_dimension(value)
 
 
-class RadialHistogram(TransformedHistogramMixin, Histogram1D):
+class RadialHistogram(TransformedHistogramBase, Histogram1D):
     """Projection of polar histogram to 1D with respect to radius.
 
     This is a special case of a 1D histogram with transformed coordinates.
     """
 
-    default_axis_names = [
-        "r",
-    ]
+    @property
+    def default_axis_names(self) -> tuple[str]:
+        return ("r",)
+
     source_ndim = (2, 3)
 
     @property
@@ -181,13 +183,16 @@ class RadialHistogram(TransformedHistogramMixin, Histogram1D):
         return np.hypot(np.hypot(value[..., 1], value[..., 0]), value[..., 2])
 
 
-class AzimuthalHistogram(TransformedHistogramMixin, Histogram1D):
+class AzimuthalHistogram(TransformedHistogramBase, Histogram1D):
     """Projection of polar histogram to 1D with respect to phi.
 
     This is a special case of a 1D histogram with transformed coordinates.
     """
 
-    default_axis_names = ["phi"]
+    @property
+    def default_axis_names(self) -> tuple[str]:
+        return ("phi",)
+
     default_init_values = {"radius": 1}
     source_ndim = 2
 
@@ -212,7 +217,7 @@ class AzimuthalHistogram(TransformedHistogramMixin, Histogram1D):
         self._meta_data["radius"] = value
 
 
-class PolarHistogram(TransformedHistogramMixin, HistogramND):
+class PolarHistogram(TransformedHistogramBase, HistogramND):
     """2D histogram in polar coordinates.
 
     This is a special case of a 2D histogram with transformed coordinates:
@@ -221,7 +226,7 @@ class PolarHistogram(TransformedHistogramMixin, HistogramND):
 
     """
 
-    default_axis_names = ["r", "phi"]
+    default_axis_names = ("r", "phi")
     source_ndim = 2
 
     @property
@@ -242,7 +247,7 @@ class PolarHistogram(TransformedHistogramMixin, HistogramND):
     _projection_class_map = {(0,): RadialHistogram, (1,): AzimuthalHistogram}
 
 
-class SphericalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
+class SphericalSurfaceHistogram(TransformedHistogramBase, HistogramND):
     """2D histogram in spherical coordinates.
 
     This is a special case of a 2D histogram with transformed coordinates:
@@ -258,7 +263,10 @@ class SphericalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         sizes2 = self.get_bin_widths(1)
         return reduce(np.multiply, np.ix_(sizes1, sizes2))
 
-    default_axis_names = ["theta", "phi"]
+    @property
+    def default_axis_names(self) -> tuple[str, str]:
+        return "theta", "phi"
+
     default_init_values = {"radius": 1}
     source_ndim = 3
 
@@ -284,7 +292,7 @@ class SphericalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         return result
 
 
-class SphericalHistogram(TransformedHistogramMixin, HistogramND):
+class SphericalHistogram(TransformedHistogramBase, HistogramND):
     """3D histogram in spherical coordinates.
 
     This is a special case of a 3D histogram with transformed coordinates:
@@ -293,7 +301,7 @@ class SphericalHistogram(TransformedHistogramMixin, HistogramND):
     - phi as azimuthal angle  (in the xy projection) in the (0, 2*pi) range
     """
 
-    default_axis_names = ["r", "theta", "phi"]
+    default_axis_names = ("r", "theta", "phi")
     source_ndim = 3
 
     @classmethod
@@ -322,7 +330,7 @@ class SphericalHistogram(TransformedHistogramMixin, HistogramND):
     _projection_class_map = {(1, 2): SphericalSurfaceHistogram, (0,): RadialHistogram}
 
 
-class CylindricalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
+class CylindricalSurfaceHistogram(TransformedHistogramBase, HistogramND):
     """2D histogram in coordinates on cylinder surface.
 
     This is a special case of a 2D histogram with transformed coordinates:
@@ -335,7 +343,10 @@ class CylindricalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
         The radius of the surface. Useful for plotting
     """
 
-    default_axis_names = ["rho", "phi", "z"]
+    @property
+    def default_axis_names(self) -> tuple[str, str, str]:
+        return "rho", "phi", "z"
+
     default_init_values = {"radius": 1}
     source_ndim = 3
 
@@ -368,7 +379,7 @@ class CylindricalSurfaceHistogram(TransformedHistogramMixin, HistogramND):
     _projection_class_map = {(0,): AzimuthalHistogram}
 
 
-class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
+class CylindricalHistogram(TransformedHistogramBase, HistogramND):
     """3D histogram in cylindrical coordinates.
 
     This is a special case of a 3D histogram with transformed coordinates:
@@ -377,7 +388,7 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
     - z as the last direction without modification, in (-inf, +inf) range
     """
 
-    default_axis_names = ["rho", "phi", "z"]
+    default_axis_names = ("rho", "phi", "z")
     source_ndim = 3
 
     @classmethod
@@ -406,7 +417,7 @@ class CylindricalHistogram(TransformedHistogramMixin, HistogramND):
     }
 
     def projection(self, *axes, **kwargs):
-        result = TransformedHistogramMixin.projection(self, *axes, **kwargs)
+        result = TransformedHistogramBase.projection(self, *axes, **kwargs)
         if isinstance(result, CylindricalSurfaceHistogram):
             result.radius = self.get_bin_right_edges(0)[-1]
         return result
@@ -750,7 +761,7 @@ cylindrical_surface_histogram = deprecation_alias(
 def extract_transformed_data(
     data: ArrayLike,
     transformed: bool,
-    klass: type[TransformedHistogramMixin],
+    klass: type[TransformedHistogramBase],
     *,
     dropna: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]: ...
@@ -760,7 +771,7 @@ def extract_transformed_data(
 def extract_transformed_data(
     data: None,
     transformed: bool,
-    klass: type[TransformedHistogramMixin],
+    klass: type[TransformedHistogramBase],
     *,
     dropna: bool = False,
 ) -> tuple[None, None]: ...
@@ -769,7 +780,7 @@ def extract_transformed_data(
 def extract_transformed_data(
     data: ArrayLike | None,
     transformed: bool,
-    klass: type[TransformedHistogramMixin],
+    klass: type[TransformedHistogramBase],
     *,
     dropna: bool = False,
 ) -> tuple[np.ndarray | None, np.ndarray | None]:

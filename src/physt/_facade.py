@@ -172,11 +172,7 @@ def h3(data: ArrayLike | None, bins=None, **kwargs) -> HistogramND:
         Can be a single array (with three columns) or three different arrays
         (for each component)
     """
-    if (
-        data is not None
-        and isinstance(data, (list, tuple))
-        and not np.isscalar(data[0])
-    ):
+    if isinstance(data, (list, tuple)) and not np.isscalar(data[0]):
         if "axis_names" not in kwargs:
             kwargs["axis_names"] = [getattr(column, "name", None) for column in data]
         data = np.concatenate([item[:, np.newaxis] for item in data], axis=1)

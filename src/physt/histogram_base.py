@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     import physt
+    import physt.plotting
     from physt.binnings import BinningLike
     from physt.typing_aliases import ArrayLike, Axis, DTypeLike
 
@@ -177,11 +178,11 @@ class HistogramBase(abc.ABC):
     )
 
     @property
-    def default_axis_names(self) -> list[str]:
+    def default_axis_names(self) -> tuple[str, ...]:
         """Axis names to be used when an instance does not define them."""
-        return [f"axis{i}" for i in range(self.ndim)]
+        return tuple(f"axis{i}" for i in range(self.ndim))
 
-    default_init_values: dict[str, Any] = {}
+    default_init_values: ClassVar[dict[str, Any]] = {}
 
     @property
     def meta_data(self) -> dict[str, Any]:

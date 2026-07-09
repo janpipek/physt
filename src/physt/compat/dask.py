@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import dask
+import dask.threaded
 import numpy as np
 from dask.array import Array
 
