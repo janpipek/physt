@@ -188,6 +188,7 @@ class BinningBase(ABC):
 
     def _force_bin_existence(self, values: ArrayLike) -> int | BinMap | None:
         # Implement this if appropriate. It cannot be an abstract method.
+        # It does not check whether the binning is adaptive
         raise NotImplementedError()
 
     @final
@@ -282,11 +283,13 @@ class BinningBase(ABC):
             edges = np.concatenate([edges, np.asarray([np.inf])])
         return edges, mask
 
+    # TODO: is this used?
     @property
     def first_edge(self) -> float:
         """The left edge of the first bin."""
         return self.bins[0, 0].item()
 
+    # TODO: is this used?
     @property
     def last_edge(self) -> float:
         """The right edge of the last bin."""
@@ -538,7 +541,7 @@ class FixedWidthBinning(_NumpyLikeBinning):
             add_left = add_right = 0
             if value < self.numpy_bins[0]:
                 add_left = int(np.ceil((self.numpy_bins[0] - value) / self.bin_width))
-                self._times_min -= add_left
+                self._times_min -= add_left  # type: ignore  # We know it is not None
                 self._bin_count += add_left
             elif value >= self.numpy_bins[-1]:
                 add_right = (value - self.numpy_bins[-1]) / self.bin_width
@@ -560,7 +563,8 @@ class FixedWidthBinning(_NumpyLikeBinning):
                 cast(float, values), includes_right_edge=includes_right_edge
             )
         else:
-            min_, max_ = np.min(values), np.max(values)
+            arr = np.asarray(values)
+            min_, max_ = arr.min(), arr.max()
             result = self._force_bin_existence_single(min_)
             result2 = self._force_bin_existence_single(
                 max_, includes_right_edge=includes_right_edge
@@ -572,11 +576,13 @@ class FixedWidthBinning(_NumpyLikeBinning):
 
     @property
     def first_edge(self) -> float:
-        return self._bin_width * self._times_min + self._shift
+        return self._bin_width * self._validate_times_min() + self._shift
 
     @property
     def last_edge(self) -> float:
-        return (self._times_min + self._bin_count) * self._bin_width + self._shift
+        return (
+            self._validate_times_min() + self._bin_count
+        ) * self._bin_width + self._shift
 
     @property
     # TODO: Cache this
@@ -584,7 +590,7 @@ class FixedWidthBinning(_NumpyLikeBinning):
         if self._bin_count == 0:
             return np.zeros((0, 2), dtype=float)
         return (
-            self._times_min + np.arange(self._bin_count + 1, dtype=int)
+            self._validate_times_min() + np.arange(self._bin_count + 1, dtype=int)
         ) * self._bin_width + self._shift
 
     @property
@@ -595,21 +601,31 @@ class FixedWidthBinning(_NumpyLikeBinning):
     def bin_width(self) -> float:
         return self._bin_width
 
+    def _validate_times_min(self) -> int:
+        """Check the binning is well-defined and return the times min."""
+        if self._times_min is None:
+            assert not self._bin_count  # This should never occur
+            raise ValueError(
+                "No bins and not enough information to provide first edge."
+            )
+        return self._times_min
+
     def _force_new_min_max(self, new_min, new_max) -> BinMap | None:
         bin_map = None
         add_right = add_left = 0
-        if new_min < self._times_min:
-            add_left = self._times_min - new_min
-        if new_max - self._times_min > self._bin_count:
-            add_right = new_max - self._times_min - self._bin_count
+        times_min = self._validate_times_min()
+        if new_min < times_min:  # type: ignore
+            add_left = times_min - new_min
+        if new_max - times_min > self._bin_count:  # type: ignore
+            add_right = new_max - times_min - self._bin_count
         if add_left or add_right:
             bin_map = ((i, i + add_left) for i in range(self._bin_count))
             self._set_min_and_count(
-                self._times_min - add_left, self._bin_count + add_left + add_right
+                times_min - add_left, self._bin_count + add_left + add_right
             )
         return bin_map
 
-    def _set_min_and_count(self, times_min: int, bin_count: int) -> None:
+    def _set_min_and_count(self, times_min: int | None, bin_count: int) -> None:
         self._bin_count = bin_count
         self._times_min = times_min
 
@@ -630,9 +646,13 @@ class FixedWidthBinning(_NumpyLikeBinning):
         if self.bin_count == 0:
             self._set_min_and_count(other._times_min, other.bin_count)
             return (), None
-        new_min = min(self._times_min, other._times_min)
-        new_max = max(
-            self._times_min + self._bin_count, other._times_min + other._bin_count
+
+        times_min = self._validate_times_min()
+        other_times_min = other._validate_times_min()
+
+        new_min: float = min(times_min, other_times_min)
+        new_max: float = max(
+            times_min + self._bin_count, other_times_min + other._bin_count
         )
 
         bin_map1 = self._force_new_min_max(new_min, new_max)
@@ -801,7 +821,9 @@ def pretty_binning(
     if max_bin_width:
         bin_width = min(bin_width, max_bin_width)
 
-    return fixed_width_binning(bin_width=bin_width, data=data, range=range, **kwargs)
+    return fixed_width_binning(
+        bin_width=bin_width, data=data, range=range, align=True, **kwargs
+    )
 
 
 human_binning = deprecation_alias(pretty_binning, "human_binning")
@@ -860,6 +882,7 @@ def static_binning(
 def integer_binning(
     data: np.ndarray | None = None,
     *,
+    adaptive: bool = False,
     range: tuple[int, int] | None = None,
     bin_width: int = 1,
 ) -> FixedWidthBinning:
@@ -870,13 +893,13 @@ def integer_binning(
     range:  min (included) and max integer (excluded) bin
     bin_width: group "bin_width" integers into one bin (not recommended)
     """
-    kwargs = {}
+    kwargs: dict[str, Any] = {}
     if range:
         kwargs["range"] = tuple(r - 0.5 for r in range)
     else:
         kwargs["bin_shift"] = 0.5
     return fixed_width_binning(
-        data=data, bin_width=bin_width, align=False, includes_right_edge=True, **kwargs
+        data=data, bin_width=bin_width, align=False, adaptive=adaptive, **kwargs
     )
 
 
@@ -899,17 +922,25 @@ def fixed_width_binning(
     range: (min, max)
     align: Must be multiple of bin_width
     """
-    if align and range is not None:
-        raise ValueError("Cannot set both `align` and `range`.")
-    if align and bin_shift:
-        raise ValueError("Cannot set `bin_shift` when `align==True`.")
-    if range:
-        min_ = range[0]
-    elif bin_shift:
-        # Not needed
-        min_ = None
+    if align is None:
+        align = not range and bin_shift is None
+
+    min_ = None
+    if align:
+        if range:
+            raise ValueError("Cannot set both `align` and `range`.")
+        if bin_shift:
+            raise ValueError("Cannot set `bin_shift` when `align==True`.")
+        bin_shift = 0.0
     else:
-        min_ = np.min(data)
+        # Not aligned, bin_shift will be constructed from min_
+        if bin_shift:
+            pass
+        elif range:
+            min_ = range[0]
+        elif data is not None:
+            min_ = np.min(data)
+
     result = FixedWidthBinning(
         bin_width=bin_width,
         includes_right_edge=includes_right_edge,

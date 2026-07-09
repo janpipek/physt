@@ -29,7 +29,7 @@ class TestH1:
             bin_width=100000,
             adaptive=True,
             compute=True,
-            method=method,
+            dask_method=method,
         )
         assert result.total == 1000001
         assert result.bin_right_edges[-1] == 1100000
@@ -42,7 +42,7 @@ class TestH1:
             bin_width=100,
             adaptive=True,
             compute=True,
-            method=method,
+            dask_method=method,
         )
         assert result.total == 1000000
         assert result.bin_right_edges[-1] == 1000
@@ -55,7 +55,7 @@ class TestH1:
             bin_width=100,
             adaptive=True,
             compute=True,
-            method=method,
+            dask_method=method,
         )
         assert result.total == 1000000
         assert result.bin_right_edges[-1] == 2000
@@ -72,7 +72,7 @@ class TestH2:
             bin_width=100000,
             adaptive=True,
             compute=True,
-            method=method,
+            dask_method=method,
         )
         assert result.total == 1000001
 
@@ -86,6 +86,6 @@ class TestH3:
             bin_width=100000,
             adaptive=True,
             compute=True,
-            method=method,
+            dask_method=method,
         )
         assert result.total == 1000001

@@ -140,8 +140,8 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         keep_missed: bool = True,
         stats: Statistics | None = None,
         overflow: float | None = 0.0,
-        underflow: float| None = 0.0,
-        inner_missed: float| None = 0.0,
+        underflow: float | None = 0.0,
+        inner_missed: float | None = 0.0,
         axis_name: str | None = None,
         **kwargs,
     ):
@@ -405,6 +405,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
     ) -> None:
         # TODO: Unify with HistogramBase
         values_array, array_mask = extract_1d_array(values, dropna=dropna)
+        assert values_array is not None
         if self._binning.is_adaptive():
             map = self._binning.force_bin_existence(values_array)
             self._reshape_data(self._binning.bin_count, map)

@@ -491,7 +491,7 @@ def calculate_1d_frequencies(
 
 
 def calculate_1d_bins(
-    array: Optional[np.ndarray], _: Any = None, **kwargs
+    array: Optional[np.ndarray], _: Any = None, *, check_nan: bool = True, **kwargs
 ) -> BinningBase:
     """Find optimal binning from arguments.
 
@@ -511,7 +511,7 @@ def calculate_1d_bins(
 
     """
     if array is not None:
-        if kwargs.pop("check_nan", True):
+        if check_nan:
             if np.any(np.isnan(array)):
                 raise ValueError("Cannot calculate bins in presence of NaN's.")
         if kwargs.get("range"):  # TODO: re-consider the usage of this parameter
@@ -542,6 +542,10 @@ def calculate_1d_bins(
             raise ValueError(f"No binning method '{_}' available.")
     elif callable(_):
         binning = _(array, **kwargs)
+        if not isinstance(binning, BinningBase):
+            raise TypeError(
+                f"The callable passed for bins should return a BinningBase, not {binning.__class__.__name__}"
+            )
     elif np.iterable(_):
         if isinstance(_, list):
             warnings.warn(
