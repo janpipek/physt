@@ -160,7 +160,7 @@ Rationale (for both): physt is dumb, but precise.
 
 ## Dependencies
 
-- Python 3.9+
+- Python 3.10+
 - Numpy 1.25+
 - (optional) polars (1.0+), pandas (1.5+), dask, xarray - if you want to histogram those
 - (optional) matplotlib - simple visualization
