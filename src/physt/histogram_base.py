@@ -450,7 +450,7 @@ class HistogramBase(abc.ABC):
     def is_adaptive(self) -> bool:
         """Whether the binning can be changed with operations."""
         # TODO: remove in favour of adaptive property
-        return all(binning.is_adaptive() for binning in self._binnings)
+        return all(binning.adaptive for binning in self._binnings)
 
     def set_adaptive(self, value: bool = True):
         """Change the histogram binning to (non)adaptive.
