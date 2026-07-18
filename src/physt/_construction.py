@@ -490,7 +490,12 @@ def calculate_1d_frequencies(
 
 
 def calculate_1d_bins(
-    array: np.ndarray | None, _: Any = None, *, check_nan: bool = True, **kwargs
+    array: np.ndarray | None,
+    _: Any = None,
+    *,
+    check_nan: bool = True,
+    range: tuple[float, float] | None = None,
+    **kwargs,
 ) -> BinningBase:
     """Find optimal binning from arguments.
 
@@ -513,7 +518,7 @@ def calculate_1d_bins(
         if check_nan:
             if np.any(np.isnan(array)):
                 raise ValueError("Cannot calculate bins in presence of NaN's.")
-        if kwargs.get("range"):  # TODO: re-consider the usage of this parameter
+        if range:  # TODO: re-consider the usage of this parameter
             array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
     if _ is None:
         bin_count = (

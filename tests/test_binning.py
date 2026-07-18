@@ -3,6 +3,7 @@ import pytest
 
 from physt import binnings
 from physt._construction import calculate_nd_bins
+from physt.binnings import FixedWidthBinning
 
 
 class TestCalculateBinsNd:
@@ -45,6 +46,10 @@ class TestNumpyBins:
 
 
 class TestFixedWidthBins:
+    @pytest.fixture
+    def fixed_width_binning(self) -> FixedWidthBinning:
+        return binnings.FixedWidthBinning(bin_count=2, times_min=0)
+
     def test_without_alignment(self):
         data = np.asarray([4.6, 7.3])
         the_binning = binnings.fixed_width_binning(data, 1.0, align=False)
@@ -55,21 +60,19 @@ class TestFixedWidthBins:
         the_binning = binnings.fixed_width_binning(data, 1.0, align=True)
         assert np.allclose(the_binning.numpy_bins, [4, 5, 6, 7, 8])
 
-    def test_adapt_extension(self):
+    def test_adapt_extension(self, fixed_width_binning):
         b = binnings.FixedWidthBinning(bin_width=10, bin_count=3, min=0, adaptive=True)
-        b2 = binnings.FixedWidthBinning(bin_width=10, bin_count=2, min=0, adaptive=True)
-        m1, m2 = b2.adapt(b)
+        m1, m2 = fixed_width_binning.adapt(b)
         assert tuple(m1) == ((0, 0), (1, 1))
         assert m2 is None
-        assert np.array_equal(b2.numpy_bins, [0, 10, 20, 30])
-        assert b2.bin_count == 3
+        assert np.array_equal(fixed_width_binning.numpy_bins, [0, 10, 20, 30])
+        assert fixed_width_binning.bin_count == 3
 
-    def test_adapt_left(self):
-        b = binnings.FixedWidthBinning(bin_width=10, bin_count=3, min=0, adaptive=True)
+    def test_adapt_left(self, fixed_width_binning):
         b3 = binnings.FixedWidthBinning(
             bin_width=10, bin_count=2, min=50, adaptive=True
         )
-        m1, m2 = b3.adapt(b)
+        m1, m2 = b3.adapt(fixed_width_binning)
         assert tuple(m1) == ((0, 5), (1, 6))
         assert tuple(m2) == ((0, 0), (1, 1), (2, 2))
         assert b3.bin_count == 7

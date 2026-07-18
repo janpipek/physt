@@ -462,7 +462,7 @@ class HistogramBase(abc.ABC):
         This requires binning in all dimensions to allow this.
         """
         # TODO: remove in favour of adaptive property
-        if not all(b.adaptive_allowed for b in self._binnings) and value:
+        if not all(b.adaptable for b in self._binnings) and value:
             raise ValueError("All binnings must allow adaptive behaviour.")
         self._adaptive = value
 

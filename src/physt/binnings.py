@@ -73,34 +73,19 @@ class BinningBase(ABC):
     - define at least one of the following properties: bins, numpy_bins (cached conversion exists)
     - if you modify bins, put _bins and _numpy_bins into proper state (None may be sufficient)
     - checking of proper bins should be done in __init__
-    - if you want to support adaptive histogram, override _force_bin_existence
+    - if you want to support adaptive histogram, override force_bin_existence
     - implement _update_dict to contain the binning representation
     - the constructor (and facade methods) must accept any kwargs (and ignores those that are not used).
     """
 
-    adaptive_allowed: ClassVar[bool] = False
+    adaptable: ClassVar[bool] = False
     """Whether it is possible to update the bins dynamically."""
 
     inconsecutive_allowed: ClassVar[bool] = False
     """Whether it is possible to have bins with gaps."""
 
-    adaptive: bool = attrs.field(default=False, kw_only=True)
-    """Whether the binning is adaptive (bins are updated dynamically)."""
-
-    @adaptive.validator
-    def _validate_adaptive(self, attribute, value) -> bool:
-        if value and not self.adaptive_allowed:
-            raise ValueError(f"Adaptivity not allowed for {self.__class__.__name__}.")
-        return value
-
     includes_right_edge: bool = attrs.field(default=False, kw_only=True)
     """Whether the right edge of the last bin is included in the binning."""
-
-    def __attrs_post_init__(self):
-        if self.includes_right_edge and self.adaptive:
-            raise ValueError(
-                "Adaptivity does not work together with right-edge inclusion."
-            )
 
     @overload
     def __getitem__(self, index: slice) -> StaticBinning: ...
@@ -131,7 +116,6 @@ class BinningBase(ABC):
         to add details.
         """
         result: dict[str, Any] = {
-            "adaptive": self.adaptive,
             "binning_type": type(self).__name__,
         }
         self._update_dict(result)
@@ -162,8 +146,9 @@ class BinningBase(ABC):
             return is_consecutive(self.bins, rtol=rtol, atol=atol)
         return True
 
-    @final
-    def force_bin_existence(self, values: ArrayLike) -> int | BinMap | None:
+    def force_bin_existence(
+        self, values: ArrayLike
+    ) -> tuple["BinningBase", int | BinMap | None]:
         """Change schema so that there is a bin for value.
 
         It is necessary to implement the _force_bin_existence template method.
@@ -180,14 +165,6 @@ class BinningBase(ABC):
             otherwise => the iterable contains tuples (old bin index, new bin index)
                 new bin index can occur multiple times, which corresponds to bin merging
         """
-        if not self.is_adaptive():
-            raise RuntimeError("Histogram is not adaptive.")
-        else:
-            return self._force_bin_existence(values)
-
-    def _force_bin_existence(self, values: ArrayLike) -> int | BinMap | None:
-        # Implement this if appropriate. It cannot be an abstract method.
-        # It does not check whether the binning is adaptive
         raise NotImplementedError()
 
     @final
@@ -207,8 +184,6 @@ class BinningBase(ABC):
         ----
         Implement the `_adapt` template method.
         """
-        if not self.is_adaptive():
-            raise RuntimeError("Cannot adapt non-adaptive binning.")
         if np.array_equal(self.bins, other.bins):
             # Already adapted
             return None, None
@@ -453,7 +428,7 @@ class NumpyBinning(EdgeBasedBinning):
 class FixedWidthBinning(EdgeBasedBinning):
     """Binning schema with predefined bin width."""
 
-    adaptive_allowed: ClassVar[bool] = True
+    adaptable: ClassVar[bool] = True
 
     bin_count: int = attrs.field(default=0)
     bin_width: float = attrs.field(default=1.0, converter=float)
@@ -487,8 +462,11 @@ class FixedWidthBinning(EdgeBasedBinning):
         bin_width: float,
         includes_right_edge: bool = False,
         align: bool = True,
+        shift: float | None = None,
     ) -> "FixedWidthBinning":
-        times_min = int(np.floor(min_ / bin_width))
+        if align and shift:
+            raise ValueError("Cannot align with shift.")
+        times_min = int(np.floor(min_ - (shift or 0.0) / bin_width))
         shift = 0 if align else min_ - times_min * bin_width
         bin_count = max(1, int(np.floor(max_ - (times_min * bin_width + shift))))
         if includes_right_edge and shift + bin_count * bin_width == max_:
@@ -507,8 +485,6 @@ class FixedWidthBinning(EdgeBasedBinning):
             f"{self.__class__.__name__}(bin_width={self.bin_width}, "
             f"bin_count={self.bin_count}, min={self.first_edge}"
         )
-        if self.is_adaptive():
-            result += ", adaptive=True"
         return result + ")"
 
     def is_regular(self, **kwargs) -> bool:
@@ -543,9 +519,9 @@ class FixedWidthBinning(EdgeBasedBinning):
             else:
                 return None
 
-    def _force_bin_existence(
+    def force_bin_existence(
         self, values: ArrayLike, *, includes_right_edge=None
-    ) -> int | BinMap | None:
+    ) -> tuple[FixedWidthBinning, int | BinMap | None]:
         if np.isscalar(values):
             return self._force_bin_existence_single(
                 cast(float, values), includes_right_edge=includes_right_edge
@@ -655,7 +631,7 @@ class FixedWidthBinning(EdgeBasedBinning):
 class ExponentialBinning(EdgeBasedBinning):
     """Binning schema with exponentially distributed bins."""
 
-    adaptive_allowed: ClassVar[bool] = False
+    adaptable: ClassVar[bool] = False
 
     bin_count: int = attrs.field()
     log_min: float
@@ -747,10 +723,9 @@ def pretty_binning(
     range: RangeTuple | None = None,
     min_bin_width: float | None = None,
     max_bin_width: float | None = None,
-    adaptive: bool = False,
     includes_right_edge: bool = False,
 ) -> FixedWidthBinning:
-    """Construct fixed-width ninning schema with bins automatically optimized to human-friendly widths.
+    """Construct fixed-width binning schema with bins automatically optimized to human-friendly widths.
 
     Typical widths are: 1.0, 25,0, 0.02, 500, 2.5e-7, ...
 
@@ -788,7 +763,6 @@ def pretty_binning(
         data=data,
         range=range,
         align=True,
-        adaptive=adaptive,
         includes_right_edge=includes_right_edge,
     )
 
@@ -859,7 +833,6 @@ def static_binning(
 def integer_binning(
     data: np.ndarray | None = None,
     *,
-    adaptive: bool = False,
     range: tuple[int, int] | None = None,
     bin_width: int = 1,
 ) -> FixedWidthBinning:
@@ -874,7 +847,7 @@ def integer_binning(
     if range:
         kwargs["range"] = tuple(r - 0.5 for r in range)
     else:
-        kwargs["bin_shift"] = 0.5
+        kwargs["shift"] = 0.5
     return fixed_width_binning(data=data, bin_width=bin_width, align=False, **kwargs)
 
 
@@ -885,7 +858,6 @@ def fixed_width_binning(
     *,
     min_: float | None = None,
     bin_count: int | None = None,
-    adaptive: bool = False,
     range: RangeTuple | None = None,
     align: bool | None = None,
     includes_right_edge: bool = False,
@@ -919,8 +891,6 @@ def fixed_width_binning(
             if align is None:
                 # We should respect the lower bound of the range
                 align = False
-            if adaptive:
-                raise ValueError("Cannot set `adaptive` when `range` is set.")
             align = False
             min_ = range[0]
             max_ = range[1]
@@ -936,7 +906,6 @@ def fixed_width_binning(
     return FixedWidthBinning(
         bin_width=bin_width,
         includes_right_edge=includes_right_edge,
-        adaptive=adaptive,
     )
 
 
