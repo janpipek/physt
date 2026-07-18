@@ -115,7 +115,6 @@ def h1(
         array,
         bins,
         check_nan=not dropna and array is not None,
-        adaptive=adaptive,
         **kwargs,
     )
 
@@ -229,9 +228,7 @@ def h(
 
     weights = extract_weights(weights, array_mask=array_mask)
 
-    bin_schemas = calculate_nd_bins(
-        array, bins, dim=dim, check_nan=check_nan, adaptive=adaptive, **kwargs
-    )
+    bin_schemas = calculate_nd_bins(array, bins, dim=dim, check_nan=check_nan, **kwargs)
 
     # Prepare remaining data
     klass: type[HistogramND] = Histogram2D if dim == 2 else HistogramND  # type: ignore

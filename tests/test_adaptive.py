@@ -127,7 +127,7 @@ class TestAdaptiveND:
     def test_create_empty(self):
         h = histogramdd(None, "fixed_width", bin_width=10, dim=7, adaptive=True)
         assert h.ndim == 7
-        assert h.is_adaptive()
+        assert h.is_adaptive
 
     # TODO: Add a few more tests?
 

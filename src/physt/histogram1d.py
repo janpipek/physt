@@ -366,7 +366,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         Note: Name was selected because of the eponymous method in ROOT
         """
         self._coerce_dtype(type(weight))
-        if self._binning.is_adaptive():
+        if self.is_adaptive:
             bin_map = self._binning.force_bin_existence(value)
             self._reshape_data(self._binning.bin_count, bin_map)
 
@@ -407,7 +407,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         # TODO: Unify with HistogramBase
         values_array, array_mask = extract_1d_array(values, dropna=dropna)
         assert values_array is not None
-        if self._binning.is_adaptive():
+        if self.is_adaptive:
             map = self._binning.force_bin_existence(values_array)
             self._reshape_data(self._binning.bin_count, map)
         weights_array = extract_weights(weights, array_mask=array_mask)

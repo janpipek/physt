@@ -875,9 +875,7 @@ def integer_binning(
         kwargs["range"] = tuple(r - 0.5 for r in range)
     else:
         kwargs["bin_shift"] = 0.5
-    return fixed_width_binning(
-        data=data, bin_width=bin_width, align=False, adaptive=adaptive, **kwargs
-    )
+    return fixed_width_binning(data=data, bin_width=bin_width, align=False, **kwargs)
 
 
 @register_binning()
