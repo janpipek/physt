@@ -479,9 +479,7 @@ class FixedWidthBinning(EdgeBasedBinning):
     def is_regular(self, **kwargs) -> bool:
         return True
 
-    def _extended_bins_to_adapt(
-        self, values: ArrayLike
-    ) -> tuple[int | None, int | None]:
+    def _extended_bins_to_adapt(self, values: ArrayLike) -> tuple[int, int]:
         """Find how many bins to add to both sides to cover `values`."""
         if np.isscalar(values):
             return self._extended_bins_to_adapt_single(cast(float, values))
@@ -490,18 +488,16 @@ class FixedWidthBinning(EdgeBasedBinning):
         _, add_right = self._extended_bins_to_adapt_single(array.max())
         return add_left, add_right
 
-    def _extended_bins_to_adapt_single(
-        self, value: float
-    ) -> tuple[int | None, int | None]:
+    def _extended_bins_to_adapt_single(self, value: float) -> tuple[int, int]:
         if value < self.numpy_bins[0]:
             add_left = int(np.ceil((self.numpy_bins[0] - value) / self.bin_width))
-            return add_left, None
+            return add_left, 0
         if value > self.numpy_bins[-1]:
             add_right = int(np.ceil((value - self.numpy_bins[-1]) / self.bin_width))
-            return add_right, None
+            return 0, add_right
         if value == self.numpy_bins[-1]:
-            return 1, None
-        return None, None
+            return 0, 1
+        return 0, 0
 
     def coerce_values(self, values: ArrayLike) -> tuple["BinningBase", int | None]:
         if self.bin_count == 0:
@@ -518,7 +514,12 @@ class FixedWidthBinning(EdgeBasedBinning):
             # Nothing changes
             return self, None
         # We only shift (potentially by 0)
-        return self, add_left
+        new_binning = attrs.evolve(
+            self,
+            bin_count=self.bin_count + add_left + add_right,
+            times_min=self.times_min - add_left,
+        )
+        return new_binning, add_left
 
     @property
     def first_edge(self) -> float:

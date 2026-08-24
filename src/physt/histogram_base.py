@@ -590,14 +590,14 @@ class HistogramBase(abc.ABC):
     ):
         """Fill new data arrays using a map.
 
-        It modifies new_frequencies and new_errors2 in-place.
+        Note: It modifies new_frequencies and new_errors2 in-place!
 
         Parameters
         ----------
         old_frequencies : Source of frequencies data
-        new_frequencies : Target of frequencies data
+        new_frequencies : Target of frequencies data (updated)
         old_errors2 : Source of errors data
-        new_errors2 : Target of errors data
+        new_errors2 : Target of errors data (updated)
         bin_map: Iterable[(old, new)] or int or None
             As in _reshape_data
         axis: On which axis to apply
