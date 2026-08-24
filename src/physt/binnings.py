@@ -175,7 +175,7 @@ class BinningBase(ABC):
         if np.array_equal(self.bins, other.bins):
             return self, None, None
         if is_bin_subset(other.bins, self.bins):
-            indices = np.searchsorted(other.bins[:, 0], self.bins[:, 0])
+            indices = np.searchsorted(self.bins[:, 0], other.bins[:, 0])
             return self, None, list(enumerate(indices))
 
         # Otherwise, the subclass needs to implement it

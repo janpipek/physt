@@ -6,19 +6,20 @@ from physt import binnings, h2, histogram_nd
 from physt.binnings import BinningBase, as_binning
 from physt.histogram_nd import Histogram2D
 
-vals = np.asarray(
-    [
-        [0.1, 2.0],
-        [-0.1, 0.7],
-        [0.2, 1.5],
-        [0.2, -1.5],
-        [0.2, 1.47],
-        [1.2, 1.23],
-        [0.7, 0.5],
-    ]
-)
 
-np.random.seed(42)
+@pytest.fixture
+def values() -> np.ndarray:
+    return np.asarray(
+        [
+            [0.1, 1.9],
+            [-0.1, 0.7],
+            [0.2, 1.5],
+            [0.2, -1.5],
+            [0.2, 1.47],
+            [1.2, 1.23],
+            [0.7, 0.5],
+        ]
+    )
 
 
 @pytest.fixture
@@ -37,33 +38,36 @@ def h3x3(bins0to3, a3x3) -> Histogram2D:
     return Histogram2D(binnings=[bins0to3, bins0to3], frequencies=a3x3)
 
 
+np.random.seed(42)
+
+
 class TestCalculateFrequencies:
-    def test_simple(self):
+    def test_simple(self, values):
         bins = [[0, 1, 2], [0, 1, 2]]
         schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
         frequencies, errors2, missing = histogram_nd.calculate_nd_frequencies(
-            vals, binnings=schemas
+            values, binnings=schemas
         )
         assert np.array_equal([[1, 3], [0, 1]], frequencies)
         assert missing == 2
         assert errors2 is None
 
-    def test_gap(self):
+    def test_gap(self, values):
         bins = [[[-1, 0], [1, 2]], [[-2, -1], [1, 2]]]
         schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
         frequencies, errors2, missing = histogram_nd.calculate_nd_frequencies(
-            vals, binnings=schemas
+            values, binnings=schemas
         )
         assert np.array_equal([[0, 0], [0, 1]], frequencies)
         assert missing == 6
         assert errors2 is None
 
-    def test_errors(self):
+    def test_errors(self, values):
         bins = [[[-1, 0], [1, 2]], [[-2, -1], [1, 2]]]
         weights = np.asarray([2, 1, 1, 1, 1, 2, 1])
         schemas = [binnings.static_binning(None, bins=np.asarray(bs)) for bs in bins]
         frequencies, errors2, missing = histogram_nd.calculate_nd_frequencies(
-            vals, binnings=schemas, weights=weights
+            values, binnings=schemas, weights=weights
         )
         assert np.array_equal([[0, 0], [0, 2]], frequencies)
         assert missing == 7
@@ -80,14 +84,13 @@ class TestHistogram2D:
         assert h2.name == "Some histogram"
         assert h2.axis_names == ("x", "y")
 
-    def test_dropna(self):
-        vals2 = np.array(vals)
-        vals2[0, 1] = np.nan
+    def test_dropna(self, values):
+        values[0, 1] = np.nan
         with pytest.raises(
             ValueError, match="Cannot calculate bins in presence of NaN's"
         ):
-            hist = physt.h2(vals2[:, 0], vals2[:, 1], dropna=False)
-        hist = physt.h2(vals2[:, 0], vals2[:, 1])
+            physt.h2(values[:, 0], values[:, 1], dropna=False)
+        hist = physt.h2(values[:, 0], values[:, 1])
         assert hist.frequencies.sum() == 6
 
 
