@@ -22,7 +22,6 @@ def create_adaptive():
                 bin_width=1,
                 bin_count=dim,
                 times_min=0 if shape[i] else None,
-                adaptive=True,
             )
             for i, dim in enumerate(shape)
         ]

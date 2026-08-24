@@ -408,8 +408,8 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         values_array, array_mask = extract_1d_array(values, dropna=dropna)
         assert values_array is not None
         if self.is_adaptive:
-            map = self._binning.force_bin_existence(values_array)
-            self._reshape_data(self._binning.bin_count, map)
+            bin_map = self._binning.force_bin_existence(values_array)
+            self._reshape_data(self._binning.bin_count, bin_map)
         weights_array = extract_weights(weights, array_mask=array_mask)
         if weights_array is not None:
             self._coerce_dtype(weights_array.dtype)

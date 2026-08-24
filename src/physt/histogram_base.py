@@ -864,7 +864,6 @@ class HistogramBase(abc.ABC):
             if other.ndim != self.ndim:
                 raise ValueError("Cannot add histograms with different dimensions.")
             if self.has_same_bins(other):
-                # print("Has same!!!!!!!!!!")
                 self._coerce_dtype(other.dtype)
                 self.frequencies = self.frequencies + other.frequencies
                 self.errors2 = self.errors2 + other.errors2
@@ -875,15 +874,14 @@ class HistogramBase(abc.ABC):
 
                 other = other.copy()
                 other.is_adaptive = True
-
                 self._coerce_dtype(other.dtype)
 
                 for i in range(self.ndim):
-                    new_bins = self._binnings[i].copy()
-
-                    map1, map2 = new_bins.adapt(other._binnings[i])
-                    self._change_binning(new_bins, map1, axis=i)
-                    other._change_binning(new_bins, map2, axis=i)
+                    new_binning, map1, map2 = self._binnings[i].coerce(
+                        other._binnings[i]
+                    )
+                    self._change_binning(new_binning, map1, axis=i)
+                    other._change_binning(new_binning, map2, axis=i)
                 self.frequencies = self.frequencies + other.frequencies
                 self.errors2 = self.errors2 + other.errors2
             else:

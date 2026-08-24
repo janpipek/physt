@@ -159,6 +159,7 @@ class BinningBase(ABC):
 
         Returns
         -------
+        binning: New binning that fits all values
         bin_map: BinMap or None or int
             None => There was no change in bins
             int => The bins are only shifted (allows mass assignment)
@@ -167,31 +168,25 @@ class BinningBase(ABC):
         """
         raise NotImplementedError()
 
-    @final
-    def adapt(self, other: "BinningBase") -> tuple[BinMap | None, BinMap | None]:
-        """Adapt this binning so that it contains all bins of another binning.
+    def coerce(
+        self, other: "BinningBase"
+    ) -> tuple["BinningBase", BinMap | None, BinMap | None]:
+        """..."""
 
-        Parameters
-        ----------
-        other: BinningBase
-
-        Returns
-        -------
-        map1: A remapping from old bins to new bins. If not changed, None.
-        map2: A remapping of `other` bins to new bins. If not changed, None.
-
-        Note
-        ----
-        Implement the `_adapt` template method.
-        """
+        # Two trivial situation with which we can deal here
         if np.array_equal(self.bins, other.bins):
-            # Already adapted
-            return None, None
-        return self._adapt(other)
+            return self, None, None
+        if is_bin_subset(other.bins, self.bins):
+            indices = np.searchsorted(other.bins[:, 0], self.bins[:, 0])
+            return self, None, list(enumerate(indices))
 
-    def _adapt(self, other: "BinningBase") -> tuple[BinMap | None, BinMap | None]:
-        # Implement this if appropriate. It cannot be an abstract method.
-        raise RuntimeError(f"Cannot adapt {self.__class__.__name__}.")
+        # Otherwise, the subclass needs to implement it
+        return self._coerce(other)
+
+    def _coerce(
+        self, other: "BinningBase"
+    ) -> tuple["BinningBase", BinMap | None, BinMap | None]:
+        raise NotImplementedError()
 
     def __eq__(self, other: object) -> bool:
         if self is other:
@@ -431,7 +426,7 @@ class FixedWidthBinning(EdgeBasedBinning):
     adaptable: ClassVar[bool] = True
 
     bin_count: int = attrs.field(default=0)
-    bin_width: float = attrs.field(default=1.0, converter=float)
+    bin_width: float = attrs.field(converter=float)
     times_min: int | None = attrs.field(default=None)
     shift: float = 0.0
 
@@ -492,63 +487,58 @@ class FixedWidthBinning(EdgeBasedBinning):
     def is_regular(self, **kwargs) -> bool:
         return True
 
-    def _force_bin_existence_single(
-        self, value: float, *, includes_right_edge: bool | None = None
-    ) -> tuple["FixedWidthBinning", int | None]:
-        if includes_right_edge is None:
-            includes_right_edge = self.includes_right_edge
+    def _extended_bins_to_adapt(
+        self, values: ArrayLike
+    ) -> tuple[int | None, int | None]:
+        """Find how many bins to add to both sides to cover `values`."""
+        if np.isscalar(values):
+            return self._extended_bins_to_adapt_single(cast(float, values))
+        array = np.asanyarray(values, copy=False)
+        add_left, _ = self._extended_bins_to_adapt_single(array.min())
+        _, add_right = self._extended_bins_to_adapt_single(array.max())
+        return add_left, add_right
 
-        if self._bin_count == 0:
-            self._times_min = int(np.floor((value - self._shift) / self.bin_width))
-            self._bin_count = 1
-            # No bins yet, no remapping needed
-            return 0
-        else:
-            add_left = add_right = 0
-            if value < self.numpy_bins[0]:
-                add_left = int(np.ceil((self.numpy_bins[0] - value) / self.bin_width))
-                self._times_min -= add_left  # type: ignore  # We know it is not None
-                self._bin_count += add_left
-            elif value >= self.numpy_bins[-1]:
-                add_right = (value - self.numpy_bins[-1]) / self.bin_width
-                add_right = int(np.ceil(add_right))
-                self._bin_count += add_right
-                if self.last_edge == value and not includes_right_edge:
-                    add_right += 1
-                    self._bin_count += 1
-            if add_left or add_right:
-                return add_left
-            else:
-                return None
+    def _extended_bins_to_adapt_single(
+        self, value: float
+    ) -> tuple[int | None, int | None]:
+        if value < self.numpy_bins[0]:
+            add_left = int(np.ceil((self.numpy_bins[0] - value) / self.bin_width))
+            return add_left, None
+        if value > self.numpy_bins[-1]:
+            add_right = int(np.ceil((value - self.numpy_bins[-1]) / self.bin_width))
+            return add_right, None
+        if value == self.numpy_bins[-1]:
+            return 1, None
+        return None, None
 
     def force_bin_existence(
-        self, values: ArrayLike, *, includes_right_edge=None
-    ) -> tuple[FixedWidthBinning, int | BinMap | None]:
-        if np.isscalar(values):
-            return self._force_bin_existence_single(
-                cast(float, values), includes_right_edge=includes_right_edge
+        self, values: ArrayLike
+    ) -> tuple["BinningBase", int | None]:
+        if self.bin_count == 0:
+            if self.shift:
+                # TODO: Do this
+                raise NotImplementedError("A hístogram with shift and ")
+            return fixed_width_binning(values, bin_width=self.bin_width)
+        add_left, add_right = self._extended_bins_to_adapt(values)
+        if add_right and self.includes_right_edge:
+            raise ValueError(
+                "Cannot extend to the right if the last bin includes the right edge."
             )
-        else:
-            arr = np.asarray(values)
-            min_, max_ = arr.min(), arr.max()
-            result = self._force_bin_existence_single(min_)
-            result2 = self._force_bin_existence_single(
-                max_, includes_right_edge=includes_right_edge
-            )
-            if result is None:
-                return result2
-            else:
-                return result
+        if not add_left and not add_right:
+            # Nothing changes
+            return self, None
+        # We only shift (potentially by 0)
+        return self, add_left
 
     @property
     def first_edge(self) -> float:
-        return self._bin_width * self._validate_times_min() + self._shift
+        return self.bin_width * self._validate_times_min() + self.shift
 
     @property
     def last_edge(self) -> float:
         return (
-            self._validate_times_min() + self._bin_count
-        ) * self._bin_width + self._shift
+            self._validate_times_min() + self.bin_count
+        ) * self.bin_width + self.shift
 
     @property
     # TODO: Cache this
@@ -567,54 +557,39 @@ class FixedWidthBinning(EdgeBasedBinning):
             )
         return self.times_min
 
-    def _force_new_min_max(self, new_min, new_max) -> BinMap | None:
-        bin_map = None
-        add_right = add_left = 0
-        times_min = self._validate_times_min()
-        if new_min < times_min:  # type: ignore
-            add_left = times_min - new_min
-        if new_max - times_min > self._bin_count:  # type: ignore
-            add_right = new_max - times_min - self._bin_count
-        if add_left or add_right:
-            bin_map = ((i, i + add_left) for i in range(self._bin_count))
-            self._set_min_and_count(
-                times_min - add_left, self._bin_count + add_left + add_right
-            )
-        return bin_map
-
-    def _set_min_and_count(self, times_min: int | None, bin_count: int) -> None:
-        self._bin_count = bin_count
-        self._times_min = times_min
-
-    def _adapt(self, other: BinningBase) -> tuple[BinMap | None, BinMap | None]:
+    def _coerce(
+        self, other: BinningBase
+    ) -> tuple[BinningBase, BinMap | int | None, BinMap | int | None]:
         other = other.as_fixed_width()
         if self.bin_width != other.bin_width:
             raise ValueError(
-                "Cannot adapt fixed-width histograms with different widths"
+                f"Cannot adapt fixed-width histograms with different bin widths: {self.bin_width} vs {other.bin_width}."
             )
-        if self._shift != other._shift:
+        if self.shift != other.shift:
             raise ValueError(
-                f"Cannot adapt shifted fixed-width histograms: {self._shift} vs {other._shift}"
+                f"Cannot adapt shifted fixed-width histograms: {self.shift} vs {other.shift}"
             )
-        # Following operations modify schemas
-        other = other.copy()
-        if other.bin_count == 0:
-            return None, ()
+
+        # Trivial cases
         if self.bin_count == 0:
-            self._set_min_and_count(other._times_min, other.bin_count)
-            return (), None
+            return other, None, None
+        if other.bin_count == 0:
+            return self, None, None
 
-        times_min = self._validate_times_min()
-        other_times_min = other._validate_times_min()
-
-        new_min: float = min(times_min, other_times_min)
-        new_max: float = max(
-            times_min + self._bin_count, other_times_min + other._bin_count
+        new_times_min = min(self.times_min, other.times_min)
+        new_times_max = max(
+            self.times_min + self.bin_count, other.times_min + other.bin_count
+        )
+        result = FixedWidthBinning(
+            bin_width=self.bin_width,
+            times_min=new_times_min,
+            bin_count=new_times_max - new_times_min,
+            shift=self.shift,
         )
 
-        bin_map1 = self._force_new_min_max(new_min, new_max)
-        bin_map2 = other._force_new_min_max(new_min, new_max)
-        return bin_map1, bin_map2
+        bin_map1 = self.times_min - new_times_min
+        bin_map2 = other.times_min - new_times_min
+        return result, bin_map1, bin_map2
 
     def as_fixed_width(self, *, copy: bool = True) -> "FixedWidthBinning":
         if copy:
@@ -858,10 +833,10 @@ def fixed_width_binning(
     data: np.ndarray | None = None,
     bin_width: float = 1.0,
     *,
-    min_: float | None = None,
     bin_count: int | None = None,
     range: RangeTuple | None = None,
     align: bool | None = None,
+    shift: float | None = None,
     includes_right_edge: bool = False,
 ) -> FixedWidthBinning:
     """Construct fixed-width binning schema.
@@ -870,7 +845,9 @@ def fixed_width_binning(
     ----------
     bin_width: float
     range: (min, max)
-    align: Must be multiple of bin_width
+    align: all edges must align with multiples of the bin_width
+        i.e. we cannot have [47, 49, 51] for bin_width=2
+    shift:
     """
     if data is not None or range:
         # First try to create from limits
@@ -902,12 +879,14 @@ def fixed_width_binning(
             max_=max_,
             bin_width=bin_width,
             align=align,
+            shift=shift,
             includes_right_edge=includes_right_edge,
         )
 
     return FixedWidthBinning(
         bin_width=bin_width,
         includes_right_edge=includes_right_edge,
+        shift=shift or 0.0,
     )
 
 
