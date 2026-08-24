@@ -49,7 +49,7 @@ class TestFixedWidthBins:
     @pytest.fixture
     def fixed_width_binning(self) -> FixedWidthBinning:
         # Bins: [0, 10, 20]
-        return binnings.FixedWidthBinning(bin_width=10, bin_count=2, times_min=0)
+        return binnings.FixedWidthBinning(bin_width=10, bin_count=2, bin_times_min=0)
 
     def test_numpy_bins(self, fixed_width_binning):
         assert np.array_equal(fixed_width_binning.numpy_bins, [0, 10, 20])
@@ -67,7 +67,9 @@ class TestFixedWidthBins:
 
     class TestCoercion:
         def test_coerce_extension(self, fixed_width_binning):
-            other = binnings.FixedWidthBinning(bin_width=10, bin_count=3, times_min=0)
+            other = binnings.FixedWidthBinning(
+                bin_width=10, bin_count=3, bin_times_min=0
+            )
             new, m1, m2 = fixed_width_binning.coerce(other)
             assert m1 == 0
             assert m2 == 0
@@ -77,7 +79,7 @@ class TestFixedWidthBins:
             other = binnings.FixedWidthBinning(
                 bin_width=10,
                 bin_count=2,
-                times_min=-1,
+                bin_times_min=-1,
             )
             # Bins: [-10, 0, 10]
             new, m1, m2 = fixed_width_binning.coerce(other)
@@ -89,7 +91,7 @@ class TestFixedWidthBins:
             other = binnings.FixedWidthBinning(
                 bin_width=10,
                 bin_count=2,
-                times_min=1,
+                bin_times_min=1,
             )
             # Bins: [10, 20, 30]
             new, m1, m2 = fixed_width_binning.coerce(other)
@@ -101,7 +103,7 @@ class TestFixedWidthBins:
             other = binnings.FixedWidthBinning(
                 bin_width=10,
                 bin_count=1,
-                times_min=3,
+                bin_times_min=3,
             )
             # Bins: [30, 40]
             new, m1, m2 = fixed_width_binning.coerce(other)
@@ -110,7 +112,9 @@ class TestFixedWidthBins:
             assert np.array_equal(new.numpy_bins, [0, 10, 20, 30, 40])
 
         def test_coerce_subset(self, fixed_width_binning):
-            other = binnings.FixedWidthBinning(bin_width=10, bin_count=4, times_min=-1)
+            other = binnings.FixedWidthBinning(
+                bin_width=10, bin_count=4, bin_times_min=-1
+            )
             new1, m1, m2 = fixed_width_binning.coerce(other)
             assert m1 == 1
             assert m2 == 0
@@ -121,16 +125,16 @@ class TestFixedWidthBins:
             assert new1 == new2
 
         def test_coerce_invalid(self):
-            b1 = binnings.FixedWidthBinning(bin_width=10, bin_count=2, times_min=0)
+            b1 = binnings.FixedWidthBinning(bin_width=10, bin_count=2, bin_times_min=0)
             b2 = binnings.FixedWidthBinning(
-                bin_width=10, bin_count=2, times_min=0, shift=1
+                bin_width=10, bin_count=2, bin_times_min=0, bin_shift=1
             )
             with pytest.raises(
                 ValueError, match="Cannot coerce shifted fixed-width histograms"
             ):
                 b1.coerce(b2)
 
-            b3 = binnings.FixedWidthBinning(bin_width=5, bin_count=6, times_min=0)
+            b3 = binnings.FixedWidthBinning(bin_width=5, bin_count=6, bin_times_min=0)
             with pytest.raises(
                 ValueError,
                 match="Cannot coerce fixed-width histograms with different bin widths",

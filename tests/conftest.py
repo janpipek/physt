@@ -21,7 +21,7 @@ def create_adaptive():
             FixedWidthBinning(
                 bin_width=1,
                 bin_count=dim,
-                times_min=0 if shape[i] else None,
+                bin_times_min=0 if shape[i] else None,
             )
             for i, dim in enumerate(shape)
         ]

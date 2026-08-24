@@ -3,7 +3,7 @@
 See https://geant4.web.cern.ch/ for the project pages.
 """
 
-import codecs
+from pathlib import Path
 
 import numpy as np
 
@@ -12,7 +12,7 @@ from physt.statistics import Statistics
 from physt.types import Histogram1D, Histogram2D
 
 
-def load_csv(path: str) -> Histogram1D | Histogram2D:
+def load_csv(path: str | Path) -> Histogram1D | Histogram2D:
     """Loads a histogram as output from Geant4 analysis tools in CSV format.
 
     Parameters
@@ -26,7 +26,7 @@ def load_csv(path: str) -> Histogram1D | Histogram2D:
     """
     meta = []
     data_raw = []
-    with codecs.open(path, encoding="ASCII") as in_file:
+    with Path(path).open("r", encoding="ASCII") as in_file:
         for line in in_file:
             if line.startswith("#"):
                 key, value = line[1:].strip().split(" ", 1)
@@ -59,7 +59,9 @@ def _create_h1(data, meta) -> Histogram1D:
     min_ = float(min_)
     max_ = float(max_)
     binning = fixed_width_binning(
-        bin_width=(max_ - min_) / bin_count, range=(min_, max_)
+        bin_width=(max_ - min_) / bin_count,
+        range=(min_, max_),
+        includes_right_edge=True,
     )
     stats = Statistics(sum=data[1:-1, 3].sum(), sum2=data[1:-1, 4].sum())
 
@@ -84,7 +86,9 @@ def _create_h2(data, meta) -> Histogram2D:
         min_ = float(min_)
         max_ = float(max_)
         binning = fixed_width_binning(
-            bin_width=(max_ - min_) / bin_count, range=(min_, max_)
+            bin_width=(max_ - min_) / bin_count,
+            range=(min_, max_),
+            includes_right_edge=True,
         )
         binnings.append(binning)
 

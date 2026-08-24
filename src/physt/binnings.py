@@ -420,10 +420,10 @@ class FixedWidthBinning(EdgeBasedBinning):
 
     bin_count: int = attrs.field(default=0)
     bin_width: float = attrs.field(converter=float)
-    times_min: int | None = attrs.field(default=None)
-    shift: float = 0.0
+    bin_times_min: int | None = attrs.field(default=None)
+    bin_shift: float = 0.0
 
-    @times_min.validator
+    @bin_times_min.validator
     def _validate_times_min(self, attribute, value):
         if value is None and self.bin_count > 0:
             raise ValueError("times_min must be defined when bin_count > 0.")
@@ -465,8 +465,8 @@ class FixedWidthBinning(EdgeBasedBinning):
         return cls(
             bin_width=bin_width,
             bin_count=bin_count,
-            times_min=times_min,
-            shift=shift,
+            bin_times_min=times_min,
+            bin_shift=shift,
             includes_right_edge=includes_right_edge,
         )
 
@@ -503,7 +503,7 @@ class FixedWidthBinning(EdgeBasedBinning):
 
     def coerce_values(self, values: ArrayLike) -> tuple["BinningBase", int | None]:
         if self.bin_count == 0:
-            if self.shift:
+            if self.bin_shift:
                 # TODO: Implement this
                 raise NotImplementedError()
             return fixed_width_binning(values, bin_width=self.bin_width), None
@@ -519,19 +519,19 @@ class FixedWidthBinning(EdgeBasedBinning):
         new_binning = attrs.evolve(
             self,
             bin_count=self.bin_count + add_left + add_right,
-            times_min=self.times_min - add_left,
+            bin_times_min=self.bin_times_min - add_left,
         )
         return new_binning, add_left
 
     @property
     def first_edge(self) -> float:
-        return self.bin_width * self._validate_times_min() + self.shift
+        return self.bin_width * self._validate_times_min() + self.bin_shift
 
     @property
     def last_edge(self) -> float:
         return (
             self._validate_times_min() + self.bin_count
-        ) * self.bin_width + self.shift
+        ) * self.bin_width + self.bin_shift
 
     @property
     # TODO: Cache this
@@ -540,15 +540,15 @@ class FixedWidthBinning(EdgeBasedBinning):
             return np.zeros((0, 2), dtype=float)
         return (
             self._validate_times_min() + np.arange(self.bin_count + 1, dtype=int)
-        ) * self.bin_width + self.shift
+        ) * self.bin_width + self.bin_shift
 
     def _validate_times_min(self) -> int:
         """Check the binning is well-defined and return the times min."""
-        if self.times_min is None:
+        if self.bin_times_min is None:
             raise ValueError(
                 "No bins and not enough information to provide first edge."
             )
-        return self.times_min
+        return self.bin_times_min
 
     def _coerce(
         self, other: BinningBase
@@ -558,9 +558,9 @@ class FixedWidthBinning(EdgeBasedBinning):
             raise ValueError(
                 f"Cannot coerce fixed-width histograms with different bin widths: {self.bin_width} vs {other.bin_width}."
             )
-        if self.shift != other.shift:
+        if self.bin_shift != other.bin_shift:
             raise ValueError(
-                f"Cannot coerce shifted fixed-width histograms: {self.shift} vs {other.shift}"
+                f"Cannot coerce shifted fixed-width histograms: {self.bin_shift} vs {other.bin_shift}"
             )
 
         # Trivial cases
@@ -569,19 +569,19 @@ class FixedWidthBinning(EdgeBasedBinning):
         if other.bin_count == 0:
             return self, None, None
 
-        new_times_min = min(self.times_min, other.times_min)
+        new_times_min = min(self.bin_times_min, other.bin_times_min)
         new_times_max = max(
-            self.times_min + self.bin_count, other.times_min + other.bin_count
+            self.bin_times_min + self.bin_count, other.bin_times_min + other.bin_count
         )
         result = FixedWidthBinning(
             bin_width=self.bin_width,
-            times_min=new_times_min,
+            bin_times_min=new_times_min,
             bin_count=new_times_max - new_times_min,
-            shift=self.shift,
+            bin_shift=self.bin_shift,
         )
 
-        bin_map1 = self.times_min - new_times_min
-        bin_map2 = other.times_min - new_times_min
+        bin_map1 = self.bin_times_min - new_times_min
+        bin_map2 = other.bin_times_min - new_times_min
         return result, bin_map1, bin_map2
 
     def as_fixed_width(self, *, copy: bool = True) -> "FixedWidthBinning":
@@ -593,8 +593,8 @@ class FixedWidthBinning(EdgeBasedBinning):
         # TODO: Fix to be instantiable from JSON
         a_dict["bin_count"] = self.bin_count
         a_dict["bin_width"] = self.bin_width
-        a_dict["bin_shift"] = self.shift
-        a_dict["bin_times_min"] = self.times_min
+        a_dict["bin_shift"] = self.bin_shift
+        a_dict["bin_times_min"] = self.bin_times_min
 
 
 @attrs.define(frozen=True, kw_only=True)
@@ -819,7 +819,9 @@ def integer_binning(
         kwargs["range"] = tuple(r - 0.5 for r in range)
     else:
         kwargs["shift"] = 0.5
-    return fixed_width_binning(data=data, bin_width=bin_width, align=False, **kwargs)
+    return fixed_width_binning(
+        data=data, bin_width=bin_width, align=False, includes_right_edge=True, **kwargs
+    )
 
 
 @register_binning()
@@ -880,7 +882,7 @@ def fixed_width_binning(
     return FixedWidthBinning(
         bin_width=bin_width,
         includes_right_edge=includes_right_edge,
-        shift=shift or 0.0,
+        bin_shift=shift or 0.0,
     )
 
 
