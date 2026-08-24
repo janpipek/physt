@@ -318,7 +318,9 @@ class BinningBase(ABC):
 class StaticBinning(BinningBase):
     """Binning defined by an array of bin edge pairs."""
 
-    bins: np.ndarray = attrs.field(converter=make_bin_array)
+    bins: np.ndarray = attrs.field(
+        converter=make_bin_array, eq=attrs.cmp_using(np.array_equal)
+    )
 
     inconsecutive_allowed: ClassVar[bool] = True
 
@@ -786,10 +788,11 @@ def static_binning(
     *,
     bins: ArrayLike,
     includes_right_edge: bool = False,
+    range: RangeTuple | None = None,
 ) -> StaticBinning:
     """Construct static binning with whatever bins.
 
-    Any data passed in will be ignored.
+    Any data passed in will be ignored. Also, range will be ignored
     """
     # TODO: Fail with no bins!
     return StaticBinning(
