@@ -50,3 +50,7 @@ examples:
 docs:
     cd docs && uv run --extra all sphinx-apidoc -o . ../src/physt
     uv run --extra all sphinx-build -b html docs/ docs/_build/html
+
+# Run example notebooks
+notebooks:
+    cd docs && uv run --with jupyter --with seaborn --with plotly jupyter notebook
