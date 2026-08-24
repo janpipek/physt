@@ -186,15 +186,6 @@ class BinningBase(ABC):
     ) -> tuple["BinningBase", BinMap | None, BinMap | None]:
         raise NotImplementedError()
 
-    def __eq__(self, other: object) -> bool:
-        if self is other:
-            return True
-        if type(other) is not type(self):
-            return False
-        if (bins := self.bins) is not None:
-            return np.array_equal(bins, other.bins)
-        return False
-
     @property
     @abstractmethod
     def bin_count(self) -> int:
@@ -406,7 +397,9 @@ class EdgeBasedBinning(BinningBase, ABC):
 class NumpyBinning(EdgeBasedBinning):
     """Binning schema working as numpy.histogram."""
 
-    numpy_bins: np.ndarray = attrs.field(converter=np.asarray)
+    numpy_bins: np.ndarray = attrs.field(
+        converter=np.asarray, eq=attrs.cmp_using(np.array_equal)
+    )
 
     @numpy_bins.validator
     def _validate_rising_bins(self, attribute, value):

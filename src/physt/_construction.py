@@ -495,7 +495,6 @@ def calculate_1d_bins(
     /,
     *,
     check_nan: bool = True,
-    range: tuple[float, float] | None = None,
     **kwargs,
 ) -> BinningBase:
     """Find optimal binning from arguments.
@@ -519,8 +518,7 @@ def calculate_1d_bins(
         if check_nan:
             if np.any(np.isnan(array)):
                 raise ValueError("Cannot calculate bins in presence of NaN's.")
-        if "range" in kwargs:  # TODO: re-consider the usage of this parameter
-            range = kwargs["range"]
+        if range := kwargs.get("range"):
             array = array[(array >= range[0]) & (array <= range[1])]
 
     match _:
@@ -563,6 +561,7 @@ def calculate_1d_bins(
 def calculate_nd_bins(
     array: np.ndarray | None,
     bins=None,
+    *,
     dim: int | None = None,
     check_nan: bool = True,
     **kwargs,
