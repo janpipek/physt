@@ -659,6 +659,7 @@ class HistogramBase(abc.ABC):
         a_copy._meta_data = self._meta_data.copy()
         a_copy.keep_missed = self.keep_missed
         a_copy._missed = missed
+        a_copy.is_adaptive = self.is_adaptive
         return a_copy
 
     @abc.abstractmethod
