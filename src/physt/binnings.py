@@ -843,7 +843,6 @@ def fixed_width_binning(
     range: (min, max)
     align: all edges must align with multiples of the bin_width
         i.e. we cannot have [47, 49, 51] for bin_width=2
-    shift:
     """
     if data is not None or range:
         # First try to create from limits
@@ -861,12 +860,9 @@ def fixed_width_binning(
                 align = True
         if range:
             # This takes precedence over data
-            if align:
-                raise ValueError("Cannot set both `align` and `range`.")
             if align is None:
                 # We should respect the lower bound of the range
                 align = False
-            align = False
             min_ = range[0]
             max_ = range[1]
 

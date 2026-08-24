@@ -143,25 +143,26 @@ class TestFixedWidthBins:
 
 
 class TestPrettyBins:
-    def test_exact(self):
-        data = np.random.rand(1000)
-        the_binning = binnings.pretty_binning(data, 10)
-        assert np.allclose(the_binning.numpy_bins, np.linspace(0, 1, 11))
+    @pytest.fixture
+    def data(self) -> np.ndarray:
+        return np.random.rand(1000)
 
-        the_binning = binnings.pretty_binning(data, 9)
-        assert np.allclose(the_binning.numpy_bins, np.linspace(0, 1, 11))
+    @pytest.mark.parametrize("bin_suggestion", [9, 10, 11])
+    def test_exact(self, data, bin_suggestion):
+        binning = binnings.pretty_binning(data, bin_suggestion)
+        assert np.allclose(binning.numpy_bins, np.linspace(0, 1, 11))
 
-        the_binning = binnings.pretty_binning(data, 11)
-        assert np.allclose(the_binning.numpy_bins, np.linspace(0, 1, 11))
+    def test_min_max_bin_width(self, data):
+        binning = binnings.pretty_binning(data, min_bin_width=0.3)
+        assert binning.bin_width == 0.3
 
-    def test_min_max_bin_width(self):
-        data = np.random.rand(1000)
+    def test_max_bin_width(self, data):
+        binning = binnings.pretty_binning(data, max_bin_width=0.001)
+        assert binning.bin_width == 0.001
 
-        the_binning = binnings.pretty_binning(data, min_bin_width=0.3)
-        assert the_binning.bin_width == 0.3
-
-        the_binning = binnings.pretty_binning(data, max_bin_width=0.001)
-        assert the_binning.bin_width == 0.001
+    def test_with_range(self, data):
+        binning = binnings.pretty_binning(data, range=[0.1, 0.9])
+        assert binning.bin_width == 0.1
 
 
 class TestIntegerBins:
