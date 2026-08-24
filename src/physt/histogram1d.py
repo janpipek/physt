@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 import warnings
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 import numpy as np
 
@@ -212,6 +212,12 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         else:
             raise ValueError("In Histogram1D.select(), axis must be 0.")
 
+    @overload
+    def __getitem__(self, index: slice | np.ndarray) -> "Histogram1D": ...
+
+    @overload
+    def __getitem__(self, index: int) -> tuple[np.ndarray, float]: ...
+
     def __getitem__(
         self, index: int | slice | np.ndarray
     ) -> "Histogram1D" | tuple[np.ndarray, float]:
@@ -231,6 +237,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         underflow = np.nan
         overflow = np.nan
         keep_missed = False
+
         if isinstance(index, int):
             return self.bins[index], self.frequencies[index]
         if isinstance(index, np.ndarray):
@@ -251,9 +258,12 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
                     underflow += self.frequencies[0 : index.start].sum()
                 if index.stop:
                     overflow += self.frequencies[index.stop :].sum()
+
         # Masked arrays or item list or ...
+        binning = self._binning.as_static(copy=False)
+
         return self.__class__(
-            self._binning.as_static(copy=False)[index],
+            binning[index],
             self.frequencies[index],
             self.errors2[index],
             overflow=overflow,

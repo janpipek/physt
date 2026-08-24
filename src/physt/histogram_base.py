@@ -468,7 +468,7 @@ class HistogramBase(abc.ABC):
     def _change_binning(
         self,
         new_binning: BinningBase,
-        bin_map: BinMap | None,
+        bin_map: BinMap | int | None,
         axis: Axis = 0,
     ):
         """Set new binning and update the bin contents according to a map.

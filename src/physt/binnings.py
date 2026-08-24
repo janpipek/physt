@@ -88,19 +88,25 @@ class BinningBase(ABC):
     """Whether the right edge of the last bin is included in the binning."""
 
     @overload
-    def __getitem__(self, index: slice) -> StaticBinning: ...
+    def __getitem__(self, index: slice | np.ndarray) -> StaticBinning: ...
 
     @overload
     def __getitem__(self, index: int) -> EdgePair: ...
 
-    def __getitem__(self, index: slice | int) -> StaticBinning | EdgePair:
-        if isinstance(index, slice):
-            same_right_edge = self.bins[index][-1, 1] == self.bins[-1, 1]
-            return StaticBinning(
-                bins=self.bins[index],
-                includes_right_edge=same_right_edge and self.includes_right_edge,
-            )
-        return self.bins[index]
+    def __getitem__(self, index: slice | np.ndarray | int) -> StaticBinning | EdgePair:
+        if isinstance(index, int):
+            return self.bins[index]
+        if isinstance(index, np.ndarray):
+            if index.dtype == bool:
+                if index.shape != (self.bin_count,):
+                    raise IndexError(
+                        "Cannot index with masked array of a wrong dimension"
+                    )
+        same_right_edge = self.bins[index][-1, 1] == self.bins[-1, 1]
+        return StaticBinning(
+            bins=self.bins[index],
+            includes_right_edge=same_right_edge and self.includes_right_edge,
+        )
 
     @staticmethod
     def from_dict(a_dict: dict[str, Any]) -> BinningBase:
@@ -168,8 +174,22 @@ class BinningBase(ABC):
 
     def coerce(
         self, other: "BinningBase"
-    ) -> tuple["BinningBase", BinMap | None, BinMap | None]:
-        """..."""
+    ) -> tuple["BinningBase", BinMap | int | None, BinMap | int | None]:
+        """Find a binning that is a superset of both self and `other`.
+
+        Parameters
+        ----------
+        values: All values we want bins for.
+
+        Returns
+        -------
+        binning: New binning that satisfies
+        bin_map: BinMap or None or int
+            None => There was no change in bins
+            int => The bins are only shifted (allows mass assignment)
+            otherwise => the iterable contains tuples (old bin index, new bin index)
+                new bin index can occur multiple times, which corresponds to bin merging
+        """
 
         # Two trivial situation with which we can deal here
         if np.array_equal(self.bins, other.bins):
@@ -183,7 +203,7 @@ class BinningBase(ABC):
 
     def _coerce(
         self, other: "BinningBase"
-    ) -> tuple["BinningBase", BinMap | None, BinMap | None]:
+    ) -> tuple["BinningBase", BinMap | int | None, BinMap | int | None]:
         raise NotImplementedError()
 
     @property
@@ -254,8 +274,6 @@ class BinningBase(ABC):
         StaticBinning
             A new static binning with a copy of bins.
         """
-        if not copy:
-            return self
         return StaticBinning(
             bins=self.bins.copy(), includes_right_edge=self.includes_right_edge
         )
@@ -270,6 +288,12 @@ class BinningBase(ABC):
         if self.bin_count == 0:
             raise ValueError("Cannot guess binning width with zero bins")
         elif self.bin_count == 1 or self.is_consecutive() and self.is_regular():
+            return FixedWidthBinning.create_from_min_max(
+                min_=self.bins[0, 0],
+                max_=self.bins[-1, 1],
+                align=False,
+                bin_count=self.bin_count,
+            )
             return FixedWidthBinning(
                 min=self.bins[0, 0],
                 bin_count=self.bin_count,
@@ -447,21 +471,32 @@ class FixedWidthBinning(EdgeBasedBinning):
         *,
         min_: float,
         max_: float,
-        bin_width: float,
+        bin_width: float | None = None,
+        bin_count: int | None = None,
         includes_right_edge: bool = False,
         align: bool = True,
         shift: float | None = None,
     ) -> "FixedWidthBinning":
         if align and shift:
             raise ValueError("Cannot align with shift.")
+        if bin_width and bin_count:
+            raise ValueError("Cannot specify both bin_width and bin_count.")
+        if not bin_width and not bin_count:
+            raise ValueError("Must specify either bin_width or bin_count.")
+        if not bin_width:
+            assert bin_count is not None
+            bin_width = (max_ - min_) / bin_count
         times_min = int(np.floor((min_ - (shift or 0.0)) / bin_width))
         if shift is None:
             shift = 0.0 if align else min_ - times_min * bin_width
-        bin_count = int(np.ceil((max_ - (times_min * bin_width + shift)) / bin_width))
-        if not includes_right_edge and shift + bin_count * bin_width == max_:
-            bin_count += 1
-        # If min == max, we might end up with 0 bins by now...
-        bin_count = max(1, bin_count)
+        if not bin_count:
+            bin_count = int(
+                np.ceil((max_ - (times_min * bin_width + shift)) / bin_width)
+            )
+            if not includes_right_edge and shift + bin_count * bin_width == max_:
+                bin_count += 1
+            # If min == max, we might end up with 0 bins by now...
+            bin_count = max(1, bin_count)
         return cls(
             bin_width=bin_width,
             bin_count=bin_count,
@@ -519,18 +554,18 @@ class FixedWidthBinning(EdgeBasedBinning):
         new_binning = attrs.evolve(
             self,
             bin_count=self.bin_count + add_left + add_right,
-            bin_times_min=self.bin_times_min - add_left,
+            bin_times_min=self._unwrap_times_min() - add_left,
         )
         return new_binning, add_left
 
     @property
     def first_edge(self) -> float:
-        return self.bin_width * self._validate_times_min() + self.bin_shift
+        return self.bin_width * self._unwrap_times_min() + self.bin_shift
 
     @property
     def last_edge(self) -> float:
         return (
-            self._validate_times_min() + self.bin_count
+            self._unwrap_times_min() + self.bin_count
         ) * self.bin_width + self.bin_shift
 
     @property
@@ -539,10 +574,10 @@ class FixedWidthBinning(EdgeBasedBinning):
         if not self.bin_count:
             return np.zeros((0, 2), dtype=float)
         return (
-            self._validate_times_min() + np.arange(self.bin_count + 1, dtype=int)
+            self._unwrap_times_min() + np.arange(self.bin_count + 1, dtype=int)
         ) * self.bin_width + self.bin_shift
 
-    def _validate_times_min(self) -> int:
+    def _unwrap_times_min(self) -> int:
         """Check the binning is well-defined and return the times min."""
         if self.bin_times_min is None:
             raise ValueError(
@@ -569,9 +604,12 @@ class FixedWidthBinning(EdgeBasedBinning):
         if other.bin_count == 0:
             return self, None, None
 
-        new_times_min = min(self.bin_times_min, other.bin_times_min)
+        # Type-checker-safe min and max computation
+        self_times_min = self._unwrap_times_min()
+        other_times_min = other._unwrap_times_min()
+        new_times_min = min(self_times_min, other_times_min)
         new_times_max = max(
-            self.bin_times_min + self.bin_count, other.bin_times_min + other.bin_count
+            self_times_min + self.bin_count, other_times_min + other.bin_count
         )
         result = FixedWidthBinning(
             bin_width=self.bin_width,
@@ -580,8 +618,9 @@ class FixedWidthBinning(EdgeBasedBinning):
             bin_shift=self.bin_shift,
         )
 
-        bin_map1 = self.bin_times_min - new_times_min
-        bin_map2 = other.bin_times_min - new_times_min
+        # Both as plain numbers
+        bin_map1 = self_times_min - new_times_min
+        bin_map2 = other_times_min - new_times_min
         return result, bin_map1, bin_map2
 
     def as_fixed_width(self, *, copy: bool = True) -> "FixedWidthBinning":
@@ -845,12 +884,12 @@ def fixed_width_binning(
         i.e. we cannot have [47, 49, 51] for bin_width=2
     """
     if data is not None or range:
+        if bin_count is not None:
+            raise ValueError("Cannot set both `bin_count` and `data`/`range`.")
+
         # First try to create from limits
         min_ = None
         max_ = None
-
-        if bin_count is not None:
-            raise ValueError("Cannot set both `bin_count` and `data`/`range`.")
 
         if data is not None:
             arr = np.asarray(data)
@@ -858,6 +897,7 @@ def fixed_width_binning(
             max_ = np.max(arr)
             if align is None:
                 align = True
+
         if range:
             # This takes precedence over data
             if align is None:
@@ -865,6 +905,11 @@ def fixed_width_binning(
                 align = False
             min_ = range[0]
             max_ = range[1]
+
+        # Type-checker
+        assert min_ is not None
+        assert max_ is not None
+        assert align is not None
 
         return FixedWidthBinning.create_from_min_max(
             min_=min_,
