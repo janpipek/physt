@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import dataclasses
 import warnings
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, overload
 
+import attrs
 import numpy as np
 
 from physt._construction import (
@@ -186,7 +186,8 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         # Overriden to include the statistics as well
         a_copy = super().copy(include_frequencies=include_frequencies)
         if include_frequencies:
-            a_copy._stats = dataclasses.replace(self.statistics)
+            # A copy of statistics
+            a_copy._stats = attrs.evolve(self.statistics)
         return a_copy
 
     @property
@@ -393,7 +394,7 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             self._frequencies[ixbin] += weight
             self._errors2[ixbin] += weight**2
             try:
-                self._stats = dataclasses.replace(
+                self._stats = attrs.evolve(
                     self.statistics,
                     weight=self.statistics.weight + weight,
                     sum=self.statistics.sum + weight * value,

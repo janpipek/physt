@@ -2,36 +2,40 @@
 
 from __future__ import annotations
 
-import dataclasses
-from dataclasses import dataclass
+from functools import partial
 from typing import TYPE_CHECKING, cast
 
+import attrs
 import numpy as np
 
 if TYPE_CHECKING:
     from typing import Any
 
 
-@dataclass(frozen=True)
+# Define equality comparer for our Statistics class
+_nan_equal = partial(np.array_equal, equal_nan=True)
+
+
+@attrs.define(frozen=True)
 class Statistics:
     """Container of statistics accumulative data."""
 
-    sum: float = 0.0
+    sum: float = attrs.field(default=0.0, eq=attrs.cmp_using(_nan_equal))
     """Weighted sum of all values entered into histogram."""
 
-    sum2: float = 0.0
+    sum2: float = attrs.field(default=0.0, eq=attrs.cmp_using(_nan_equal))
     """Weighted sum of squares of the values used to construct the histogram."""
 
-    min: float = np.inf
+    min: float = attrs.field(default=np.inf, eq=attrs.cmp_using(_nan_equal))
     """Minimum value used to construct the histogram."""
 
-    max: float = -np.inf
+    max: float = attrs.field(default=-np.inf, eq=attrs.cmp_using(_nan_equal))
     """Maximum value used to construct the histogram."""
 
-    weight: float = 0.0
+    weight: float = attrs.field(default=0.0, eq=attrs.cmp_using(_nan_equal))
     """The total weight of values used to construct the histogram."""
 
-    median: float = np.nan
+    median: float = attrs.field(default=np.nan, eq=attrs.cmp_using(_nan_equal))
     """The median of the values used to construct the histogram.
 
     Note that any addition/subtraction or filling will destroy the
@@ -78,23 +82,11 @@ class Statistics:
         if not np.isscalar(other):
             return INVALID_STATISTICS
         other_scalar = cast(float, other)
-        return dataclasses.replace(
+        return attrs.evolve(
             self,
             sum=self.sum * other_scalar,
             sum2=self.sum2 * other_scalar**2,
             weight=self.weight * other_scalar,
-        )
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, Statistics):
-            return False
-        return (
-            np.array_equal(self.sum, other.sum, equal_nan=True)
-            and np.array_equal(self.sum2, other.sum2, equal_nan=True)
-            and np.array_equal(self.min, other.min, equal_nan=True)
-            and np.array_equal(self.max, other.max, equal_nan=True)
-            and np.array_equal(self.weight, other.weight, equal_nan=True)
-            and np.array_equal(self.median, other.median, equal_nan=True)
         )
 
     def __rich_repr__(self):
