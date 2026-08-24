@@ -746,14 +746,16 @@ def cylindrical_surface(
     )
 
 
-azimuthal_histogram = deprecation_alias(azimuthal, "azimuthal_histogram")
-radial_histogram = deprecation_alias(radial, "radial_histogram")
-polar_histogram = deprecation_alias(polar, "polar_histogram")
-spherical_histogram = deprecation_alias(polar, "spherical_histogram")
-spherical_surface_histogram = deprecation_alias(polar, "spherical_surface_histogram")
-cylindrical_histogram = deprecation_alias(cylindrical, "cylindrical_histogram")
+azimuthal_histogram = deprecation_alias(azimuthal, "azimuthal_histogram", "0.11")
+radial_histogram = deprecation_alias(radial, "radial_histogram", "0.11")
+polar_histogram = deprecation_alias(polar, "polar_histogram", "0.11")
+spherical_histogram = deprecation_alias(polar, "spherical_histogram", "0.11")
+spherical_surface_histogram = deprecation_alias(
+    polar, "spherical_surface_histogram", "0.11"
+)
+cylindrical_histogram = deprecation_alias(cylindrical, "cylindrical_histogram", "0.11")
 cylindrical_surface_histogram = deprecation_alias(
-    cylindrical_surface, "cylindrical_surface_histogram"
+    cylindrical_surface, "cylindrical_surface_histogram", "0.11"
 )
 
 

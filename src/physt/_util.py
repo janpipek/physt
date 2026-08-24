@@ -89,9 +89,8 @@ def deprecation_alias(
     def inner(*args, **kwargs):
         message = (
             f"{deprecated_name} is deprecated"
-            + f" and will be removed in {remove_version}"
-            if remove_version
-            else "" + f", use {f.__name__} instead"
+            + (f" and will be removed in {remove_version}" if remove_version else "")
+            + f", use {f.__name__} instead."
         )
         warnings.warn(
             message,

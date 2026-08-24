@@ -250,8 +250,8 @@ def h(
 
 # Aliases
 histogram = h1
-histogram2d = deprecation_alias(h2, "histogram2d", "0.10")
-histogramdd = deprecation_alias(h, "histogramdd", "0.10")
+histogram2d = deprecation_alias(h2, "histogram2d", "0.11")
+histogramdd = deprecation_alias(h, "histogramdd", "0.11")
 
 
 def collection(data, bins=10, **kwargs) -> HistogramCollection:

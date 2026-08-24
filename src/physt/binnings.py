@@ -776,7 +776,7 @@ def pretty_binning(
     )
 
 
-human_binning = deprecation_alias(pretty_binning, "human_binning")
+human_binning = deprecation_alias(pretty_binning, "human_binning", "0.11")
 register_binning(name="human")(human_binning)
 
 
