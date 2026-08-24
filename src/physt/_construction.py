@@ -519,7 +519,7 @@ def calculate_1d_bins(
             if np.any(np.isnan(array)):
                 raise ValueError("Cannot calculate bins in presence of NaN's.")
         if range:  # TODO: re-consider the usage of this parameter
-            array = array[(array >= kwargs["range"][0]) & (array <= kwargs["range"][1])]
+            array = array[(array >= range[0]) & (array <= range[1])]
     if _ is None:
         bin_count = (
             10  # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
@@ -545,6 +545,7 @@ def calculate_1d_bins(
         else:
             raise ValueError(f"No binning method '{_}' available.")
     elif callable(_):
+        # TODO: What about passing range?
         binning = _(array, **kwargs)
         if not isinstance(binning, BinningBase):
             raise TypeError(
