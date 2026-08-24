@@ -163,7 +163,7 @@ class TestPrettyBins:
 class TestIntegerBins:
     @pytest.fixture
     def data(self) -> np.ndarray:
-        np.asarray([1, 2, 3, 5, 6, 2, 4, 3, 2, 3, 4, 5, 6, 6, 1, 2, 5])
+        return np.asarray([1, 2, 3, 5, 6, 2, 4, 3, 2, 3, 4, 5, 6, 6, 1, 2, 5])
 
     def test_dice(self, data):
         the_binning = binnings.integer_binning(data)

@@ -459,8 +459,9 @@ class FixedWidthBinning(EdgeBasedBinning):
     ) -> "FixedWidthBinning":
         if align and shift:
             raise ValueError("Cannot align with shift.")
-        times_min = int(np.floor(min_ - (shift or 0.0) / bin_width))
-        shift = 0 if align else min_ - times_min * bin_width
+        times_min = int(np.floor((min_ - (shift or 0.0)) / bin_width))
+        if shift is None:
+            shift = 0 if align else min_ - times_min * bin_width
         bin_count = max(
             1, int(np.ceil((max_ - (times_min * bin_width + shift)) / bin_width))
         )
