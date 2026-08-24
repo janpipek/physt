@@ -139,6 +139,7 @@ def h1(
         name=name,
         axis_name=axis_name,
         title=title,
+        adaptive=adaptive,
     )
 
 
@@ -243,13 +244,14 @@ def h(
         axis_names=axis_names,
         name=name,
         title=title,
+        adaptive=adaptive,
     )
 
 
 # Aliases
 histogram = h1
-histogram2d = deprecation_alias(h2, "histogram2d")
-histogramdd = deprecation_alias(h, "histogramdd")
+histogram2d = deprecation_alias(h2, "histogram2d", "0.10")
+histogramdd = deprecation_alias(h, "histogramdd", "0.10")
 
 
 def collection(data, bins=10, **kwargs) -> HistogramCollection:

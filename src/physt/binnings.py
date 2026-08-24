@@ -146,12 +146,10 @@ class BinningBase(ABC):
             return is_consecutive(self.bins, rtol=rtol, atol=atol)
         return True
 
-    def force_bin_existence(
+    def coerce_values(
         self, values: ArrayLike
     ) -> tuple["BinningBase", int | BinMap | None]:
         """Change schema so that there is a bin for value.
-
-        It is necessary to implement the _force_bin_existence template method.
 
         Parameters
         ----------
@@ -511,14 +509,12 @@ class FixedWidthBinning(EdgeBasedBinning):
             return 1, None
         return None, None
 
-    def force_bin_existence(
-        self, values: ArrayLike
-    ) -> tuple["BinningBase", int | None]:
+    def coerce_values(self, values: ArrayLike) -> tuple["BinningBase", int | None]:
         if self.bin_count == 0:
             if self.shift:
-                # TODO: Do this
-                raise NotImplementedError("A hístogram with shift and ")
-            return fixed_width_binning(values, bin_width=self.bin_width)
+                # TODO: Implement this
+                raise NotImplementedError()
+            return fixed_width_binning(values, bin_width=self.bin_width), None
         add_left, add_right = self._extended_bins_to_adapt(values)
         if add_right and self.includes_right_edge:
             raise ValueError(

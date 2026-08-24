@@ -99,8 +99,7 @@ class TestFillNAdaptive(object):
 class TestAdaptive2D(object):
     def test_create_empty(self):
         h = h2(None, None, "fixed_width", bin_width=10, adaptive=True)
-        for b in h._binnings:
-            assert b.is_adaptive()
+        assert h.is_adaptive
         assert h.ndim == 2
 
     def test_create_nonempty(self):

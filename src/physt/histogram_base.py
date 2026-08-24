@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 
     HistogramType = TypeVar("HistogramType", bound="HistogramBase")
 
-
 # Various platforms have different default floating point dtypes.
 _FREQUENCY_SUPPORTED_DTYPES: list[type[np.number]] = [
     np.int16,
@@ -562,7 +561,7 @@ class HistogramBase(abc.ABC):
             If iterable, pairs specify which old bin should go into which new bin
         axis: On which axis to apply
         """
-        if bin_map is None:
+        if bin_map is None and new_size == self.shape[axis]:
             return
 
         new_shape = list(self.shape)
@@ -574,7 +573,7 @@ class HistogramBase(abc.ABC):
             new_frequencies=new_frequencies,
             old_errors2=self._errors2,
             new_errors2=new_errors2,
-            bin_map=bin_map,
+            bin_map=bin_map or 0,
             axis=axis,
         )
         self._frequencies = new_frequencies

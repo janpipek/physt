@@ -46,6 +46,14 @@ class TestNumpyBins:
 
 
 class TestFixedWidthBins:
+    @pytest.fixture
+    def fixed_width_binning(self) -> FixedWidthBinning:
+        # Bins: [0, 10, 20]
+        return binnings.FixedWidthBinning(bin_width=10, bin_count=2, times_min=0)
+
+    def test_numpy_bins(self, fixed_width_binning):
+        assert np.array_equal(fixed_width_binning.numpy_bins, [0, 10, 20])
+
     class TestHelper:
         def test_without_alignment(self):
             data = np.asarray([4.6, 7.3])
@@ -58,11 +66,6 @@ class TestFixedWidthBins:
             assert np.allclose(the_binning.numpy_bins, [4, 5, 6, 7, 8])
 
     class TestCoercion:
-        @pytest.fixture
-        def fixed_width_binning(self) -> FixedWidthBinning:
-            # Bins: [0, 10, 20]
-            return binnings.FixedWidthBinning(bin_width=10, bin_count=2, times_min=0)
-
         def test_coerce_extension(self, fixed_width_binning):
             other = binnings.FixedWidthBinning(bin_width=10, bin_count=3, times_min=0)
             new, m1, m2 = fixed_width_binning.coerce(other)
@@ -158,11 +161,15 @@ class TestPrettyBins:
 
 
 class TestIntegerBins:
-    def test_dice(self):
-        data = np.asarray([1, 2, 3, 5, 6, 2, 4, 3, 2, 3, 4, 5, 6, 6, 1, 2, 5])
+    @pytest.fixture
+    def data(self) -> np.ndarray:
+        np.asarray([1, 2, 3, 5, 6, 2, 4, 3, 2, 3, 4, 5, 6, 6, 1, 2, 5])
+
+    def test_dice(self, data):
         the_binning = binnings.integer_binning(data)
         assert np.allclose(the_binning.numpy_bins, [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5])
 
+    def test_with_range(self, data):
         the_binning = binnings.integer_binning(data, range=(1, 6))
         assert np.allclose(the_binning.numpy_bins, [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
 

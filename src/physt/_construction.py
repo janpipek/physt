@@ -492,6 +492,7 @@ def calculate_1d_frequencies(
 def calculate_1d_bins(
     array: np.ndarray | None,
     _: Any = None,
+    /,
     *,
     check_nan: bool = True,
     range: tuple[float, float] | None = None,
@@ -518,47 +519,44 @@ def calculate_1d_bins(
         if check_nan:
             if np.any(np.isnan(array)):
                 raise ValueError("Cannot calculate bins in presence of NaN's.")
-        if range:  # TODO: re-consider the usage of this parameter
+        if "range" in kwargs:  # TODO: re-consider the usage of this parameter
+            range = kwargs["range"]
             array = array[(array >= range[0]) & (array <= range[1])]
-    if _ is None:
-        bin_count = (
-            10  # kwargs.pop("bins", ideal_bin_count(data=array)) - same as numpy
-        )
-        binning = numpy_binning(array, bin_count, **kwargs)
-    elif isinstance(_, BinningBase):
-        binning = _
-    elif isinstance(_, int):
-        binning = numpy_binning(array, _, **kwargs)
-    elif isinstance(_, str):
-        # What about the ranges???
-        if _ in bincount_methods:
+
+    match _:
+        case None:
+            binning = numpy_binning(array, 10, **kwargs)
+        case BinningBase():
+            binning = _
+        case int(n):
+            binning = numpy_binning(array, n, **kwargs)
+        case str(name) if name in bincount_methods:
             # TODO: Do we really want this?
             if array is None:
                 raise ValueError(
-                    f"Cannot find the ideal number of bins without data (method='{_}')"
+                    f"Cannot find the ideal number of bins without data (method='{name}')"
                 )
-            bin_count = ideal_bin_count(array, method=_)
+            bin_count = ideal_bin_count(array, method=name)
             binning = numpy_binning(array, bin_count, **kwargs)
-        elif _ in binning_methods:
-            method = binning_methods[_]
+        case str(name) if name in binning_methods:
+            method = binning_methods[name]
             binning = method(array, **kwargs)
-        else:
-            raise ValueError(f"No binning method '{_}' available.")
-    elif callable(_):
-        # TODO: What about passing range?
-        binning = _(array, **kwargs)
-        if not isinstance(binning, BinningBase):
-            raise TypeError(
-                f"The callable passed for bins should return a BinningBase, not {binning.__class__.__name__}"
-            )
-    elif np.iterable(_):
-        if isinstance(_, list):
-            warnings.warn(
-                "Using `list` for bins not recommended, it has different meaning with N-D histograms."
-            )
-        binning = static_binning(array, bins=_, **kwargs)
-    else:
-        raise ValueError(f"Binning {_} not understood.")
+        case str(name):
+            raise ValueError(f"Unknown binning method '{name}'")
+        case bins if np.iterable(bins):
+            if isinstance(bins, list):
+                warnings.warn(
+                    "Using `list` for bins not recommended, it has different meaning with N-D histograms."
+                )
+            binning = static_binning(array, bins=_, **kwargs)
+        case f if callable(f):
+            binning = f(array, **kwargs)
+            if not isinstance(binning, BinningBase):
+                raise TypeError(
+                    f"The callable passed for bins should return a BinningBase, not {binning.__class__.__name__}"
+                )
+        case other:
+            raise ValueError(f"Binning {other} not understood.")
     return binning
 
 

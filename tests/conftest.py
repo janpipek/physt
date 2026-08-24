@@ -30,8 +30,8 @@ def create_adaptive():
         if len(shape) == 2:
             klass = Histogram2D
         elif len(shape) == 1:
-            return Histogram1D(binning=binnings[0], frequencies=data)
-        return klass(binnings=binnings, frequencies=data)
+            return Histogram1D(binning=binnings[0], frequencies=data, adaptive=True)
+        return klass(binnings=binnings, frequencies=data, adaptive=True)
 
     return inner
 

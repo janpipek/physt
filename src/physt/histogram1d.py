@@ -367,8 +367,9 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         """
         self._coerce_dtype(type(weight))
         if self.is_adaptive:
-            bin_map = self._binning.force_bin_existence(value)
-            self._reshape_data(self._binning.bin_count, bin_map)
+            binning, bin_map = self._binning.coerce_values(value)
+            self._change_binning(binning, bin_map, 0)
+            # self._reshape_data(self._binning.bin_count, bin_map)
 
         ixbin = self.find_bin(value)
         if ixbin is None:
@@ -408,8 +409,8 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         values_array, array_mask = extract_1d_array(values, dropna=dropna)
         assert values_array is not None
         if self.is_adaptive:
-            bin_map = self._binning.force_bin_existence(values_array)
-            self._reshape_data(self._binning.bin_count, bin_map)
+            binning, bin_map = self._binning.coerce_values(values_array)
+            self._change_binning(binning, bin_map, 0)
         weights_array = extract_weights(weights, array_mask=array_mask)
         if weights_array is not None:
             self._coerce_dtype(weights_array.dtype)
