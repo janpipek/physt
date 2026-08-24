@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 
     HistogramType = TypeVar("HistogramType", bound="HistogramBase")
 
-
 # Various platforms have different default floating point dtypes.
 _FREQUENCY_SUPPORTED_DTYPES: list[type[np.number]] = [
     np.int16,
@@ -110,6 +109,7 @@ class HistogramBase(abc.ABC):
         axis_names: Iterable[str] | None = None,
         dtype: DTypeLike | None = None,
         keep_missed: bool = True,
+        adaptive: bool = False,
         **kwargs,
     ):
         """Constructor
@@ -153,6 +153,7 @@ class HistogramBase(abc.ABC):
                     )
             dtype = frequencies.dtype
             self.frequencies = frequencies
+        self.is_adaptive = adaptive
         self._dtype, _ = self._eval_dtype(dtype)  # type: ignore
 
         # Errors
@@ -172,6 +173,7 @@ class HistogramBase(abc.ABC):
     _frequencies: np.ndarray
     _errors2: np.ndarray
     _missed: np.ndarray
+    _adaptive: bool = False
 
     SUPPORTED_DTYPES: ClassVar[Collection[type[np.number]]] = tuple(
         _FREQUENCY_SUPPORTED_DTYPES
@@ -447,35 +449,26 @@ class HistogramBase(abc.ABC):
         """Total number (weight) of entries that missed the bins."""
         return self._missed.sum().item()
 
+    @property
     def is_adaptive(self) -> bool:
         """Whether the binning can be changed with operations."""
-        # TODO: remove in favour of adaptive property
-        return all(binning.is_adaptive() for binning in self._binnings)
+        return self._adaptive
 
-    def set_adaptive(self, value: bool = True):
+    @is_adaptive.setter
+    def is_adaptive(self, value: bool = True):
         """Change the histogram binning to (non)adaptive.
 
         This requires binning in all dimensions to allow this.
         """
         # TODO: remove in favour of adaptive property
-        if not all(b.adaptive_allowed for b in self._binnings):
+        if not all(b.adaptable for b in self._binnings) and value:
             raise ValueError("All binnings must allow adaptive behaviour.")
-        for binning in self._binnings:
-            binning.set_adaptive(value)
-
-    @property
-    def adaptive(self) -> bool:
-        # TODO: Remove?
-        return self.is_adaptive()
-
-    @adaptive.setter
-    def adaptive(self, value: bool):
-        self.set_adaptive(value)
+        self._adaptive = value
 
     def _change_binning(
         self,
         new_binning: BinningBase,
-        bin_map: BinMap | None,
+        bin_map: BinMap | int | None,
         axis: Axis = 0,
     ):
         """Set new binning and update the bin contents according to a map.
@@ -568,7 +561,7 @@ class HistogramBase(abc.ABC):
             If iterable, pairs specify which old bin should go into which new bin
         axis: On which axis to apply
         """
-        if bin_map is None:
+        if bin_map is None and new_size == self.shape[axis]:
             return
 
         new_shape = list(self.shape)
@@ -580,7 +573,7 @@ class HistogramBase(abc.ABC):
             new_frequencies=new_frequencies,
             old_errors2=self._errors2,
             new_errors2=new_errors2,
-            bin_map=bin_map,
+            bin_map=bin_map or 0,
             axis=axis,
         )
         self._frequencies = new_frequencies
@@ -597,14 +590,14 @@ class HistogramBase(abc.ABC):
     ):
         """Fill new data arrays using a map.
 
-        It modifies new_frequencies and new_errors2 in-place.
+        Note: It modifies new_frequencies and new_errors2 in-place!
 
         Parameters
         ----------
         old_frequencies : Source of frequencies data
-        new_frequencies : Target of frequencies data
+        new_frequencies : Target of frequencies data (updated)
         old_errors2 : Source of errors data
-        new_errors2 : Target of errors data
+        new_errors2 : Target of errors data (updated)
         bin_map: Iterable[(old, new)] or int or None
             As in _reshape_data
         axis: On which axis to apply
@@ -666,6 +659,7 @@ class HistogramBase(abc.ABC):
         a_copy._meta_data = self._meta_data.copy()
         a_copy.keep_missed = self.keep_missed
         a_copy._missed = missed
+        a_copy.is_adaptive = self.is_adaptive
         return a_copy
 
     @abc.abstractmethod
@@ -870,26 +864,24 @@ class HistogramBase(abc.ABC):
             if other.ndim != self.ndim:
                 raise ValueError("Cannot add histograms with different dimensions.")
             if self.has_same_bins(other):
-                # print("Has same!!!!!!!!!!")
                 self._coerce_dtype(other.dtype)
                 self.frequencies = self.frequencies + other.frequencies
                 self.errors2 = self.errors2 + other.errors2
                 self._missed += other._missed
-            elif self.is_adaptive():
+            elif self.is_adaptive:
                 if other.missed > 0:
                     raise ValueError("Cannot adapt histogram with missed values.")
 
                 other = other.copy()
-                other.set_adaptive(True)
-
+                other.is_adaptive = True
                 self._coerce_dtype(other.dtype)
 
                 for i in range(self.ndim):
-                    new_bins = self._binnings[i].copy()
-
-                    map1, map2 = new_bins.adapt(other._binnings[i])
-                    self._change_binning(new_bins, map1, axis=i)
-                    other._change_binning(new_bins, map2, axis=i)
+                    new_binning, map1, map2 = self._binnings[i].coerce(
+                        other._binnings[i]
+                    )
+                    self._change_binning(new_binning, map1, axis=i)
+                    other._change_binning(new_binning, map2, axis=i)
                 self.frequencies = self.frequencies + other.frequencies
                 self.errors2 = self.errors2 + other.errors2
             else:

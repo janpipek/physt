@@ -3,6 +3,7 @@ import pytest
 
 from physt import binnings
 from physt._construction import calculate_nd_bins
+from physt.binnings import FixedWidthBinning
 
 
 class TestCalculateBinsNd:
@@ -45,131 +46,135 @@ class TestNumpyBins:
 
 
 class TestFixedWidthBins:
-    def test_without_alignment(self):
-        data = np.asarray([4.6, 7.3])
-        the_binning = binnings.fixed_width_binning(data, 1.0, align=False)
-        assert np.allclose(the_binning.numpy_bins, [4.6, 5.6, 6.6, 7.6])
+    @pytest.fixture
+    def fixed_width_binning(self) -> FixedWidthBinning:
+        # Bins: [0, 10, 20]
+        return binnings.FixedWidthBinning(bin_width=10, bin_count=2, bin_times_min=0)
 
-    def test_with_alignment(self):
-        data = np.asarray([4.6, 7.3])
-        the_binning = binnings.fixed_width_binning(data, 1.0, align=True)
-        assert np.allclose(the_binning.numpy_bins, [4, 5, 6, 7, 8])
+    def test_numpy_bins(self, fixed_width_binning):
+        assert np.array_equal(fixed_width_binning.numpy_bins, [0, 10, 20])
 
-    def test_adapt_extension(self):
-        b = binnings.FixedWidthBinning(bin_width=10, bin_count=3, min=0, adaptive=True)
-        b2 = binnings.FixedWidthBinning(bin_width=10, bin_count=2, min=0, adaptive=True)
-        m1, m2 = b2.adapt(b)
-        assert tuple(m1) == ((0, 0), (1, 1))
-        assert m2 is None
-        assert np.array_equal(b2.numpy_bins, [0, 10, 20, 30])
-        assert b2.bin_count == 3
+    class TestHelper:
+        def test_without_alignment(self):
+            data = np.asarray([4.6, 7.3])
+            the_binning = binnings.fixed_width_binning(data, 1.0, align=False)
+            assert np.allclose(the_binning.numpy_bins, [4.6, 5.6, 6.6, 7.6])
 
-    def test_adapt_left(self):
-        b = binnings.FixedWidthBinning(bin_width=10, bin_count=3, min=0, adaptive=True)
-        b3 = binnings.FixedWidthBinning(
-            bin_width=10, bin_count=2, min=50, adaptive=True
-        )
-        m1, m2 = b3.adapt(b)
-        assert tuple(m1) == ((0, 5), (1, 6))
-        assert tuple(m2) == ((0, 0), (1, 1), (2, 2))
-        assert b3.bin_count == 7
+        def test_with_alignment(self):
+            data = np.asarray([4.6, 7.3])
+            the_binning = binnings.fixed_width_binning(data, 1.0, align=True)
+            assert np.allclose(the_binning.numpy_bins, [4, 5, 6, 7, 8])
 
-    def test_adapt_right(self):
-        b = binnings.FixedWidthBinning(bin_width=10, bin_count=3, min=0, adaptive=True)
-        b4 = binnings.FixedWidthBinning(
-            bin_width=10, bin_count=2, min=-30, adaptive=True
-        )
-        m1, m2 = b4.adapt(b)
-        assert tuple(m1) == ((0, 0), (1, 1))
-        assert tuple(m2) == ((0, 3), (1, 4), (2, 5))
-        assert b4.bin_count == 6
+    class TestCoercion:
+        def test_coerce_extension(self, fixed_width_binning):
+            other = binnings.FixedWidthBinning(
+                bin_width=10, bin_count=3, bin_times_min=0
+            )
+            new, m1, m2 = fixed_width_binning.coerce(other)
+            assert m1 == 0
+            assert m2 == 0
+            assert np.array_equal(new.numpy_bins, [0, 10, 20, 30])
 
-    def test_adapt_intersection1(self):
-        b = binnings.FixedWidthBinning(bin_width=10, bin_count=3, min=0, adaptive=True)
-        b5 = binnings.FixedWidthBinning(
-            bin_width=10, bin_count=2, min=-10, adaptive=True
-        )
-        m1, m2 = b5.adapt(b)
-        assert tuple(m1) == ((0, 0), (1, 1))
-        assert tuple(m2) == ((0, 1), (1, 2), (2, 3))
-        assert b5.bin_count == 4
+        def test_coerce_left(self, fixed_width_binning):
+            other = binnings.FixedWidthBinning(
+                bin_width=10,
+                bin_count=2,
+                bin_times_min=-1,
+            )
+            # Bins: [-10, 0, 10]
+            new, m1, m2 = fixed_width_binning.coerce(other)
+            assert m1 == 1
+            assert m2 == 0
+            assert np.array_equal(new.numpy_bins, [-10, 0, 10, 20])
 
-    def test_adapt_intersection2(self):
-        b = binnings.FixedWidthBinning(bin_width=10, bin_count=3, min=0, adaptive=True)
-        b6 = binnings.FixedWidthBinning(
-            bin_width=10, bin_count=3, min=10, adaptive=True
-        )
-        m1, m2 = b6.adapt(b)
-        assert tuple(m1) == ((0, 1), (1, 2), (2, 3))
-        assert tuple(m2) == ((0, 0), (1, 1), (2, 2))
-        assert b6.bin_count == 4
+        def test_coerce_right(self, fixed_width_binning):
+            other = binnings.FixedWidthBinning(
+                bin_width=10,
+                bin_count=2,
+                bin_times_min=1,
+            )
+            # Bins: [10, 20, 30]
+            new, m1, m2 = fixed_width_binning.coerce(other)
+            assert m1 == 0
+            assert m2 == 1
+            assert np.array_equal(new.numpy_bins, [0, 10, 20, 30])
 
-    def test_adapt_internal(self):
-        b1 = binnings.FixedWidthBinning(bin_width=10, bin_count=3, min=0, adaptive=True)
-        b2 = binnings.FixedWidthBinning(
-            bin_width=10, bin_count=1, min=10, adaptive=True
-        )
-        m1, m2 = b1.adapt(b2)
-        assert m1 is None
-        assert tuple(m2) == ((0, 1),)
+        def test_coerce_nonadjacent(self, fixed_width_binning):
+            other = binnings.FixedWidthBinning(
+                bin_width=10,
+                bin_count=1,
+                bin_times_min=3,
+            )
+            # Bins: [30, 40]
+            new, m1, m2 = fixed_width_binning.coerce(other)
+            assert m1 == 0
+            assert m2 == 3
+            assert np.array_equal(new.numpy_bins, [0, 10, 20, 30, 40])
 
-    def test_adapt_external(self):
-        b1 = binnings.FixedWidthBinning(
-            bin_width=10, bin_count=1, min=10, adaptive=True
-        )
-        b2 = binnings.FixedWidthBinning(bin_width=10, bin_count=3, min=0, adaptive=True)
-        m1, m2 = b1.adapt(b2)
-        assert tuple(m1) == ((0, 1),)
-        assert m2 is None
-        assert b1.bin_count == 3
+        def test_coerce_subset(self, fixed_width_binning):
+            other = binnings.FixedWidthBinning(
+                bin_width=10, bin_count=4, bin_times_min=-1
+            )
+            new1, m1, m2 = fixed_width_binning.coerce(other)
+            assert m1 == 1
+            assert m2 == 0
+            assert new1 == other
 
-    def test_adapt_wrong(self):
-        b1 = binnings.FixedWidthBinning(bin_width=10, bin_count=2, min=0, adaptive=True)
-        b2 = binnings.FixedWidthBinning(bin_width=10, bin_count=2, min=1, adaptive=True)
-        with pytest.raises(
-            ValueError, match="Cannot adapt shifted fixed-width histograms"
-        ):
-            b1.adapt(b2)
-        with pytest.raises(
-            ValueError, match="Cannot adapt shifted fixed-width histograms"
-        ):
-            b2.adapt(b1)
+            # Try opposite way
+            new2, m1, m2 = other.coerce(fixed_width_binning)
+            assert new1 == new2
 
-        b3 = binnings.FixedWidthBinning(bin_width=5, bin_count=6, min=0, adaptive=True)
-        with pytest.raises(ValueError):
-            b1.adapt(b3)
-        with pytest.raises(ValueError):
-            b3.adapt(b1)
+        def test_coerce_invalid(self):
+            b1 = binnings.FixedWidthBinning(bin_width=10, bin_count=2, bin_times_min=0)
+            b2 = binnings.FixedWidthBinning(
+                bin_width=10, bin_count=2, bin_times_min=0, bin_shift=1
+            )
+            with pytest.raises(
+                ValueError, match="Cannot coerce shifted fixed-width histograms"
+            ):
+                b1.coerce(b2)
+
+            b3 = binnings.FixedWidthBinning(bin_width=5, bin_count=6, bin_times_min=0)
+            with pytest.raises(
+                ValueError,
+                match="Cannot coerce fixed-width histograms with different bin widths",
+            ):
+                b1.coerce(b3)
 
 
 class TestPrettyBins:
-    def test_exact(self):
-        data = np.random.rand(1000)
-        the_binning = binnings.pretty_binning(data, 10)
-        assert np.allclose(the_binning.numpy_bins, np.linspace(0, 1, 11))
+    @pytest.fixture
+    def data(self) -> np.ndarray:
+        return np.random.rand(1000)
 
-        the_binning = binnings.pretty_binning(data, 9)
-        assert np.allclose(the_binning.numpy_bins, np.linspace(0, 1, 11))
+    @pytest.mark.parametrize("bin_suggestion", [9, 10, 11])
+    def test_exact(self, data, bin_suggestion):
+        binning = binnings.pretty_binning(data, bin_suggestion)
+        assert np.allclose(binning.numpy_bins, np.linspace(0, 1, 11))
 
-        the_binning = binnings.pretty_binning(data, 11)
-        assert np.allclose(the_binning.numpy_bins, np.linspace(0, 1, 11))
+    def test_min_max_bin_width(self, data):
+        binning = binnings.pretty_binning(data, min_bin_width=0.3)
+        assert binning.bin_width == 0.3
 
-    def test_min_max_bin_width(self):
-        data = np.random.rand(1000)
+    def test_max_bin_width(self, data):
+        binning = binnings.pretty_binning(data, max_bin_width=0.001)
+        assert binning.bin_width == 0.001
 
-        the_binning = binnings.pretty_binning(data, min_bin_width=0.3)
-        assert the_binning.bin_width == 0.3
-
-        the_binning = binnings.pretty_binning(data, max_bin_width=0.001)
-        assert the_binning.bin_width == 0.001
+    def test_with_range(self, data):
+        binning = binnings.pretty_binning(data, range=[0.1, 0.9])
+        assert binning.bin_width == 0.1
 
 
 class TestIntegerBins:
-    def test_dice(self):
-        data = np.asarray([1, 2, 3, 5, 6, 2, 4, 3, 2, 3, 4, 5, 6, 6, 1, 2, 5])
+    @pytest.fixture
+    def data(self) -> np.ndarray:
+        return np.asarray([1, 2, 3, 5, 6, 2, 4, 3, 2, 3, 4, 5, 6, 6, 1, 2, 5])
+
+    def test_dice(self, data):
         the_binning = binnings.integer_binning(data)
         assert np.allclose(the_binning.numpy_bins, [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5])
 
+    def test_with_range(self, data):
         the_binning = binnings.integer_binning(data, range=(1, 6))
         assert np.allclose(the_binning.numpy_bins, [0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
 

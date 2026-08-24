@@ -99,8 +99,7 @@ class TestFillNAdaptive(object):
 class TestAdaptive2D(object):
     def test_create_empty(self):
         h = h2(None, None, "fixed_width", bin_width=10, adaptive=True)
-        for b in h._binnings:
-            assert b.is_adaptive()
+        assert h.is_adaptive
         assert h.ndim == 2
 
     def test_create_nonempty(self):
@@ -127,7 +126,7 @@ class TestAdaptiveND:
     def test_create_empty(self):
         h = histogramdd(None, "fixed_width", bin_width=10, dim=7, adaptive=True)
         assert h.ndim == 7
-        assert h.is_adaptive()
+        assert h.is_adaptive
 
     # TODO: Add a few more tests?
 
@@ -145,16 +144,18 @@ class TestAdaptiveArithmetics:
         ha2 = h1(None, "fixed_width", bin_width=10, adaptive=True)
         ha2.fill_n([23, 51])
 
-        ha3 = ha1 + ha2
-        ha4 = ha2 + ha1
-        assert np.array_equal(ha3.frequencies, [1, 0, 2, 0, 1, 1])
-        assert np.array_equal(ha3.numpy_bins, [0, 10, 20, 30, 40, 50, 60])
-        assert ha4 == ha3
+        total1 = ha1 + ha2
+        total2 = ha2 + ha1
+        assert np.array_equal(total1.frequencies, [1, 0, 2, 0, 1, 1])
+        assert np.array_equal(total1.numpy_bins, [0, 10, 20, 30, 40, 50, 60])
+        assert total2 == total1
 
     def test_add_cross_2d(self):
         d1 = np.asarray([1, 21, 3])
         d2 = np.asarray([10, 12, 20])
-        h = h2(d1, d2, "fixed_width", bin_width=10, adaptive=True)
+
+        ha = h2(d1, d2, "fixed_width", bin_width=10, adaptive=True)
         hb = h2(d1, d2 + 10, "fixed_width", bin_width=10, adaptive=True)
-        hc = h + hb
-        assert np.array_equal(hc.numpy_bins[1], [10, 20, 30, 40])
+        total = ha + hb
+        assert np.array_equal(total.numpy_bins[0], [0, 10, 20, 30])
+        assert np.array_equal(total.numpy_bins[1], [10, 20, 30])

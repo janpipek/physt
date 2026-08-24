@@ -68,24 +68,33 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 
-def deprecation_alias(f: Callable[P, R], deprecated_name: str) -> Callable[P, R]:
+def deprecation_alias(
+    f: Callable[P, R], deprecated_name: str, remove_version: str | None = None
+) -> Callable[P, R]:
     """Provide a deprecated copy of a function.
 
     Parameters
     ----------
     f : The correct function
     deprecated_name : The name the function will be given
+    remove_version : The version the function will be removed
 
     Examples
     --------
     >>> def new(x): return 1
-    >>> old = deprecation_alias(new, "old")
+    >>> old = deprecation_alias(new, "old", "1.0")
     """
 
     @wraps(f)
     def inner(*args, **kwargs):
+        message = (
+            f"{deprecated_name} is deprecated"
+            + f" and will be removed in {remove_version}"
+            if remove_version
+            else "" + f", use {f.__name__} instead"
+        )
         warnings.warn(
-            f"{deprecated_name} is deprecated, use {f.__name__} instead",
+            message,
             FutureWarning,
         )
         return f(*args, **kwargs)

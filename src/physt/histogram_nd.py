@@ -335,10 +335,10 @@ class HistogramND(HistogramBase):
     def fill(self, value: ArrayLike, weight: float = 1, **kwargs):
         self._coerce_dtype(type(weight))
         value_array = np.asarray(value)
-        for i, binning in enumerate(self._binnings):
-            if binning.is_adaptive():
-                bin_map = binning.force_bin_existence(value_array[i])
-                self._reshape_data(binning.bin_count, bin_map, i)
+        for axis, binning in enumerate(self._binnings):
+            if binning.adaptable:
+                binning, bin_map = binning.coerce_values(value_array[axis])
+                self._change_binning(binning, bin_map, axis)
         ixbin = self.find_bin(value_array, **kwargs)
         if ixbin is None and self.keep_missed:
             self._missed += weight
@@ -390,11 +390,9 @@ class HistogramND(HistogramBase):
             # TODO: Check for weights size?
             self._coerce_dtype(weights.dtype)
         for i, binning in enumerate(self._binnings):
-            if binning.is_adaptive():
-                bin_map = binning.force_bin_existence(
-                    values_array[:, i]
-                )  # TODO: Add to some test
-                self._reshape_data(binning.bin_count, bin_map, i)
+            if binning.adaptable:
+                new_binning, bin_map = binning.coerce_values(values_array[:, i])
+                self._change_binning(new_binning, bin_map, i)
         frequencies, errors2, missed = calculate_nd_frequencies(
             values_array, self._binnings, weights=weights
         )
