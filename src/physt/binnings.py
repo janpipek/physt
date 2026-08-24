@@ -563,11 +563,11 @@ class FixedWidthBinning(EdgeBasedBinning):
         other = other.as_fixed_width()
         if self.bin_width != other.bin_width:
             raise ValueError(
-                f"Cannot adapt fixed-width histograms with different bin widths: {self.bin_width} vs {other.bin_width}."
+                f"Cannot coerce fixed-width histograms with different bin widths: {self.bin_width} vs {other.bin_width}."
             )
         if self.shift != other.shift:
             raise ValueError(
-                f"Cannot adapt shifted fixed-width histograms: {self.shift} vs {other.shift}"
+                f"Cannot coerce shifted fixed-width histograms: {self.shift} vs {other.shift}"
             )
 
         # Trivial cases
