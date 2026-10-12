@@ -38,6 +38,7 @@ dev = [
     "physt[all]",
     "pytest>=8.4.1",
     "pytest-xdist>=3.8.0",
+    "pyzmq>=27.2.0; python_version >= '3.15'", # free-threading support
     "sphinx>=7.4.7",
     "sphinx-rtd-theme>=3.0.2",
     "sphinxcontrib-apidoc>=0.6.0",
@@ -50,7 +51,10 @@ pandas = [
     "pandas>=2.0",
     "pandas>=3.0.6; python_version >= '3.15'"
 ]
-polars = ["polars>=1.0", "physt[pandas]"]
+polars = [
+    "polars>=1.0",
+    "polars>=2.0; python_version >= '3.15'",  # free-threading support
+    "physt[pandas]"]
 xarray = ["xarray"]
 matplotlib = [
     "matplotlib>=3.0",
@@ -62,7 +66,8 @@ plotly = ["plotly"]
 folium = ["folium"]
 # root = ["uproot3"]  # TODO: Update to uproot4
 all = [
-    "physt[astropy,dask,pandas,polars,xarray,matplotlib,plotly,folium]",
+    "physt[astropy,dask,pandas,xarray,matplotlib,plotly,folium]",
+    "physt[polars]; python_version < '3.15'",  # not working with free-threading / Python 3.15?
 ]
 
 [project.scripts]

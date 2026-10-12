@@ -1,9 +1,12 @@
 import hypothesis.strategies as st
 import numpy as np
-import polars
 import pytest
 from hypothesis import assume, given
 from hypothesis.extra.numpy import array_shapes, arrays
+
+# No proper support for free-threaded Python yet
+polars = pytest.importorskip("polars")
+
 from polars.testing.parametric import dataframes, series
 
 from physt import h, h1
