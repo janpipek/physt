@@ -1,5 +1,10 @@
+0.10.1 (12 Oct 2026)
+--------------------
+- Support: require Python >= 3.11, support Python 3.15
+- Support: require polars >= 1.0 and other newer libs for 3.15
+
 0.10.0 (24 Aug 2026)
--------------------
+--------------------
 - Removed: physt.helpers as it was not much useful
 - Support: require Python >= 3.10, support Python 3.14
 - Improved: type annotations improved to fit Python 3.10
