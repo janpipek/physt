@@ -57,7 +57,7 @@ class TestH1:
     @given(
         data=series(
             allowed_dtypes=NUMERIC_POLARS_DTYPES,
-            allow_infinities=False,
+            allow_infinity=False,
             allow_null=False,
             min_size=2,
         )
@@ -81,7 +81,7 @@ class TestH:
     @given(
         data=dataframes(
             allowed_dtypes=NUMERIC_POLARS_DTYPES,
-            allow_infinities=False,
+            allow_infinity=False,
             allow_null=False,
             allow_nan=False,
             min_cols=1,
@@ -115,7 +115,12 @@ class TestExtraNDArray:
     def test_same_result_as_with_arrays(self, data: polars.DataFrame, dropna: bool):
         # With equality, we do not have to look at specific cases
         _, result, _ = extract_nd_array(data, dropna=dropna)
-        array = data.to_numpy()
+        try:
+            # This was data.to_numpy() but type coercing led to int128 which fails (at least in windows)
+            array = np.column_stack([s.to_numpy() for s in data.iter_columns()])
+        except:
+            print(data.dtypes)
+            raise
         _, array_result, _ = extract_nd_array(array, dropna=dropna)
         assert_optional_array_equal(result, array_result)
 
@@ -252,9 +257,10 @@ def series_and_mask(
     max_length: int = 10,
     allowed_dtypes=NUMERIC_POLARS_DTYPES,
 ) -> tuple[polars.Series, np.ndarray]:
+    # We must draw the length explicitly because we need it for two arrays
     length = draw(st.integers(min_value=min_length, max_value=max_length))
     mask = draw(arrays(shape=(length,), dtype=bool))
-    s = draw(series(size=length, allowed_dtypes=allowed_dtypes, allow_null=False))
+    s = draw(series(min_size=length, max_size=length, allowed_dtypes=allowed_dtypes, allow_null=False))
     return s, mask
 
 
