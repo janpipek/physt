@@ -20,7 +20,8 @@ def all_subclasses(cls: type) -> tuple[type, ...]:
 
     From: http://stackoverflow.com/a/17246726/2692780
     """
-    subclasses = []
+    subclasses: list[type] = []
+    subclass: type
     for subclass in cls.__subclasses__():
         subclasses.append(subclass)
         subclasses.extend(all_subclasses(subclass))

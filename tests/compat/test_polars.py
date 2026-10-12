@@ -5,7 +5,8 @@ from hypothesis import assume, given
 from hypothesis.extra.numpy import array_shapes, arrays
 
 # No proper support for free-threaded Python yet
-polars = pytest.importorskip("polars")
+pytest.importorskip("polars")
+import polars  # type: ignore
 
 from polars.testing.parametric import dataframes, series
 
