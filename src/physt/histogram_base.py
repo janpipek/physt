@@ -14,9 +14,7 @@ from physt.statistics import INVALID_STATISTICS
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Mapping
-    from typing import Any, ClassVar, TypeVar
-
-    from typing_extensions import Self
+    from typing import Any, ClassVar, Self, TypeVar
 
     import physt
     import physt.plotting

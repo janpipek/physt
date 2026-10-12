@@ -6,11 +6,11 @@ import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from contextlib import suppress
-from typing import TYPE_CHECKING, ParamSpec, TypeAlias, TypeVar, cast, final, overload
+from typing import TYPE_CHECKING, ParamSpec, TypeAlias, Self, TypeVar, cast, final, overload
 
 import attrs
 import numpy as np
-from typing_extensions import Self, override
+from typing_extensions import override
 
 from physt._bin_utils import (
     find_pretty_width,
