@@ -1,6 +1,7 @@
 import contextlib
 import contextvars
 import os
+from typing import Any
 
 
 class _Config:
@@ -9,7 +10,7 @@ class _Config:
     It uses contextvars to enable async/thread-safe.
     """
 
-    _instance = None
+    _instance : "_Config | None" = None
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -17,20 +18,20 @@ class _Config:
             return cls._instance
         raise ValueError("Config is a singleton object.")
 
-    def _make_var(self, name, default):
+    def _make_var(self, name: str, default: Any):
         var = contextvars.ContextVar(name, default=default)
         setattr(self, name, var)
 
-    def _get_value(self, name):
+    def _get_value(self, name: str) -> Any:
         var = getattr(self, name)
         return var.get()
 
-    def _set_value(self, name, value) -> None:
+    def _set_value(self, name: str, value: Any) -> None:
         var = getattr(self, name)
         return var.set(value)
 
     @contextlib.contextmanager
-    def _change_value(self, name, value):
+    def _change_value(self, name: str, value: Any):
         token = getattr(self, name).set(value)
         try:
             yield
