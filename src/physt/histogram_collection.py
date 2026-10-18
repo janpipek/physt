@@ -130,7 +130,7 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
     def normalize_all(self) -> Self:
         """Normalize all histograms so that total content of each of them is equal to 1.0."""
         histograms = [h.normalize() for h in self.histograms]
-        return HistogramCollection(*histograms, title=self.title, name=self.name)
+        return type(self)(*histograms, title=self.title, name=self.name)
 
     def sum(self) -> Histogram1D:
         """Return the sum of all contained histograms."""

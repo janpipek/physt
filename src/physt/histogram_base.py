@@ -403,7 +403,7 @@ class HistogramBase(abc.ABC):
     def bin_sizes(self) -> np.ndarray:
         raise NotImplementedError
 
-    def normalize(self) -> "HistogramBase":
+    def normalize(self) -> Self:
         """Normalize the histogram, so that the total weight is equal to 1.
 
         Parameters
@@ -521,7 +521,7 @@ class HistogramBase(abc.ABC):
         amount: int | None = None,
         *,
         min_frequency: float | None = None,
-        axis: Axis,
+        axis: int,
     ) -> None:
         """Merge bins in one axis, in-place."""
         if amount is not None:
