@@ -35,7 +35,7 @@ dev = [
     "ipython>=8.18.1",
     "mypy>=1.18.2",
     "nbsphinx>=0.9.7",
-    "physt[all]",
+    "physt[all-ft]",
     "pytest>=8.4.1",
     "pytest-xdist>=3.8.0",
     "pyzmq>=27.2.0; python_version >= '3.15'", # free-threading support
@@ -53,7 +53,7 @@ pandas = [
 ]
 polars = [
     "polars>=1.0",
-    "polars>=2.0; python_version >= '3.15'",  # free-threading support
+    "polars>=2.0; python_version >= '3.15'",
     "physt[pandas]"]
 xarray = ["xarray"]
 matplotlib = [
@@ -65,9 +65,12 @@ plotly = ["plotly"]
 # vega3 = ["vega3"]
 folium = ["folium"]
 # root = ["uproot3"]  # TODO: Update to uproot4
+all-ft = [
+    # Safe for free-threading
+    "physt[dask,pandas,xarray,matplotlib,plotly,folium]",
+]
 all = [
-    "physt[astropy,dask,pandas,xarray,matplotlib,plotly,folium]",
-    "physt[polars]; python_version < '3.15'",  # not working with free-threading / Python 3.15?
+    "physt[dask,pandas,xarray,matplotlib,plotly,folium,polars,astropy]"
 ]
 
 [project.scripts]
