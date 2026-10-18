@@ -84,12 +84,6 @@ class TestValues:
         assert np.array_equal(new.bins, example_histogram.bins)
         assert new is not example_histogram
 
-        copy = example_histogram.copy()
-        new = copy.normalize(inplace=True)
-        assert np.allclose(new.frequencies, expected)
-        assert np.array_equal(new.bins, example_histogram.bins)
-        assert new is copy
-
     def test_total(self, example_histogram):
         assert np.isclose(example_histogram.total, 14.2)
 
@@ -386,11 +380,11 @@ class TestArithmetics:
 
 
 class TestMerging:
-    def test_2(self):
+    def test_merge_bins(self):
         data = np.random.rand(100)
         hist1 = h1(data, 120)
         hist2 = h1(data, 60)
-        merged = hist1.merge_bins(2, inplace=False)
+        merged = hist1.merge_bins(2)
         assert hist2 == merged
 
 

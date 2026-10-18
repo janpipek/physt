@@ -154,12 +154,12 @@ class TestDtype:
 
 
 class TestMerging:
-    def test_2(self):
+    def test_merge_bins(self):
         data1 = np.random.rand(100)
         data2 = np.random.rand(100)
         hh = h2(data1, data2, 120)
         hha = h2(data1, data2, 60)
-        hhb = hh.merge_bins(2, inplace=False)
+        hhb = hh.merge_bins(2)
         assert hha == hhb
 
 
@@ -183,15 +183,6 @@ class TestPartialNormalizing:
         assert np.allclose(h1.frequencies, [[1, 0], [0.333333333333, 0.6666666666]])
         with pytest.raises(ValueError):
             h.partial_normalize("third_axis")
-
-    def test_inplace(self):
-        freqs = [[1, 0], [1, 2]]
-        h = Histogram2D(binnings=(range(3), range(3)), frequencies=freqs)
-        h1 = h.partial_normalize(0, inplace=False)
-        assert np.allclose(h.frequencies, freqs)
-        assert not np.allclose(h1.frequencies, h.frequencies)
-        h.partial_normalize(0, inplace=True)
-        assert h1 == h
 
     def test_values(self):
         freqs = [[1, 0], [1, 2]]

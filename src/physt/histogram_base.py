@@ -402,14 +402,11 @@ class HistogramBase(abc.ABC):
     def bin_sizes(self) -> np.ndarray:
         raise NotImplementedError
 
-    def normalize(
-        self, inplace: bool = False, percent: bool = False
-    ) -> "HistogramBase":
+    def normalize(self) -> "HistogramBase":
         """Normalize the histogram, so that the total weight is equal to 1.
 
         Parameters
         ----------
-        inplace: If True, updates itself. If False (default), returns copy
         percent: If True, normalizes to percent instead of 1. Default: False
 
         Returns
@@ -421,10 +418,7 @@ class HistogramBase(abc.ABC):
         densities
         HistogramND.partial_normalize
         """
-        if inplace:
-            self /= self.total * (0.01 if percent else 1)
-            return self
-        return self / self.total * (100 if percent else 1)
+        return self / self.total
 
     @property
     def errors2(self) -> np.ndarray:
@@ -493,13 +487,12 @@ class HistogramBase(abc.ABC):
         self._binnings[axis] = new_binning
 
     def merge_bins(
-        self: "HistogramType",
+        self,
         amount: int | None = None,
         *,
         min_frequency: float | None = None,
         axis: Axis | None = None,
-        inplace: bool = False,
-    ) -> "HistogramType":
+    ) -> Self:
         """Reduce the number of bins and add their content:
 
         Parameters
@@ -508,50 +501,51 @@ class HistogramBase(abc.ABC):
         min_frequency: Try to have at least this value in each bin
             (this is not enforce e.g. for minima between high bins)
         axis: On which axis to do this (None => all)
-        inplace: Whether to modify this histogram or return a new one
         """
-        if not inplace:
-            histogram = self.copy()
-            histogram.merge_bins(
-                amount, min_frequency=min_frequency, axis=axis, inplace=True
+        histogram = self.copy()
+        axes = (self._get_axis(axis),) if axis is not None else range(self.ndim)
+        for ax in axes:
+            histogram._merge_bin_axis(
+                amount=amount, min_frequency=min_frequency, axis=ax
             )
-            return histogram
-        elif axis is None:
-            for i in range(self.ndim):
-                self.merge_bins(
-                    amount=amount, min_frequency=min_frequency, axis=i, inplace=True
-                )
-        else:
-            axis = self._get_axis(axis)
-            if amount is not None:
-                if not amount == int(amount):
-                    raise ValueError(f"Amount must be integer, {amount} found.")
-                bin_map = [(i, i // amount) for i in range(self.shape[axis])]
-            elif min_frequency is not None:
-                if self.ndim == 1:
-                    check = self.frequencies
-                else:
-                    # TODO: Check this!
-                    from physt.histogram_nd import HistogramND
+        return histogram
 
-                    check = cast(HistogramND, self).projection(axis).frequencies
-                bin_map = []
-                current_new = 0
-                current_sum = 0
-                for i, freq in enumerate(check):
-                    if freq >= min_frequency and current_sum > 0:
-                        current_sum = 0
-                        current_new += 1
-                    bin_map.append((i, current_new))
-                    current_sum += freq
-                    if current_sum > min_frequency:
-                        current_sum = 0
-                        current_new += 1
+    def _merge_bin_axis(
+        self,
+        amount: int | None = None,
+        *,
+        min_frequency: float | None = None,
+        axis: Axis,
+    ) -> None:
+        if amount is not None:
+            if not amount == int(amount):
+                raise ValueError(f"Amount must be integer, {amount} found.")
+            bin_map = [(i, i // amount) for i in range(self.shape[axis])]
+        elif min_frequency is not None:
+            if self.ndim == 1:
+                check = self.frequencies
             else:
-                raise NotImplementedError("Not yet implemented.")
-            new_binning = self._binnings[axis].apply_bin_map(bin_map)
-            self._change_binning(new_binning, bin_map, axis=axis)
-        return self
+                # TODO: Check this!
+                from physt.histogram_nd import HistogramND
+
+                check = cast(HistogramND, self).projection(axis).frequencies
+            bin_map = []
+            current_new = 0
+            current_sum = 0
+            for i, freq in enumerate(check):
+                if freq >= min_frequency and current_sum > 0:
+                    current_sum = 0
+                    current_new += 1
+                bin_map.append((i, current_new))
+                current_sum += freq
+                if current_sum > min_frequency:
+                    current_sum = 0
+                    current_new += 1
+        else:
+            raise NotImplementedError("Not yet implemented.")
+        new_binning = self._binnings[axis].apply_bin_map(bin_map)
+        self._change_binning(new_binning, bin_map, axis=axis)
+
 
     def _reshape_data(self, new_size: int, bin_map: BinMap | int | None, axis: int = 0):
         """Reshape data to match new binning schema.

@@ -470,7 +470,6 @@ class HistogramND(HistogramBase):
         """
         # TODO: Merge with Histogram1D.cumulative_frequencies
         # TODO: Deal with errors and totals etc.
-        # TODO: inplace
         new_one = self.copy()
         axis_id = self._get_axis(axis)
         new_one._frequencies = np.cumsum(new_one.frequencies, axis_id)
@@ -565,32 +564,26 @@ class Histogram2D(HistogramND):
             a_copy._errors2 = a_copy._errors2.T
         return a_copy
 
-    def partial_normalize(self, axis: Axis = 0, inplace: bool = False) -> "Histogram2D":
+    def partial_normalize(self, axis: Axis = 0) -> "Histogram2D":
         """Normalize in rows or columns.
 
         Parameters
         ----------
         axis: int or str
             Along which axis to sum (numpy-sense)
-        inplace: bool
-            Update the object itself
         """
         # TODO: Is this applicable for HistogramND?
         axis = self._get_axis(axis)
-        if not inplace:
-            copy = self.copy()
-            copy.partial_normalize(axis, inplace=True)
-            return copy
+        copy = self.copy()
+        copy._coerce_dtype(float)
+        if axis == 0:
+            divisor = np.atleast_1d(self._frequencies.sum(axis=0))
         else:
-            self._coerce_dtype(float)
-            if axis == 0:
-                divisor = np.atleast_1d(self._frequencies.sum(axis=0))
-            else:
-                divisor = np.atleast_2d(self._frequencies.sum(axis=1)[:, np.newaxis])
-            divisor[divisor == 0] = 1  # Prevent division errors
-            self._frequencies /= divisor
-            self._errors2 /= divisor * divisor  # Has its limitations
-            return self
+            divisor = np.atleast_2d(self._frequencies.sum(axis=1)[:, np.newaxis])
+        divisor[divisor == 0] = 1  # Prevent division errors
+        copy._frequencies /= divisor
+        copy._errors2 /= divisor * divisor  # Has its limitations
+        return copy
 
     @property
     def numpy_like(self) -> tuple[np.ndarray, ...]:
