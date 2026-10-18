@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import abc
 import warnings
+from threading import Lock
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
@@ -97,6 +98,13 @@ class HistogramBase(abc.ABC):
     special
 
     """
+    _lock: Lock
+
+    def __new__(cls, *args, **kwargs):
+        # Ensure every instance has its own lock (incl. copy()-ed)
+        instance = super().__new__(cls)
+        instance._lock = Lock()
+        return instance
 
     def __init__(
         self,

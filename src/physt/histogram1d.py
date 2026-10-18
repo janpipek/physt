@@ -169,8 +169,6 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         if axis_name:
             kwargs["axis_names"] = [axis_name]
 
-        self._lock = Lock()
-
         HistogramBase.__init__(
             self, [binning], frequencies, errors2, keep_missed=keep_missed, **kwargs
         )
