@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import warnings
 from numbers import Number
+from threading import Lock
 from typing import TYPE_CHECKING, cast, overload
 
 import numpy as np
@@ -60,6 +61,8 @@ class HistogramND(HistogramBase):
                 raise ValueError(
                     f"bins must be a sequence of {dimension} schemas, {len(binnings)} found."
                 )
+
+        self._lock = Lock()
 
         HistogramBase.__init__(
             self, binnings, frequencies, axis_names=axis_names, **kwargs
@@ -333,18 +336,20 @@ class HistogramND(HistogramBase):
             return ixbins
 
     def fill(self, value: ArrayLike, weight: float = 1, **kwargs):
-        self._coerce_dtype(type(weight))
         value_array = np.asarray(value)
-        for axis, binning in enumerate(self._binnings):
-            if binning.adaptable:
-                binning, bin_map = binning.coerce_values(value_array[axis])
-                self._change_binning(binning, bin_map, axis)
-        ixbin = self.find_bin(value_array, **kwargs)
-        if ixbin is None and self.keep_missed:
-            self._missed += weight
-        else:
-            self._frequencies[ixbin] += weight
-            self._errors2[ixbin] += weight**2
+
+        with self._lock:
+            self._coerce_dtype(type(weight))
+            for axis, binning in enumerate(self._binnings):
+                if binning.adaptable:
+                    binning, bin_map = binning.coerce_values(value_array[axis])
+                    self._change_binning(binning, bin_map, axis)
+            ixbin = self.find_bin(value_array, **kwargs)
+            if ixbin is None and self.keep_missed:
+                self._missed += weight
+            else:
+                self._frequencies[ixbin] += weight
+                self._errors2[ixbin] += weight**2
         return ixbin
 
     def fill_n(
@@ -385,20 +390,22 @@ class HistogramND(HistogramBase):
             )
         if dropna:
             values_array = values_array[~np.isnan(values_array).any(axis=1)]
-        if weights is not None:
-            weights = np.asarray(weights)
-            # TODO: Check for weights size?
-            self._coerce_dtype(weights.dtype)
-        for i, binning in enumerate(self._binnings):
-            if binning.adaptable:
-                new_binning, bin_map = binning.coerce_values(values_array[:, i])
-                self._change_binning(new_binning, bin_map, i)
-        frequencies, errors2, missed = calculate_nd_frequencies(
-            values_array, self._binnings, weights=weights
-        )
-        self._frequencies += frequencies
-        self._errors2 += errors2 if errors2 is not None else frequencies
-        self._missed[0] += missed
+
+        with self._lock:
+            if weights is not None:
+                weights = np.asarray(weights)
+                # TODO: Check for weights size?
+                self._coerce_dtype(weights.dtype)
+            for i, binning in enumerate(self._binnings):
+                if binning.adaptable:
+                    new_binning, bin_map = binning.coerce_values(values_array[:, i])
+                    self._change_binning(new_binning, bin_map, i)
+            frequencies, errors2, missed = calculate_nd_frequencies(
+                values_array, self._binnings, weights=weights
+            )
+            self._frequencies += frequencies
+            self._errors2 += errors2 if errors2 is not None else frequencies
+            self._missed[0] += missed
 
     def _get_projection_axes(
         self, *axes: Axis
