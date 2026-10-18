@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import warnings
 from numbers import Number
-from threading import Lock
 from typing import TYPE_CHECKING, cast, overload
 
 import numpy as np
@@ -61,9 +60,6 @@ class HistogramND(HistogramBase):
                 raise ValueError(
                     f"bins must be a sequence of {dimension} schemas, {len(binnings)} found."
                 )
-
-        self._lock = Lock()
-
         HistogramBase.__init__(
             self, binnings, frequencies, axis_names=axis_names, **kwargs
         )
