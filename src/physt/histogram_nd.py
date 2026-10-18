@@ -466,10 +466,10 @@ class HistogramND(HistogramBase):
         """
         # TODO: Merge with Histogram1D.cumulative_frequencies
         # TODO: Deal with errors and totals etc.
-        new_one = self.copy()
+        result = self.copy()
         axis_id = self._get_axis(axis)
-        new_one._frequencies = np.cumsum(new_one.frequencies, axis_id)
-        return new_one
+        result._frequencies = np.cumsum(result.frequencies, axis_id)
+        return result
 
     def projection(self, *axes: Axis, **kwargs) -> HistogramBase:
         """Reduce dimensionality by summing along axis/axes.
@@ -489,10 +489,11 @@ class HistogramND(HistogramBase):
         HistogramND or Histogram2D or Histogram1D (or others in special cases)
         """
         # TODO: rename to project in 0.5
-        axes, invert = self._get_projection_axes(*axes)
-        frequencies = self.frequencies.sum(axis=invert)
-        errors2 = self.errors2.sum(axis=invert)
-        return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
+        with self._lock:
+            axes, invert = self._get_projection_axes(*axes)
+            frequencies = self.frequencies.sum(axis=invert)
+            errors2 = self.errors2.sum(axis=invert)
+            return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
 
     def __eq__(self, other: Any):
         """Equality comparison"""
@@ -552,13 +553,13 @@ class Histogram2D(HistogramND):
         -------
         Histogram2D - a copy with swapped axes
         """
-        a_copy = self.copy()
-        a_copy._binnings = list(reversed(a_copy._binnings))
-        a_copy.axis_names = tuple(reversed(a_copy.axis_names))
-        a_copy._frequencies = a_copy._frequencies.T
-        if a_copy.errors2 is not None:
-            a_copy._errors2 = a_copy._errors2.T
-        return a_copy
+        result = self.copy()
+        result._binnings = list(reversed(result._binnings))
+        result.axis_names = tuple(reversed(result.axis_names))
+        result._frequencies = result._frequencies.T
+        if result.errors2 is not None:
+            result._errors2 = result._errors2.T
+        return result
 
     def partial_normalize(self, axis: Axis = 0) -> "Histogram2D":
         """Normalize in rows or columns.
@@ -570,16 +571,16 @@ class Histogram2D(HistogramND):
         """
         # TODO: Is this applicable for HistogramND?
         axis = self._get_axis(axis)
-        copy = self.copy()
-        copy._coerce_dtype(float)
+        result = self.copy()
+        result._coerce_dtype(float)
         if axis == 0:
-            divisor = np.atleast_1d(self._frequencies.sum(axis=0))
+            divisor = np.atleast_1d(result._frequencies.sum(axis=0))
         else:
-            divisor = np.atleast_2d(self._frequencies.sum(axis=1)[:, np.newaxis])
+            divisor = np.atleast_2d(result._frequencies.sum(axis=1)[:, np.newaxis])
         divisor[divisor == 0] = 1  # Prevent division errors
-        copy._frequencies /= divisor
-        copy._errors2 /= divisor * divisor  # Has its limitations
-        return copy
+        result._frequencies /= divisor
+        result._errors2 /= divisor * divisor  # Has its limitations
+        return result
 
     @property
     def numpy_like(self) -> tuple[np.ndarray, ...]:
