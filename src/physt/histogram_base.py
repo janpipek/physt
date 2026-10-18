@@ -917,7 +917,7 @@ class HistogramBase(abc.ABC):
         result = self.copy()
         result -= other
         if isinstance(other, HistogramBase):
-            result._meta_data = self._merge_meta_data(self, other)
+            result._meta_data = self._merge_meta_data(result, other)
         return result
 
     def __isub__(self, other):
