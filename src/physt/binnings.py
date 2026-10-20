@@ -113,7 +113,7 @@ class BinningBase(ABC):
                     )
 
         bins = self.bins[index]
-        same_right_edge = len(bins) and (bins[-1, 1] == self.bins[-1, 1])
+        same_right_edge = (len(bins) > 0) and (bins[-1, 1] == self.bins[-1, 1])
         return StaticBinning(
             bins=bins,
             includes_right_edge=same_right_edge and self.includes_right_edge,

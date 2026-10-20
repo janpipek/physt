@@ -438,7 +438,7 @@ class HistogramND(HistogramBase):
             from physt.histogram1d import Histogram1D
 
             klass = type or Histogram1D
-            return klass(
+            return klass(  # type: ignore
                 binning=bins[0],
                 frequencies=frequencies,
                 errors2=errors2,
