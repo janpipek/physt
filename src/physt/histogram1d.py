@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import warnings
 from abc import ABC, abstractmethod
-from threading import Lock
 from typing import TYPE_CHECKING, overload
 
 import attrs
@@ -429,12 +428,14 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
             weights_array = extract_weights(weights, array_mask=array_mask)
             if weights_array is not None:
                 self._coerce_dtype(weights_array.dtype)
-            (frequencies, errors2, underflow, overflow, stats) = calculate_1d_frequencies(
-                values_array,
-                self._binning,
-                dtype=self.dtype,
-                weights=weights_array,
-                validate_bins=False,
+            (frequencies, errors2, underflow, overflow, stats) = (
+                calculate_1d_frequencies(
+                    values_array,
+                    self._binning,
+                    dtype=self.dtype,
+                    weights=weights_array,
+                    validate_bins=False,
+                )
             )
             self._frequencies += frequencies
             self._errors2 += errors2

@@ -7,7 +7,8 @@ def tests(session):
     session.install("pytest")
     session.run("pytest")
 
-@nox.session(python=[ "3.14t", "3.15t"], venv_backend="uv")
+
+@nox.session(python=["3.14t", "3.15t"], venv_backend="uv")
 def tests_free_threading(session):
     session.install(".[all-ft]")
     session.install("pytest")

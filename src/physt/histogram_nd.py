@@ -421,15 +421,23 @@ class HistogramND(HistogramBase):
         invert = (i for i in range(self.ndim) if i not in axes_)
         return tuple(axes_), tuple(invert)
 
-    def _reduce_dimension(self, axes, frequencies, errors2, **kwargs) -> HistogramBase:
+    def _reduce_dimension(
+        self,
+        axes,
+        frequencies,
+        errors2,
+        *,
+        name: str | None = None,
+        type: type[HistogramBase] | None = None,
+    ) -> HistogramBase:
         # TODO: document
-        name = kwargs.pop("name", self.name)
+        name = name or self.name
         axis_names = [name for i, name in enumerate(self.axis_names) if i in axes]
         bins = [bins for i, bins in enumerate(self._binnings) if i in axes]
         if len(axes) == 1:
             from physt.histogram1d import Histogram1D
 
-            klass = kwargs.get("type", Histogram1D)
+            klass = type or Histogram1D
             return klass(
                 binning=bins[0],
                 frequencies=frequencies,
@@ -438,7 +446,7 @@ class HistogramND(HistogramBase):
                 name=name,
             )
         elif len(axes) == 2:
-            klass = kwargs.get("type", Histogram2D)
+            klass = type or Histogram2D
             return klass(
                 binnings=bins,
                 frequencies=frequencies,
@@ -447,7 +455,7 @@ class HistogramND(HistogramBase):
                 name=name,
             )
         else:
-            klass = kwargs.get("type", HistogramND)
+            klass = type or HistogramND
             return klass(
                 dimension=len(axes),
                 binnings=bins,
@@ -495,7 +503,7 @@ class HistogramND(HistogramBase):
             errors2 = self.errors2.sum(axis=invert)
             return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
 
-    def __eq__(self, other: Any):
+    def __eq__(self, other: object):
         """Equality comparison"""
         # TODO: Describe allclose
         # TODO: Think about softer alternatives (like compare method)

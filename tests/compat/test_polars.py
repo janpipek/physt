@@ -260,7 +260,14 @@ def series_and_mask(
     # We must draw the length explicitly because we need it for two arrays
     length = draw(st.integers(min_value=min_length, max_value=max_length))
     mask = draw(arrays(shape=(length,), dtype=bool))
-    s = draw(series(min_size=length, max_size=length, allowed_dtypes=allowed_dtypes, allow_null=False))
+    s = draw(
+        series(
+            min_size=length,
+            max_size=length,
+            allowed_dtypes=allowed_dtypes,
+            allow_null=False,
+        )
+    )
     return s, mask
 
 

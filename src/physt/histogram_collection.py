@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Container, Mapping
-from typing import TYPE_CHECKING, cast, Self
+from typing import TYPE_CHECKING, Self, cast
 
 import numpy as np
 
