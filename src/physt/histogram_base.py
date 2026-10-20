@@ -98,6 +98,7 @@ class HistogramBase(abc.ABC):
     special
 
     """
+
     _lock: RLock
 
     def __new__(cls, *args, **kwargs):
@@ -173,6 +174,17 @@ class HistogramBase(abc.ABC):
 
         self._meta_data = kwargs.copy()
         self.axis_names = tuple(axis_names or self.default_axis_names)
+
+    def __getstate__(self):
+        # Necessary to make this object pickle-able
+        state = self.__dict__.copy()
+        if "_lock" in state:
+            del state["_lock"]
+        return state
+
+    def __setstate__(self, state):
+        # Necessary to make this object pickle-able
+        self.__dict__.update(state)
 
     # "Protected" attributes
     _binnings: list[BinningBase]
@@ -343,7 +355,9 @@ class HistogramBase(abc.ABC):
                                 raise ValueError("Data contain non-integer values.")
                 for array in (self.frequencies, self.errors2):
                     if np.any((array > type_info.max) | (array < type_info.min)):
-                        raise ValueError("Data contain values outside the specified range.")
+                        raise ValueError(
+                            "Data contain values outside the specified range."
+                        )
 
             self._dtype = value
             self._frequencies = self._frequencies.astype(value)
@@ -511,9 +525,7 @@ class HistogramBase(abc.ABC):
         result = self.copy()
         axes = (self._get_axis(axis),) if axis is not None else range(self.ndim)
         for ax in axes:
-            result._merge_bin_axis(
-                amount=amount, min_frequency=min_frequency, axis=ax
-            )
+            result._merge_bin_axis(amount=amount, min_frequency=min_frequency, axis=ax)
         return result
 
     def _merge_bin_axis(
@@ -552,7 +564,6 @@ class HistogramBase(abc.ABC):
             raise NotImplementedError("Not yet implemented.")
         new_binning = self._binnings[axis].apply_bin_map(bin_map)
         self._change_binning(new_binning, bin_map, axis=axis)
-
 
     def _reshape_data(self, new_size: int, bin_map: BinMap | int | None, axis: int = 0):
         """Reshape data to match new binning schema, in-place.
@@ -905,7 +916,9 @@ class HistogramBase(abc.ABC):
                 self._coerce_dtype(array.dtype)
                 self.frequencies = self.frequencies + array
                 self.errors2 = self.errors2 + abs(array)
-                self._missed = self._missed * np.nan  # TODO: Any reasonable interpretation?
+                self._missed = (
+                    self._missed * np.nan
+                )  # TODO: Any reasonable interpretation?
                 self._stats = INVALID_STATISTICS
         else:
             raise TypeError(
@@ -932,7 +945,9 @@ class HistogramBase(abc.ABC):
                 else:
                     adapted_self = self + 0 * other_copy
                     adapted_other = 0 * self + other_copy
-                    self.frequencies = adapted_self.frequencies - adapted_other.frequencies
+                    self.frequencies = (
+                        adapted_self.frequencies - adapted_other.frequencies
+                    )
                     self.errors2 = adapted_self.errors2 + adapted_other.errors2
                     self._missed -= other._missed
                 self._stats = INVALID_STATISTICS
@@ -941,7 +956,9 @@ class HistogramBase(abc.ABC):
             array = np.asarray(other)
             return self.__iadd__(array * (-1))
         else:
-            raise TypeError("Only histograms and arrays can be subtracted from a histogram.")
+            raise TypeError(
+                "Only histograms and arrays can be subtracted from a histogram."
+            )
 
     def __mul__(self, other: Any):
         result = self.copy()
@@ -1015,7 +1032,9 @@ class HistogramBase(abc.ABC):
         self.fill(value)
 
     @classmethod
-    def _merge_meta_data(cls, first: "HistogramBase", second: "HistogramBase") -> dict[str, Any]:
+    def _merge_meta_data(
+        cls, first: "HistogramBase", second: "HistogramBase"
+    ) -> dict[str, Any]:
         """Merge meta data of two histograms leaving only the equal values.
 
         (Used in arithmetic operations)
