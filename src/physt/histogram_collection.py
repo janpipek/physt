@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Container, Mapping
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Self, cast
 
 import numpy as np
 
@@ -114,12 +114,12 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
             and all((h1 == h2) for h1, h2 in zip(self.histograms, other.histograms))
         )
 
-    def normalize_bins(self, inplace: bool = False) -> "HistogramCollection":
+    def normalize_bins(self) -> "HistogramCollection":
         """Normalize each bin in the collection so that the sum is 1.0 for each bin.
 
         Note: If a bin is zero in all collections, the result will be inf.
         """
-        col = self if inplace else self.copy()
+        col = self.copy()
         sums = self.sum().frequencies
         for h in col.histograms:
             h.set_dtype(float)
@@ -127,12 +127,10 @@ class HistogramCollection(Container[Histogram1D], ObjectWithBinning):
             h._errors2 /= sums**2  # TODO: Does this make sense?
         return col
 
-    def normalize_all(self, inplace: bool = False) -> "HistogramCollection":
+    def normalize_all(self) -> Self:
         """Normalize all histograms so that total content of each of them is equal to 1.0."""
-        col = self if inplace else self.copy()
-        for h in col.histograms:
-            h.normalize(inplace=True)
-        return col
+        histograms = [h.normalize() for h in self.histograms]
+        return type(self)(*histograms, title=self.title, name=self.name)
 
     def sum(self) -> Histogram1D:
         """Return the sum of all contained histograms."""

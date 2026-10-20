@@ -60,7 +60,6 @@ class HistogramND(HistogramBase):
                 raise ValueError(
                     f"bins must be a sequence of {dimension} schemas, {len(binnings)} found."
                 )
-
         HistogramBase.__init__(
             self, binnings, frequencies, axis_names=axis_names, **kwargs
         )
@@ -333,18 +332,20 @@ class HistogramND(HistogramBase):
             return ixbins
 
     def fill(self, value: ArrayLike, weight: float = 1, **kwargs):
-        self._coerce_dtype(type(weight))
         value_array = np.asarray(value)
-        for axis, binning in enumerate(self._binnings):
-            if binning.adaptable:
-                binning, bin_map = binning.coerce_values(value_array[axis])
-                self._change_binning(binning, bin_map, axis)
-        ixbin = self.find_bin(value_array, **kwargs)
-        if ixbin is None and self.keep_missed:
-            self._missed += weight
-        else:
-            self._frequencies[ixbin] += weight
-            self._errors2[ixbin] += weight**2
+
+        with self._lock:
+            self._coerce_dtype(type(weight))
+            for axis, binning in enumerate(self._binnings):
+                if binning.adaptable:
+                    binning, bin_map = binning.coerce_values(value_array[axis])
+                    self._change_binning(binning, bin_map, axis)
+            ixbin = self.find_bin(value_array, **kwargs)
+            if ixbin is None and self.keep_missed:
+                self._missed += weight
+            else:
+                self._frequencies[ixbin] += weight
+                self._errors2[ixbin] += weight**2
         return ixbin
 
     def fill_n(
@@ -385,20 +386,22 @@ class HistogramND(HistogramBase):
             )
         if dropna:
             values_array = values_array[~np.isnan(values_array).any(axis=1)]
-        if weights is not None:
-            weights = np.asarray(weights)
-            # TODO: Check for weights size?
-            self._coerce_dtype(weights.dtype)
-        for i, binning in enumerate(self._binnings):
-            if binning.adaptable:
-                new_binning, bin_map = binning.coerce_values(values_array[:, i])
-                self._change_binning(new_binning, bin_map, i)
-        frequencies, errors2, missed = calculate_nd_frequencies(
-            values_array, self._binnings, weights=weights
-        )
-        self._frequencies += frequencies
-        self._errors2 += errors2 if errors2 is not None else frequencies
-        self._missed[0] += missed
+
+        with self._lock:
+            if weights is not None:
+                weights = np.asarray(weights)
+                # TODO: Check for weights size?
+                self._coerce_dtype(weights.dtype)
+            for i, binning in enumerate(self._binnings):
+                if binning.adaptable:
+                    new_binning, bin_map = binning.coerce_values(values_array[:, i])
+                    self._change_binning(new_binning, bin_map, i)
+            frequencies, errors2, missed = calculate_nd_frequencies(
+                values_array, self._binnings, weights=weights
+            )
+            self._frequencies += frequencies
+            self._errors2 += errors2 if errors2 is not None else frequencies
+            self._missed[0] += missed
 
     def _get_projection_axes(
         self, *axes: Axis
@@ -418,16 +421,24 @@ class HistogramND(HistogramBase):
         invert = (i for i in range(self.ndim) if i not in axes_)
         return tuple(axes_), tuple(invert)
 
-    def _reduce_dimension(self, axes, frequencies, errors2, **kwargs) -> HistogramBase:
+    def _reduce_dimension(
+        self,
+        axes,
+        frequencies,
+        errors2,
+        *,
+        name: str | None = None,
+        type: type[HistogramBase] | None = None,
+    ) -> HistogramBase:
         # TODO: document
-        name = kwargs.pop("name", self.name)
+        name = name or self.name
         axis_names = [name for i, name in enumerate(self.axis_names) if i in axes]
         bins = [bins for i, bins in enumerate(self._binnings) if i in axes]
         if len(axes) == 1:
             from physt.histogram1d import Histogram1D
 
-            klass = kwargs.get("type", Histogram1D)
-            return klass(
+            klass = type or Histogram1D
+            return klass(  # type: ignore
                 binning=bins[0],
                 frequencies=frequencies,
                 errors2=errors2,
@@ -435,7 +446,7 @@ class HistogramND(HistogramBase):
                 name=name,
             )
         elif len(axes) == 2:
-            klass = kwargs.get("type", Histogram2D)
+            klass = type or Histogram2D
             return klass(
                 binnings=bins,
                 frequencies=frequencies,
@@ -444,7 +455,7 @@ class HistogramND(HistogramBase):
                 name=name,
             )
         else:
-            klass = kwargs.get("type", HistogramND)
+            klass = type or HistogramND
             return klass(
                 dimension=len(axes),
                 binnings=bins,
@@ -463,11 +474,10 @@ class HistogramND(HistogramBase):
         """
         # TODO: Merge with Histogram1D.cumulative_frequencies
         # TODO: Deal with errors and totals etc.
-        # TODO: inplace
-        new_one = self.copy()
+        result = self.copy()
         axis_id = self._get_axis(axis)
-        new_one._frequencies = np.cumsum(new_one.frequencies, axis_id)
-        return new_one
+        result._frequencies = np.cumsum(result.frequencies, axis_id)
+        return result
 
     def projection(self, *axes: Axis, **kwargs) -> HistogramBase:
         """Reduce dimensionality by summing along axis/axes.
@@ -487,12 +497,13 @@ class HistogramND(HistogramBase):
         HistogramND or Histogram2D or Histogram1D (or others in special cases)
         """
         # TODO: rename to project in 0.5
-        axes, invert = self._get_projection_axes(*axes)
-        frequencies = self.frequencies.sum(axis=invert)
-        errors2 = self.errors2.sum(axis=invert)
-        return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
+        with self._lock:
+            axes, invert = self._get_projection_axes(*axes)
+            frequencies = self.frequencies.sum(axis=invert)
+            errors2 = self.errors2.sum(axis=invert)
+            return self._reduce_dimension(axes, frequencies, errors2, **kwargs)
 
-    def __eq__(self, other: Any):
+    def __eq__(self, other: object):
         """Equality comparison"""
         # TODO: Describe allclose
         # TODO: Think about softer alternatives (like compare method)
@@ -550,40 +561,34 @@ class Histogram2D(HistogramND):
         -------
         Histogram2D - a copy with swapped axes
         """
-        a_copy = self.copy()
-        a_copy._binnings = list(reversed(a_copy._binnings))
-        a_copy.axis_names = tuple(reversed(a_copy.axis_names))
-        a_copy._frequencies = a_copy._frequencies.T
-        if a_copy.errors2 is not None:
-            a_copy._errors2 = a_copy._errors2.T
-        return a_copy
+        result = self.copy()
+        result._binnings = list(reversed(result._binnings))
+        result.axis_names = tuple(reversed(result.axis_names))
+        result._frequencies = result._frequencies.T
+        if result.errors2 is not None:
+            result._errors2 = result._errors2.T
+        return result
 
-    def partial_normalize(self, axis: Axis = 0, inplace: bool = False) -> "Histogram2D":
+    def partial_normalize(self, axis: Axis = 0) -> "Histogram2D":
         """Normalize in rows or columns.
 
         Parameters
         ----------
         axis: int or str
             Along which axis to sum (numpy-sense)
-        inplace: bool
-            Update the object itself
         """
         # TODO: Is this applicable for HistogramND?
         axis = self._get_axis(axis)
-        if not inplace:
-            copy = self.copy()
-            copy.partial_normalize(axis, inplace=True)
-            return copy
+        result = self.copy()
+        result._coerce_dtype(float)
+        if axis == 0:
+            divisor = np.atleast_1d(result._frequencies.sum(axis=0))
         else:
-            self._coerce_dtype(float)
-            if axis == 0:
-                divisor = np.atleast_1d(self._frequencies.sum(axis=0))
-            else:
-                divisor = np.atleast_2d(self._frequencies.sum(axis=1)[:, np.newaxis])
-            divisor[divisor == 0] = 1  # Prevent division errors
-            self._frequencies /= divisor
-            self._errors2 /= divisor * divisor  # Has its limitations
-            return self
+            divisor = np.atleast_2d(result._frequencies.sum(axis=1)[:, np.newaxis])
+        divisor[divisor == 0] = 1  # Prevent division errors
+        result._frequencies /= divisor
+        result._errors2 /= divisor * divisor  # Has its limitations
+        return result
 
     @property
     def numpy_like(self) -> tuple[np.ndarray, ...]:

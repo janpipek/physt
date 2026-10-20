@@ -376,36 +376,37 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         Note: If a gap in unconsecutive bins is matched, underflow & overflow are not valid anymore.
         Note: Name was selected because of the eponymous method in ROOT
         """
-        self._coerce_dtype(type(weight))
-        if self.is_adaptive:
-            binning, bin_map = self._binning.coerce_values(value)
-            self._change_binning(binning, bin_map, 0)
-            # self._reshape_data(self._binning.bin_count, bin_map)
+        with self._lock:
+            self._coerce_dtype(type(weight))
+            if self.is_adaptive:
+                binning, bin_map = self._binning.coerce_values(value)
+                self._change_binning(binning, bin_map, 0)
+                # self._reshape_data(self._binning.bin_count, bin_map)
 
-        ixbin = self.find_bin(value)
-        if ixbin is None:
-            self.overflow = np.nan
-            self.underflow = np.nan
-        elif ixbin == -1 and self.keep_missed:
-            self.underflow += weight
-        elif ixbin == self.bin_count and self.keep_missed:
-            self.overflow += weight
-        else:
-            self._frequencies[ixbin] += weight
-            self._errors2[ixbin] += weight**2
-            try:
-                self._stats = attrs.evolve(
-                    self.statistics,
-                    weight=self.statistics.weight + weight,
-                    sum=self.statistics.sum + weight * value,
-                    sum2=self.statistics.sum2 + weight * value**2,
-                    min=min(self.statistics.min, value),
-                    max=max(self.statistics.max, value),
-                    median=np.nan,
-                )
-            except OverflowError:
-                warnings.warn("Overflow when updating statistics.")
-                self._stats = INVALID_STATISTICS
+            ixbin = self.find_bin(value)
+            if ixbin is None:
+                self.overflow = np.nan
+                self.underflow = np.nan
+            elif ixbin == -1 and self.keep_missed:
+                self.underflow += weight
+            elif ixbin == self.bin_count and self.keep_missed:
+                self.overflow += weight
+            else:
+                self._frequencies[ixbin] += weight
+                self._errors2[ixbin] += weight**2
+                try:
+                    self._stats = attrs.evolve(
+                        self.statistics,
+                        weight=self.statistics.weight + weight,
+                        sum=self.statistics.sum + weight * value,
+                        sum2=self.statistics.sum2 + weight * value**2,
+                        min=min(self.statistics.min, value),
+                        max=max(self.statistics.max, value),
+                        median=np.nan,
+                    )
+                except OverflowError:
+                    warnings.warn("Overflow when updating statistics.")
+                    self._stats = INVALID_STATISTICS
 
         return ixbin
 
@@ -419,26 +420,30 @@ class Histogram1D(ObjectWithBinning, HistogramBase):
         # TODO: Unify with HistogramBase
         values_array, array_mask = extract_1d_array(values, dropna=dropna)
         assert values_array is not None
-        if self.is_adaptive:
-            binning, bin_map = self._binning.coerce_values(values_array)
-            self._change_binning(binning, bin_map, 0)
-        weights_array = extract_weights(weights, array_mask=array_mask)
-        if weights_array is not None:
-            self._coerce_dtype(weights_array.dtype)
-        (frequencies, errors2, underflow, overflow, stats) = calculate_1d_frequencies(
-            values_array,
-            self._binning,
-            dtype=self.dtype,
-            weights=weights_array,
-            validate_bins=False,
-        )
-        self._frequencies += frequencies
-        self._errors2 += errors2
-        # TODO: check that adaptive does not produce under-/over-flows?
-        if self.keep_missed:
-            self.underflow += underflow
-            self.overflow += overflow
-        self._stats += stats
+
+        with self._lock:
+            if self.is_adaptive:
+                binning, bin_map = self._binning.coerce_values(values_array)
+                self._change_binning(binning, bin_map, 0)
+            weights_array = extract_weights(weights, array_mask=array_mask)
+            if weights_array is not None:
+                self._coerce_dtype(weights_array.dtype)
+            (frequencies, errors2, underflow, overflow, stats) = (
+                calculate_1d_frequencies(
+                    values_array,
+                    self._binning,
+                    dtype=self.dtype,
+                    weights=weights_array,
+                    validate_bins=False,
+                )
+            )
+            self._frequencies += frequencies
+            self._errors2 += errors2
+            # TODO: check that adaptive does not produce under-/over-flows?
+            if self.keep_missed:
+                self.underflow += underflow
+                self.overflow += overflow
+            self._stats += stats
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):

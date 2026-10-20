@@ -190,24 +190,53 @@ class TestExponentialBins:
 
 
 class TestQuantileBins:
-    def test_simple(self):
-        data = np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])
+    @pytest.fixture()
+    def data(self) -> np.ndarray:
+        return np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])
+
+    def test_simple(self, data):
         the_binning = binnings.quantile_binning(data, bin_count=2)
         assert np.allclose(the_binning.numpy_bins, [0.1, 1.0, 10.0])
 
         the_binning = binnings.quantile_binning(data, bin_count=3)
         assert np.allclose(the_binning.numpy_bins, [0.1, 0.6, 2.2, 10.0])
 
-    def test_qrange(self):
-        data = np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])
+    def test_qrange(self, data):
         the_binning = binnings.quantile_binning(data, bin_count=3, qrange=(0.4, 1.0))
         assert np.allclose(the_binning.numpy_bins, [0.76, 1.8, 2.96, 10.0])
 
-    def test_q(self):
-        data = np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])
+    def test_q(self, data):
         the_binning = binnings.quantile_binning(data, q=[0.1, 0.7, 1.0])
         assert np.allclose(the_binning.numpy_bins, [0.26, 2.36, 10.0])
-        # TODO: Implement
+
+
+class TestAstropyBins:
+    pytest.importorskip("astropy")
+
+    @pytest.fixture()
+    def data(self) -> np.ndarray:
+        return np.asarray([0.1, 0.3, 0.4, 0.7, 1.0, 2.0, 2.6, 3.5, 10.0])
+
+    def test_knuth_binning(self, data):
+        the_binning = binnings.knuth_binning(data)
+        assert np.allclose(the_binning.numpy_bins, [0.1, 2.08, 4.06, 6.04, 8.02, 10.0])
+
+    def test_bayesian_block_binning(self, data):
+        the_binning = binnings.bayesian_blocks_binning(data)
+        assert np.allclose(the_binning.numpy_bins, [0.1, 0.85, 10.0])
+
+    def test_freedman_binning(self, data):
+        the_binning = binnings.freedman_binning(data)
+        assert np.allclose(
+            the_binning.numpy_bins,
+            [0.1, 2.21529937, 4.33059874, 6.44589811, 8.56119748, 10.67649685],
+        )
+
+    def test_scott_binning(self, data):
+        the_binning = binnings.scott_binning(data)
+        assert np.allclose(
+            the_binning.numpy_bins, [0.1, 5.04107773, 9.98215546, 14.92323319]
+        )
 
 
 # TODO: Test binning equality

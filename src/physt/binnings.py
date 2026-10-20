@@ -111,9 +111,11 @@ class BinningBase(ABC):
                     raise IndexError(
                         "Cannot index with masked array of a wrong dimension"
                     )
-        same_right_edge = self.bins[index][-1, 1] == self.bins[-1, 1]
+
+        bins = self.bins[index]
+        same_right_edge = (len(bins) > 0) and (bins[-1, 1] == self.bins[-1, 1])
         return StaticBinning(
-            bins=self.bins[index],
+            bins=bins,
             includes_right_edge=same_right_edge and self.includes_right_edge,
         )
 

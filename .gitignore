@@ -75,3 +75,6 @@ tests/profile/mprofile*
 
 # Mypy
 /.mypy_cache
+
+# Uv
+.python-version
