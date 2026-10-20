@@ -54,6 +54,16 @@ class TestH1:
         assert h.total == n_points * n_threads
 
     @pytest.mark.parametrize("n_threads", [1, 100])
+    def test_adaptive_h2_fill(self, n_threads: int):
+        h = h2(None, None, bins="fixed_width", bin_width=1, adaptive=True)
+        n_points = 100
+        data = np.vstack(
+            [np.linspace(0, 100, n_points), np.linspace(0, 100, n_points)]
+        ).T
+        self._threaded_fill(h, data, n_threads)
+        assert h.total == n_points * n_threads
+
+    @pytest.mark.parametrize("n_threads", [1, 100])
     def test_adaptive_h2_fill_n(self, n_threads: int):
         h = h2(None, None, bins="fixed_width", bin_width=1, adaptive=True)
         n_points = 100
