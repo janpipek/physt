@@ -69,7 +69,7 @@ def geo_map(
     h2: Histogram2D,
     *,
     map: Map | None = None,
-    tiles: str | None = "cartodb positron",
+    tiles: str | None = "OpenStreetMap",
     cmap="wk",
     alpha: float = 0.5,
     lw=1,
