@@ -45,7 +45,7 @@ dev = [
 ]
 
 [project.optional-dependencies]
-astropy = ["astropy>=6.0"]
+astropy = ["astropy>=6.0", "scipy"]
 dask = ["dask[array]>=2023.0"]
 pandas = [
     "pandas>=2.0",
